@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Secure Mail Console</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                >
+                    <path
+                        d="M12 3L19 6V11C19 16 16 20 12 21C8 20 5 16 5 11V6L12 3Z"
+                    />
+                </svg>
+            </div>
+
+            <span>Secure Mail Console</span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="logout-button"
+            id="logoutButton"
+        >
+            <span>↪</span>
+            Logout
+        </button>
+
+    </header>
+
+
+    <!-- ================================================= -->
+    <!-- TITLE -->
+    <!-- ================================================= -->
+
+    <div class="page-title">
+
+        <span class="title-icon">➤</span>
+
+        <h1>Bulk Email Sender</h1>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MAIN GRID -->
+    <!-- ================================================= -->
+
+    <main class="dashboard">
+
+
+        <!-- ============================================= -->
+        <!-- LEFT COLUMN -->
+        <!-- ============================================= -->
+
+        <section class="card compose-card">
+
+            <div class="section-title">
+
+                <span>✎</span>
+
+                <h2>Compose Message</h2>
+
+            </div>
+
+
+            <!-- ROW -->
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label for="senderName">
+                        Sender Name
+                    </label>
+
+                    <input
+                        id="senderName"
+                        type="text"
+                        placeholder="E.g., John Doe"
+                        autocomplete="name"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="gmail">
+                        Your Gmail
+                    </label>
+
+                    <input
+                        id="gmail"
+                        type="email"
+                        placeholder="you@gmail.com"
+                        autocomplete="email"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- ROW -->
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label for="appPassword">
+                        App Password
+                    </label>
+
+                    <div class="password-wrap">
+
+                        <input
+                            id="appPassword"
+                            type="password"
+                            placeholder="16-character app password"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="eye-button"
+                            aria-label="Show password"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="subject">
+                        Email Subject
+                    </label>
+
+                    <input
+                        id="subject"
+                        type="text"
+                        placeholder="Enter subject line..."
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div class="field message-field">
+
+                <label for="message">
+                    Message Body
+                    <span class="small-note">
+                        Plain Text
+                    </span>
+                </label>
+
+                <textarea
+                    id="message"
+                    placeholder="Write your email here... Use {name} for recipient name."
+                ></textarea>
+
+                <div class="message-help">
+                    Personalization: <code>{name}</code>
+                </div>
+
+            </div>
+
+
+            <!-- ACCESS KEY -->
+
+            <div class="field">
+
+                <label for="accessKey">
+                    Access Key
+                    <span class="optional">
+                        Optional
+                    </span>
+                </label>
+
+                <input
+                    id="accessKey"
+                    type="password"
+                    placeholder="Required only if APP_ACCESS_KEY is configured"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <!-- SECURITY INFO -->
+
+            <div class="security-box">
+
+                <div class="security-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <strong>Secure SMTP connection</strong>
+
+                    <p>
+                        Your Gmail App Password is used only for
+                        the current send request and is not saved.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================= -->
+        <!-- RIGHT COLUMN -->
+        <!-- ============================================= -->
+
+        <div class="right-column">
+
+
+            <!-- RECIPIENTS -->
+
+            <section class="card recipients-card">
+
+                <div class="section-title recipients-heading">
+
+                    <div>
+
+                        <div class="title-line">
+
+                            <span>♟</span>
+
+                            <h2>Recipients</h2>
+
+                        </div>
+
+                        <p>
+                            Paste emails separated by commas,
+                            new lines, or semicolons
+                        </p>
+
+                    </div>
+
+                    <span
+                        class="found-badge"
+                        id="foundBadge"
+                    >
+                        0 found
+                    </span>
+
+                </div>
+
+
+                <textarea
+                    id="recipients"
+                    class="recipients-input"
+                    placeholder="recipient1@example.com&#10;recipient2@example.com"
+                ></textarea>
+
+            </section>
+
+
+
+            <!-- PROGRESS -->
+
+            <section class="card progress-card">
+
+                <div class="section-title">
+
+                    <span>◔</span>
+
+                    <h2>Progress Monitor</h2>
+
+                </div>
+
+
+                <div class="stats-grid">
+
+
+                    <div class="stat-box">
+
+                        <span class="stat-label">
+                            TOTAL
+                        </span>
+
+                        <strong
+                            id="totalCount"
+                            class="stat-number blue"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span class="stat-label">
+                            SENT
+                        </span>
+
+                        <strong
+                            id="sentCount"
+                            class="stat-number green"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span class="stat-label">
+                            FAILED
+                        </span>
+
+                        <strong
+                            id="failedCount"
+                            class="stat-number red"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span class="stat-label">
+                            REMAINING
+                        </span>
+
+                        <strong
+                            id="remainingCount"
+                            class="stat-number orange"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PROGRESS BAR -->
+
+                <div class="progress-track">
+
+                    <div
+                        class="progress-fill"
+                        id="progressFill"
+                    ></div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div
+                    class="status-line"
+                    id="statusLine"
+                >
+
+                    <span class="status-dot"></span>
+
+                    <span>
+                        Ready to send
+                    </span>
+
+                </div>
+
+
+                <!-- SEND BUTTON -->
+
+                <button
+                    type="button"
+                    id="sendButton"
+                    class="send-button"
+                >
+
+                    <span>➤</span>
+
+                    <span>
+                        Send All
+                    </span>
+
+                </button>
+
+
+                <!-- RESULT -->
+
+                <div
+                    class="result-box"
+                    id="resultBox"
+                ></div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <footer>
+        Use this sender only for recipients you are authorized to contact.
+    </footer>
+
+</div>
+
+
+<script>
+
+const $ = (id) => document.getElementById(id);
+
+
+const senderName = $("senderName");
+const gmail = $("gmail");
+const appPassword = $("appPassword");
+const subject = $("subject");
+const message = $("message");
+const recipients = $("recipients");
+const accessKey = $("accessKey");
+
+const foundBadge = $("foundBadge");
+
+const totalCount = $("totalCount");
+const sentCount = $("sentCount");
+const failedCount = $("failedCount");
+const remainingCount = $("remainingCount");
+
+const progressFill = $("progressFill");
+const statusLine = $("statusLine");
+
+const sendButton = $("sendButton");
+const resultBox = $("resultBox");
+
+
+
+/* ======================================================
+   RECIPIENT PARSER
+====================================================== */
+
+function parseRecipients(value) {
+
+    if (!value.trim()) {
+        return [];
+    }
+
+    return [
+        ...new Set(
+            value
+                .replaceAll(",", "\n")
+                .replaceAll(";", "\n")
+                .split(/\s+/)
+                .map(x => x.trim().toLowerCase())
+                .filter(Boolean)
+        )
+    ];
+}
+
+
+
+function updateRecipientCount() {
+
+    const list = parseRecipients(recipients.value);
+
+    foundBadge.textContent = `${list.length} found`;
+
+    totalCount.textContent = list.length;
+    remainingCount.textContent = list.length;
+}
+
+
+
+recipients.addEventListener(
+    "input",
+    updateRecipientCount
+);
+
+
+
+/* ======================================================
+   PASSWORD TOGGLE
+====================================================== */
+
+$("togglePassword").addEventListener(
+    "click",
+    () => {
+
+        if (appPassword.type === "password") {
+
+            appPassword.type = "text";
+
+        } else {
+
+            appPassword.type = "password";
+
+        }
+
+    }
+);
+
+
+
+/* ======================================================
+   RESET STATS
+====================================================== */
+
+function resetStats(total) {
+
+    totalCount.textContent = total;
+    sentCount.textContent = 0;
+    failedCount.textContent = 0;
+    remainingCount.textContent = total;
+
+    progressFill.style.width = "0%";
+
+    resultBox.innerHTML = "";
+
+}
+
+
+
+/* ======================================================
+   STATUS
+====================================================== */
+
+function setStatus(text, type = "normal") {
+
+    statusLine.innerHTML = `
+        <span class="status-dot ${type}"></span>
+        <span>${escapeHtml(text)}</span>
+    `;
+
+}
+
+
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+
+/* ======================================================
+   SEND
+====================================================== */
+
+sendButton.addEventListener(
+    "click",
+    async () => {
+
+        const recipientList = parseRecipients(
+            recipients.value
+        );
+
+
+        if (!senderName.value.trim()) {
+
+            showError("Please enter sender name.");
+            senderName.focus();
+            return;
+
+        }
+
+
+        if (!gmail.value.trim()) {
+
+            showError("Please enter Gmail address.");
+            gmail.focus();
+            return;
+
+        }
+
+
+        if (!appPassword.value.trim()) {
+
+            showError("Please enter Gmail App Password.");
+            appPassword.focus();
+            return;
+
+        }
+
+
+        if (!subject.value.trim()) {
+
+            showError("Please enter email subject.");
+            subject.focus();
+            return;
+
+        }
+
+
+        if (!message.value.trim()) {
+
+            showError("Please enter message body.");
+            message.focus();
+            return;
+
+        }
+
+
+        if (!recipientList.length) {
+
+            showError("Please add at least one recipient.");
+            recipients.focus();
+            return;
+
+        }
+
+
+        if (recipientList.length > 5) {
+
+            showError(
+                "Maximum 5 recipients can be sent in one request."
+            );
+
+            return;
+
+        }
+
+
+        resetStats(recipientList.length);
+
+        sendButton.disabled = true;
+
+        sendButton.innerHTML = `
+            <span class="spinner"></span>
+            <span>Sending...</span>
+        `;
+
+        setStatus(
+            "Connecting to Gmail...",
+            "sending"
+        );
+
+
+        try {
+
+            const response = await fetch(
+                "/api/send",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+
+                        ...(accessKey.value.trim()
+                            ? {
+                                "X-Access-Key":
+                                    accessKey.value.trim()
+                            }
+                            : {})
+                    },
+
+                    body: JSON.stringify({
+
+                        sender_name:
+                            senderName.value.trim(),
+
+                        gmail:
+                            gmail.value.trim(),
+
+                        app_password:
+                            appPassword.value.trim(),
+
+                        subject:
+                            subject.value.trim(),
+
+                        message:
+                            message.value,
+
+                        recipients:
+                            recipientList.join("\n")
+                    })
+                }
+            );
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error || "Sending failed."
+                );
+
+            }
+
+
+            const total =
+                data.total || recipientList.length;
+
+            const sent =
+                data.sent || 0;
+
+            const failed =
+                data.failed || 0;
+
+            const remaining =
+                data.remaining || 0;
+
+
+            totalCount.textContent = total;
+            sentCount.textContent = sent;
+            failedCount.textContent = failed;
+            remainingCount.textContent = remaining;
+
+
+            const completed =
+                sent + failed;
+
+            const percentage =
+                total > 0
+                    ? Math.round(
+                        (completed / total) * 100
+                    )
+                    : 0;
+
+
+            progressFill.style.width =
+                `${percentage}%`;
+
+
+            if (sent > 0 && failed === 0) {
+
+                setStatus(
+                    "All emails sent successfully.",
+                    "success"
+                );
+
+            } else if (sent > 0 && failed > 0) {
+
+                setStatus(
+                    "Sending completed with some failures.",
+                    "warning"
+                );
+
+            } else {
+
+                setStatus(
+                    "No emails were sent.",
+                    "error"
+                );
+
+            }
+
+
+            renderResults(data);
+
+
+        } catch (error) {
+
+            setStatus(
+                error.message,
+                "error"
+            );
+
+            showError(
+                error.message
+            );
+
+        } finally {
+
+            sendButton.disabled = false;
+
+            sendButton.innerHTML = `
+                <span>➤</span>
+                <span>Send All</span>
+            `;
+
+        }
+
+    }
+);
+
+
+
+/* ======================================================
+   RESULT
+====================================================== */
+
+function renderResults(data) {
+
+    let html = "";
+
+
+    if (
+        data.sent_emails &&
+        data.sent_emails.length
+    ) {
+
+        html += `
+            <div class="result-success">
+                <strong>Sent:</strong>
+                ${data.sent_emails
+                    .map(escapeHtml)
+                    .join(", ")}
+            </div>
+        `;
+
+    }
+
+
+    if (
+        data.failed_emails &&
+        data.failed_emails.length
+    ) {
+
+        html += `
+            <div class="result-error">
+
+                <strong>Failed:</strong>
+
+                <ul>
+                    ${data.failed_emails
+                        .map(item => `
+                            <li>
+                                ${escapeHtml(item.email)}
+                                —
+                                ${escapeHtml(item.error)}
+                            </li>
+                        `)
+                        .join("")}
+                </ul>
+
+            </div>
+        `;
+
+    }
+
+
+    resultBox.innerHTML = html;
+
+}
+
+
+
+function showError(text) {
+
+    resultBox.innerHTML = `
+        <div class="result-error">
+            ${escapeHtml(text)}
+        </div>
+    `;
+
+    setStatus(
+        text,
+        "error"
+    );
+
+}
+
+
+
+/* ======================================================
+   LOGOUT / CLEAR
+====================================================== */
+
+$("logoutButton").addEventListener(
+    "dblclick",
+    () => {
+
+        senderName.value = "";
+        gmail.value = "";
+        appPassword.value = "";
+        subject.value = "";
+        message.value = "";
+        recipients.value = "";
+        accessKey.value = "";
+
+        updateRecipientCount();
+
+        resetStats(0);
+
+        setStatus(
+            "Form cleared.",
+            "normal"
+        );
+
+        resultBox.innerHTML = "";
+
+    }
+);
+
+
+updateRecipientCount();
+
+</script>
+
+</body>
+</html>
