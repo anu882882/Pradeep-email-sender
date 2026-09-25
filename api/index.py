@@ -14,7 +14,6 @@ BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
 
-
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
@@ -29,6 +28,7 @@ app = Flask(
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
+# Maximum recipients per send
 MAX_RECIPIENTS = 25
 
 
@@ -46,8 +46,7 @@ def is_valid_email(email):
     return (
         EMAIL_PATTERN.fullmatch(
             email.strip()
-        )
-        is not None
+        ) is not None
     )
 
 
@@ -278,14 +277,18 @@ def send_emails():
 
 
     # -----------------------------------------------------
-    # MAX 5
+    # MAXIMUM 25 RECIPIENTS
     # -----------------------------------------------------
 
     if len(recipients) > MAX_RECIPIENTS:
-    return jsonify({
-        "success": False,
-        "error": "Maximum 25 recipients are allowed per send."
-    }), 400
+
+        return jsonify({
+            "success": False,
+            "error": (
+                "Maximum 25 recipients "
+                "are allowed per send."
+            )
+        }), 400
 
 
     # -----------------------------------------------------
@@ -327,16 +330,15 @@ def send_emails():
             timeout=25
         ) as server:
 
-            # Gmail login
             server.login(
                 gmail,
                 app_password
             )
 
 
-            # -------------------------------------------------
+            # ---------------------------------------------
             # SEND ONE BY ONE
-            # -------------------------------------------------
+            # ---------------------------------------------
 
             for recipient in recipients:
 
