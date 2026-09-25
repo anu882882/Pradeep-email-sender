@@ -1,0 +1,935 @@
+* {
+    box-sizing: border-box;
+}
+
+
+:root {
+    --bg: #f4f7fc;
+    --card: #ffffff;
+    --border: #dbe3ef;
+
+    --text: #111827;
+    --muted: #71809a;
+
+    --blue: #407ff2;
+    --blue-dark: #2f6fe5;
+
+    --green: #0bb486;
+    --green-dark: #079d76;
+
+    --red: #ef4444;
+    --orange: #f59e0b;
+
+    --shadow:
+        0 7px 20px rgba(15, 23, 42, 0.08);
+}
+
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        "Manrope",
+        Arial,
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fafc 0%,
+            #eef4ff 100%
+        );
+}
+
+
+button,
+input,
+textarea {
+    font-family: inherit;
+}
+
+
+.page {
+    width: min(1080px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 18px 0 28px;
+}
+
+
+
+/* ======================================================
+   HEADER
+====================================================== */
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 34px;
+}
+
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 29px;
+    font-weight: 800;
+
+    letter-spacing: -1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #3d83f6,
+            #6b5be8
+        );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
+}
+
+
+.brand-icon {
+    width: 30px;
+    height: 34px;
+
+    color: #3d83f6;
+}
+
+
+.brand-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+.logout-button {
+    border: 1px solid #fecaca;
+
+    color: #ef4444;
+
+    background: #fff;
+
+    border-radius: 7px;
+
+    padding: 7px 13px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+
+.logout-button:hover {
+    background: #fff5f5;
+}
+
+
+
+/* ======================================================
+   PAGE TITLE
+====================================================== */
+
+.page-title {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 20px;
+}
+
+
+.page-title h1 {
+    margin: 0;
+
+    font-size: 21px;
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+}
+
+
+.title-icon {
+    font-size: 25px;
+    color: #080f1c;
+}
+
+
+
+/* ======================================================
+   GRID
+====================================================== */
+
+.dashboard {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.02fr)
+        minmax(0, 0.98fr);
+
+    gap: 20px;
+
+    align-items: start;
+}
+
+
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+
+/* ======================================================
+   CARD
+====================================================== */
+
+.card {
+    background: var(--card);
+
+    border-radius: 11px;
+
+    box-shadow: var(--shadow);
+
+    border: 1px solid rgba(226, 232, 240, 0.6);
+
+    padding: 28px 30px;
+}
+
+
+.compose-card {
+    min-height: 665px;
+}
+
+
+.section-title {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-bottom: 6px;
+}
+
+
+.section-title > span {
+    font-size: 20px;
+}
+
+
+.section-title h2 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 800;
+
+    letter-spacing: -0.3px;
+}
+
+
+
+/* ======================================================
+   FORMS
+====================================================== */
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 13px;
+
+    margin-bottom: 17px;
+}
+
+
+.field {
+    margin-bottom: 16px;
+}
+
+
+.field label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #172033;
+}
+
+
+.optional,
+.small-note {
+    color: #7c8aa1;
+    font-weight: 500;
+}
+
+
+input,
+textarea {
+    width: 100%;
+
+    border: 1px solid var(--border);
+
+    background: #fff;
+
+    color: #182033;
+
+    outline: none;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+input {
+    height: 42px;
+    padding: 0 14px;
+}
+
+
+textarea {
+    resize: vertical;
+}
+
+
+input:focus,
+textarea:focus {
+    border-color: #6c9df7;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(64, 127, 242, 0.1);
+}
+
+
+input::placeholder,
+textarea::placeholder {
+    color: #8791a1;
+}
+
+
+.message-field textarea {
+    min-height: 265px;
+
+    padding: 14px;
+
+    line-height: 1.55;
+}
+
+
+.message-help {
+    margin-top: 7px;
+
+    color: #7b879a;
+
+    font-size: 11px;
+}
+
+
+code {
+    background: #f1f5f9;
+
+    padding: 2px 5px;
+
+    border-radius: 4px;
+
+    color: #315eaf;
+}
+
+
+
+/* ======================================================
+   PASSWORD
+====================================================== */
+
+.password-wrap {
+    position: relative;
+}
+
+
+.password-wrap input {
+    padding-right: 42px;
+}
+
+
+.eye-button {
+    position: absolute;
+
+    right: 8px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 30px;
+    height: 30px;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #718096;
+
+    cursor: pointer;
+}
+
+
+
+/* ======================================================
+   SECURITY
+====================================================== */
+
+.security-box {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 11px;
+
+    padding: 13px;
+
+    border: 1px solid #d8eee5;
+
+    background: #f2fbf7;
+
+    border-radius: 8px;
+
+    margin-top: 8px;
+}
+
+
+.security-icon {
+    width: 25px;
+    height: 25px;
+
+    flex: 0 0 25px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #16a065;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+.security-box strong {
+    display: block;
+
+    font-size: 12px;
+}
+
+
+.security-box p {
+    margin: 3px 0 0;
+
+    color: #65758b;
+
+    font-size: 10px;
+
+    line-height: 1.45;
+}
+
+
+
+/* ======================================================
+   RECIPIENTS
+====================================================== */
+
+.recipients-card {
+    min-height: 238px;
+}
+
+
+.recipients-heading {
+    justify-content: space-between;
+
+    align-items: flex-start;
+}
+
+
+.title-line {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+}
+
+
+.recipients-heading p {
+    margin: 1px 0 9px;
+
+    font-size: 10px;
+
+    color: #7a879d;
+}
+
+
+.found-badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 9px;
+
+    border-radius: 14px;
+
+    background: #eff6ff;
+
+    color: #4082f5;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.recipients-input {
+    height: 135px;
+
+    padding: 13px;
+
+    resize: vertical;
+
+    font-family:
+        Consolas,
+        "Courier New",
+        monospace;
+
+    line-height: 1.6;
+}
+
+
+
+/* ======================================================
+   PROGRESS
+====================================================== */
+
+.progress-card {
+    padding-bottom: 30px;
+}
+
+
+.stats-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 14px;
+
+    margin-top: 4px;
+}
+
+
+.stat-box {
+    min-height: 89px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+}
+
+
+.stat-label {
+    color: #71809a;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+.stat-number {
+    margin-top: 4px;
+
+    font-size: 25px;
+
+    line-height: 1;
+}
+
+
+.blue {
+    color: var(--blue);
+}
+
+
+.green {
+    color: var(--green);
+}
+
+
+.red {
+    color: var(--red);
+}
+
+
+.orange {
+    color: var(--orange);
+}
+
+
+
+/* ======================================================
+   PROGRESS BAR
+====================================================== */
+
+.progress-track {
+    width: 100%;
+    height: 7px;
+
+    margin-top: 22px;
+
+    background: #e4e9f1;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #4386f5,
+            #0bb486
+        );
+
+    border-radius: inherit;
+
+    transition: width 0.3s ease;
+}
+
+
+
+/* ======================================================
+   STATUS
+====================================================== */
+
+.status-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    margin: 12px 0 22px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #111827;
+}
+
+
+.status-dot.success {
+    background: #0bb486;
+}
+
+
+.status-dot.error {
+    background: #ef4444;
+}
+
+
+.status-dot.warning {
+    background: #f59e0b;
+}
+
+
+.status-dot.sending {
+    background: #4082f5;
+
+    animation: pulse 1s infinite;
+}
+
+
+@keyframes pulse {
+
+    0% {
+        opacity: 0.35;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.35;
+    }
+
+}
+
+
+
+/* ======================================================
+   SEND BUTTON
+====================================================== */
+
+.send-button {
+    width: 100%;
+
+    height: 40px;
+
+    border: 0;
+
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #12b987,
+            #079f75
+        );
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.send-button:hover {
+    transform: translateY(-1px);
+}
+
+
+.send-button:disabled {
+    opacity: 0.7;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+
+/* ======================================================
+   SPINNER
+====================================================== */
+
+.spinner {
+    width: 15px;
+    height: 15px;
+
+    border: 2px solid rgba(255,255,255,.4);
+
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation:
+        spin 0.7s linear infinite;
+}
+
+
+@keyframes spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+
+/* ======================================================
+   RESULT
+====================================================== */
+
+.result-box {
+    margin-top: 14px;
+}
+
+
+.result-success,
+.result-error {
+    border-radius: 7px;
+
+    padding: 10px 12px;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+.result-success {
+    background: #effcf7;
+
+    border: 1px solid #c9f1df;
+
+    color: #087c5b;
+}
+
+
+.result-error {
+    background: #fff4f4;
+
+    border: 1px solid #ffd3d3;
+
+    color: #c53030;
+}
+
+
+.result-error ul {
+    margin: 5px 0 0;
+
+    padding-left: 18px;
+}
+
+
+
+/* ======================================================
+   FOOTER
+====================================================== */
+
+footer {
+    text-align: center;
+
+    margin-top: 18px;
+
+    color: #8995a8;
+
+    font-size: 10px;
+}
+
+
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media (max-width: 850px) {
+
+    .page {
+        width: min(94%, 650px);
+
+        padding-top: 15px;
+    }
+
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+
+    .compose-card {
+        min-height: auto;
+    }
+
+
+    .brand {
+        font-size: 23px;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    .topbar {
+        align-items: flex-start;
+
+        gap: 12px;
+    }
+
+
+    .brand {
+        font-size: 19px;
+    }
+
+
+    .brand-icon {
+        width: 24px;
+        height: 28px;
+    }
+
+
+    .logout-button {
+        font-size: 10px;
+
+        padding: 6px 9px;
+    }
+
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .card {
+        padding: 20px;
+    }
+
+
+    .stats-grid {
+        gap: 8px;
+    }
+
+}
