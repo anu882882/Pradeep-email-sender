@@ -282,14 +282,10 @@ def send_emails():
     # -----------------------------------------------------
 
     if len(recipients) > MAX_RECIPIENTS:
-
-        return jsonify({
-            "success": False,
-            "error": (
-                "Maximum 5 recipients "
-                "are allowed per send."
-            )
-        }), 400
+    return jsonify({
+        "success": False,
+        "error": "Maximum 25 recipients are allowed per send."
+    }), 400
 
 
     # -----------------------------------------------------
