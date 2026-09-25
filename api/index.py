@@ -2,6 +2,7 @@ import os
 import re
 import ssl
 import smtplib
+
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
@@ -9,22 +10,27 @@ from email.utils import formataddr
 from flask import Flask, render_template, request, jsonify
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
 
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
-    static_folder=os.path.join(BASE_DIR, "static"),
+    static_folder=os.path.join(BASE_DIR, "static")
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # SETTINGS
-# ---------------------------------------------------------
+# =========================================================
 
-MAX_RECIPIENTS = 5
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
+
+MAX_RECIPIENTS = 5
+
 
 EMAIL_PATTERN = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
@@ -32,21 +38,24 @@ EMAIL_PATTERN = re.compile(
 )
 
 
-# ---------------------------------------------------------
-# HELPERS
-# ---------------------------------------------------------
+# =========================================================
+# EMAIL VALIDATION
+# =========================================================
 
 def is_valid_email(email):
-    return EMAIL_PATTERN.fullmatch(email.strip()) is not None
+    return (
+        EMAIL_PATTERN.fullmatch(
+            email.strip()
+        )
+        is not None
+    )
 
+
+# =========================================================
+# RECIPIENT PARSER
+# =========================================================
 
 def parse_recipients(raw_value):
-    """
-    Accept:
-      email1@gmail.com
-      email2@gmail.com,email3@gmail.com
-      email4@gmail.com;email5@gmail.com
-    """
 
     if not raw_value:
         return []
@@ -58,144 +67,145 @@ def parse_recipients(raw_value):
         .replace("\r", "\n")
     )
 
-    results = []
+    recipients = []
     seen = set()
 
     for line in normalized.split("\n"):
-        email = line.strip().lower()
 
-        if not email:
-            continue
+        parts = line.split()
 
-        # Also handle accidental spaces
-        pieces = email.split()
+        for part in parts:
 
-        for piece in pieces:
-            if piece not in seen:
-                seen.add(piece)
-                results.append(piece)
+            email = part.strip().lower()
 
-    return results
+            if not email:
+                continue
 
+            if email not in seen:
+
+                seen.add(email)
+                recipients.append(email)
+
+    return recipients
+
+
+# =========================================================
+# NAME FROM EMAIL
+# =========================================================
 
 def display_name_from_email(email):
-    """
-    Example:
-    john.smith@gmail.com
-    -> John Smith
-    """
 
-    local = email.split("@", 1)[0]
+    local_part = email.split("@", 1)[0]
 
-    local = re.sub(r"[._-]+", " ", local)
-    local = re.sub(r"\d+", " ", local)
+    local_part = re.sub(
+        r"[._-]+",
+        " ",
+        local_part
+    )
 
-    local = " ".join(local.split()).strip()
+    local_part = re.sub(
+        r"\d+",
+        " ",
+        local_part
+    )
 
-    if not local:
-        return "there"
-
-    return local.title()
-
-
-def render_personalized_text(text, recipient):
-    """
-    Supports:
-
-    {name}
-
-    Example:
-    Hello {name},
-
-    becomes:
-
-    Hello John,
-    """
-
-    name = display_name_from_email(recipient)
-
-    return text.replace("{name}", name)
-
-
-def check_access_key():
-    """
-    Protect the public Vercel endpoint.
-
-    Set APP_ACCESS_KEY in Vercel Environment Variables.
-    """
-
-    configured_key = os.environ.get("APP_ACCESS_KEY", "").strip()
-
-    # If no key is configured, allow access.
-    # You can change this to return False if you want
-    # access key to be mandatory.
-    if not configured_key:
-        return True
-
-    supplied_key = (
-        request.headers.get("X-Access-Key")
-        or request.form.get("access_key")
-        or ""
+    local_part = " ".join(
+        local_part.split()
     ).strip()
 
-    return supplied_key == configured_key
+    if not local_part:
+        return "there"
+
+    return local_part.title()
 
 
-# ---------------------------------------------------------
-# PAGES
-# ---------------------------------------------------------
+# =========================================================
+# PERSONALIZATION
+# =========================================================
+
+def personalize_message(message, recipient):
+
+    name = display_name_from_email(
+        recipient
+    )
+
+    return message.replace(
+        "{name}",
+        name
+    )
+
+
+# =========================================================
+# HOME
+# =========================================================
 
 @app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
 
+    return render_template(
+        "index.html"
+    )
+
+
+# =========================================================
+# HEALTH CHECK
+# =========================================================
 
 @app.route("/health", methods=["GET"])
 def health():
+
     return jsonify({
         "status": "ok",
         "service": "Secure Mail Console"
     })
 
 
-# ---------------------------------------------------------
+# =========================================================
 # SEND EMAILS
-# ---------------------------------------------------------
+# =========================================================
 
 @app.route("/api/send", methods=["POST"])
 def send_emails():
 
-    # -----------------------------------------------------
-    # ACCESS KEY
-    # -----------------------------------------------------
-
-    if not check_access_key():
-        return jsonify({
-            "success": False,
-            "error": "Invalid access key."
-        }), 401
-
-
-    # -----------------------------------------------------
-    # JSON
-    # -----------------------------------------------------
-
-    data = request.get_json(silent=True)
+    data = request.get_json(
+        silent=True
+    )
 
     if not data:
+
         return jsonify({
             "success": False,
             "error": "Invalid request."
         }), 400
 
 
-    sender_name = str(data.get("sender_name", "")).strip()
-    gmail = str(data.get("gmail", "")).strip()
-    app_password = str(data.get("app_password", "")).strip()
-    subject = str(data.get("subject", "")).strip()
-    message = str(data.get("message", ""))
+    # -----------------------------------------------------
+    # FORM DATA
+    # -----------------------------------------------------
 
-    raw_recipients = str(data.get("recipients", ""))
+    sender_name = str(
+        data.get("sender_name", "")
+    ).strip()
+
+    gmail = str(
+        data.get("gmail", "")
+    ).strip()
+
+    app_password = str(
+        data.get("app_password", "")
+    ).strip()
+
+    subject = str(
+        data.get("subject", "")
+    ).strip()
+
+    message = str(
+        data.get("message", "")
+    )
+
+    raw_recipients = str(
+        data.get("recipients", "")
+    )
 
 
     # -----------------------------------------------------
@@ -203,13 +213,23 @@ def send_emails():
     # -----------------------------------------------------
 
     if not sender_name:
+
         return jsonify({
             "success": False,
             "error": "Please enter sender name."
         }), 400
 
 
-    if not gmail or not is_valid_email(gmail):
+    if not gmail:
+
+        return jsonify({
+            "success": False,
+            "error": "Please enter your Gmail address."
+        }), 400
+
+
+    if not is_valid_email(gmail):
+
         return jsonify({
             "success": False,
             "error": "Please enter a valid Gmail address."
@@ -217,6 +237,7 @@ def send_emails():
 
 
     if not app_password:
+
         return jsonify({
             "success": False,
             "error": "Please enter your Gmail App Password."
@@ -224,6 +245,7 @@ def send_emails():
 
 
     if not subject:
+
         return jsonify({
             "success": False,
             "error": "Please enter email subject."
@@ -231,16 +253,24 @@ def send_emails():
 
 
     if not message.strip():
+
         return jsonify({
             "success": False,
             "error": "Please enter message body."
         }), 400
 
 
-    recipients = parse_recipients(raw_recipients)
+    # -----------------------------------------------------
+    # RECIPIENTS
+    # -----------------------------------------------------
+
+    recipients = parse_recipients(
+        raw_recipients
+    )
 
 
     if not recipients:
+
         return jsonify({
             "success": False,
             "error": "Please enter at least one recipient."
@@ -248,25 +278,33 @@ def send_emails():
 
 
     # -----------------------------------------------------
-    # LIMIT
+    # MAX 5
     # -----------------------------------------------------
 
     if len(recipients) > MAX_RECIPIENTS:
+
         return jsonify({
             "success": False,
             "error": (
-                f"Maximum {MAX_RECIPIENTS} recipients are allowed "
-                "per send."
+                "Maximum 5 recipients "
+                "are allowed per send."
             )
         }), 400
 
 
+    # -----------------------------------------------------
+    # INVALID EMAILS
+    # -----------------------------------------------------
+
     invalid = [
-        email for email in recipients
+        email
+        for email in recipients
         if not is_valid_email(email)
     ]
 
+
     if invalid:
+
         return jsonify({
             "success": False,
             "error": "Invalid email address(es).",
@@ -281,27 +319,40 @@ def send_emails():
     sent = []
     failed = []
 
-    context = ssl.create_default_context()
+    ssl_context = ssl.create_default_context()
+
 
     try:
 
         with smtplib.SMTP_SSL(
             SMTP_HOST,
             SMTP_PORT,
-            context=context,
+            context=ssl_context,
             timeout=25
         ) as server:
 
-            server.login(gmail, app_password)
+            # Gmail login
+            server.login(
+                gmail,
+                app_password
+            )
+
+
+            # -------------------------------------------------
+            # SEND ONE BY ONE
+            # -------------------------------------------------
 
             for recipient in recipients:
 
                 try:
 
-                    personalized_message = render_personalized_text(
-                        message,
-                        recipient
+                    personalized_message = (
+                        personalize_message(
+                            message,
+                            recipient
+                        )
                     )
+
 
                     mail = MIMEText(
                         personalized_message,
@@ -309,16 +360,23 @@ def send_emails():
                         "utf-8"
                     )
 
+
                     mail["Subject"] = Header(
                         subject,
                         "utf-8"
                     )
 
+
                     mail["From"] = formataddr(
-                        (sender_name, gmail)
+                        (
+                            sender_name,
+                            gmail
+                        )
                     )
 
+
                     mail["To"] = recipient
+
 
                     server.sendmail(
                         gmail,
@@ -326,7 +384,11 @@ def send_emails():
                         mail.as_string()
                     )
 
-                    sent.append(recipient)
+
+                    sent.append(
+                        recipient
+                    )
+
 
                 except Exception as exc:
 
@@ -342,8 +404,8 @@ def send_emails():
             "success": False,
             "error": (
                 "Gmail authentication failed. "
-                "Use your Gmail App Password, not your normal "
-                "Gmail password."
+                "Use a Gmail App Password instead "
+                "of your normal Gmail password."
             )
         }), 401
 
@@ -352,7 +414,9 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error": "Could not connect to Gmail SMTP."
+            "error": (
+                "Could not connect to Gmail SMTP."
+            )
         }), 502
 
 
@@ -372,24 +436,53 @@ def send_emails():
         }), 500
 
 
+    # -----------------------------------------------------
+    # RESULT
+    # -----------------------------------------------------
+
+    total = len(recipients)
+    sent_count = len(sent)
+    failed_count = len(failed)
+
+    remaining = (
+        total
+        - sent_count
+        - failed_count
+    )
+
+
     return jsonify({
-        "success": len(sent) > 0,
-        "total": len(recipients),
-        "sent": len(sent),
-        "failed": len(failed),
-        "remaining": len(recipients) - len(sent) - len(failed),
+
+        "success": sent_count > 0,
+
+        "total": total,
+
+        "sent": sent_count,
+
+        "failed": failed_count,
+
+        "remaining": remaining,
+
         "sent_emails": sent,
+
         "failed_emails": failed
+
     })
 
 
-# ---------------------------------------------------------
-# VERCEL ENTRY
-# ---------------------------------------------------------
+# =========================================================
+# LOCAL DEVELOPMENT
+# =========================================================
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
+        port=int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        ),
         debug=True
     )
