@@ -4,35 +4,43 @@
 
 
 :root {
+
     --bg: #f4f7fc;
+
     --card: #ffffff;
+
     --border: #dbe3ef;
 
     --text: #111827;
+
     --muted: #71809a;
 
     --blue: #407ff2;
-    --blue-dark: #2f6fe5;
 
     --green: #0bb486;
-    --green-dark: #079d76;
 
     --red: #ef4444;
+
     --orange: #f59e0b;
 
     --shadow:
-        0 7px 20px rgba(15, 23, 42, 0.08);
+        0 7px 20px
+        rgba(15, 23, 42, 0.08);
+
 }
 
 
 html,
 body {
+
     margin: 0;
     padding: 0;
+
 }
 
 
 body {
+
     min-height: 100vh;
 
     font-family:
@@ -40,7 +48,8 @@ body {
         Arial,
         sans-serif;
 
-    color: var(--text);
+    color:
+        var(--text);
 
     background:
         linear-gradient(
@@ -48,46 +57,75 @@ body {
             #f8fafc 0%,
             #eef4ff 100%
         );
+
 }
 
 
 button,
 input,
 textarea {
+
     font-family: inherit;
+
 }
 
 
 .page {
-    width: min(1080px, calc(100% - 40px));
-    margin: 0 auto;
-    padding: 18px 0 28px;
+
+    width:
+        min(
+            1080px,
+            calc(100% - 40px)
+        );
+
+    margin:
+        0 auto;
+
+    padding:
+        18px 0 28px;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    HEADER
-====================================================== */
+===================================================== */
 
 .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 
-    margin-bottom: 34px;
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        34px;
+
 }
 
 
 .brand {
+
     display: flex;
-    align-items: center;
-    gap: 10px;
 
-    font-size: 29px;
-    font-weight: 800;
+    align-items:
+        center;
 
-    letter-spacing: -1px;
+    gap:
+        10px;
+
+    font-size:
+        29px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        -1px;
 
     background:
         linear-gradient(
@@ -96,542 +134,740 @@ textarea {
             #6b5be8
         );
 
-    -webkit-background-clip: text;
-    background-clip: text;
+    -webkit-background-clip:
+        text;
 
-    color: transparent;
+    background-clip:
+        text;
+
+    color:
+        transparent;
+
 }
 
 
 .brand-icon {
-    width: 30px;
-    height: 34px;
 
-    color: #3d83f6;
+    width:
+        30px;
+
+    height:
+        34px;
+
+    color:
+        #3d83f6;
+
 }
 
 
 .brand-icon svg {
-    width: 100%;
-    height: 100%;
+
+    width:
+        100%;
+
+    height:
+        100%;
+
 }
 
 
 .logout-button {
-    border: 1px solid #fecaca;
 
-    color: #ef4444;
+    border:
+        1px solid #fecaca;
 
-    background: #fff;
+    color:
+        #ef4444;
 
-    border-radius: 7px;
+    background:
+        #fff;
 
-    padding: 7px 13px;
+    border-radius:
+        7px;
 
-    font-size: 12px;
-    font-weight: 700;
+    padding:
+        7px 13px;
 
-    cursor: pointer;
+    font-size:
+        12px;
 
-    transition: 0.2s ease;
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
 }
 
 
 .logout-button:hover {
-    background: #fff5f5;
+
+    background:
+        #fff5f5;
+
 }
 
 
 
-/* ======================================================
-   PAGE TITLE
-====================================================== */
+/* =====================================================
+   TITLE
+===================================================== */
 
 .page-title {
+
     display: flex;
-    align-items: center;
 
-    gap: 8px;
+    align-items:
+        center;
 
-    margin-bottom: 20px;
+    gap:
+        8px;
+
+    margin-bottom:
+        20px;
+
 }
 
 
 .page-title h1 {
-    margin: 0;
 
-    font-size: 21px;
-    font-weight: 800;
+    margin:
+        0;
 
-    letter-spacing: -0.5px;
+    font-size:
+        21px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        -0.5px;
+
 }
 
 
 .title-icon {
-    font-size: 25px;
-    color: #080f1c;
+
+    font-size:
+        25px;
+
+    color:
+        #080f1c;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    GRID
-====================================================== */
+===================================================== */
 
 .dashboard {
+
     display: grid;
 
     grid-template-columns:
         minmax(0, 1.02fr)
         minmax(0, 0.98fr);
 
-    gap: 20px;
+    gap:
+        20px;
 
-    align-items: start;
+    align-items:
+        start;
+
 }
 
 
 .right-column {
+
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+
+    flex-direction:
+        column;
+
+    gap:
+        20px;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    CARD
-====================================================== */
+===================================================== */
 
 .card {
-    background: var(--card);
 
-    border-radius: 11px;
+    background:
+        var(--card);
 
-    box-shadow: var(--shadow);
+    border-radius:
+        11px;
 
-    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow:
+        var(--shadow);
 
-    padding: 28px 30px;
+    border:
+        1px solid
+        rgba(
+            226,
+            232,
+            240,
+            0.6
+        );
+
+    padding:
+        28px 30px;
+
 }
 
 
 .compose-card {
-    min-height: 665px;
+
+    min-height:
+        665px;
+
 }
 
 
 .section-title {
+
     display: flex;
-    align-items: center;
 
-    gap: 5px;
+    align-items:
+        center;
 
-    margin-bottom: 6px;
+    gap:
+        5px;
+
+    margin-bottom:
+        6px;
+
 }
 
 
 .section-title > span {
-    font-size: 20px;
+
+    font-size:
+        20px;
+
 }
 
 
 .section-title h2 {
-    margin: 0;
 
-    font-size: 16px;
-    font-weight: 800;
+    margin:
+        0;
 
-    letter-spacing: -0.3px;
+    font-size:
+        16px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        -0.3px;
+
 }
 
 
 
-/* ======================================================
-   FORMS
-====================================================== */
+/* =====================================================
+   FORM
+===================================================== */
 
 .form-grid {
+
     display: grid;
 
     grid-template-columns:
         1fr
         1fr;
 
-    gap: 13px;
+    gap:
+        13px;
 
-    margin-bottom: 17px;
+    margin-bottom:
+        17px;
+
 }
 
 
 .field {
-    margin-bottom: 16px;
+
+    margin-bottom:
+        16px;
+
 }
 
 
 .field label {
+
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom:
+        7px;
 
-    font-size: 12px;
-    font-weight: 700;
+    font-size:
+        12px;
 
-    color: #172033;
+    font-weight:
+        700;
+
+    color:
+        #172033;
+
 }
 
 
-.optional,
 .small-note {
-    color: #7c8aa1;
-    font-weight: 500;
+
+    color:
+        #7c8aa1;
+
+    font-weight:
+        500;
+
 }
 
 
 input,
 textarea {
-    width: 100%;
 
-    border: 1px solid var(--border);
+    width:
+        100%;
 
-    background: #fff;
+    border:
+        1px solid
+        var(--border);
 
-    color: #182033;
+    background:
+        #fff;
 
-    outline: none;
+    color:
+        #182033;
 
-    border-radius: 7px;
+    outline:
+        none;
 
-    font-size: 13px;
+    border-radius:
+        7px;
+
+    font-size:
+        13px;
 
     transition:
-        border-color 0.18s ease,
-        box-shadow 0.18s ease;
+        border-color
+        0.18s ease,
+
+        box-shadow
+        0.18s ease;
+
 }
 
 
 input {
-    height: 42px;
-    padding: 0 14px;
+
+    height:
+        42px;
+
+    padding:
+        0 14px;
+
 }
 
 
 textarea {
-    resize: vertical;
+
+    resize:
+        vertical;
+
 }
 
 
 input:focus,
 textarea:focus {
-    border-color: #6c9df7;
+
+    border-color:
+        #6c9df7;
 
     box-shadow:
         0 0 0 3px
-        rgba(64, 127, 242, 0.1);
+        rgba(
+            64,
+            127,
+            242,
+            0.1
+        );
+
 }
 
 
 input::placeholder,
 textarea::placeholder {
-    color: #8791a1;
+
+    color:
+        #8791a1;
+
 }
 
 
 .message-field textarea {
-    min-height: 265px;
 
-    padding: 14px;
+    min-height:
+        315px;
 
-    line-height: 1.55;
+    padding:
+        14px;
+
+    line-height:
+        1.55;
+
 }
 
 
 .message-help {
-    margin-top: 7px;
 
-    color: #7b879a;
+    margin-top:
+        7px;
 
-    font-size: 11px;
+    color:
+        #7b879a;
+
+    font-size:
+        11px;
+
 }
 
 
 code {
-    background: #f1f5f9;
 
-    padding: 2px 5px;
+    background:
+        #f1f5f9;
 
-    border-radius: 4px;
+    padding:
+        2px 5px;
 
-    color: #315eaf;
+    border-radius:
+        4px;
+
+    color:
+        #315eaf;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    PASSWORD
-====================================================== */
+===================================================== */
 
 .password-wrap {
-    position: relative;
+
+    position:
+        relative;
+
 }
 
 
 .password-wrap input {
-    padding-right: 42px;
+
+    padding-right:
+        42px;
+
 }
 
 
 .eye-button {
-    position: absolute;
 
-    right: 8px;
-    top: 50%;
+    position:
+        absolute;
 
-    transform: translateY(-50%);
+    right:
+        8px;
 
-    width: 30px;
-    height: 30px;
+    top:
+        50%;
 
-    border: 0;
+    transform:
+        translateY(-50%);
 
-    background: transparent;
+    width:
+        30px;
 
-    color: #718096;
+    height:
+        30px;
 
-    cursor: pointer;
+    border:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        #718096;
+
+    cursor:
+        pointer;
+
 }
 
 
 
-/* ======================================================
-   SECURITY
-====================================================== */
-
-.security-box {
-    display: flex;
-    align-items: flex-start;
-
-    gap: 11px;
-
-    padding: 13px;
-
-    border: 1px solid #d8eee5;
-
-    background: #f2fbf7;
-
-    border-radius: 8px;
-
-    margin-top: 8px;
-}
-
-
-.security-icon {
-    width: 25px;
-    height: 25px;
-
-    flex: 0 0 25px;
-
-    display: grid;
-    place-items: center;
-
-    border-radius: 50%;
-
-    background: #16a065;
-    color: white;
-
-    font-size: 14px;
-    font-weight: 800;
-}
-
-
-.security-box strong {
-    display: block;
-
-    font-size: 12px;
-}
-
-
-.security-box p {
-    margin: 3px 0 0;
-
-    color: #65758b;
-
-    font-size: 10px;
-
-    line-height: 1.45;
-}
-
-
-
-/* ======================================================
+/* =====================================================
    RECIPIENTS
-====================================================== */
+===================================================== */
 
 .recipients-card {
-    min-height: 238px;
+
+    min-height:
+        238px;
+
 }
 
 
 .recipients-heading {
-    justify-content: space-between;
 
-    align-items: flex-start;
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
 }
 
 
 .title-line {
-    display: flex;
-    align-items: center;
 
-    gap: 5px;
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        5px;
+
 }
 
 
 .recipients-heading p {
-    margin: 1px 0 9px;
 
-    font-size: 10px;
+    margin:
+        1px 0 9px;
 
-    color: #7a879d;
+    font-size:
+        10px;
+
+    color:
+        #7a879d;
+
 }
 
 
 .found-badge {
-    display: inline-flex;
 
-    align-items: center;
-    justify-content: center;
+    display:
+        inline-flex;
 
-    padding: 4px 9px;
+    align-items:
+        center;
 
-    border-radius: 14px;
+    justify-content:
+        center;
 
-    background: #eff6ff;
+    padding:
+        4px 9px;
 
-    color: #4082f5;
+    border-radius:
+        14px;
 
-    font-size: 10px;
-    font-weight: 700;
+    background:
+        #eff6ff;
+
+    color:
+        #4082f5;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
 }
 
 
 .recipients-input {
-    height: 135px;
 
-    padding: 13px;
+    height:
+        135px;
 
-    resize: vertical;
+    padding:
+        13px;
+
+    resize:
+        vertical;
 
     font-family:
         Consolas,
         "Courier New",
         monospace;
 
-    line-height: 1.6;
+    line-height:
+        1.6;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    PROGRESS
-====================================================== */
+===================================================== */
 
 .progress-card {
-    padding-bottom: 30px;
+
+    padding-bottom:
+        30px;
+
 }
 
 
 .stats-grid {
-    display: grid;
+
+    display:
+        grid;
 
     grid-template-columns:
         1fr
         1fr;
 
-    gap: 14px;
+    gap:
+        14px;
 
-    margin-top: 4px;
+    margin-top:
+        4px;
+
 }
 
 
 .stat-box {
-    min-height: 89px;
 
-    border: 1px solid var(--border);
+    min-height:
+        89px;
 
-    border-radius: 8px;
+    border:
+        1px solid
+        var(--border);
 
-    display: flex;
+    border-radius:
+        8px;
 
-    flex-direction: column;
+    display:
+        flex;
 
-    align-items: center;
-    justify-content: center;
+    flex-direction:
+        column;
 
-    background: #fff;
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    background:
+        #fff;
+
 }
 
 
 .stat-label {
-    color: #71809a;
 
-    font-size: 11px;
+    color:
+        #71809a;
 
-    font-weight: 700;
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
 }
 
 
 .stat-number {
-    margin-top: 4px;
 
-    font-size: 25px;
+    margin-top:
+        4px;
 
-    line-height: 1;
+    font-size:
+        25px;
+
+    line-height:
+        1;
+
 }
 
 
 .blue {
-    color: var(--blue);
+    color:
+        var(--blue);
 }
 
 
 .green {
-    color: var(--green);
+    color:
+        var(--green);
 }
 
 
 .red {
-    color: var(--red);
+    color:
+        var(--red);
 }
 
 
 .orange {
-    color: var(--orange);
+    color:
+        var(--orange);
 }
 
 
 
-/* ======================================================
+/* =====================================================
    PROGRESS BAR
-====================================================== */
+===================================================== */
 
 .progress-track {
-    width: 100%;
-    height: 7px;
 
-    margin-top: 22px;
+    width:
+        100%;
 
-    background: #e4e9f1;
+    height:
+        7px;
 
-    border-radius: 10px;
+    margin-top:
+        22px;
 
-    overflow: hidden;
+    background:
+        #e4e9f1;
+
+    border-radius:
+        10px;
+
+    overflow:
+        hidden;
+
 }
 
 
 .progress-fill {
-    width: 0%;
-    height: 100%;
+
+    width:
+        0%;
+
+    height:
+        100%;
 
     background:
         linear-gradient(
@@ -640,93 +876,138 @@ code {
             #0bb486
         );
 
-    border-radius: inherit;
+    border-radius:
+        inherit;
 
-    transition: width 0.3s ease;
+    transition:
+        width
+        0.3s ease;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    STATUS
-====================================================== */
+===================================================== */
 
 .status-line {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    gap: 7px;
+    display:
+        flex;
 
-    margin: 12px 0 22px;
+    align-items:
+        center;
 
-    font-size: 12px;
-    font-weight: 700;
+    justify-content:
+        center;
+
+    gap:
+        7px;
+
+    margin:
+        12px 0 22px;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
 }
 
 
 .status-dot {
-    width: 9px;
-    height: 9px;
 
-    border-radius: 50%;
+    width:
+        9px;
 
-    background: #111827;
+    height:
+        9px;
+
+    border-radius:
+        50%;
+
+    background:
+        #111827;
+
 }
 
 
 .status-dot.success {
-    background: #0bb486;
+
+    background:
+        #0bb486;
+
 }
 
 
 .status-dot.error {
-    background: #ef4444;
+
+    background:
+        #ef4444;
+
 }
 
 
 .status-dot.warning {
-    background: #f59e0b;
+
+    background:
+        #f59e0b;
+
 }
 
 
 .status-dot.sending {
-    background: #4082f5;
 
-    animation: pulse 1s infinite;
+    background:
+        #4082f5;
+
+    animation:
+        pulse
+        1s infinite;
+
 }
 
 
 @keyframes pulse {
 
     0% {
-        opacity: 0.35;
+        opacity:
+            0.35;
     }
 
     50% {
-        opacity: 1;
+        opacity:
+            1;
     }
 
     100% {
-        opacity: 0.35;
+        opacity:
+            0.35;
     }
 
 }
 
 
 
-/* ======================================================
+/* =====================================================
    SEND BUTTON
-====================================================== */
+===================================================== */
 
 .send-button {
-    width: 100%;
 
-    height: 40px;
+    width:
+        100%;
 
-    border: 0;
+    height:
+        40px;
 
-    border-radius: 7px;
+    border:
+        0;
+
+    border-radius:
+        7px;
 
     background:
         linear-gradient(
@@ -735,157 +1016,243 @@ code {
             #079f75
         );
 
-    color: white;
+    color:
+        white;
 
-    font-size: 13px;
-    font-weight: 800;
+    font-size:
+        13px;
 
-    cursor: pointer;
+    font-weight:
+        800;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    cursor:
+        pointer;
 
-    gap: 7px;
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        7px;
 
     transition:
-        transform 0.15s ease,
-        opacity 0.15s ease;
+        transform
+        0.15s ease,
+
+        opacity
+        0.15s ease;
+
 }
 
 
 .send-button:hover {
-    transform: translateY(-1px);
+
+    transform:
+        translateY(-1px);
+
 }
 
 
 .send-button:disabled {
-    opacity: 0.7;
 
-    cursor: not-allowed;
+    opacity:
+        0.7;
 
-    transform: none;
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    SPINNER
-====================================================== */
+===================================================== */
 
 .spinner {
-    width: 15px;
-    height: 15px;
 
-    border: 2px solid rgba(255,255,255,.4);
+    width:
+        15px;
 
-    border-top-color: white;
+    height:
+        15px;
 
-    border-radius: 50%;
+    border:
+        2px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.4
+        );
+
+    border-top-color:
+        white;
+
+    border-radius:
+        50%;
 
     animation:
-        spin 0.7s linear infinite;
+        spin
+        0.7s linear infinite;
+
 }
 
 
 @keyframes spin {
 
     to {
-        transform: rotate(360deg);
+        transform:
+            rotate(360deg);
     }
 
 }
 
 
 
-/* ======================================================
+/* =====================================================
    RESULT
-====================================================== */
+===================================================== */
 
 .result-box {
-    margin-top: 14px;
+
+    margin-top:
+        14px;
+
 }
 
 
 .result-success,
 .result-error {
-    border-radius: 7px;
 
-    padding: 10px 12px;
+    border-radius:
+        7px;
 
-    font-size: 11px;
+    padding:
+        10px 12px;
 
-    line-height: 1.5;
+    font-size:
+        11px;
+
+    line-height:
+        1.5;
+
 }
 
 
 .result-success {
-    background: #effcf7;
 
-    border: 1px solid #c9f1df;
+    background:
+        #effcf7;
 
-    color: #087c5b;
+    border:
+        1px solid
+        #c9f1df;
+
+    color:
+        #087c5b;
+
 }
 
 
 .result-error {
-    background: #fff4f4;
 
-    border: 1px solid #ffd3d3;
+    background:
+        #fff4f4;
 
-    color: #c53030;
+    border:
+        1px solid
+        #ffd3d3;
+
+    color:
+        #c53030;
+
 }
 
 
 .result-error ul {
-    margin: 5px 0 0;
 
-    padding-left: 18px;
+    margin:
+        5px 0 0;
+
+    padding-left:
+        18px;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    FOOTER
-====================================================== */
+===================================================== */
 
 footer {
-    text-align: center;
 
-    margin-top: 18px;
+    text-align:
+        center;
 
-    color: #8995a8;
+    margin-top:
+        18px;
 
-    font-size: 10px;
+    color:
+        #8995a8;
+
+    font-size:
+        10px;
+
 }
 
 
 
-/* ======================================================
+/* =====================================================
    RESPONSIVE
-====================================================== */
+===================================================== */
 
 @media (max-width: 850px) {
 
     .page {
-        width: min(94%, 650px);
 
-        padding-top: 15px;
+        width:
+            min(
+                94%,
+                650px
+            );
+
+        padding-top:
+            15px;
+
     }
 
 
     .dashboard {
-        grid-template-columns: 1fr;
+
+        grid-template-columns:
+            1fr;
+
     }
 
 
     .compose-card {
-        min-height: auto;
+
+        min-height:
+            auto;
+
     }
 
 
     .brand {
-        font-size: 23px;
+
+        font-size:
+            23px;
+
     }
 
 }
@@ -894,42 +1261,67 @@ footer {
 @media (max-width: 560px) {
 
     .topbar {
-        align-items: flex-start;
 
-        gap: 12px;
+        align-items:
+            flex-start;
+
+        gap:
+            12px;
+
     }
 
 
     .brand {
-        font-size: 19px;
+
+        font-size:
+            19px;
+
     }
 
 
     .brand-icon {
-        width: 24px;
-        height: 28px;
+
+        width:
+            24px;
+
+        height:
+            28px;
+
     }
 
 
     .logout-button {
-        font-size: 10px;
 
-        padding: 6px 9px;
+        font-size:
+            10px;
+
+        padding:
+            6px 9px;
+
     }
 
 
     .form-grid {
-        grid-template-columns: 1fr;
+
+        grid-template-columns:
+            1fr;
+
     }
 
 
     .card {
-        padding: 20px;
+
+        padding:
+            20px;
+
     }
 
 
     .stats-grid {
-        gap: 8px;
+
+        gap:
+            8px;
+
     }
 
 }
