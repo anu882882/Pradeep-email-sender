@@ -12,25 +12,21 @@
 
     <title>Secure Mail Console</title>
 
-
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
-
 
     <link
         rel="preconnect"
         href="https://fonts.googleapis.com"
     >
 
-
     <link
         rel="preconnect"
         href="https://fonts.gstatic.com"
         crossorigin
     >
-
 
     <link
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
@@ -52,9 +48,7 @@
 
     <header class="topbar">
 
-
         <div class="brand">
-
 
             <div class="brand-icon">
 
@@ -73,11 +67,9 @@
 
             </div>
 
-
             <span>
                 Secure Mail Console
             </span>
-
 
         </div>
 
@@ -94,7 +86,6 @@
 
         </button>
 
-
     </header>
 
 
@@ -108,7 +99,6 @@
         <span class="title-icon">
             ➤
         </span>
-
 
         <h1>
             Bulk Email Sender
@@ -157,7 +147,6 @@
                         Sender Name
                     </label>
 
-
                     <input
                         id="senderName"
                         type="text"
@@ -174,7 +163,6 @@
                     <label for="gmail">
                         Your Gmail
                     </label>
-
 
                     <input
                         id="gmail"
@@ -204,14 +192,12 @@
 
                     <div class="password-wrap">
 
-
                         <input
                             id="appPassword"
                             type="password"
                             placeholder="16-character app password"
                             autocomplete="off"
                         >
-
 
                         <button
                             type="button"
@@ -220,7 +206,6 @@
                         >
                             ◉
                         </button>
-
 
                     </div>
 
@@ -233,7 +218,6 @@
                     <label for="subject">
                         Email Subject
                     </label>
-
 
                     <input
                         id="subject"
@@ -251,7 +235,6 @@
             <!-- MESSAGE -->
 
             <div class="field message-field">
-
 
                 <label for="message">
 
@@ -280,7 +263,6 @@
 
                 </div>
 
-
             </div>
 
 
@@ -305,13 +287,11 @@
 
                     <div>
 
-
                         <div class="title-line">
 
                             <span>
                                 ♟
                             </span>
-
 
                             <h2>
                                 Recipients
@@ -324,9 +304,7 @@
                             Paste emails separated by commas, new lines, or semicolons
                         </p>
 
-
                     </div>
-
 
 
                     <span
@@ -338,7 +316,6 @@
 
 
                 </div>
-
 
 
                 <textarea
@@ -363,7 +340,6 @@
                         ◔
                     </span>
 
-
                     <h2>
                         Progress Monitor
                     </h2>
@@ -383,7 +359,6 @@
                             TOTAL
                         </span>
 
-
                         <strong
                             id="totalCount"
                             class="stat-number blue"
@@ -400,7 +375,6 @@
                         <span class="stat-label">
                             SENT
                         </span>
-
 
                         <strong
                             id="sentCount"
@@ -419,7 +393,6 @@
                             FAILED
                         </span>
 
-
                         <strong
                             id="failedCount"
                             class="stat-number red"
@@ -436,7 +409,6 @@
                         <span class="stat-label">
                             REMAINING
                         </span>
-
 
                         <strong
                             id="remainingCount"
@@ -604,20 +576,15 @@ function parseRecipients(value) {
         ...new Set(
 
             value
-
                 .replaceAll(",", "\n")
-
                 .replaceAll(";", "\n")
-
                 .split(/\s+/)
-
                 .map(
                     item =>
                         item
                             .trim()
                             .toLowerCase()
                 )
-
                 .filter(Boolean)
 
         )
@@ -632,7 +599,6 @@ function parseRecipients(value) {
 // ========================================================
 
 function updateRecipientCount() {
-
 
     const list =
         parseRecipients(
@@ -669,7 +635,6 @@ $("togglePassword").addEventListener(
     "click",
     () => {
 
-
         if (
             appPassword.type ===
             "password"
@@ -696,26 +661,20 @@ $("togglePassword").addEventListener(
 
 function resetStats(total) {
 
-
     totalCount.textContent =
         total;
-
 
     sentCount.textContent =
         "0";
 
-
     failedCount.textContent =
         "0";
-
 
     remainingCount.textContent =
         total;
 
-
     progressFill.style.width =
         "0%";
-
 
     resultBox.innerHTML =
         "";
@@ -732,7 +691,6 @@ function setStatus(
     text,
     type = "normal"
 ) {
-
 
     statusLine.innerHTML = `
 
@@ -756,33 +714,12 @@ function setStatus(
 
 function escapeHtml(value) {
 
-
     return String(value)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 
@@ -793,7 +730,6 @@ function escapeHtml(value) {
 // ========================================================
 
 function showError(text) {
-
 
     resultBox.innerHTML = `
 
@@ -931,15 +867,22 @@ sendButton.addEventListener(
 
 
 
-       if (recipientList.length > 25) {
+        // ------------------------------------------------
+        // MAXIMUM 25
+        // ------------------------------------------------
 
-    showError(
-        "Maximum 25 recipients can be sent at one time."
-    );
+        if (
+            recipientList.length > 25
+        ) {
 
-    return;
+            showError(
+                "Maximum 25 recipients can be sent at one time."
+            );
 
-}
+            return;
+
+        }
+
 
 
         // ------------------------------------------------
@@ -978,7 +921,6 @@ sendButton.addEventListener(
         // ------------------------------------------------
 
         try {
-
 
             const response =
                 await fetch(
@@ -1067,14 +1009,11 @@ sendButton.addEventListener(
             totalCount.textContent =
                 total;
 
-
             sentCount.textContent =
                 sent;
 
-
             failedCount.textContent =
                 failed;
-
 
             remainingCount.textContent =
                 remaining;
@@ -1143,12 +1082,10 @@ sendButton.addEventListener(
 
         } catch (error) {
 
-
             setStatus(
                 error.message,
                 "error"
             );
-
 
             showError(
                 error.message
@@ -1156,7 +1093,6 @@ sendButton.addEventListener(
 
 
         } finally {
-
 
             sendButton.disabled =
                 false;
@@ -1188,16 +1124,13 @@ sendButton.addEventListener(
 
 function renderResults(data) {
 
-
     let html = "";
-
 
 
     if (
         data.sent_emails &&
         data.sent_emails.length
     ) {
-
 
         html += `
 
@@ -1224,7 +1157,6 @@ function renderResults(data) {
         data.failed_emails.length
     ) {
 
-
         html += `
 
             <div class="result-error">
@@ -1232,7 +1164,6 @@ function renderResults(data) {
                 <strong>
                     Failed:
                 </strong>
-
 
                 <ul>
 
@@ -1265,7 +1196,6 @@ function renderResults(data) {
     }
 
 
-
     resultBox.innerHTML =
         html;
 
@@ -1281,44 +1211,34 @@ $("logoutButton").addEventListener(
     "dblclick",
     () => {
 
-
         senderName.value =
             "";
-
 
         gmail.value =
             "";
 
-
         appPassword.value =
             "";
-
 
         subject.value =
             "";
 
-
         message.value =
             "";
-
 
         recipients.value =
             "";
 
-
         updateRecipientCount();
-
 
         resetStats(
             0
         );
 
-
         setStatus(
             "Form cleared.",
             "normal"
         );
-
 
         resultBox.innerHTML =
             "";
