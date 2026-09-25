@@ -931,18 +931,15 @@ sendButton.addEventListener(
 
 
 
-        if (
-            recipientList.length > 5
-        ) {
+       if (recipientList.length > 25) {
 
-            showError(
-                "Maximum 5 recipients can be sent at one time."
-            );
+    showError(
+        "Maximum 25 recipients can be sent at one time."
+    );
 
-            return;
+    return;
 
-        }
-
+}
 
 
         // ------------------------------------------------
