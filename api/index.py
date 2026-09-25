@@ -29,7 +29,7 @@ app = Flask(
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
-MAX_RECIPIENTS = 5
+MAX_RECIPIENTS = 25
 
 
 EMAIL_PATTERN = re.compile(
