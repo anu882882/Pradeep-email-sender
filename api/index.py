@@ -1,20 +1,11 @@
-import os
-import re
-import ssl
-import smtplib
-import json
+import os, re, ssl, smtplib, json
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flask import (
-    Flask, render_template, request, jsonify,
-    session, redirect, url_for, Response, stream_with_context
-)
-
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response, stream_with_context
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
-
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,10 +15,7 @@ app = Flask(
     static_folder=os.path.join(ROOT, "static")
 )
 
-app.secret_key = os.environ.get(
-    "SESSION_SECRET",
-    "change-this-secret"
-)
+app.secret_key = os.environ.get("SESSION_SECRET", "change-this-secret")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -35,31 +23,13 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax"
 )
 
-
-# ---------------- CONFIG ----------------
-
-LOGIN_PASSWORD = os.environ.get(
-    "APP_LOGIN_PASSWORD", ""
-)
-
-SENDER_NAME = os.environ.get(
-    "SENDER_NAME", ""
-)
-
-SENDER_GMAIL = os.environ.get(
-    "SENDER_GMAIL", ""
-)
-
-SENDER_APP_PASSWORD = os.environ.get(
-    "SENDER_APP_PASSWORD", ""
-)
+LOGIN_PASSWORD = os.environ.get("APP_LOGIN_PASSWORD", "")
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
 MAX_RECIPIENTS = 25
 BATCH_SIZE = 5
-
 
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
@@ -68,18 +38,14 @@ EMAIL_RE = re.compile(
 
 
 def valid_email(x):
-    return bool(
-        EMAIL_RE.fullmatch(
-            str(x).strip()
-        )
-    )
+    return bool(EMAIL_RE.fullmatch(str(x).strip()))
 
 
-def recipients(raw):
+def get_recipients(raw):
     raw = str(raw or "")
     raw = raw.replace(",", "\n").replace(";", "\n")
 
-    out = []
+    result = []
     seen = set()
 
     for x in raw.split():
@@ -87,9 +53,9 @@ def recipients(raw):
 
         if x and x not in seen:
             seen.add(x)
-            out.append(x)
+            result.append(x)
 
-    return out
+    return result
 
 
 def login_required(fn):
@@ -105,16 +71,12 @@ def login_required(fn):
                     "error": "Login required."
                 }), 401
 
-            return redirect(
-                url_for("login")
-            )
+            return redirect(url_for("login"))
 
         return fn(*args, **kwargs)
 
     return wrapper
 
-
-# ---------------- LOGIN ----------------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -124,14 +86,12 @@ def login():
 
     if request.method == "POST":
 
-        password = request.form.get(
-            "password", ""
-        )
+        password = request.form.get("password", "")
 
         if not LOGIN_PASSWORD:
             return render_template(
                 "login.html",
-                error="Login password is not configured."
+                error="APP_LOGIN_PASSWORD is not configured."
             )
 
         if password != LOGIN_PASSWORD:
@@ -152,21 +112,14 @@ def login():
 def logout():
 
     session.clear()
+    return redirect(url_for("login"))
 
-    return redirect(
-        url_for("login")
-    )
-
-
-# ---------------- HOME ----------------
 
 @app.route("/")
 @login_required
 def home():
     return render_template("index.html")
 
-
-# ---------------- HEALTH ----------------
 
 @app.route("/api/health")
 def health():
@@ -177,9 +130,14 @@ def health():
     })
 
 
-# ---------------- SEND ONE ----------------
-
-def send_one(recipient, subject, message):
+def send_one(
+    sender_name,
+    gmail,
+    app_password,
+    recipient,
+    subject,
+    message
+):
 
     try:
 
@@ -200,7 +158,7 @@ def send_one(recipient, subject, message):
         )
 
         mail["From"] = formataddr(
-            (SENDER_NAME, SENDER_GMAIL)
+            (sender_name, gmail)
         )
 
         mail["To"] = recipient
@@ -215,17 +173,18 @@ def send_one(recipient, subject, message):
         ) as smtp:
 
             smtp.login(
-                SENDER_GMAIL,
-                SENDER_APP_PASSWORD
+                gmail,
+                app_password
             )
 
             refused = smtp.sendmail(
-                SENDER_GMAIL,
+                gmail,
                 [recipient],
                 mail.as_string()
             )
 
         if refused:
+
             return {
                 "email": recipient,
                 "status": "failed",
@@ -239,6 +198,7 @@ def send_one(recipient, subject, message):
         }
 
     except smtplib.SMTPAuthenticationError:
+
         return {
             "email": recipient,
             "status": "failed",
@@ -246,6 +206,7 @@ def send_one(recipient, subject, message):
         }
 
     except Exception as e:
+
         return {
             "email": recipient,
             "status": "failed",
@@ -253,15 +214,23 @@ def send_one(recipient, subject, message):
         }
 
 
-# ---------------- LIVE SEND ----------------
-
 @app.route("/api/send-live", methods=["POST"])
 @login_required
 def send_live():
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    data = request.get_json(silent=True) or {}
+
+    sender_name = str(
+        data.get("sender_name", "")
+    ).strip()
+
+    gmail = str(
+        data.get("gmail", "")
+    ).strip()
+
+    app_password = str(
+        data.get("app_password", "")
+    ).strip()
 
     subject = str(
         data.get("subject", "")
@@ -271,27 +240,27 @@ def send_live():
         data.get("message", "")
     )
 
-    to = recipients(
+    to = get_recipients(
         data.get("recipients", "")
     )
 
-    if not SENDER_NAME:
+    if not sender_name:
         return jsonify({
             "success": False,
-            "error": "SENDER_NAME is not configured."
-        }), 500
+            "error": "Sender name required."
+        }), 400
 
-    if not valid_email(SENDER_GMAIL):
+    if not valid_email(gmail):
         return jsonify({
             "success": False,
-            "error": "SENDER_GMAIL is not configured correctly."
-        }), 500
+            "error": "Invalid Gmail address."
+        }), 400
 
-    if not SENDER_APP_PASSWORD:
+    if not app_password:
         return jsonify({
             "success": False,
-            "error": "SENDER_APP_PASSWORD is not configured."
-        }), 500
+            "error": "Gmail App Password required."
+        }), 400
 
     if not subject:
         return jsonify({
@@ -355,15 +324,18 @@ def send_live():
                 max_workers=BATCH_SIZE
             ) as pool:
 
-                jobs = [
+                jobs = {
                     pool.submit(
                         send_one,
-                        email,
+                        sender_name,
+                        gmail,
+                        app_password,
+                        recipient,
                         subject,
                         message
-                    )
-                    for email in batch
-                ]
+                    ): recipient
+                    for recipient in batch
+                }
 
                 for job in as_completed(jobs):
 
@@ -375,7 +347,6 @@ def send_live():
                         failed += 1
 
                     done = sent + failed
-                    remaining = total - done
 
                     yield json.dumps({
                         "type": "recipient",
@@ -385,7 +356,7 @@ def send_live():
                         "total": total,
                         "sent": sent,
                         "failed": failed,
-                        "remaining": remaining,
+                        "remaining": total - done,
                         "percent": round(
                             done / total * 100,
                             1
@@ -416,8 +387,6 @@ def send():
     return send_live()
 
 
-# ---------------- PROTECTION ----------------
-
 @app.route("/api/protection")
 @login_required
 def protection():
@@ -434,11 +403,8 @@ def protection():
 
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT", 5000
-            )
-        )
+        port=int(os.environ.get("PORT", 5000))
     )
