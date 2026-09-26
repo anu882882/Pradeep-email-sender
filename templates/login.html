@@ -1,69 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
 
-    <title>Secure Mail Console - Login</title>
+<meta charset="UTF-8">
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Secure Mail Console</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f7fb;
+    font-family: Arial, sans-serif;
+    color: #172033;
+}
+
+.login-card {
+    width: min(410px, calc(100% - 30px));
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow:
+        0 15px 40px
+        rgba(30,50,80,.10);
+}
+
+.logo {
+    font-size: 34px;
+    margin-bottom: 12px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+p {
+    color: #748095;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+label {
+    display: block;
+    margin-top: 22px;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+input {
+    width: 100%;
+    height: 46px;
+    padding: 0 13px;
+    border: 1px solid #d6deea;
+    border-radius: 8px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #4679ed;
+}
+
+button {
+    width: 100%;
+    height: 46px;
+    margin-top: 15px;
+    border: 0;
+    border-radius: 8px;
+    background: #4679ed;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.error {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 7px;
+    background: #fff0f0;
+    border: 1px solid #ffd0d0;
+    color: #c62828;
+    font-size: 12px;
+}
+
+</style>
+
 </head>
 
-<body class="login-page">
+<body>
 
-    <div class="login-card">
+<div class="login-card">
 
-        <div class="login-icon">
-            ✉
-        </div>
-
-        <h1>Secure Mail Console</h1>
-
-        <p class="login-subtitle">
-            Sign in to continue
-        </p>
-
-        {% if error %}
-            <div class="error-box">
-                {{ error }}
-            </div>
-        {% endif %}
-
-        <form method="POST">
-
-            <label for="password">
-                Password
-            </label>
-
-            <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter password"
-                autocomplete="current-password"
-                required
-            >
-
-            <button
-                type="submit"
-                class="login-button"
-            >
-                Login
-            </button>
-
-        </form>
-
-        <div class="login-footer">
-            Secure Mail Console
-        </div>
-
+    <div class="logo">
+        🛡️
     </div>
 
+    <h1>
+        Secure Mail Console
+    </h1>
+
+    <p>
+        Sign in to access the protected email sender.
+    </p>
+
+    {% if error %}
+
+    <div class="error">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+    <form method="POST">
+
+        <label>
+            Login Password
+        </label>
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Enter password"
+            required
+        >
+
+        <button type="submit">
+            Sign In
+        </button>
+
+    </form>
+
+</div>
+
 </body>
+
 </html>
