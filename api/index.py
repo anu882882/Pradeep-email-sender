@@ -21,7 +21,7 @@ from email.utils import formataddr
 
 
 # =========================================================
-# PROJECT PATHS
+# PATHS
 # =========================================================
 
 API_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +32,7 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 
 # =========================================================
-# FLASK APP
+# FLASK
 # =========================================================
 
 app = Flask(
@@ -44,7 +44,7 @@ app = Flask(
 
 
 # =========================================================
-# SECURITY
+# LOGIN / SESSION
 # =========================================================
 
 APP_LOGIN_PASSWORD = os.environ.get(
@@ -58,7 +58,7 @@ SESSION_SECRET = os.environ.get(
 )
 
 if not SESSION_SECRET:
-    SESSION_SECRET = "temporary-session-secret-change-me"
+    SESSION_SECRET = "change-this-session-secret"
 
 
 app.secret_key = SESSION_SECRET
@@ -80,15 +80,22 @@ SMTP_PORT = 465
 
 
 # =========================================================
-# SENDING LIMITS
+# LIMITS
 # =========================================================
 
 MAX_RECIPIENTS = 25
+
 SEND_DELAY_SECONDS = 1.0
+
+MAX_MESSAGE_LENGTH = 50000
+
+MAX_SUBJECT_LENGTH = 250
+
+MAX_SENDER_NAME_LENGTH = 100
 
 
 # =========================================================
-# EMAIL VALIDATION
+# EMAIL REGEX
 # =========================================================
 
 EMAIL_PATTERN = re.compile(
@@ -144,13 +151,13 @@ def parse_recipients(raw_value):
 
 
 # =========================================================
-# LOGIN PROTECTION
+# LOGIN REQUIRED
 # =========================================================
 
 def login_required(view):
 
     @wraps(view)
-    def wrapped_view(*args, **kwargs):
+    def wrapped(*args, **kwargs):
 
         if not session.get("logged_in"):
 
@@ -170,7 +177,7 @@ def login_required(view):
             **kwargs
         )
 
-    return wrapped_view
+    return wrapped
 
 
 # =========================================================
@@ -189,7 +196,6 @@ def login():
             url_for("home")
         )
 
-
     if request.method == "POST":
 
         password = str(
@@ -199,16 +205,12 @@ def login():
             )
         )
 
-
         if not APP_LOGIN_PASSWORD:
 
             return render_template(
                 "login.html",
-                error=(
-                    "Login password is not configured."
-                )
+                error="Login password is not configured."
             )
-
 
         if password != APP_LOGIN_PASSWORD:
 
@@ -217,7 +219,6 @@ def login():
                 error="Incorrect password."
             )
 
-
         session.clear()
 
         session["logged_in"] = True
@@ -225,7 +226,6 @@ def login():
         return redirect(
             url_for("home")
         )
-
 
     return render_template(
         "login.html"
@@ -288,32 +288,229 @@ def protection():
 
         "active": True,
 
+        "checks": {
+            "duplicate_filter": True,
+            "invalid_email_filter": True,
+            "recipient_limit": True,
+            "message_validation": True,
+            "smtp_authentication": True,
+            "smtp_error_stop": True,
+            "controlled_rate": True
+        },
+
         "max_recipients":
             MAX_RECIPIENTS,
 
-        "duplicate_filter":
-            True,
-
-        "invalid_email_filter":
-            True,
-
-        "controlled_rate":
-            True,
-
-        "smtp_error_protection":
-            True,
+        "delay_seconds":
+            SEND_DELAY_SECONDS,
 
         "fake_captcha":
             False,
 
-        "access_key_required":
+        "cloudflare_widget":
             False
 
     })
 
 
 # =========================================================
-# SEND EMAILS
+# REAL-TIME PRECHECK
+# =========================================================
+
+@app.route(
+    "/api/precheck",
+    methods=["POST"]
+)
+@login_required
+def precheck():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    raw_recipients = str(
+        data.get(
+            "recipients",
+            ""
+        )
+    )
+
+    message = str(
+        data.get(
+            "message",
+            ""
+        )
+    )
+
+    subject = str(
+        data.get(
+            "subject",
+            ""
+        )
+    )
+
+    sender_name = str(
+        data.get(
+            "sender_name",
+            ""
+        )
+    )
+
+
+    recipients = parse_recipients(
+        raw_recipients
+    )
+
+
+    duplicate_count = 0
+
+    raw_items = re.split(
+        r"[\s,;]+",
+        raw_recipients.strip()
+    )
+
+    raw_items = [
+        x.lower()
+        for x in raw_items
+        if x
+    ]
+
+    duplicate_count = (
+        len(raw_items)
+        - len(set(raw_items))
+    )
+
+
+    invalid = [
+        email
+        for email in recipients
+        if not is_valid_email(email)
+    ]
+
+
+    warnings = []
+
+
+    if len(recipients) > MAX_RECIPIENTS:
+
+        warnings.append(
+            f"Maximum {MAX_RECIPIENTS} recipients allowed."
+        )
+
+
+    if duplicate_count > 0:
+
+        warnings.append(
+            f"{duplicate_count} duplicate recipient(s) found."
+        )
+
+
+    if invalid:
+
+        warnings.append(
+            f"{len(invalid)} invalid email address(es) found."
+        )
+
+
+    if not sender_name.strip():
+
+        warnings.append(
+            "Sender name is empty."
+        )
+
+
+    if not subject.strip():
+
+        warnings.append(
+            "Subject is empty."
+        )
+
+
+    if not message.strip():
+
+        warnings.append(
+            "Message body is empty."
+        )
+
+
+    if len(message) > MAX_MESSAGE_LENGTH:
+
+        warnings.append(
+            "Message body is too large."
+        )
+
+
+    if len(subject) > MAX_SUBJECT_LENGTH:
+
+        warnings.append(
+            "Subject is too long."
+        )
+
+
+    if len(sender_name) > MAX_SENDER_NAME_LENGTH:
+
+        warnings.append(
+            "Sender name is too long."
+        )
+
+
+    blocked = any([
+        len(recipients) > MAX_RECIPIENTS,
+        bool(invalid),
+        not sender_name.strip(),
+        not subject.strip(),
+        not message.strip(),
+        len(message) > MAX_MESSAGE_LENGTH,
+        len(subject) > MAX_SUBJECT_LENGTH,
+        len(sender_name) > MAX_SENDER_NAME_LENGTH
+    ])
+
+
+    return jsonify({
+
+        "ok": not blocked,
+
+        "total": len(recipients),
+
+        "valid":
+            len(recipients) - len(invalid),
+
+        "invalid":
+            len(invalid),
+
+        "duplicates":
+            duplicate_count,
+
+        "warnings":
+            warnings,
+
+        "checks": {
+
+            "recipients":
+                len(recipients) <= MAX_RECIPIENTS,
+
+            "email_format":
+                len(invalid) == 0,
+
+            "sender":
+                bool(sender_name.strip()),
+
+            "subject":
+                bool(subject.strip()),
+
+            "message":
+                bool(message.strip()),
+
+            "message_size":
+                len(message) <= MAX_MESSAGE_LENGTH
+
+        }
+
+    })
+
+
+# =========================================================
+# SEND EMAIL
 # =========================================================
 
 @app.route(
@@ -326,7 +523,6 @@ def send_emails():
     data = request.get_json(
         silent=True
     )
-
 
     if not data:
 
@@ -385,7 +581,7 @@ def send_emails():
 
 
     # =====================================================
-    # VALIDATION
+    # BASIC VALIDATION
     # =====================================================
 
     if not sender_name:
@@ -393,6 +589,14 @@ def send_emails():
         return jsonify({
             "success": False,
             "error": "Please enter sender name."
+        }), 400
+
+
+    if len(sender_name) > MAX_SENDER_NAME_LENGTH:
+
+        return jsonify({
+            "success": False,
+            "error": "Sender name is too long."
         }), 400
 
 
@@ -428,11 +632,27 @@ def send_emails():
         }), 400
 
 
+    if len(subject) > MAX_SUBJECT_LENGTH:
+
+        return jsonify({
+            "success": False,
+            "error": "Subject is too long."
+        }), 400
+
+
     if not message.strip():
 
         return jsonify({
             "success": False,
             "error": "Please enter message body."
+        }), 400
+
+
+    if len(message) > MAX_MESSAGE_LENGTH:
+
+        return jsonify({
+            "success": False,
+            "error": "Message body is too large."
         }), 400
 
 
@@ -453,24 +673,16 @@ def send_emails():
         }), 400
 
 
-    # =====================================================
-    # MAX 25
-    # =====================================================
-
     if len(recipients) > MAX_RECIPIENTS:
 
         return jsonify({
             "success": False,
             "error": (
-                "Maximum 25 recipients "
-                "are allowed per send."
+                f"Maximum {MAX_RECIPIENTS} "
+                "recipients are allowed."
             )
         }), 400
 
-
-    # =====================================================
-    # INVALID EMAILS
-    # =====================================================
 
     invalid = [
         email
@@ -495,12 +707,11 @@ def send_emails():
 
 
     # =====================================================
-    # SMTP SEND
+    # SMTP
     # =====================================================
 
     sent = []
     failed = []
-
 
     ssl_context = ssl.create_default_context()
 
@@ -514,7 +725,7 @@ def send_emails():
             timeout=25
         ) as server:
 
-            # Gmail authentication
+            # Gmail App Password authentication
             server.login(
                 gmail,
                 app_password
@@ -527,7 +738,6 @@ def send_emails():
 
                 try:
 
-                    # {name} personalization
                     personalized_message = (
                         message.replace(
                             "{name}",
@@ -572,7 +782,6 @@ def send_emails():
                     )
 
 
-                    # Controlled sending interval
                     if (
                         index
                         < len(recipients) - 1
@@ -596,7 +805,6 @@ def send_emails():
                     })
 
 
-                    # Stop on SMTP errors
                     if isinstance(
                         exc,
                         smtplib.SMTPException
@@ -655,10 +863,6 @@ def send_emails():
         }), 500
 
 
-    # =====================================================
-    # RESULT
-    # =====================================================
-
     total = len(recipients)
 
     sent_count = len(sent)
@@ -699,7 +903,7 @@ def send_emails():
 
 
 # =========================================================
-# RUN LOCALLY
+# LOCAL
 # =========================================================
 
 if __name__ == "__main__":
