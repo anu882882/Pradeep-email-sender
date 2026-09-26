@@ -1,11 +1,20 @@
-import os, re, ssl, smtplib, json
+import os
+import re
+import ssl
+import smtplib
+import json
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response, stream_with_context
+from flask import (
+    Flask, render_template, request, jsonify,
+    session, redirect, url_for, Response, stream_with_context
+)
+
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
+
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -15,7 +24,10 @@ app = Flask(
     static_folder=os.path.join(ROOT, "static")
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET", "change-this-secret")
+app.secret_key = os.environ.get(
+    "SESSION_SECRET",
+    "RakshakSecureSession_2026"
+)
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -23,7 +35,11 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax"
 )
 
-LOGIN_PASSWORD = os.environ.get("APP_LOGIN_PASSWORD", "")
+# LOGIN
+LOGIN_PASSWORD = os.environ.get(
+    "APP_LOGIN_PASSWORD",
+    "Love882@#"
+)
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
@@ -37,30 +53,33 @@ EMAIL_RE = re.compile(
 )
 
 
-def valid_email(x):
-    return bool(EMAIL_RE.fullmatch(str(x).strip()))
+def valid_email(email):
+    return bool(
+        EMAIL_RE.fullmatch(str(email).strip())
+    )
 
 
 def get_recipients(raw):
     raw = str(raw or "")
-    raw = raw.replace(",", "\n").replace(";", "\n")
+    raw = raw.replace(",", "\n")
+    raw = raw.replace(";", "\n")
 
     result = []
     seen = set()
 
-    for x in raw.split():
-        x = x.strip().lower()
+    for item in raw.split():
+        email = item.strip().lower()
 
-        if x and x not in seen:
-            seen.add(x)
-            result.append(x)
+        if email and email not in seen:
+            seen.add(email)
+            result.append(email)
 
     return result
 
 
-def login_required(fn):
+def login_required(function):
 
-    @wraps(fn)
+    @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("logged_in"):
@@ -73,10 +92,12 @@ def login_required(fn):
 
             return redirect(url_for("login"))
 
-        return fn(*args, **kwargs)
+        return function(*args, **kwargs)
 
     return wrapper
 
+
+# ================= LOGIN =================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -86,15 +107,13 @@ def login():
 
     if request.method == "POST":
 
-        password = request.form.get("password", "")
-
-        if not LOGIN_PASSWORD:
-            return render_template(
-                "login.html",
-                error="APP_LOGIN_PASSWORD is not configured."
-            )
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         if password != LOGIN_PASSWORD:
+
             return render_template(
                 "login.html",
                 error="Incorrect password."
@@ -103,23 +122,37 @@ def login():
         session.clear()
         session["logged_in"] = True
 
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html"
+    )
 
 
 @app.route("/logout")
 def logout():
 
     session.clear()
-    return redirect(url_for("login"))
 
+    return redirect(
+        url_for("login")
+    )
+
+
+# ================= HOME =================
 
 @app.route("/")
 @login_required
 def home():
-    return render_template("index.html")
 
+    return render_template(
+        "index.html"
+    )
+
+
+# ================= HEALTH =================
 
 @app.route("/api/health")
 def health():
@@ -129,6 +162,8 @@ def health():
         "service": "Secure Mail Console"
     })
 
+
+# ================= SEND ONE =================
 
 def send_one(
     sender_name,
@@ -158,7 +193,10 @@ def send_one(
         )
 
         mail["From"] = formataddr(
-            (sender_name, gmail)
+            (
+                sender_name,
+                gmail
+            )
         )
 
         mail["To"] = recipient
@@ -205,20 +243,24 @@ def send_one(
             "message": "Gmail authentication failed."
         }
 
-    except Exception as e:
+    except Exception as error:
 
         return {
             "email": recipient,
             "status": "failed",
-            "message": str(e)
+            "message": str(error)
         }
 
+
+# ================= LIVE SEND =================
 
 @app.route("/api/send-live", methods=["POST"])
 @login_required
 def send_live():
 
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(
+        silent=True
+    ) or {}
 
     sender_name = str(
         data.get("sender_name", "")
@@ -240,7 +282,7 @@ def send_live():
         data.get("message", "")
     )
 
-    to = get_recipients(
+    recipient_list = get_recipients(
         data.get("recipients", "")
     )
 
@@ -274,33 +316,34 @@ def send_live():
             "error": "Message required."
         }), 400
 
-    if not to:
+    if not recipient_list:
         return jsonify({
             "success": False,
             "error": "Add recipients."
         }), 400
 
-    if len(to) > MAX_RECIPIENTS:
+    if len(recipient_list) > MAX_RECIPIENTS:
         return jsonify({
             "success": False,
             "error": "Maximum 25 recipients."
         }), 400
 
-    bad = [
-        x for x in to
-        if not valid_email(x)
+    invalid = [
+        email
+        for email in recipient_list
+        if not valid_email(email)
     ]
 
-    if bad:
+    if invalid:
         return jsonify({
             "success": False,
             "error": "Invalid recipient email.",
-            "invalid": bad
+            "invalid": invalid
         }), 400
 
     def stream():
 
-        total = len(to)
+        total = len(recipient_list)
         sent = 0
         failed = 0
 
@@ -310,22 +353,23 @@ def send_live():
             "batch": BATCH_SIZE
         }) + "\n"
 
+        # 5 recipients per batch
         for start in range(
             0,
             total,
             BATCH_SIZE
         ):
 
-            batch = to[
+            batch = recipient_list[
                 start:start + BATCH_SIZE
             ]
 
             with ThreadPoolExecutor(
                 max_workers=BATCH_SIZE
-            ) as pool:
+            ) as executor:
 
-                jobs = {
-                    pool.submit(
+                futures = [
+                    executor.submit(
                         send_one,
                         sender_name,
                         gmail,
@@ -333,20 +377,22 @@ def send_live():
                         recipient,
                         subject,
                         message
-                    ): recipient
+                    )
                     for recipient in batch
-                }
+                ]
 
-                for job in as_completed(jobs):
+                for future in as_completed(
+                    futures
+                ):
 
-                    result = job.result()
+                    result = future.result()
 
                     if result["status"] == "sent":
                         sent += 1
                     else:
                         failed += 1
 
-                    done = sent + failed
+                    completed = sent + failed
 
                     yield json.dumps({
                         "type": "recipient",
@@ -356,9 +402,9 @@ def send_live():
                         "total": total,
                         "sent": sent,
                         "failed": failed,
-                        "remaining": total - done,
+                        "remaining": total - completed,
                         "percent": round(
-                            done / total * 100,
+                            completed / total * 100,
                             1
                         )
                     }) + "\n"
@@ -384,8 +430,11 @@ def send_live():
 @app.route("/api/send", methods=["POST"])
 @login_required
 def send():
+
     return send_live()
 
+
+# ================= PROTECTION =================
 
 @app.route("/api/protection")
 @login_required
@@ -406,5 +455,10 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
+        port=int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        )
     )
