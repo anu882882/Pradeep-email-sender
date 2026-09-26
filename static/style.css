@@ -1,4 +1,6 @@
-*{box-sizing:border-box}
+*{
+box-sizing:border-box
+}
 
 body{
 margin:0;
@@ -57,7 +59,8 @@ font-weight:bold;
 margin:13px 0 6px
 }
 
-input,textarea{
+input,
+textarea{
 width:100%;
 border:1px solid #dbe2ed;
 border-radius:7px;
@@ -82,7 +85,8 @@ align-items:center;
 justify-content:space-between
 }
 
-#count,#dispatch{
+#count,
+#dispatch{
 background:#edf5ff;
 color:#3577e8;
 padding:5px 9px;
@@ -112,9 +116,17 @@ margin-top:8px;
 color:#3678ed
 }
 
-.green{color:#0aad70!important}
-.red{color:#ed3f43!important}
-.orange{color:#ed9b00!important}
+.green{
+color:#0aad70!important
+}
+
+.red{
+color:#ed3f43!important
+}
+
+.orange{
+color:#ed9b00!important
+}
 
 .bar{
 height:7px;
@@ -253,6 +265,10 @@ color:#5268ed;
 font-size:23px
 }
 
+.login-box p{
+color:#788397
+}
+
 .login-box input{
 margin:15px 0
 }
@@ -264,5 +280,17 @@ font-size:12px
 }
 
 @media(max-width:800px){
-.grid{grid-template-columns:1fr}
+
+.grid{
+grid-template-columns:1fr
+}
+
+header{
+padding:0 4%
+}
+
+.logo{
+font-size:20px
+}
+
 }
