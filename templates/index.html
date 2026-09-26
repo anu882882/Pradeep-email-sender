@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
@@ -20,326 +21,297 @@
 
 <body>
 
-<div class="app-shell">
-
-    <!-- HEADER -->
+<div class="app">
 
     <header class="topbar">
-
         <div>
-            <div class="brand">
-                ✉ Secure Mail Console
-            </div>
-
-            <div class="brand-subtitle">
-                Authenticated Email Sender
-            </div>
+            Secure Mail Console
         </div>
 
         <a
-            href="/logout"
-            class="logout-button"
+            href="{{ url_for('logout') }}"
+            class="logout"
         >
             Logout
         </a>
-
     </header>
 
 
-    <!-- MAIN -->
+    <main class="container">
 
-    <main class="main-container">
-
-        <div class="page-title">
+        <section class="hero">
 
             <div>
-                <h1>Bulk Email Sender</h1>
+                <div class="brand-row">
 
-                <p>
-                    Send authenticated email through Gmail SMTP.
-                </p>
+                    <div class="logo">
+                        ✉
+                    </div>
+
+                    <div>
+
+                        <h1>
+                            Bulk Email Sender
+                        </h1>
+
+                        <p>
+                            Authenticated Gmail SMTP sending console
+                        </p>
+
+                    </div>
+
+                </div>
             </div>
 
             <div class="status-badge">
-                <span class="status-dot"></span>
-                Protection Active
-            </div>
-
-        </div>
-
-
-        <!-- PROTECTION -->
-
-        <section class="protection-card">
-
-            <div class="protection-header">
-
-                <div>
-                    <h2>Sending Protection</h2>
-
-                    <p>
-                        Basic delivery safeguards are enabled.
-                    </p>
-                </div>
-
-                <span class="active-label">
-                    ACTIVE
-                </span>
-
-            </div>
-
-            <div class="protection-grid">
-
-                <div class="protection-item">
-                    <strong>25</strong>
-                    <span>Max Recipients</span>
-                </div>
-
-                <div class="protection-item">
-                    <strong>✓</strong>
-                    <span>Duplicate Filter</span>
-                </div>
-
-                <div class="protection-item">
-                    <strong>✓</strong>
-                    <span>Invalid Email Filter</span>
-                </div>
-
-                <div class="protection-item">
-                    <strong>1s</strong>
-                    <span>Controlled Rate</span>
-                </div>
-
-                <div class="protection-item">
-                    <strong>✓</strong>
-                    <span>SMTP Error Stop</span>
-                </div>
-
+                ● Protected
             </div>
 
         </section>
 
 
-        <!-- FORM -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-                    <h2>Compose Message</h2>
-
-                    <p>
-                        Enter your Gmail SMTP details and recipients.
-                    </p>
-                </div>
-
-            </div>
+        <div class="grid">
 
 
-            <form id="sendForm">
+            <!-- SENDER -->
 
+            <section class="card">
 
-                <!-- SENDER -->
-
-                <div class="form-grid">
-
-                    <div class="field">
-
-                        <label>
-                            Sender Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="sender_name"
-                            name="sender_name"
-                            placeholder="Your Name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="field">
-
-                        <label>
-                            Gmail Address
-                        </label>
-
-                        <input
-                            type="email"
-                            id="gmail"
-                            name="gmail"
-                            placeholder="you@gmail.com"
-                            required
-                        >
-
-                    </div>
-
-                </div>
-
-
-                <!-- APP PASSWORD -->
+                <h2>
+                    Sender Details
+                </h2>
 
                 <div class="field">
 
-                    <label>
+                    <label for="sender_name">
+                        Sender Name
+                    </label>
+
+                    <input
+                        id="sender_name"
+                        type="text"
+                        placeholder="Your Name"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="gmail">
+                        Gmail Address
+                    </label>
+
+                    <input
+                        id="gmail"
+                        type="email"
+                        placeholder="your@gmail.com"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="app_password">
                         Gmail App Password
                     </label>
 
                     <input
-                        type="password"
                         id="app_password"
-                        name="app_password"
-                        placeholder="Enter Gmail App Password"
-                        autocomplete="off"
-                        required
+                        type="password"
+                        placeholder="16-character Gmail App Password"
+                        autocomplete="new-password"
                     >
 
                     <small>
-                        Use a Gmail App Password, not your normal Gmail password.
+                        Used only for the SMTP connection.
                     </small>
 
                 </div>
 
-
-                <!-- RECIPIENTS -->
-
-                <div class="field">
-
-                    <div class="label-row">
-
-                        <label>
-                            Recipients
-                        </label>
-
-                        <span class="counter">
-                            <span id="recipientCount">0</span>/25
-                        </span>
-
-                    </div>
-
-                    <textarea
-                        id="recipients"
-                        name="recipients"
-                        rows="7"
-                        placeholder="recipient1@gmail.com
-recipient2@gmail.com
-recipient3@gmail.com"
-                        required
-                    ></textarea>
-
-                    <small>
-                        One email per line, or separate emails with commas.
-                    </small>
-
-                </div>
+            </section>
 
 
-                <!-- SUBJECT -->
+            <!-- MESSAGE -->
+
+            <section class="card">
+
+                <h2>
+                    Message
+                </h2>
 
                 <div class="field">
 
-                    <label>
-                        Subject
+                    <label for="subject">
+                        Email Subject
                     </label>
 
                     <input
-                        type="text"
                         id="subject"
-                        name="subject"
-                        placeholder="Email subject"
-                        required
+                        type="text"
+                        placeholder="Your email subject"
                     >
 
                 </div>
 
 
-                <!-- MESSAGE -->
-
                 <div class="field">
 
-                    <label>
+                    <label for="message">
                         Message Body
                     </label>
 
                     <textarea
                         id="message"
-                        name="message"
-                        rows="12"
                         placeholder="Write your message here...
 
 You can use {name} for basic recipient-name personalization."
-                        required
                     ></textarea>
 
                 </div>
 
+            </section>
 
-                <!-- ACTION -->
 
-                <div class="action-row">
+            <!-- RECIPIENTS -->
 
-                    <button
-                        type="submit"
-                        id="sendButton"
-                        class="send-button"
+            <section class="card full">
+
+                <div class="section-head">
+
+                    <div>
+
+                        <h2>
+                            Recipients
+                        </h2>
+
+                        <p>
+                            Maximum 25 unique addresses per send.
+                        </p>
+
+                    </div>
+
+                    <div
+                        id="recipientCount"
+                        class="count"
                     >
-                        Send Emails
-                    </button>
-
-                    <span
-                        id="sendStatus"
-                        class="send-status"
-                    ></span>
+                        0 / 25
+                    </div>
 
                 </div>
 
-            </form>
 
-        </section>
+                <div class="field">
 
+                    <textarea
+                        id="recipients"
+                        class="recipient-box"
+                        placeholder="one@example.com
+two@example.com
+three@example.com"
+                    ></textarea>
 
-        <!-- RESULT -->
+                    <small>
+                        Separate addresses with new lines, commas, or semicolons.
+                    </small>
 
-        <section
-            id="resultPanel"
-            class="result-panel hidden"
-        >
-
-            <h2>Send Result</h2>
-
-            <div class="result-grid">
-
-                <div>
-                    <strong id="resultTotal">0</strong>
-                    <span>Total</span>
                 </div>
 
-                <div>
-                    <strong id="resultSent">0</strong>
-                    <span>Sent</span>
+            </section>
+
+
+            <!-- SEND -->
+
+            <section class="card full">
+
+                <div class="protection">
+
+                    <div>
+
+                        <strong>
+                            Sending Protection
+                        </strong>
+
+                        <span>
+                            ACTIVE
+                        </span>
+
+                    </div>
+
+                    <div class="protection-list">
+
+                        <div>
+                            ✓ Duplicate filtering
+                        </div>
+
+                        <div>
+                            ✓ Invalid-address filtering
+                        </div>
+
+                        <div>
+                            ✓ Controlled sending rate
+                        </div>
+
+                        <div>
+                            ✓ SMTP error protection
+                        </div>
+
+                        <div>
+                            ✓ Maximum 25 recipients
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div>
-                    <strong id="resultFailed">0</strong>
-                    <span>Failed</span>
+
+                <button
+                    id="sendButton"
+                    class="send-button"
+                >
+                    Send Emails
+                </button>
+
+
+                <div
+                    id="status"
+                    class="status"
+                ></div>
+
+
+                <div
+                    id="progressWrap"
+                    class="progress-wrap hidden"
+                >
+
+                    <div class="progress-track">
+
+                        <div
+                            id="progress"
+                            class="progress"
+                        ></div>
+
+                    </div>
+
+                    <div
+                        id="progressText"
+                        class="progress-text"
+                    >
+                        Preparing...
+                    </div>
+
                 </div>
 
-                <div>
-                    <strong id="resultRemaining">0</strong>
-                    <span>Remaining</span>
-                </div>
 
-            </div>
+                <div
+                    id="results"
+                    class="results hidden"
+                ></div>
 
-            <div
-                id="errorList"
-                class="error-list"
-            ></div>
+            </section>
 
-        </section>
+        </div>
 
     </main>
 
@@ -348,106 +320,202 @@ You can use {name} for basic recipient-name personalization."
 
 <script>
 
-const form = document.getElementById("sendForm");
+const senderName =
+    document.getElementById("sender_name");
 
-const sendButton =
-    document.getElementById("sendButton");
+const gmail =
+    document.getElementById("gmail");
 
-const sendStatus =
-    document.getElementById("sendStatus");
+const appPassword =
+    document.getElementById("app_password");
 
-const recipientsInput =
+const subject =
+    document.getElementById("subject");
+
+const message =
+    document.getElementById("message");
+
+const recipients =
     document.getElementById("recipients");
 
 const recipientCount =
     document.getElementById("recipientCount");
 
-const resultPanel =
-    document.getElementById("resultPanel");
+const sendButton =
+    document.getElementById("sendButton");
 
-const resultTotal =
-    document.getElementById("resultTotal");
+const statusBox =
+    document.getElementById("status");
 
-const resultSent =
-    document.getElementById("resultSent");
+const progressWrap =
+    document.getElementById("progressWrap");
 
-const resultFailed =
-    document.getElementById("resultFailed");
+const progress =
+    document.getElementById("progress");
 
-const resultRemaining =
-    document.getElementById("resultRemaining");
+const progressText =
+    document.getElementById("progressText");
 
-const errorList =
-    document.getElementById("errorList");
+const results =
+    document.getElementById("results");
 
-
-// ---------------------------------------------------------
-// RECIPIENT COUNT
-// ---------------------------------------------------------
 
 function getRecipients() {
 
-    const raw =
-        recipientsInput.value || "";
-
-    return raw
-        .split(/[\s,;]+/)
-        .map(x => x.trim().toLowerCase())
+    return recipients.value
+        .replace(/,/g, "\n")
+        .replace(/;/g, "\n")
+        .split(/\s+/)
+        .map(
+            value => value.trim().toLowerCase()
+        )
         .filter(Boolean);
 
 }
 
 
-function updateRecipientCount() {
+function uniqueRecipients() {
 
-    const unique =
-        [...new Set(getRecipients())];
-
-    recipientCount.textContent =
-        unique.length;
-
-    if (unique.length > 25) {
-        recipientCount.classList.add("count-danger");
-    } else {
-        recipientCount.classList.remove("count-danger");
-    }
+    return [
+        ...new Set(
+            getRecipients()
+        )
+    ];
 
 }
 
 
-recipientsInput.addEventListener(
+function updateCount() {
+
+    const list =
+        uniqueRecipients();
+
+    recipientCount.textContent =
+        `${list.length} / 25`;
+
+}
+
+
+function showStatus(
+    text,
+    type = "info"
+) {
+
+    statusBox.textContent = text;
+
+    statusBox.className =
+        `status ${type}`;
+
+    statusBox.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+function hideResults() {
+
+    results.innerHTML = "";
+
+    results.classList.add(
+        "hidden"
+    );
+
+}
+
+
+recipients.addEventListener(
     "input",
-    updateRecipientCount
+    updateCount
 );
 
-updateRecipientCount();
+
+sendButton.addEventListener(
+    "click",
+    async function () {
+
+        hideResults();
+
+        const recipientList =
+            uniqueRecipients();
 
 
-// ---------------------------------------------------------
-// SEND
-// ---------------------------------------------------------
+        if (
+            recipientList.length === 0
+        ) {
 
-form.addEventListener(
-    "submit",
-    async function(event) {
-
-        event.preventDefault();
-
-        const recipients =
-            [...new Set(getRecipients())];
-
-        if (!recipients.length) {
-
-            sendStatus.textContent =
-                "Please enter at least one recipient.";
+            showStatus(
+                "Please enter at least one recipient.",
+                "error"
+            );
 
             return;
         }
 
-        if (recipients.length > 25) {
 
-            sendStatus.textContent =
-                "Maximum 25 recipients allowed.";
+        if (
+            recipientList.length > 25
+        ) {
+
+            showStatus(
+                "Maximum 25 recipients are allowed.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!senderName.value.trim()) {
+
+            showStatus(
+                "Please enter sender name.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!gmail.value.trim()) {
+
+            showStatus(
+                "Please enter Gmail address.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!appPassword.value.trim()) {
+
+            showStatus(
+                "Please enter Gmail App Password.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!subject.value.trim()) {
+
+            showStatus(
+                "Please enter email subject.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!message.value.trim()) {
+
+            showStatus(
+                "Please enter message body.",
+                "error"
+            );
 
             return;
         }
@@ -458,46 +526,22 @@ form.addEventListener(
         sendButton.textContent =
             "Sending...";
 
-        sendStatus.textContent =
-            "Connecting to Gmail SMTP...";
 
-
-        resultPanel.classList.add(
+        progressWrap.classList.remove(
             "hidden"
         );
 
+        progress.style.width =
+            "0%";
 
-        const payload = {
+        progressText.textContent =
+            `Sending 0 / ${recipientList.length}`;
 
-            sender_name:
-                document.getElementById(
-                    "sender_name"
-                ).value.trim(),
 
-            gmail:
-                document.getElementById(
-                    "gmail"
-                ).value.trim(),
-
-            app_password:
-                document.getElementById(
-                    "app_password"
-                ).value.trim(),
-
-            recipients:
-                recipients.join("\n"),
-
-            subject:
-                document.getElementById(
-                    "subject"
-                ).value.trim(),
-
-            message:
-                document.getElementById(
-                    "message"
-                ).value
-
-        };
+        showStatus(
+            "Connecting to Gmail SMTP...",
+            "info"
+        );
 
 
         try {
@@ -513,8 +557,27 @@ form.addEventListener(
                                 "application/json"
                         },
 
-                        body:
-                            JSON.stringify(payload)
+                        body: JSON.stringify({
+
+                            sender_name:
+                                senderName.value.trim(),
+
+                            gmail:
+                                gmail.value.trim(),
+
+                            app_password:
+                                appPassword.value.trim(),
+
+                            subject:
+                                subject.value.trim(),
+
+                            message:
+                                message.value,
+
+                            recipients:
+                                recipientList.join("\n")
+
+                        })
                     }
                 );
 
@@ -523,7 +586,7 @@ form.addEventListener(
                 await response.json();
 
 
-            if (!response.ok || !result.ok) {
+            if (!response.ok) {
 
                 throw new Error(
                     result.error ||
@@ -533,75 +596,134 @@ form.addEventListener(
             }
 
 
-            resultPanel.classList.remove(
-                "hidden"
-            );
+            const sent =
+                Number(result.sent || 0);
+
+            const failed =
+                Number(result.failed || 0);
+
+            const total =
+                Number(result.total || recipientList.length);
 
 
-            resultTotal.textContent =
-                result.total || 0;
-
-            resultSent.textContent =
-                result.sent || 0;
-
-            resultFailed.textContent =
-                result.failed || 0;
-
-            resultRemaining.textContent =
-                result.remaining || 0;
+            const percent =
+                total > 0
+                    ? Math.round(
+                        (
+                            sent + failed
+                        ) / total * 100
+                    )
+                    : 0;
 
 
-            errorList.innerHTML = "";
+            progress.style.width =
+                `${percent}%`;
 
 
-            if (
-                result.failed_items &&
-                result.failed_items.length
-            ) {
+            progressText.textContent =
+                `Completed: ${sent + failed} / ${total}`;
 
-                const title =
-                    document.createElement(
-                        "strong"
-                    );
 
-                title.textContent =
-                    "Failed recipients:";
+            if (result.success) {
 
-                errorList.appendChild(
-                    title
+                showStatus(
+                    `Sending complete. ${sent} email(s) sent.`,
+                    "success"
                 );
 
+            } else {
 
-                result.failed_items.forEach(
-                    item => {
-
-                        const div =
-                            document.createElement(
-                                "div"
-                            );
-
-                        div.textContent =
-                            item.email +
-                            " — " +
-                            item.error;
-
-                        errorList.appendChild(
-                            div
-                        );
-
-                    }
+                showStatus(
+                    result.error ||
+                    "No email was sent.",
+                    "error"
                 );
 
             }
 
 
-            sendStatus.textContent =
-                "Sending completed.";
+            let html = `
+                <h3>Send Result</h3>
+
+                <div class="result-summary">
+
+                    <div>
+                        <strong>${total}</strong>
+                        <span>Total</span>
+                    </div>
+
+                    <div>
+                        <strong>${sent}</strong>
+                        <span>Sent</span>
+                    </div>
+
+                    <div>
+                        <strong>${failed}</strong>
+                        <span>Failed</span>
+                    </div>
+
+                    <div>
+                        <strong>${result.remaining || 0}</strong>
+                        <span>Remaining</span>
+                    </div>
+
+                </div>
+            `;
+
+
+            if (
+                Array.isArray(
+                    result.failed_emails
+                )
+                &&
+                result.failed_emails.length
+            ) {
+
+                html += `
+                    <div class="failed-list">
+                        <strong>Failed recipients</strong>
+                `;
+
+
+                result.failed_emails.forEach(
+                    item => {
+
+                        html += `
+                            <div>
+                                ${escapeHtml(item.email)}
+                                —
+                                ${escapeHtml(item.error)}
+                            </div>
+                        `;
+
+                    }
+                );
+
+
+                html += `</div>`;
+
+            }
+
+
+            results.innerHTML =
+                html;
+
+            results.classList.remove(
+                "hidden"
+            );
+
 
         } catch (error) {
 
-            sendStatus.textContent =
-                error.message;
+            showStatus(
+                error.message ||
+                "Could not send emails.",
+                "error"
+            );
+
+            progressText.textContent =
+                "Sending failed.";
+
 
         } finally {
 
@@ -616,7 +738,38 @@ form.addEventListener(
     }
 );
 
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+updateCount();
+
 </script>
 
 </body>
+
 </html>
