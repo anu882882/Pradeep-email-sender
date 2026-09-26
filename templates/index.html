@@ -1,44 +1,480 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
+
 <link rel="stylesheet"
 href="{{ url_for('static',filename='style.css') }}">
+
 </head>
 
-<body class="login-page">
+<body>
 
-<div class="login-box">
+<header>
 
-<h1>🛡️ Secure Mail Console</h1>
+<div class="logo">
+🛡️ Secure Mail Console
+</div>
 
-<p>Private access</p>
+<a href="/logout">
+⇥ Logout
+</a>
 
-<form method="POST">
+</header>
+
+<main>
+
+<h2>➤ Bulk Email Sender</h2>
+
+<div class="grid">
+
+<section class="card">
+
+<h3>🖉 Compose Message</h3>
+
+<label>Sender Name</label>
 
 <input
-type="password"
-name="password"
-placeholder="Enter login password"
-required
-autofocus
+id="sender"
+placeholder="E.g. John Doe"
 >
 
-<button type="submit">
-Login
+<label>Your Gmail</label>
+
+<input
+id="gmail"
+type="email"
+placeholder="you@gmail.com"
+>
+
+<label>App Password</label>
+
+<input
+id="appPassword"
+type="password"
+placeholder="16-character App Password"
+>
+
+<label>Email Subject</label>
+
+<input
+id="subject"
+placeholder="Enter subject line..."
+>
+
+<label>Message Body</label>
+
+<textarea
+id="message"
+placeholder="Write your email here... {name} supported"
+></textarea>
+
+<div class="protection">
+
+<b>🛡️ Spam Protection</b>
+
+<div class="verify">
+
+<span id="verifyIcon">✓</span>
+
+<div>
+
+<strong id="verifyTitle">
+Ready
+</strong>
+
+<small id="verifyText">
+Real SMTP verification will appear here.
+</small>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section>
+
+<div class="card">
+
+<div class="row">
+
+<h3>👥 Recipients</h3>
+
+<span id="count">
+0 found
+</span>
+
+</div>
+
+<small>
+Paste emails, comma separated or new lines
+</small>
+
+<textarea
+id="recipients"
+placeholder="recipient1@example.com
+recipient2@example.com"
+></textarea>
+
+</div>
+
+
+<div class="card">
+
+<h3>◔ Progress Monitor</h3>
+
+<div class="stats">
+
+<div>
+TOTAL
+<b id="total">0</b>
+</div>
+
+<div>
+SENT
+<b class="green" id="sent">0</b>
+</div>
+
+<div>
+FAILED
+<b class="red" id="failed">0</b>
+</div>
+
+<div>
+REMAINING
+<b class="orange" id="remaining">0</b>
+</div>
+
+</div>
+
+<div class="bar">
+<i id="bar"></i>
+</div>
+
+<p id="status">
+● Ready to send
+</p>
+
+<button id="send">
+➤ Send All
 </button>
 
-{% if error %}
-<div class="login-error">
-{{ error }}
 </div>
-{% endif %}
 
-</form>
+
+<div class="card">
+
+<div class="row">
+
+<h3>⚡ Live Recipients Dispatch</h3>
+
+<span id="dispatch">
+0 / 0
+</span>
 
 </div>
+
+<div id="list" class="list">
+No recipients dispatched yet.
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+
+<script>
+
+const $ = id =>
+document.getElementById(id);
+
+
+function getRecipients(){
+
+return [
+...new Set(
+$("recipients").value
+.replace(/[,;]/g,"\n")
+.split(/\s+/)
+.map(x => x.trim().toLowerCase())
+.filter(Boolean)
+)
+];
+
+}
+
+
+$("recipients").oninput = () => {
+
+const list = getRecipients();
+
+$("count").textContent =
+list.length + " found";
+
+$("total").textContent =
+list.length;
+
+$("remaining").textContent =
+list.length;
+
+};
+
+
+$("send").onclick = async () => {
+
+const list = getRecipients();
+
+if(!$("sender").value.trim())
+return alert("Enter sender name.");
+
+if(!$("gmail").value.trim())
+return alert("Enter Gmail.");
+
+if(!$("appPassword").value.trim())
+return alert("Enter Gmail App Password.");
+
+if(!list.length)
+return alert("Add recipients.");
+
+if(list.length > 25)
+return alert("Maximum 25 recipients.");
+
+if(!$("subject").value.trim())
+return alert("Enter subject.");
+
+if(!$("message").value.trim())
+return alert("Enter message.");
+
+
+$("send").disabled = true;
+$("send").textContent = "Sending...";
+
+$("list").innerHTML = "";
+
+$("sent").textContent = "0";
+$("failed").textContent = "0";
+$("remaining").textContent = list.length;
+
+$("bar").style.width = "0%";
+
+$("verifyIcon").className = "working";
+$("verifyTitle").textContent = "Verifying...";
+$("verifyText").textContent =
+"Checking SMTP acceptance.";
+
+
+try{
+
+const response = await fetch(
+"/api/send-live",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+sender_name:
+$("sender").value.trim(),
+
+gmail:
+$("gmail").value.trim(),
+
+app_password:
+$("appPassword").value.trim(),
+
+subject:
+$("subject").value.trim(),
+
+message:
+$("message").value,
+
+recipients:
+list.join("\n")
+
+})
+}
+);
+
+
+if(!response.ok){
+
+const error =
+await response.json();
+
+throw new Error(
+error.error || "Send failed."
+);
+
+}
+
+
+const reader =
+response.body.getReader();
+
+const decoder =
+new TextDecoder();
+
+let buffer = "";
+
+
+while(true){
+
+const part =
+await reader.read();
+
+if(part.done)
+break;
+
+buffer += decoder.decode(
+part.value
+);
+
+const lines =
+buffer.split("\n");
+
+buffer = lines.pop();
+
+
+for(const line of lines){
+
+if(!line.trim())
+continue;
+
+const data =
+JSON.parse(line);
+
+
+if(data.type === "start"){
+
+$("total").textContent =
+data.total;
+
+$("dispatch").textContent =
+"0 / " + data.total;
+
+}
+
+
+if(data.type === "recipient"){
+
+$("sent").textContent =
+data.sent;
+
+$("failed").textContent =
+data.failed;
+
+$("remaining").textContent =
+data.remaining;
+
+$("bar").style.width =
+data.percent + "%";
+
+$("dispatch").textContent =
+(data.sent + data.failed)
++ " / "
++ data.total;
+
+
+const row =
+document.createElement("div");
+
+row.className =
+"dispatch-row "
++ data.status;
+
+row.innerHTML =
+(data.status === "sent" ? "✓ " : "× ")
++ data.email
++ "<b>"
++ (data.status === "sent"
+    ? "Sent"
+    : "Failed")
++ "</b>";
+
+$("list").prepend(row);
+
+
+if(data.status === "sent"){
+
+$("verifyIcon").className =
+"verified";
+
+$("verifyIcon").textContent =
+"✓";
+
+$("verifyTitle").textContent =
+"Verified ✓";
+
+$("verifyText").textContent =
+data.sent
++ " recipient(s) accepted by SMTP.";
+
+}
+
+}
+
+
+if(data.type === "complete"){
+
+$("bar").style.width =
+"100%";
+
+$("status").textContent =
+"● Completed: "
++ data.sent
++ " sent, "
++ data.failed
++ " failed";
+
+}
+
+}
+
+}
+
+
+}catch(error){
+
+$("verifyIcon").className =
+"error";
+
+$("verifyTitle").textContent =
+"Error";
+
+$("verifyText").textContent =
+error.message;
+
+$("status").textContent =
+"● " + error.message;
+
+}finally{
+
+$("send").disabled = false;
+
+$("send").textContent =
+"➤ Send All";
+
+}
+
+};
+
+</script>
 
 </body>
 </html>
