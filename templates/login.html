@@ -1,44 +1,472 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
+
 <link rel="stylesheet"
 href="{{ url_for('static',filename='style.css') }}">
+
 </head>
 
-<body class="login-page">
+<body>
 
-<div class="login-box">
+<header>
 
-<h1>🛡️ Secure Mail Console</h1>
+<div class="logo">
+🛡️ Secure Mail Console
+</div>
 
-<p>Private access</p>
+<a href="/logout">
+⇥ Logout
+</a>
 
-<form method="POST">
+</header>
+
+
+<main>
+
+<h2>➤ Bulk Email Sender</h2>
+
+
+<div class="grid">
+
+
+<section class="card">
+
+<h3>🖉 Compose Message</h3>
+
+
+<label>Sender Name</label>
 
 <input
-type="password"
-name="password"
-placeholder="Enter login password"
-required
-autofocus
+id="sender"
+placeholder="E.g. John Doe"
 >
 
-<button type="submit">
-Login
+
+<label>Your Gmail</label>
+
+<input
+id="gmail"
+type="email"
+placeholder="you@gmail.com"
+>
+
+
+<label>App Password</label>
+
+<input
+id="appPassword"
+type="password"
+placeholder="16-character App Password"
+>
+
+
+<label>Email Subject</label>
+
+<input
+id="subject"
+placeholder="Enter subject line..."
+>
+
+
+<label>Message Body</label>
+
+<textarea
+id="message"
+placeholder="Write your email here... {name} supported"
+></textarea>
+
+
+<div class="protection">
+
+<b>🛡️ Sending Protection</b>
+
+<div class="verify">
+
+<span id="verifyIcon">✓</span>
+
+<div>
+
+<strong id="verifyTitle">
+Ready
+</strong>
+
+<small id="verifyText">
+SMTP verification will appear here.
+</small>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section>
+
+
+<div class="card">
+
+<div class="row">
+
+<h3>👥 Recipients</h3>
+
+<span id="count">
+0 found
+</span>
+
+</div>
+
+<small>
+Paste emails, comma separated or new lines
+</small>
+
+<textarea
+id="recipients"
+placeholder="recipient1@example.com
+recipient2@example.com"
+></textarea>
+
+</div>
+
+
+<div class="card">
+
+<h3>◔ Progress Monitor</h3>
+
+<div class="stats">
+
+<div>
+TOTAL
+<b id="total">0</b>
+</div>
+
+<div>
+SENT
+<b class="green" id="sent">0</b>
+</div>
+
+<div>
+FAILED
+<b class="red" id="failed">0</b>
+</div>
+
+<div>
+REMAINING
+<b class="orange" id="remaining">0</b>
+</div>
+
+</div>
+
+
+<div class="bar">
+<i id="bar"></i>
+</div>
+
+<p id="status">
+● Ready to send
+</p>
+
+<button id="send">
+➤ Send All
 </button>
 
-{% if error %}
-<div class="login-error">
-{{ error }}
 </div>
-{% endif %}
 
-</form>
+
+<div class="card">
+
+<div class="row">
+
+<h3>⚡ Live Recipients Dispatch</h3>
+
+<span id="dispatch">
+0 / 0
+</span>
 
 </div>
+
+<div id="list" class="list">
+No recipients dispatched yet.
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+
+<script>
+
+const $ = id =>
+document.getElementById(id);
+
+
+function getRecipients(){
+
+return [
+...new Set(
+$("recipients").value
+.replace(/[,;]/g,"\n")
+.split(/\s+/)
+.map(x=>x.trim().toLowerCase())
+.filter(Boolean)
+)
+];
+
+}
+
+
+$("recipients").oninput=()=>{
+
+let r=getRecipients();
+
+$("count").textContent =
+r.length+" found";
+
+$("total").textContent =
+r.length;
+
+$("remaining").textContent =
+r.length;
+
+};
+
+
+$("send").onclick=async()=>{
+
+let r=getRecipients();
+
+
+if(!$("sender").value.trim())
+return alert("Enter sender name.");
+
+if(!$("gmail").value.trim())
+return alert("Enter Gmail.");
+
+if(!$("appPassword").value.trim())
+return alert("Enter App Password.");
+
+if(!r.length)
+return alert("Add recipients.");
+
+if(r.length>25)
+return alert("Maximum 25 recipients.");
+
+if(!$("subject").value.trim())
+return alert("Enter subject.");
+
+if(!$("message").value.trim())
+return alert("Enter message.");
+
+
+$("send").disabled=true;
+$("send").textContent="Sending...";
+
+$("list").innerHTML="";
+
+$("sent").textContent=0;
+$("failed").textContent=0;
+$("remaining").textContent=r.length;
+
+$("bar").style.width="0%";
+
+
+$("verifyIcon").className="working";
+$("verifyTitle").textContent="Verifying...";
+$("verifyText").textContent=
+"Checking SMTP acceptance.";
+
+
+try{
+
+let response=await fetch(
+"/api/send-live",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+sender_name:
+$("sender").value.trim(),
+
+gmail:
+$("gmail").value.trim(),
+
+app_password:
+$("appPassword").value.trim(),
+
+subject:
+$("subject").value.trim(),
+
+message:
+$("message").value,
+
+recipients:
+r.join("\n")
+
+})
+}
+);
+
+
+if(!response.ok){
+
+let e=await response.json();
+
+throw new Error(
+e.error||"Send failed."
+);
+
+}
+
+
+let reader=
+response.body.getReader();
+
+let decoder=new TextDecoder();
+
+let buffer="";
+
+
+while(true){
+
+let x=await reader.read();
+
+if(x.done)break;
+
+buffer+=decoder.decode(x.value);
+
+let lines=buffer.split("\n");
+
+buffer=lines.pop();
+
+
+for(let line of lines){
+
+if(!line.trim())continue;
+
+let d=JSON.parse(line);
+
+
+if(d.type==="start"){
+
+$("total").textContent=d.total;
+
+$("dispatch").textContent=
+"0 / "+d.total;
+
+}
+
+
+if(d.type==="recipient"){
+
+$("sent").textContent=d.sent;
+
+$("failed").textContent=d.failed;
+
+$("remaining").textContent=d.remaining;
+
+$("bar").style.width=
+d.percent+"%";
+
+$("dispatch").textContent=
+(d.sent+d.failed)+" / "+d.total;
+
+
+let row=document.createElement("div");
+
+row.className=
+"dispatch-row "+
+d.status;
+
+
+row.innerHTML=
+(d.status==="sent"?"✓":"×")
++" "
++d.email+
+"<b>"+
+(d.status==="sent"?"Sent":"Failed")
++"</b>";
+
+
+$("list").prepend(row);
+
+
+if(d.status==="sent"){
+
+$("verifyIcon").className=
+"verified";
+
+$("verifyIcon").textContent="✓";
+
+$("verifyTitle").textContent=
+"Verified ✓";
+
+$("verifyText").textContent=
+d.sent+
+" recipient(s) accepted by SMTP.";
+
+}
+
+}
+
+
+if(d.type==="complete"){
+
+$("bar").style.width="100%";
+
+$("status").textContent=
+"● Completed: "+
+d.sent+
+" sent, "+
+d.failed+
+" failed";
+
+}
+
+}
+
+}
+
+
+}catch(e){
+
+$("verifyIcon").className="error";
+
+$("verifyTitle").textContent="Error";
+
+$("verifyText").textContent=
+e.message;
+
+$("status").textContent=
+"● "+e.message;
+
+}finally{
+
+$("send").disabled=false;
+
+$("send").textContent="➤ Send All";
+
+}
+
+};
+
+</script>
 
 </body>
 </html>
