@@ -3,7 +3,6 @@ import re
 import ssl
 import smtplib
 import secrets
-import json
 
 from functools import wraps
 from email.mime.text import MIMEText
@@ -15,8 +14,6 @@ from flask import (
     jsonify,
     session,
     redirect,
-    Response,
-    stream_with_context,
 )
 
 
@@ -27,9 +24,9 @@ app = Flask(
 )
 
 
-# --------------------------------------------------
-# Security / Login
-# --------------------------------------------------
+# ==========================================
+# LOGIN
+# ==========================================
 
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
@@ -48,9 +45,9 @@ LOGIN_PASSWORD = os.environ.get(
 )
 
 
-# --------------------------------------------------
-# Email settings
-# --------------------------------------------------
+# ==========================================
+# EMAIL SETTINGS
+# ==========================================
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
@@ -62,9 +59,9 @@ EMAIL_RE = re.compile(
 )
 
 
-# --------------------------------------------------
-# Helpers
-# --------------------------------------------------
+# ==========================================
+# HELPERS
+# ==========================================
 
 def valid_email(value):
     return bool(
@@ -75,8 +72,6 @@ def valid_email(value):
 
 
 def clean_app_password(value):
-    # Removes spaces accidentally copied into
-    # a Gmail App Password.
     return "".join(
         str(value).split()
     )
@@ -84,10 +79,8 @@ def clean_app_password(value):
 
 def make_ref():
     """
-    Creates a different reference for every email.
-
     Example:
-    #REF-8A42F1C7
+    #REF-5395A6CA
     """
 
     return (
@@ -104,6 +97,7 @@ def protected(view):
         if not session.get("logged_in"):
 
             if request.path.startswith("/api/"):
+
                 return jsonify(
                     error="Login required."
                 ), 401
@@ -140,21 +134,14 @@ def parse_recipients(raw):
     return result
 
 
-def get_recipient_name(email):
-
-    """
-    Uses the part before @ as a simple recipient name.
-
-    example:
-    rahul123@gmail.com -> rahul123
-    """
+def recipient_name(email):
 
     return email.split("@")[0]
 
 
-# --------------------------------------------------
-# Message checks
-# --------------------------------------------------
+# ==========================================
+# BASIC MESSAGE CHECK
+# ==========================================
 
 def message_checks(subject, message):
 
@@ -166,7 +153,7 @@ def message_checks(subject, message):
 
     issues = []
 
-    if len(str(subject)) > 200:
+    if len(subject) > 200:
 
         issues.append(
             "Subject is unusually long."
@@ -181,15 +168,13 @@ def message_checks(subject, message):
             "Repeated characters detected."
         )
 
-    link_count = len(
-        re.findall(
-            r"https?://",
-            text,
-            flags=re.I
-        )
+    links = re.findall(
+        r"https?://",
+        text,
+        flags=re.I
     )
 
-    if link_count > 5:
+    if len(links) > 5:
 
         issues.append(
             "Message contains many links."
@@ -208,9 +193,9 @@ def message_checks(subject, message):
     return issues
 
 
-# --------------------------------------------------
-# Login
-# --------------------------------------------------
+# ==========================================
+# LOGIN
+# ==========================================
 
 @app.route(
     "/login",
@@ -261,9 +246,9 @@ def logout():
     return redirect("/login")
 
 
-# --------------------------------------------------
-# Home
-# --------------------------------------------------
+# ==========================================
+# HOME
+# ==========================================
 
 @app.route("/")
 @protected
@@ -274,9 +259,9 @@ def home():
     )
 
 
-# --------------------------------------------------
-# Message checking API
-# --------------------------------------------------
+# ==========================================
+# MESSAGE CHECK
+# ==========================================
 
 @app.route(
     "/api/check-message",
@@ -317,9 +302,9 @@ def check_message():
     )
 
 
-# --------------------------------------------------
-# SEND EMAILS
-# --------------------------------------------------
+# ==========================================
+# SEND
+# ==========================================
 
 @app.route(
     "/api/send",
@@ -335,12 +320,14 @@ def send():
         or {}
     )
 
+
     sender_name = str(
         data.get(
             "sender_name",
             ""
         )
     ).strip()
+
 
     gmail = str(
         data.get(
@@ -349,12 +336,14 @@ def send():
         )
     ).strip().lower()
 
+
     app_password = clean_app_password(
         data.get(
             "app_password",
             ""
         )
     )
+
 
     subject = str(
         data.get(
@@ -363,12 +352,14 @@ def send():
         )
     ).strip()
 
+
     message = str(
         data.get(
             "message",
             ""
         )
     )
+
 
     recipients = parse_recipients(
         data.get(
@@ -378,9 +369,9 @@ def send():
     )
 
 
-    # --------------------------------------------------
-    # Validation
-    # --------------------------------------------------
+    # ======================================
+    # VALIDATION
+    # ======================================
 
     if not sender_name:
 
@@ -446,6 +437,10 @@ def send():
         ), 400
 
 
+    # ======================================
+    # BASIC MESSAGE CHECK
+    # ======================================
+
     issues = message_checks(
         subject,
         message
@@ -460,292 +455,234 @@ def send():
         ), 400
 
 
-    # --------------------------------------------------
-    # Streaming response
-    # --------------------------------------------------
-
-    @stream_with_context
-    def generate():
-
-        sent_count = 0
-        failed_count = 0
+    sent = []
+    failed = []
 
 
-        try:
+    # ======================================
+    # GMAIL CONNECTION
+    # ======================================
 
-            context = (
-                ssl.create_default_context()
-            )
+    try:
 
-
-            with smtplib.SMTP_SSL(
-                SMTP_HOST,
-                SMTP_PORT,
-                context=context,
-                timeout=30
-            ) as smtp:
+        context = ssl.create_default_context()
 
 
-                # --------------------------------------
-                # Gmail login
-                # --------------------------------------
+        with smtplib.SMTP_SSL(
+            SMTP_HOST,
+            SMTP_PORT,
+            context=context,
+            timeout=30
+        ) as smtp:
+
+
+            # ------------------------------
+            # Gmail login
+            # ------------------------------
+
+            try:
+
+                smtp.login(
+                    gmail,
+                    app_password
+                )
+
+            except smtplib.SMTPAuthenticationError:
+
+                return jsonify(
+                    error="Gmail authentication failed. Check your App Password."
+                ), 401
+
+
+            # ==================================
+            # SEND ONE EMAIL AT A TIME
+            # ==================================
+
+            for email in recipients:
+
+
+                # NEW UNIQUE REFERENCE
+                # FOR EVERY RECIPIENT
+
+                ref = make_ref()
+
+
+                name = recipient_name(
+                    email
+                )
+
+
+                # ------------------------------
+                # Replace name
+                # ------------------------------
+
+                final_message = (
+                    message
+                    .replace(
+                        "{name}",
+                        name
+                    )
+                )
+
+
+                # ------------------------------
+                # If {ref} is manually used,
+                # replace it.
+                # ------------------------------
+
+                had_ref_placeholder = (
+                    "{ref}" in final_message
+                )
+
+
+                final_message = (
+                    final_message
+                    .replace(
+                        "{ref}",
+                        ref
+                    )
+                )
+
+
+                # ------------------------------
+                # AUTOMATIC REFERENCE
+                #
+                # If user did not put {ref}
+                # in the message, backend adds:
+                #
+                # Reference: #REF-XXXXXXXX
+                # ------------------------------
+
+                if not had_ref_placeholder:
+
+                    final_message = (
+                        final_message.rstrip()
+                        + "\n\n"
+                        + "Reference: "
+                        + ref
+                    )
+
+
+                # ------------------------------
+                # Subject
+                # ------------------------------
+
+                final_subject = (
+                    subject
+                    .replace(
+                        "{name}",
+                        name
+                    )
+                    .replace(
+                        "{ref}",
+                        ref
+                    )
+                )
+
+
+                # ------------------------------
+                # Create email
+                # ------------------------------
+
+                mail = MIMEText(
+                    final_message,
+                    "plain",
+                    "utf-8"
+                )
+
+
+                mail["Subject"] = (
+                    final_subject
+                )
+
+
+                mail["From"] = (
+                    sender_name
+                    + " <"
+                    + gmail
+                    + ">"
+                )
+
+
+                mail["To"] = email
+
+
+                # ------------------------------
+                # Send
+                # ------------------------------
 
                 try:
 
-                    smtp.login(
+                    refused = smtp.sendmail(
                         gmail,
-                        app_password
-                    )
-
-                except smtplib.SMTPAuthenticationError:
-
-                    yield json.dumps({
-                        "type": "error",
-                        "error":
-                            "Gmail authentication failed. Check your App Password."
-                    }) + "\n"
-
-                    return
-
-
-                # --------------------------------------
-                # Send one recipient at a time
-                # --------------------------------------
-
-                for recipient in recipients:
-
-
-                    # IMPORTANT:
-                    # A completely new reference is
-                    # generated for every recipient.
-                    ref = make_ref()
-
-
-                    recipient_name = (
-                        get_recipient_name(
-                            recipient
-                        )
+                        [email],
+                        mail.as_string()
                     )
 
 
-                    # ----------------------------------
-                    # Replace placeholders
-                    # ----------------------------------
+                    if refused:
 
-                    final_subject = (
-                        subject
-                        .replace(
-                            "{name}",
-                            recipient_name
-                        )
-                        .replace(
-                            "{ref}",
-                            ref
-                        )
-                    )
+                        failed.append({
+                            "email": email,
+                            "ref": ref,
+                            "error": str(refused)
+                        })
 
+                    else:
 
-                    final_message = (
-                        message
-                        .replace(
-                            "{name}",
-                            recipient_name
-                        )
-                        .replace(
-                            "{ref}",
-                            ref
-                        )
-                    )
+                        sent.append({
+                            "email": email,
+                            "ref": ref
+                        })
 
 
-                    try:
+                except Exception as error:
 
-                        mail = MIMEText(
-                            final_message,
-                            "plain",
-                            "utf-8"
-                        )
+                    failed.append({
+                        "email": email,
+                        "ref": ref,
+                        "error": str(error)
+                    })
 
 
-                        mail["Subject"] = (
-                            final_subject
-                        )
+        # ==================================
+        # RESPONSE
+        # ==================================
 
+        return jsonify(
 
-                        mail["From"] = (
-                            sender_name
-                            + " <"
-                            + gmail
-                            + ">"
-                        )
+            success=True,
 
+            total=len(recipients),
 
-                        mail["To"] = recipient
+            sent=len(sent),
 
+            failed=len(failed),
 
-                        refused = smtp.sendmail(
-                            gmail,
-                            [recipient],
-                            mail.as_string()
-                        )
+            remaining=0,
 
+            sent_emails=sent,
 
-                        # ----------------------------------
-                        # Failed recipient
-                        # ----------------------------------
+            failed_emails=failed
 
-                        if refused:
+        )
 
-                            failed_count += 1
 
-                            yield json.dumps({
-                                "type": "failed",
+    except Exception as error:
 
-                                "email":
-                                    recipient,
+        return jsonify(
+            error=str(error)
+        ), 500
 
-                                "ref":
-                                    ref,
 
-                                "error":
-                                    str(refused),
-
-                                "sent":
-                                    sent_count,
-
-                                "failed":
-                                    failed_count,
-
-                                "total":
-                                    len(recipients)
-
-                            }) + "\n"
-
-
-                        # ----------------------------------
-                        # Successful recipient
-                        # ----------------------------------
-
-                        else:
-
-                            sent_count += 1
-
-                            yield json.dumps({
-                                "type": "sent",
-
-                                "email":
-                                    recipient,
-
-                                "ref":
-                                    ref,
-
-                                "sent":
-                                    sent_count,
-
-                                "failed":
-                                    failed_count,
-
-                                "total":
-                                    len(recipients)
-
-                            }) + "\n"
-
-
-                    except Exception as error:
-
-                        failed_count += 1
-
-                        yield json.dumps({
-                            "type": "failed",
-
-                            "email":
-                                recipient,
-
-                            "ref":
-                                ref,
-
-                            "error":
-                                str(error),
-
-                            "sent":
-                                sent_count,
-
-                            "failed":
-                                failed_count,
-
-                            "total":
-                                len(recipients)
-
-                        }) + "\n"
-
-
-                # --------------------------------------
-                # Completed
-                # --------------------------------------
-
-                yield json.dumps({
-
-                    "type":
-                        "done",
-
-                    "sent":
-                        sent_count,
-
-                    "failed":
-                        failed_count,
-
-                    "total":
-                        len(recipients)
-
-                }) + "\n"
-
-
-        except Exception as error:
-
-            yield json.dumps({
-
-                "type":
-                    "error",
-
-                "error":
-                    str(error),
-
-                "sent":
-                    sent_count,
-
-                "failed":
-                    failed_count
-
-            }) + "\n"
-
-
-    return Response(
-
-        generate(),
-
-        mimetype=
-            "application/x-ndjson",
-
-        headers={
-            "Cache-Control":
-                "no-cache",
-
-            "X-Accel-Buffering":
-                "no"
-        }
-
-    )
-
-
-# --------------------------------------------------
-# Local development
-# --------------------------------------------------
+# ==========================================
+# LOCAL DEVELOPMENT
+# ==========================================
 
 if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-
         port=int(
             os.environ.get(
                 "PORT",
