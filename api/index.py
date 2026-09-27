@@ -1,1296 +1,1012 @@
-<!doctype html>
-<html lang="en">
+import os
+import re
+import ssl
+import smtplib
+import socket
+import time
 
-<head>
-<meta charset="utf-8">
+from functools import wraps
+from email.mime.text import MIMEText
+from email.header import Header
+from email.utils import formataddr, formatdate, make_msgid
 
-<meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
->
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    session,
+    redirect,
+    url_for
+)
 
-<title>Secure Mail Console</title>
 
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}"
->
-</head>
+# =========================================================
+# PATHS
+# =========================================================
 
-<body>
+ROOT = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
 
-<header class="topbar">
 
-    <div>
-        <div class="brand-title">
-            🛡️ Secure Mail Console
-        </div>
+app = Flask(
+    __name__,
+    template_folder=os.path.join(ROOT, "templates"),
+    static_folder=os.path.join(ROOT, "static")
+)
 
-        <div class="brand-sub">
-            Authenticated Gmail SMTP
-        </div>
-    </div>
 
-    <a
-        href="/logout"
-        class="logout"
-    >
-        Logout
-    </a>
+# =========================================================
+# SESSION
+# =========================================================
 
-</header>
+app.secret_key = os.environ.get(
+    "SESSION_SECRET",
+    "change-this-secret"
+)
 
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_NAME="secure_mail_session",
+    PERMANENT_SESSION_LIFETIME=3600
+)
 
-<main class="container">
 
-<div class="main-grid">
+LOGIN_PASSWORD = os.environ.get(
+    "APP_LOGIN_PASSWORD",
+    ""
+)
 
 
-<!-- =====================================================
-     LEFT
-===================================================== -->
+# =========================================================
+# SMTP
+# =========================================================
 
-<section class="card">
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 465
 
-    <div class="section-title">
+MAX_RECIPIENTS = 25
 
-        <h2>Sender</h2>
+SEND_DELAY_SECONDS = 1.0
 
-        <p>
-            Gmail SMTP account
-        </p>
 
-    </div>
+# =========================================================
+# EMAIL VALIDATION
+# =========================================================
 
+EMAIL_RE = re.compile(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+    r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
+)
 
-    <label>
-        Sender Name
-    </label>
 
-    <input
-        id="senderName"
-        type="text"
-        placeholder="Your name"
-        autocomplete="name"
-    >
-
-
-    <label>
-        Gmail Address
-    </label>
-
-    <input
-        id="gmail"
-        type="email"
-        placeholder="you@gmail.com"
-        autocomplete="email"
-    >
-
-
-    <label>
-        Gmail App Password
-    </label>
-
-    <input
-        id="appPassword"
-        type="password"
-        placeholder="16-character App Password"
-        autocomplete="off"
-    >
-
-
-    <div class="info-box">
-
-        <b>SMTP Security</b>
-
-        <span>
-            Gmail SMTP uses an encrypted TLS connection.
-        </span>
-
-    </div>
-
-
-    <div class="divider"></div>
-
-
-    <div class="section-title">
-
-        <h2>Email</h2>
-
-        <p>
-            Message content
-        </p>
-
-    </div>
-
-
-    <label>
-        Subject
-    </label>
-
-    <input
-        id="subject"
-        type="text"
-        placeholder="Email subject"
-    >
-
-
-    <label>
-        Message Body
-    </label>
-
-    <textarea
-        id="message"
-        rows="10"
-        placeholder="Hello {name},
-
-Your message here..."
-    ></textarea>
-
-
-    <div class="variable-box">
-
-        <b>Personalization</b>
-
-        <code>{name}</code>
-
-        <span>
-            uses the recipient's email name
-        </span>
-
-    </div>
-
-
-    <label>
-        Unsubscribe URL
-        <small>(optional)</small>
-    </label>
-
-    <input
-        id="unsubscribe"
-        type="url"
-        placeholder="https://example.com/unsubscribe"
-    >
-
-
-    <!-- =================================================
-         SEND BUTTON
-    ================================================= -->
-
-    <button
-        id="sendBtn"
-        class="send-button"
-    >
-        ⚡ Send All
-    </button>
-
-
-    <div
-        id="status"
-        class="status"
-    >
-        Ready
-    </div>
-
-
-    <!-- =================================================
-         DIAGNOSTICS - NOW AT BOTTOM
-    ================================================= -->
-
-    <div class="diagnostics-bottom">
-
-        <div class="diagnostics-title">
-
-            <div>
-
-                <h3>
-                    Gmail Deliverability Diagnostics
-                </h3>
-
-                <p>
-                    SMTP connection and sender checks
-                </p>
-
-            </div>
-
-            <span
-                id="diagnosticBadge"
-                class="badge"
-            >
-                Not checked
-            </span>
-
-        </div>
-
-
-        <button
-            id="diagnoseBtn"
-            class="diagnose-button"
-        >
-            🔎 Run Gmail Diagnostics
-        </button>
-
-
-        <div
-            id="diagnosticError"
-            class="diagnostic-error"
-        ></div>
-
-
-        <div class="diagnostic-grid">
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    SMTP Connection
-                </span>
-
-                <b id="diagConnection">
-                    —
-                </b>
-
-            </div>
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    TLS
-                </span>
-
-                <b id="diagTls">
-                    —
-                </b>
-
-            </div>
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    Gmail Authentication
-                </span>
-
-                <b id="diagAuth">
-                    —
-                </b>
-
-            </div>
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    Sender Domain
-                </span>
-
-                <b id="diagDomain">
-                    —
-                </b>
-
-            </div>
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    Domain DNS
-                </span>
-
-                <b id="diagDns">
-                    —
-                </b>
-
-            </div>
-
-
-            <div class="diagnostic-item">
-
-                <span>
-                    SPF / DKIM / DMARC
-                </span>
-
-                <b class="status-info">
-                    Provider check
-                </b>
-
-            </div>
-
-        </div>
-
-
-        <div
-            id="diagMessage"
-            class="diag-message"
-        >
-            Enter Gmail details and run diagnostics.
-        </div>
-
-
-        <div class="recommendations">
-
-            <strong>
-                Recommended checks
-            </strong>
-
-            <ul id="recommendationList">
-
-                <li>
-                    Keep TLS enabled.
-                </li>
-
-                <li>
-                    Use a valid Gmail App Password.
-                </li>
-
-                <li>
-                    Use a consistent authenticated sender.
-                </li>
-
-                <li>
-                    Monitor Gmail Postmaster Tools.
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <a
-            class="postmaster-link"
-            href="https://postmaster.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            Open Gmail Postmaster Tools ↗
-        </a>
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     RIGHT
-===================================================== -->
-
-<section class="card">
-
-    <div class="protection-header">
-
-        <div>
-
-            <h2>
-                🛡️ Sending Protection
-            </h2>
-
-            <p>
-                Delivery safeguards
-            </p>
-
-        </div>
-
-        <span
-            id="protectBadge"
-            class="badge"
-        >
-            Checking
-        </span>
-
-    </div>
-
-
-    <div class="checks">
-
-        <div class="check">
-            ✓ TLS SMTP
-        </div>
-
-        <div class="check">
-            ✓ Gmail Authentication
-        </div>
-
-        <div class="check">
-            ✓ RFC Headers
-        </div>
-
-        <div class="check">
-            ✓ Duplicate Filter
-        </div>
-
-        <div class="check">
-            ✓ Invalid Email Filter
-        </div>
-
-        <div class="check">
-            ✓ Controlled Rate
-        </div>
-
-        <div class="check">
-            ✓ Persistent SMTP
-        </div>
-
-        <div class="check">
-            ✓ Normal Text
-        </div>
-
-    </div>
-
-
-    <div class="recipient-title">
-
-        <h2>
-            Recipients
-        </h2>
-
-        <span>
-            MAX 25
-        </span>
-
-    </div>
-
-
-    <textarea
-        id="recipients"
-        class="recipient-input"
-        rows="9"
-        placeholder="one@example.com
-two@example.com
-three@example.com"
-    ></textarea>
-
-
-    <div
-        id="recipientCounter"
-        class="recipient-counter"
-    >
-        0 / 25 recipients
-    </div>
-
-
-    <div class="stats">
-
-        <div class="stat">
-
-            <strong id="total">
-                0
-            </strong>
-
-            <span>
-                TOTAL
-            </span>
-
-        </div>
-
-
-        <div class="stat">
-
-            <strong id="sent">
-                0
-            </strong>
-
-            <span>
-                SENT
-            </span>
-
-        </div>
-
-
-        <div class="stat">
-
-            <strong id="failed">
-                0
-            </strong>
-
-            <span>
-                FAILED
-            </span>
-
-        </div>
-
-
-        <div class="stat">
-
-            <strong id="remaining">
-                0
-            </strong>
-
-            <span>
-                REMAINING
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="progress">
-
-        <i id="bar"></i>
-
-    </div>
-
-
-    <div
-        id="progressText"
-        class="progress-text"
-    >
-        0%
-    </div>
-
-
-    <div class="dispatch-title">
-
-        <div>
-
-            <h2>
-                ⚡ Live Recipients Dispatch
-            </h2>
-
-            <p>
-                SMTP response monitor
-            </p>
-
-        </div>
-
-        <span
-            id="dispatchCount"
-            class="dispatch-count"
-        >
-            0 / 0
-        </span>
-
-    </div>
-
-
-    <div
-        id="dispatch"
-        class="dispatch"
-    >
-
-        <div class="empty-dispatch">
-            Waiting for a send job...
-        </div>
-
-    </div>
-
-</section>
-
-</div>
-
-</main>
-
-
-<script>
-
-/* =====================================================
-   ELEMENT
-===================================================== */
-
-const $ = id =>
-    document.getElementById(id);
-
-
-/* =====================================================
-   RECIPIENTS
-===================================================== */
-
-function getRecipients() {
-
-    const raw =
-        $("recipients")
-            .value
-            .replaceAll(",", "\n")
-            .replaceAll(";", "\n")
-            .replaceAll("\r", "\n");
-
-    return [
-        ...new Set(
-            raw
-                .split(/\s+/)
-                .map(
-                    x =>
-                        x.trim().toLowerCase()
-                )
-                .filter(Boolean)
+def valid_email(email):
+    return bool(
+        EMAIL_RE.fullmatch(
+            str(email).strip()
         )
-    ];
-}
+    )
 
 
-function updateRecipientCounter() {
+def parse_recipients(raw):
 
-    const count =
-        getRecipients().length;
+    raw = str(raw or "")
 
-    $("recipientCounter")
-        .textContent =
-        count + " / 25 recipients";
+    raw = (
+        raw
+        .replace(",", "\n")
+        .replace(";", "\n")
+        .replace("\r", "\n")
+    )
 
-    $("recipientCounter")
-        .classList.toggle(
-            "counter-danger",
-            count > 25
-        );
-}
+    recipients = []
+    seen = set()
 
+    for line in raw.split("\n"):
 
-$("recipients")
-    .addEventListener(
-        "input",
-        updateRecipientCounter
-    );
+        for item in line.split():
 
+            email = item.strip().lower()
 
-/* =====================================================
-   PROTECTION
-===================================================== */
+            if not email:
+                continue
 
-async function loadProtection() {
+            if email in seen:
+                continue
 
-    try {
+            seen.add(email)
+            recipients.append(email)
 
-        const response =
-            await fetch(
-                "/api/protection",
-                {
-                    credentials:
-                        "same-origin"
-                }
-            );
+    return recipients
 
 
-        if (!response.ok)
-            throw new Error();
+def get_domain(email):
+
+    if "@" not in email:
+        return ""
+
+    return email.rsplit(
+        "@",
+        1
+    )[1].lower()
 
 
-        $("protectBadge")
-            .textContent =
-            "Active ✓";
+# =========================================================
+# LOGIN PROTECTION
+# =========================================================
 
-        $("protectBadge")
-            .className =
-            "badge good";
+def login_required(view):
+
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+
+        if not session.get("logged_in"):
+
+            if request.path.startswith("/api/"):
+
+                return jsonify({
+                    "success": False,
+                    "error": "Login required."
+                }), 401
+
+            return redirect(
+                url_for("login")
+            )
+
+        return view(
+            *args,
+            **kwargs
+        )
+
+    return wrapped
 
 
-    } catch {
+# =========================================================
+# LOGIN
+# =========================================================
 
-        $("protectBadge")
-            .textContent =
-            "Unavailable";
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
+def login():
 
-        $("protectBadge")
-            .className =
-            "badge bad";
+    if session.get("logged_in"):
+
+        return redirect(
+            url_for("home")
+        )
+
+    if request.method == "POST":
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        if not LOGIN_PASSWORD:
+
+            return render_template(
+                "login.html",
+                error=(
+                    "APP_LOGIN_PASSWORD "
+                    "is not configured in Vercel."
+                )
+            )
+
+        if password != LOGIN_PASSWORD:
+
+            return render_template(
+                "login.html",
+                error="Incorrect password."
+            )
+
+        session.clear()
+
+        session["logged_in"] = True
+
+        session.permanent = True
+
+        return redirect(
+            url_for("home")
+        )
+
+    return render_template(
+        "login.html"
+    )
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+
+
+# =========================================================
+# HOME
+# =========================================================
+
+@app.route("/")
+@login_required
+def home():
+
+    return render_template(
+        "index.html"
+    )
+
+
+# =========================================================
+# HEALTH
+# =========================================================
+
+@app.route("/health")
+@app.route("/api/health")
+def health():
+
+    return jsonify({
+        "ok": True,
+        "service": "Secure Mail Console"
+    })
+
+
+# =========================================================
+# PROTECTION
+# =========================================================
+
+@app.route("/api/protection")
+@login_required
+def protection():
+
+    return jsonify({
+
+        "active": True,
+
+        "tls": True,
+
+        "persistent_smtp": True,
+
+        "rfc5322_headers": True,
+
+        "duplicate_filter": True,
+
+        "invalid_email_filter": True,
+
+        "controlled_rate": True,
+
+        "max_recipients":
+            MAX_RECIPIENTS,
+
+        "spam_bypass": False
+
+    })
+
+
+# =========================================================
+# SMTP DIAGNOSTIC TEST
+# =========================================================
+
+def test_gmail_smtp(
+    gmail,
+    app_password
+):
+
+    result = {
+
+        "connection": False,
+
+        "tls": False,
+
+        "authentication": False,
+
+        "error": ""
+
     }
-}
+
+    context = ssl.create_default_context()
+
+    try:
+
+        with smtplib.SMTP_SSL(
+            SMTP_HOST,
+            SMTP_PORT,
+            context=context,
+            timeout=15
+        ) as smtp:
+
+            result["connection"] = True
+
+            result["tls"] = True
+
+            smtp.login(
+                gmail,
+                app_password
+            )
+
+            result["authentication"] = True
+
+    except smtplib.SMTPAuthenticationError:
+
+        result["error"] = (
+            "Gmail authentication failed. "
+            "Check Gmail address and App Password."
+        )
+
+    except smtplib.SMTPConnectError:
+
+        result["error"] = (
+            "Could not connect to Gmail SMTP."
+        )
+
+    except smtplib.SMTPException as exc:
+
+        result["error"] = str(exc)
+
+    except Exception as exc:
+
+        result["error"] = str(exc)
+
+    return result
 
 
-/* =====================================================
-   DIAGNOSTIC RESULT
-===================================================== */
+# =========================================================
+# DOMAIN DIAGNOSTIC
+# =========================================================
 
-function setDiag(
-    id,
-    value,
-    yesText = "PASS",
-    noText = "FAIL"
-) {
+def domain_diagnostics(email):
 
-    const element =
-        $(id);
+    domain = get_domain(email)
 
-    element.textContent =
-        value
-            ? yesText
-            : noText;
+    result = {
 
-    element.className =
-        value
-            ? "diag-pass"
-            : "diag-fail";
-}
+        "domain": domain,
 
+        "is_gmail_sender":
+            domain in (
+                "gmail.com",
+                "googlemail.com"
+            ),
 
-/* =====================================================
-   DIAGNOSTICS
-===================================================== */
+        "dns_resolves": False,
 
-$("diagnoseBtn")
-    .addEventListener(
-        "click",
-        async () => {
+        "note": ""
 
-            const gmail =
-                $("gmail")
-                    .value
-                    .trim()
-                    .toLowerCase();
-
-            const password =
-                $("appPassword")
-                    .value
-                    .trim();
+    }
 
 
-            $("diagnosticError")
-                .textContent =
-                "";
+    if not domain:
+
+        result["note"] = (
+            "Invalid sender domain."
+        )
+
+        return result
 
 
-            if (!gmail) {
+    try:
 
-                $("diagnosticError")
-                    .textContent =
-                    "Enter Gmail address first.";
+        socket.gethostbyname(
+            domain
+        )
 
-                return;
-            }
+        result["dns_resolves"] = True
 
+    except Exception:
 
-            if (!password) {
-
-                $("diagnosticError")
-                    .textContent =
-                    "Enter Gmail App Password first.";
-
-                return;
-            }
+        result["dns_resolves"] = False
 
 
-            $("diagnoseBtn")
-                .disabled =
-                true;
+    if result["is_gmail_sender"]:
 
-            $("diagnoseBtn")
-                .textContent =
-                "Checking Gmail...";
+        result["note"] = (
+            "Gmail sender detected. "
+            "SPF/DKIM/DMARC for gmail.com "
+            "are controlled by Google."
+        )
 
+    else:
 
-            $("diagnosticBadge")
-                .textContent =
-                "Checking";
-
-            $("diagnosticBadge")
-                .className =
-                "badge";
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/diagnostics",
-                        {
-                            method:
-                                "POST",
-
-                            credentials:
-                                "same-origin",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-                                    gmail:
-                                        gmail,
-
-                                    app_password:
-                                        password
-                                })
-                        }
-                    );
+        result["note"] = (
+            "Custom domain detected. "
+            "Check SPF, DKIM and DMARC "
+            "with your actual mail provider."
+        )
 
 
-                const data =
-                    await response.json();
+    return result
 
 
-                if (!response.ok) {
+# =========================================================
+# DELIVERABILITY DIAGNOSTICS
+# =========================================================
 
-                    throw new Error(
-                        data.error ||
-                        "Diagnostics failed."
-                    );
-                }
+@app.route(
+    "/api/diagnostics",
+    methods=["POST"]
+)
+@login_required
+def diagnostics():
 
-
-                const smtp =
-                    data.smtp || {};
-
-                const domain =
-                    data.domain || {};
-
-
-                setDiag(
-                    "diagConnection",
-                    smtp.connection
-                );
+    data = request.get_json(
+        silent=True
+    ) or {}
 
 
-                setDiag(
-                    "diagTls",
-                    smtp.tls
-                );
+    gmail = str(
+        data.get(
+            "gmail",
+            ""
+        )
+    ).strip().lower()
 
 
-                setDiag(
-                    "diagAuth",
-                    smtp.authentication
-                );
+    app_password = str(
+        data.get(
+            "app_password",
+            ""
+        )
+    ).strip()
 
 
-                $("diagDomain")
-                    .textContent =
-                    domain.domain || "—";
+    if not valid_email(gmail):
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Enter a valid sender email."
+
+        }), 400
 
 
-                setDiag(
-                    "diagDns",
-                    domain.dns_resolves,
-                    "RESOLVES",
-                    "NOT RESOLVING"
-                );
+    if not app_password:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Enter the Gmail App Password."
+
+        }), 400
+
+
+    smtp = test_gmail_smtp(
+        gmail,
+        app_password
+    )
+
+
+    domain = domain_diagnostics(
+        gmail
+    )
+
+
+    return jsonify({
+
+        "success": True,
+
+        "smtp": smtp,
+
+        "domain": domain,
+
+        "recommendations": [
+
+            "Keep TLS enabled.",
+
+            "Use a valid Gmail App Password.",
+
+            "Use a consistent authenticated sender.",
+
+            "For custom domains, configure SPF, DKIM and DMARC.",
+
+            "Monitor Gmail Postmaster Tools.",
+
+            "Send only to recipients who expect your messages."
+
+        ],
+
+        "inbox_note":
+            "SMTP acceptance does not verify Inbox placement."
+
+    })
+
+
+# =========================================================
+# BUILD MESSAGE
+# =========================================================
+
+def build_message(
+    sender_name,
+    sender_email,
+    recipient,
+    subject,
+    body,
+    unsubscribe_url=""
+):
+
+    personalized_body = body.replace(
+        "{name}",
+        recipient.split(
+            "@",
+            1
+        )[0]
+    )
+
+
+    message = MIMEText(
+        personalized_body,
+        "plain",
+        "utf-8"
+    )
+
+
+    message["Date"] = formatdate(
+        localtime=True
+    )
+
+
+    message["Message-ID"] = make_msgid()
+
+
+    message["Subject"] = Header(
+        subject,
+        "utf-8"
+    )
+
+
+    message["From"] = formataddr(
+        (
+            sender_name,
+            sender_email
+        )
+    )
+
+
+    message["To"] = recipient
+
+
+    message["Reply-To"] = sender_email
+
+
+    if unsubscribe_url:
+
+        message["List-Unsubscribe"] = (
+            f"<{unsubscribe_url}>"
+        )
+
+        message["List-Unsubscribe-Post"] = (
+            "List-Unsubscribe=One-Click"
+        )
+
+
+    return message
+
+
+# =========================================================
+# SEND
+# =========================================================
+
+@app.route(
+    "/api/send",
+    methods=["POST"]
+)
+@login_required
+def send_emails():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+
+    sender_name = str(
+        data.get(
+            "sender_name",
+            ""
+        )
+    ).strip()
+
+
+    gmail = str(
+        data.get(
+            "gmail",
+            ""
+        )
+    ).strip().lower()
+
+
+    app_password = str(
+        data.get(
+            "app_password",
+            ""
+        )
+    ).strip()
+
+
+    subject = str(
+        data.get(
+            "subject",
+            ""
+        )
+    ).strip()
+
+
+    message = str(
+        data.get(
+            "message",
+            ""
+        )
+    )
+
+
+    raw_recipients = str(
+        data.get(
+            "recipients",
+            ""
+        )
+    )
+
+
+    unsubscribe_url = str(
+        data.get(
+            "unsubscribe_url",
+            ""
+        )
+    ).strip()
+
+
+    if not sender_name:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Sender name required."
+
+        }), 400
+
+
+    if not valid_email(gmail):
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Valid sender email required."
+
+        }), 400
+
+
+    if not app_password:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Gmail App Password required."
+
+        }), 400
+
+
+    if not subject:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Subject required."
+
+        }), 400
+
+
+    if not message.strip():
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Message required."
+
+        }), 400
+
+
+    recipients = parse_recipients(
+        raw_recipients
+    )
+
+
+    if not recipients:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Add recipients."
+
+        }), 400
+
+
+    if len(recipients) > MAX_RECIPIENTS:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                f"Maximum {MAX_RECIPIENTS} recipients."
+
+        }), 400
+
+
+    invalid = [
+
+        email
+
+        for email in recipients
+
+        if not valid_email(email)
+
+    ]
+
+
+    if invalid:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Invalid recipient email address.",
+
+            "invalid":
+                invalid
+
+        }), 400
+
+
+    sent = []
+
+    failed = []
+
+
+    context = ssl.create_default_context()
+
+
+    try:
+
+        with smtplib.SMTP_SSL(
+            SMTP_HOST,
+            SMTP_PORT,
+            context=context,
+            timeout=30
+        ) as smtp:
+
+
+            smtp.login(
+                gmail,
+                app_password
+            )
+
+
+            for index, recipient in enumerate(
+                recipients
+            ):
+
+                try:
+
+                    mail = build_message(
+
+                        sender_name,
+
+                        gmail,
+
+                        recipient,
+
+                        subject,
+
+                        message,
+
+                        unsubscribe_url
+
+                    )
+
+
+                    refused = smtp.sendmail(
+
+                        gmail,
+
+                        [recipient],
+
+                        mail.as_string()
+
+                    )
+
+
+                    if refused:
+
+                        failed.append({
+
+                            "email":
+                                recipient,
+
+                            "error":
+                                "SMTP rejected recipient."
+
+                        })
+
+                    else:
+
+                        sent.append(
+                            recipient
+                        )
+
+
+                except smtplib.SMTPException as exc:
+
+                    failed.append({
+
+                        "email":
+                            recipient,
+
+                        "error":
+                            str(exc)
+
+                    })
+
+                    break
+
+
+                except Exception as exc:
+
+                    failed.append({
+
+                        "email":
+                            recipient,
+
+                        "error":
+                            str(exc)
+
+                    })
 
 
                 if (
-                    smtp.connection &&
-                    smtp.tls &&
-                    smtp.authentication
-                ) {
+                    index <
+                    len(recipients) - 1
+                ):
 
-                    $("diagnosticBadge")
-                        .textContent =
-                        "SMTP Ready ✓";
+                    time.sleep(
+                        SEND_DELAY_SECONDS
+                    )
 
-                    $("diagnosticBadge")
-                        .className =
-                        "badge good";
 
-                } else {
+    except smtplib.SMTPAuthenticationError:
 
-                    $("diagnosticBadge")
-                        .textContent =
-                        "Action Needed";
+        return jsonify({
 
-                    $("diagnosticBadge")
-                        .className =
-                        "badge bad";
-                }
+            "success": False,
 
+            "error":
+                "Gmail authentication failed. "
+                "Check the App Password."
 
-                $("diagMessage")
-                    .textContent =
-                    smtp.error ||
-                    domain.note ||
-                    data.inbox_note ||
-                    "Diagnostics completed.";
+        }), 401
 
 
-                const list =
-                    $("recommendationList");
+    except smtplib.SMTPConnectError:
 
-                list.innerHTML =
-                    "";
+        return jsonify({
 
+            "success": False,
 
-                (
-                    data.recommendations ||
-                    []
-                ).forEach(
-                    item => {
+            "error":
+                "Could not connect to Gmail SMTP."
 
-                        const li =
-                            document.createElement(
-                                "li"
-                            );
+        }), 502
 
-                        li.textContent =
-                            item;
 
-                        list.appendChild(
-                            li
-                        );
-                    }
-                );
+    except smtplib.SMTPException as exc:
 
+        return jsonify({
 
-            } catch (error) {
+            "success": False,
 
-                $("diagnosticBadge")
-                    .textContent =
-                    "Error";
+            "error":
+                f"SMTP error: {exc}"
 
-                $("diagnosticBadge")
-                    .className =
-                    "badge bad";
+        }), 502
 
-                $("diagnosticError")
-                    .textContent =
-                    error.message ||
-                    "Diagnostics failed.";
 
-            } finally {
+    except Exception as exc:
 
-                $("diagnoseBtn")
-                    .disabled =
-                    false;
+        return jsonify({
 
-                $("diagnoseBtn")
-                    .textContent =
-                    "🔎 Run Gmail Diagnostics";
-            }
+            "success": False,
 
-        }
-    );
+            "error":
+                str(exc)
 
+        }), 500
 
-/* =====================================================
-   RESET MONITOR
-===================================================== */
 
-function resetMonitor(total) {
+    total = len(recipients)
 
-    $("total")
-        .textContent =
-        total;
+    sent_count = len(sent)
 
-    $("sent")
-        .textContent =
-        0;
+    failed_count = len(failed)
 
-    $("failed")
-        .textContent =
-        0;
+    remaining = (
+        total
+        - sent_count
+        - failed_count
+    )
 
-    $("remaining")
-        .textContent =
-        total;
 
-    $("bar")
-        .style.width =
-        "0%";
+    return jsonify({
 
-    $("progressText")
-        .textContent =
-        "0%";
+        "success":
+            sent_count > 0,
 
-    $("dispatchCount")
-        .textContent =
-        "0 / " + total;
+        "total":
+            total,
 
-    $("dispatch")
-        .innerHTML =
-        "";
-}
+        "sent":
+            sent_count,
 
+        "failed":
+            failed_count,
 
-/* =====================================================
-   DISPATCH ROW
-===================================================== */
+        "remaining":
+            remaining,
 
-function addRow(
-    email,
-    status,
-    message
-) {
+        "sent_emails":
+            sent,
 
-    const row =
-        document.createElement(
-            "div"
-        );
+        "failed_emails":
+            failed,
 
-    row.className =
-        "dispatch-row " +
-        (
-            status === "sent"
-                ? "row-success"
-                : "row-failed"
-        );
+        "accepted_means":
+            "SMTP accepted; "
+            "Inbox placement is not verified."
 
+    })
 
-    const icon =
-        document.createElement(
-            "span"
-        );
 
-    icon.className =
-        "row-icon";
+# =========================================================
+# LOCAL RUN
+# =========================================================
 
-    icon.textContent =
-        status === "sent"
-            ? "✓"
-            : "×";
+if __name__ == "__main__":
 
+    app.run(
 
-    const emailBox =
-        document.createElement(
-            "div"
-        );
+        host="0.0.0.0",
 
-    emailBox.className =
-        "row-email";
+        port=int(
+            os.environ.get(
+                "PORT",
+                "5000"
+            )
+        ),
 
-    emailBox.textContent =
-        email;
+        debug=False
 
-
-    const statusBox =
-        document.createElement(
-            "small"
-        );
-
-    statusBox.className =
-        "row-status";
-
-    statusBox.textContent =
-        message || status;
-
-
-    row.appendChild(icon);
-    row.appendChild(emailBox);
-    row.appendChild(statusBox);
-
-
-    $("dispatch")
-        .appendChild(row);
-}
-
-
-/* =====================================================
-   SEND
-===================================================== */
-
-$("sendBtn")
-    .addEventListener(
-        "click",
-        async () => {
-
-            const recipients =
-                getRecipients();
-
-
-            if (!recipients.length) {
-
-                $("status")
-                    .textContent =
-                    "Add recipients.";
-
-                return;
-            }
-
-
-            if (recipients.length > 25) {
-
-                $("status")
-                    .textContent =
-                    "Maximum 25 recipients.";
-
-                return;
-            }
-
-
-            const payload = {
-
-                sender_name:
-                    $("senderName")
-                        .value
-                        .trim(),
-
-                gmail:
-                    $("gmail")
-                        .value
-                        .trim(),
-
-                app_password:
-                    $("appPassword")
-                        .value
-                        .trim(),
-
-                subject:
-                    $("subject")
-                        .value
-                        .trim(),
-
-                message:
-                    $("message")
-                        .value,
-
-                recipients:
-                    recipients.join("\n"),
-
-                unsubscribe_url:
-                    $("unsubscribe")
-                        .value
-                        .trim()
-            };
-
-
-            resetMonitor(
-                recipients.length
-            );
-
-
-            $("sendBtn")
-                .disabled =
-                true;
-
-            $("status")
-                .textContent =
-                "Sending...";
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/send",
-                        {
-                            method:
-                                "POST",
-
-                            credentials:
-                                "same-origin",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    payload
-                                )
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.error ||
-                        "Sending failed."
-                    );
-                }
-
-
-                (
-                    data.sent_emails ||
-                    []
-                ).forEach(
-                    email => {
-
-                        addRow(
-                            email,
-                            "sent",
-                            "SMTP accepted ✓"
-                        );
-                    }
-                );
-
-
-                (
-                    data.failed_emails ||
-                    []
-                ).forEach(
-                    item => {
-
-                        addRow(
-                            item.email,
-                            "failed",
-                            item.error
-                        );
-                    }
-                );
-
-
-                $("sent")
-                    .textContent =
-                    data.sent;
-
-                $("failed")
-                    .textContent =
-                    data.failed;
-
-                $("remaining")
-                    .textContent =
-                    data.remaining;
-
-
-                const processed =
-                    data.sent +
-                    data.failed;
-
-
-                const percent =
-                    data.total
-                        ? Math.round(
-                            processed /
-                            data.total *
-                            100
-                        )
-                        : 0;
-
-
-                $("bar")
-                    .style.width =
-                    percent + "%";
-
-                $("progressText")
-                    .textContent =
-                    percent + "%";
-
-                $("dispatchCount")
-                    .textContent =
-                    processed +
-                    " / " +
-                    data.total;
-
-
-                $("status")
-                    .textContent =
-                    "Finished: " +
-                    data.sent +
-                    " sent, " +
-                    data.failed +
-                    " failed.";
-
-
-            } catch (error) {
-
-                $("status")
-                    .textContent =
-                    error.message ||
-                    "Sending failed.";
-
-            } finally {
-
-                $("sendBtn")
-                    .disabled =
-                    false;
-            }
-
-        }
-    );
-
-
-/* =====================================================
-   START
-===================================================== */
-
-updateRecipientCounter();
-
-loadProtection();
-
-</script>
-
-</body>
-</html>
+    )
