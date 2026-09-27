@@ -1,480 +1,1046 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+
+<html lang="en">
 
 <head>
 
-<meta charset="UTF-8">
+<meta charset="utf-8">
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
 
-<title>Secure Mail Console</title>
+<title>
+    Secure Mail Console
+</title>
 
-<link rel="stylesheet"
-href="{{ url_for('static',filename='style.css') }}">
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
 
 </head>
 
+
 <body>
 
-<header>
 
-<div class="logo">
-🛡️ Secure Mail Console
-</div>
+<header class="topbar">
 
-<a href="/logout">
-⇥ Logout
-</a>
+    <div class="brand">
+
+        <div class="brand-title">
+            🛡️ Secure Mail Console
+        </div>
+
+        <div class="brand-sub">
+            Authenticated SMTP delivery
+        </div>
+
+    </div>
+
+
+    <a
+        href="/logout"
+        class="logout"
+    >
+        Logout
+    </a>
 
 </header>
 
-<main>
 
-<h2>➤ Bulk Email Sender</h2>
 
-<div class="grid">
+<main class="container">
+
+
+<div class="main-grid">
+
+
+<!-- =====================================================
+     LEFT PANEL
+===================================================== -->
 
 <section class="card">
 
-<h3>🖉 Compose Message</h3>
 
-<label>Sender Name</label>
+    <div class="section-title">
 
-<input
-id="sender"
-placeholder="E.g. John Doe"
->
+        <div>
+            <h2>
+                Sender
+            </h2>
 
-<label>Your Gmail</label>
+            <p>
+                SMTP account
+            </p>
+        </div>
 
-<input
-id="gmail"
-type="email"
-placeholder="you@gmail.com"
->
+    </div>
 
-<label>App Password</label>
 
-<input
-id="appPassword"
-type="password"
-placeholder="16-character App Password"
->
+    <label>
+        Sender Name
+    </label>
 
-<label>Email Subject</label>
+    <input
+        id="senderName"
+        type="text"
+        placeholder="Your name"
+        autocomplete="name"
+    >
 
-<input
-id="subject"
-placeholder="Enter subject line..."
->
 
-<label>Message Body</label>
+    <label>
+        Gmail Address
+    </label>
 
-<textarea
-id="message"
-placeholder="Write your email here... {name} supported"
-></textarea>
+    <input
+        id="gmail"
+        type="email"
+        placeholder="you@gmail.com"
+        autocomplete="email"
+    >
 
-<div class="protection">
 
-<b>🛡️ Spam Protection</b>
+    <label>
+        Gmail App Password
+    </label>
 
-<div class="verify">
+    <input
+        id="appPassword"
+        type="password"
+        placeholder="16-character App Password"
+        autocomplete="off"
+    >
 
-<span id="verifyIcon">✓</span>
 
-<div>
+    <div class="info-box">
 
-<strong id="verifyTitle">
-Ready
-</strong>
+        <strong>
+            Gmail SMTP
+        </strong>
 
-<small id="verifyText">
-Real SMTP verification will appear here.
-</small>
+        <span>
+            Use an App Password, not your normal Gmail password.
+        </span>
 
-</div>
+    </div>
 
-</div>
 
-</div>
+
+    <div class="divider"></div>
+
+
+
+    <div class="section-title">
+
+        <div>
+
+            <h2>
+                Email
+            </h2>
+
+            <p>
+                Message content
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <label>
+        Subject
+    </label>
+
+    <input
+        id="subject"
+        type="text"
+        placeholder="Email subject"
+    >
+
+
+    <label>
+        Message Body
+    </label>
+
+    <textarea
+        id="message"
+        rows="10"
+        placeholder="Hello {name},
+
+Your message here..."
+    ></textarea>
+
+
+    <div class="variable-box">
+
+        <b>
+            Personalization:
+        </b>
+
+        <code>
+            {name}
+        </code>
+
+        <span>
+            becomes the recipient's email name.
+        </span>
+
+    </div>
+
+
+    <label>
+        Unsubscribe URL
+        <small>
+            optional
+        </small>
+    </label>
+
+    <input
+        id="unsubscribe"
+        type="url"
+        placeholder="https://example.com/unsubscribe"
+    >
+
+
+    <div class="small-note">
+        Only enter a real unsubscribe endpoint if your message
+        is promotional/marketing email.
+    </div>
+
+
+    <button
+        id="sendBtn"
+        class="send-button"
+    >
+        <span>
+            ⚡
+        </span>
+
+        Send All
+    </button>
+
+
+    <div
+        id="status"
+        class="status"
+    >
+        Ready
+    </div>
+
 
 </section>
 
 
-<section>
 
-<div class="card">
+<!-- =====================================================
+     RIGHT PANEL
+===================================================== -->
 
-<div class="row">
-
-<h3>👥 Recipients</h3>
-
-<span id="count">
-0 found
-</span>
-
-</div>
-
-<small>
-Paste emails, comma separated or new lines
-</small>
-
-<textarea
-id="recipients"
-placeholder="recipient1@example.com
-recipient2@example.com"
-></textarea>
-
-</div>
+<section class="card">
 
 
-<div class="card">
+    <!-- Protection -->
 
-<h3>◔ Progress Monitor</h3>
+    <div class="protection-header">
 
-<div class="stats">
+        <div>
 
-<div>
-TOTAL
-<b id="total">0</b>
-</div>
+            <h2>
+                🛡️ Spam Protection
+            </h2>
 
-<div>
-SENT
-<b class="green" id="sent">0</b>
-</div>
+            <p>
+                Deliverability checks
+            </p>
 
-<div>
-FAILED
-<b class="red" id="failed">0</b>
-</div>
-
-<div>
-REMAINING
-<b class="orange" id="remaining">0</b>
-</div>
-
-</div>
-
-<div class="bar">
-<i id="bar"></i>
-</div>
-
-<p id="status">
-● Ready to send
-</p>
-
-<button id="send">
-➤ Send All
-</button>
-
-</div>
+        </div>
 
 
-<div class="card">
+        <span
+            id="protectBadge"
+            class="badge"
+        >
+            Checking
+        </span>
 
-<div class="row">
+    </div>
 
-<h3>⚡ Live Recipients Dispatch</h3>
 
-<span id="dispatch">
-0 / 0
-</span>
+    <div class="checks">
 
-</div>
 
-<div id="list" class="list">
-No recipients dispatched yet.
-</div>
+        <div class="check">
+            <span>✓</span>
+            TLS SMTP connection
+        </div>
 
-</div>
+
+        <div class="check">
+            <span>✓</span>
+            Authenticated SMTP
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            RFC email headers
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            Duplicate filtering
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            Invalid address filtering
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            Controlled send rate
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            Persistent SMTP session
+        </div>
+
+
+        <div class="check">
+            <span>✓</span>
+            No filter bypass
+        </div>
+
+
+    </div>
+
+
+
+    <!-- Recipients -->
+
+    <div class="recipient-title">
+
+        <h2>
+            Recipients
+        </h2>
+
+        <span>
+            MAX 25
+        </span>
+
+    </div>
+
+
+    <textarea
+        id="recipients"
+        class="recipient-input"
+        rows="9"
+        placeholder="one@example.com
+two@example.com
+three@example.com"
+    ></textarea>
+
+
+    <div
+        id="recipientCounter"
+        class="recipient-counter"
+    >
+        0 / 25 recipients
+    </div>
+
+
+
+    <!-- Stats -->
+
+    <div class="stats">
+
+
+        <div class="stat">
+
+            <strong id="total">
+                0
+            </strong>
+
+            <span>
+                TOTAL
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <strong id="sent">
+                0
+            </strong>
+
+            <span>
+                SENT
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <strong id="failed">
+                0
+            </strong>
+
+            <span>
+                FAILED
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <strong id="remaining">
+                0
+            </strong>
+
+            <span>
+                REMAINING
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- Progress -->
+
+    <div class="progress-wrapper">
+
+        <div class="progress">
+
+            <i id="bar"></i>
+
+        </div>
+
+        <div
+            id="progressText"
+            class="progress-text"
+        >
+            0%
+        </div>
+
+    </div>
+
+
+
+    <!-- Dispatch -->
+
+    <div class="dispatch-title">
+
+        <div>
+
+            <h2>
+                ⚡ Live Recipients Dispatch
+            </h2>
+
+            <p>
+                SMTP response monitor
+            </p>
+
+        </div>
+
+
+        <span
+            id="dispatchCount"
+            class="dispatch-count"
+        >
+            0 / 0
+        </span>
+
+    </div>
+
+
+    <div
+        id="dispatch"
+        class="dispatch"
+    >
+
+        <div class="empty-dispatch">
+            Waiting for a send job...
+        </div>
+
+    </div>
+
 
 </section>
 
+
 </div>
+
 
 </main>
 
 
+
 <script>
 
-const $ = id =>
-document.getElementById(id);
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const $ = (id) =>
+    document.getElementById(id);
 
 
-function getRecipients(){
 
-return [
-...new Set(
-$("recipients").value
-.replace(/[,;]/g,"\n")
-.split(/\s+/)
-.map(x => x.trim().toLowerCase())
-.filter(Boolean)
-)
-];
+/* =========================================================
+   RECIPIENT PARSER
+========================================================= */
+
+function getRecipients() {
+
+    const raw =
+        $("recipients").value
+            .replaceAll(",", "\n")
+            .replaceAll(";", "\n")
+            .replaceAll("\r", "\n");
+
+
+    const values =
+        raw
+            .split(/\s+/)
+            .map(
+                value =>
+                    value.trim().toLowerCase()
+            )
+            .filter(Boolean);
+
+
+    return [
+        ...new Set(values)
+    ];
+}
+
+
+
+/* =========================================================
+   RECIPIENT COUNTER
+========================================================= */
+
+function updateRecipientCounter() {
+
+    const count =
+        getRecipients().length;
+
+
+    $("recipientCounter")
+        .textContent =
+        count + " / 25 recipients";
+
+
+    if (count > 25) {
+
+        $("recipientCounter")
+            .classList.add("counter-danger");
+
+    } else {
+
+        $("recipientCounter")
+            .classList.remove("counter-danger");
+
+    }
+}
+
+
+$("recipients")
+    .addEventListener(
+        "input",
+        updateRecipientCounter
+    );
+
+
+
+/* =========================================================
+   PROTECTION
+========================================================= */
+
+async function loadProtection() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/protection"
+            );
+
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+
+        $("protectBadge")
+            .textContent =
+            "Active ✓";
+
+
+        $("protectBadge")
+            .className =
+            "badge good";
+
+
+    } catch (error) {
+
+        $("protectBadge")
+            .textContent =
+            "Unavailable";
+
+
+        $("protectBadge")
+            .className =
+            "badge bad";
+
+    }
 
 }
 
 
-$("recipients").oninput = () => {
 
-const list = getRecipients();
+/* =========================================================
+   RESET MONITOR
+========================================================= */
 
-$("count").textContent =
-list.length + " found";
+function resetMonitor(total) {
 
-$("total").textContent =
-list.length;
-
-$("remaining").textContent =
-list.length;
-
-};
+    $("total")
+        .textContent =
+        total;
 
 
-$("send").onclick = async () => {
-
-const list = getRecipients();
-
-if(!$("sender").value.trim())
-return alert("Enter sender name.");
-
-if(!$("gmail").value.trim())
-return alert("Enter Gmail.");
-
-if(!$("appPassword").value.trim())
-return alert("Enter Gmail App Password.");
-
-if(!list.length)
-return alert("Add recipients.");
-
-if(list.length > 25)
-return alert("Maximum 25 recipients.");
-
-if(!$("subject").value.trim())
-return alert("Enter subject.");
-
-if(!$("message").value.trim())
-return alert("Enter message.");
+    $("sent")
+        .textContent =
+        "0";
 
 
-$("send").disabled = true;
-$("send").textContent = "Sending...";
-
-$("list").innerHTML = "";
-
-$("sent").textContent = "0";
-$("failed").textContent = "0";
-$("remaining").textContent = list.length;
-
-$("bar").style.width = "0%";
-
-$("verifyIcon").className = "working";
-$("verifyTitle").textContent = "Verifying...";
-$("verifyText").textContent =
-"Checking SMTP acceptance.";
+    $("failed")
+        .textContent =
+        "0";
 
 
-try{
-
-const response = await fetch(
-"/api/send-live",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-
-sender_name:
-$("sender").value.trim(),
-
-gmail:
-$("gmail").value.trim(),
-
-app_password:
-$("appPassword").value.trim(),
-
-subject:
-$("subject").value.trim(),
-
-message:
-$("message").value,
-
-recipients:
-list.join("\n")
-
-})
-}
-);
+    $("remaining")
+        .textContent =
+        total;
 
 
-if(!response.ok){
+    $("bar")
+        .style.width =
+        "0%";
 
-const error =
-await response.json();
 
-throw new Error(
-error.error || "Send failed."
-);
+    $("progressText")
+        .textContent =
+        "0%";
+
+
+    $("dispatchCount")
+        .textContent =
+        "0 / " + total;
+
+
+    $("dispatch")
+        .innerHTML =
+        "";
 
 }
 
 
-const reader =
-response.body.getReader();
 
-const decoder =
-new TextDecoder();
+/* =========================================================
+   ADD DISPATCH ROW
+========================================================= */
 
-let buffer = "";
+function addRow(
+    email,
+    status,
+    message
+) {
 
-
-while(true){
-
-const part =
-await reader.read();
-
-if(part.done)
-break;
-
-buffer += decoder.decode(
-part.value
-);
-
-const lines =
-buffer.split("\n");
-
-buffer = lines.pop();
+    const row =
+        document.createElement(
+            "div"
+        );
 
 
-for(const line of lines){
-
-if(!line.trim())
-continue;
-
-const data =
-JSON.parse(line);
-
-
-if(data.type === "start"){
-
-$("total").textContent =
-data.total;
-
-$("dispatch").textContent =
-"0 / " + data.total;
-
-}
+    row.className =
+        "dispatch-row " +
+        (
+            status === "sent"
+                ? "row-success"
+                : "row-failed"
+        );
 
 
-if(data.type === "recipient"){
-
-$("sent").textContent =
-data.sent;
-
-$("failed").textContent =
-data.failed;
-
-$("remaining").textContent =
-data.remaining;
-
-$("bar").style.width =
-data.percent + "%";
-
-$("dispatch").textContent =
-(data.sent + data.failed)
-+ " / "
-+ data.total;
+    const icon =
+        document.createElement(
+            "span"
+        );
 
 
-const row =
-document.createElement("div");
-
-row.className =
-"dispatch-row "
-+ data.status;
-
-row.innerHTML =
-(data.status === "sent" ? "✓ " : "× ")
-+ data.email
-+ "<b>"
-+ (data.status === "sent"
-    ? "Sent"
-    : "Failed")
-+ "</b>";
-
-$("list").prepend(row);
+    icon.className =
+        "row-icon";
 
 
-if(data.status === "sent"){
+    icon.textContent =
+        status === "sent"
+            ? "✓"
+            : "×";
 
-$("verifyIcon").className =
-"verified";
 
-$("verifyIcon").textContent =
-"✓";
+    const emailBox =
+        document.createElement(
+            "div"
+        );
 
-$("verifyTitle").textContent =
-"Verified ✓";
 
-$("verifyText").textContent =
-data.sent
-+ " recipient(s) accepted by SMTP.";
+    emailBox.className =
+        "row-email";
 
-}
+
+    emailBox.textContent =
+        email;
+
+
+    const statusBox =
+        document.createElement(
+            "small"
+        );
+
+
+    statusBox.className =
+        "row-status";
+
+
+    statusBox.textContent =
+        message || status;
+
+
+    row.appendChild(
+        icon
+    );
+
+
+    row.appendChild(
+        emailBox
+    );
+
+
+    row.appendChild(
+        statusBox
+    );
+
+
+    $("dispatch")
+        .appendChild(
+            row
+        );
+
+
+    row.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
 
 }
 
 
-if(data.type === "complete"){
 
-$("bar").style.width =
-"100%";
+/* =========================================================
+   SEND BUTTON
+========================================================= */
 
-$("status").textContent =
-"● Completed: "
-+ data.sent
-+ " sent, "
-+ data.failed
-+ " failed";
-
-}
-
-}
-
-}
+$("sendBtn")
+    .addEventListener(
+        "click",
+        async function () {
 
 
-}catch(error){
+            const recipients =
+                getRecipients();
 
-$("verifyIcon").className =
-"error";
 
-$("verifyTitle").textContent =
-"Error";
+            /* ---------------------------------------------
+               Basic validation
+            --------------------------------------------- */
 
-$("verifyText").textContent =
-error.message;
+            if (!recipients.length) {
 
-$("status").textContent =
-"● " + error.message;
+                $("status")
+                    .textContent =
+                    "Add recipients.";
 
-}finally{
+                return;
 
-$("send").disabled = false;
+            }
 
-$("send").textContent =
-"➤ Send All";
 
-}
+            if (recipients.length > 25) {
 
-};
+                $("status")
+                    .textContent =
+                    "Maximum 25 recipients.";
+
+                return;
+
+            }
+
+
+            const payload = {
+
+                sender_name:
+                    $("senderName")
+                        .value
+                        .trim(),
+
+                gmail:
+                    $("gmail")
+                        .value
+                        .trim(),
+
+                app_password:
+                    $("appPassword")
+                        .value
+                        .trim(),
+
+                subject:
+                    $("subject")
+                        .value
+                        .trim(),
+
+                message:
+                    $("message")
+                        .value,
+
+                recipients:
+                    recipients.join("\n"),
+
+                unsubscribe_url:
+                    $("unsubscribe")
+                        .value
+                        .trim()
+
+            };
+
+
+            /* ---------------------------------------------
+               Reset UI
+            --------------------------------------------- */
+
+            resetMonitor(
+                recipients.length
+            );
+
+
+            $("sendBtn")
+                .disabled =
+                true;
+
+
+            $("status")
+                .textContent =
+                "Connecting to Gmail SMTP...";
+
+
+            try {
+
+
+                /* -----------------------------------------
+                   SEND
+                ----------------------------------------- */
+
+                const response =
+                    await fetch(
+                        "/api/send",
+                        {
+                            method:
+                                "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Sending failed."
+                    );
+
+                }
+
+
+                /* -----------------------------------------
+                   Successful recipients
+                ----------------------------------------- */
+
+                const sent =
+                    data.sent_emails ||
+                    [];
+
+
+                sent.forEach(
+                    email => {
+
+                        addRow(
+                            email,
+                            "sent",
+                            "SMTP accepted ✓"
+                        );
+
+                    }
+                );
+
+
+                /* -----------------------------------------
+                   Failed recipients
+                ----------------------------------------- */
+
+                const failed =
+                    data.failed_emails ||
+                    [];
+
+
+                failed.forEach(
+                    item => {
+
+                        addRow(
+                            item.email,
+                            "failed",
+                            item.error ||
+                            "Failed"
+                        );
+
+                    }
+                );
+
+
+                /* -----------------------------------------
+                   Stats
+                ----------------------------------------- */
+
+                $("sent")
+                    .textContent =
+                    data.sent;
+
+
+                $("failed")
+                    .textContent =
+                    data.failed;
+
+
+                $("remaining")
+                    .textContent =
+                    data.remaining;
+
+
+                const processed =
+                    data.sent +
+                    data.failed;
+
+
+                const percentage =
+                    data.total
+                        ? Math.round(
+                            (
+                                processed /
+                                data.total
+                            ) * 100
+                        )
+                        : 0;
+
+
+                $("bar")
+                    .style.width =
+                    percentage + "%";
+
+
+                $("progressText")
+                    .textContent =
+                    percentage + "%";
+
+
+                $("dispatchCount")
+                    .textContent =
+                    processed +
+                    " / " +
+                    data.total;
+
+
+                /* -----------------------------------------
+                   Final status
+                ----------------------------------------- */
+
+                $("status")
+                    .textContent =
+                    "Finished: " +
+                    data.sent +
+                    " sent, " +
+                    data.failed +
+                    " failed.";
+
+
+            } catch (error) {
+
+                $("status")
+                    .textContent =
+                    error.message ||
+                    "Sending failed.";
+
+            } finally {
+
+                $("sendBtn")
+                    .disabled =
+                    false;
+
+            }
+
+        }
+    );
+
+
+
+/* =========================================================
+   START
+========================================================= */
+
+updateRecipientCounter();
+
+loadProtection();
 
 </script>
 
+
 </body>
+
 </html>
