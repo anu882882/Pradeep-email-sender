@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 
 <head>
@@ -23,12 +24,17 @@
 
 <header>
 
-  <div class="brand">
-    <strong>✉ Secure Mail Console</strong>
-    <small>Gmail Mail Sender</small>
-  </div>
+<div class="brand">
 
-  <a href="/logout">Logout</a>
+<strong>✉ Secure Mail Console</strong>
+
+<small>Gmail Mail Sender</small>
+
+</div>
+
+<a href="/logout">
+Logout
+</a>
 
 </header>
 
@@ -36,145 +42,218 @@
 <main>
 
 
+<!-- =====================
+     SENDER
+===================== -->
+
 <section class="card">
 
-  <h2>Sender</h2>
+<h2>Sender</h2>
 
 
-  <label>Sender Name</label>
+<label>
+Sender Name
+</label>
 
-  <input
-    id="name"
-    type="text"
-    placeholder="Your name"
-  >
-
-
-  <label>Your Gmail</label>
-
-  <input
-    id="gmail"
-    type="email"
-    placeholder="your@gmail.com"
-  >
+<input
+  id="name"
+  type="text"
+  placeholder="Your name"
+>
 
 
-  <label>App Password</label>
+<label>
+Your Gmail
+</label>
 
-  <input
-    id="pass"
-    type="password"
-    placeholder="Gmail App Password"
-  >
-
-
-  <label>Subject</label>
-
-  <input
-    id="sub"
-    type="text"
-    placeholder="Email subject"
-  >
+<input
+  id="gmail"
+  type="email"
+  placeholder="your@gmail.com"
+>
 
 
-  <label>Message Body</label>
+<label>
+App Password
+</label>
 
-  <textarea
-    id="msg"
-    placeholder="Write your message..."
-  ></textarea>
-
-
-  <div class="placeholders">
-
-    <strong>Available placeholders</strong>
-
-    <div class="tags">
-      <span>{name}</span>
-      <span>{ref}</span>
-    </div>
-
-    <small>
-      {name} adds the recipient name.
-      {ref} creates a different reference ID
-      for each recipient.
-    </small>
-
-  </div>
+<input
+  id="pass"
+  type="password"
+  placeholder="Gmail App Password"
+>
 
 
-  <button
-    id="send"
-    type="button"
-  >
-    Send Emails
-  </button>
+<label>
+Subject
+</label>
+
+<input
+  id="sub"
+  type="text"
+  placeholder="Email subject"
+>
 
 
-  <p id="status"></p>
+<label>
+Message Body
+</label>
+
+<textarea
+  id="msg"
+  placeholder="Write your message..."
+></textarea>
 
 
-  <div class="protection">
+<div class="placeholders">
 
-    <h3>✓ Spam Protection</h3>
+<strong>
+Available placeholders
+</strong>
 
-    <div>✓ Duplicate recipients filtered</div>
+<div class="tags">
 
-    <div>✓ Invalid email filter</div>
+<span>{name}</span>
 
-    <div>✓ Message content checked</div>
+<span>{ref}</span>
 
-    <div>✓ Controlled sending</div>
+</div>
 
-    <p id="protectMsg">
-      Ready to check message.
-    </p>
+<small>
 
-  </div>
+{name} = recipient name<br>
+
+{ref} = unique reference ID for each email
+
+</small>
+
+</div>
+
+
+<button
+  id="send"
+  type="button"
+>
+Send Emails
+</button>
+
+
+<p id="status"></p>
+
+
+<!-- =====================
+     SPAM PROTECTION
+===================== -->
+
+<div class="protection">
+
+<h3>
+✓ Spam Protection
+</h3>
+
+<div>
+✓ Duplicate recipients filtered
+</div>
+
+<div>
+✓ Invalid email addresses checked
+</div>
+
+<div>
+✓ Message content checked
+</div>
+
+<div>
+✓ Maximum 25 recipients
+</div>
+
+<div>
+✓ Controlled sequential sending
+</div>
+
+<p id="protectMsg">
+Ready to check message.
+</p>
+
+</div>
 
 </section>
 
 
 
+<!-- =====================
+     RECIPIENTS
+===================== -->
+
 <section class="card">
 
-  <h2>Recipients</h2>
+<h2>
+Recipients
+</h2>
 
 
-  <textarea
-    id="recipients"
-    placeholder="one@email.com&#10;two@email.com&#10;three@email.com"
-  ></textarea>
+<textarea
+  id="recipients"
+  placeholder="one@email.com&#10;two@email.com&#10;three@email.com"
+></textarea>
 
 
-  <div class="stats">
+<div class="stats">
 
-    <div>
-      <strong id="total">0</strong>
-      <span>Total</span>
-    </div>
+<div>
 
-    <div>
-      <strong id="sent">0</strong>
-      <span>Sent</span>
-    </div>
+<strong id="total">
+0
+</strong>
 
-    <div>
-      <strong id="failed">0</strong>
-      <span>Failed</span>
-    </div>
+<span>
+Total
+</span>
 
-  </div>
+</div>
 
 
-  <div class="progress">
-    <div id="progress"></div>
-  </div>
+<div>
+
+<strong id="sent">
+0
+</strong>
+
+<span>
+Sent
+</span>
+
+</div>
 
 
-  <h3>Live Recipients Dispatch</h3>
+<div>
 
-  <div id="list"></div>
+<strong id="failed">
+0
+</strong>
+
+<span>
+Failed
+</span>
+
+</div>
+
+</div>
+
+
+<div class="progress">
+
+<div id="progress"></div>
+
+</div>
+
+
+<h3>
+Live Recipients Dispatch
+</h3>
+
+
+<div id="list"></div>
 
 </section>
 
@@ -182,16 +261,90 @@
 </main>
 
 
+
 <script>
+
+/* =====================
+   Helpers
+===================== */
 
 function get(id) {
   return document.getElementById(id);
 }
 
 
-/* Message check */
+/* =====================
+   Recipient list
+===================== */
 
-function checkMessage() {
+function getUniqueRecipients() {
+
+  var raw =
+    get("recipients").value;
+
+  var items =
+    raw.split(/[\s,;]+/)
+       .filter(Boolean);
+
+  var unique = [];
+
+  items.forEach(function(email) {
+
+    email =
+      email.trim().toLowerCase();
+
+    if (
+      email &&
+      unique.indexOf(email) === -1
+    ) {
+
+      unique.push(email);
+
+    }
+
+  });
+
+  return unique;
+}
+
+
+/* =====================
+   Recipient counter
+===================== */
+
+function updateRecipientCount() {
+
+  var list =
+    getUniqueRecipients();
+
+  get("total").textContent =
+    list.length;
+
+  if (list.length > 25) {
+
+    get("protectMsg").textContent =
+      "⚠ Maximum 25 recipients allowed.";
+
+  } else {
+
+    checkMessage();
+
+  }
+}
+
+
+get("recipients")
+.addEventListener(
+  "input",
+  updateRecipientCount
+);
+
+
+/* =====================
+   Message protection
+===================== */
+
+async function checkMessage() {
 
   var subject =
     get("sub").value.trim();
@@ -205,102 +358,140 @@ function checkMessage() {
       "Ready to check message.";
 
     return;
-
   }
-
-  var text =
-    (subject + " " + message)
-    .toLowerCase();
 
   var repeated =
-    /(.)\1{5,}/.test(text);
+    /(.)\1{7,}/.test(
+      subject + " " + message
+    );
 
   var links =
-    (text.match(/https?:\/\//g) || [])
-    .length;
+    (
+      subject + " " + message
+    ).match(/https?:\/\//gi) || [];
 
-  var suspicious =
+  var unsafe =
     /<script|javascript:|<iframe/i
-    .test(text);
+    .test(
+      subject + " " + message
+    );
 
-  if (
-    repeated ||
-    links > 5 ||
-    suspicious
-  ) {
+  if (repeated) {
 
     get("protectMsg").textContent =
-      "⚠ Review message before sending.";
+      "⚠ Repeated characters detected.";
 
-  } else {
-
-    get("protectMsg").textContent =
-      "✓ Message passed basic checks.";
-
+    return;
   }
 
+  if (links.length > 5) {
+
+    get("protectMsg").textContent =
+      "⚠ Message contains many links.";
+
+    return;
+  }
+
+  if (unsafe) {
+
+    get("protectMsg").textContent =
+      "⚠ Unsafe HTML content detected.";
+
+    return;
+  }
+
+  get("protectMsg").textContent =
+    "✓ Basic message checks passed.";
 }
 
 
-get("sub").addEventListener(
+get("sub")
+.addEventListener(
   "input",
   checkMessage
 );
 
-get("msg").addEventListener(
+
+get("msg")
+.addEventListener(
   "input",
   checkMessage
 );
 
 
-/* Recipient counter */
+/* =====================
+   Add dispatch row
+===================== */
 
-get("recipients").addEventListener(
-  "input",
-  function () {
+function addRow(
+  email,
+  ref,
+  failed
+) {
 
-    var list =
-      get("recipients").value
-      .split(/[\s,;]+/)
-      .filter(Boolean);
+  var row =
+    document.createElement("div");
 
-    var unique =
-      [];
+  row.className =
+    failed
+      ? "recipient-row failed"
+      : "recipient-row";
 
-    list.forEach(
-      function (email) {
+  if (failed) {
 
-        email =
-          email.toLowerCase();
+    row.innerHTML =
+      "<span>✕ " +
+      escapeHtml(email) +
+      "</span>";
 
-        if (
-          unique.indexOf(email) === -1
-        ) {
-          unique.push(email);
-        }
+  } else {
 
-      }
-    );
-
-    get("total").textContent =
-      unique.length;
+    row.innerHTML =
+      "<span>✓ " +
+      escapeHtml(email) +
+      "</span>" +
+      "<small>" +
+      escapeHtml(ref) +
+      "</small>";
 
   }
-);
+
+  get("list")
+    .appendChild(row);
+
+  row.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
+}
 
 
-/* Send */
+/* =====================
+   Basic HTML escape
+===================== */
 
-get("send").addEventListener(
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+/* =====================
+   Send
+===================== */
+
+get("send")
+.addEventListener(
   "click",
-  async function () {
-
-    checkMessage();
+  async function() {
 
     var recipients =
-      get("recipients").value
-      .split(/[\s,;]+/)
-      .filter(Boolean);
+      getUniqueRecipients();
 
     if (!recipients.length) {
 
@@ -308,7 +499,6 @@ get("send").addEventListener(
         "Add recipients first.";
 
       return;
-
     }
 
     if (recipients.length > 25) {
@@ -317,14 +507,66 @@ get("send").addEventListener(
         "Maximum 25 recipients.";
 
       return;
+    }
 
+    if (!get("name").value.trim()) {
+
+      get("status").textContent =
+        "Enter sender name.";
+
+      return;
+    }
+
+    if (!get("gmail").value.trim()) {
+
+      get("status").textContent =
+        "Enter Gmail address.";
+
+      return;
+    }
+
+    if (!get("pass").value.trim()) {
+
+      get("status").textContent =
+        "Enter Gmail App Password.";
+
+      return;
+    }
+
+    if (!get("sub").value.trim()) {
+
+      get("status").textContent =
+        "Enter subject.";
+
+      return;
+    }
+
+    if (!get("msg").value.trim()) {
+
+      get("status").textContent =
+        "Enter message.";
+
+      return;
     }
 
 
-    get("send").disabled = true;
+    var confirmed =
+      window.confirm(
+        "Send this message to " +
+        recipients.length +
+        " recipient(s)?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    get("send").disabled =
+      true;
 
     get("status").textContent =
-      "Sending...";
+      "Connecting to Gmail...";
 
     get("sent").textContent =
       "0";
@@ -377,98 +619,193 @@ get("send").addEventListener(
         );
 
 
-      var data =
-        await response.json();
-
-
       if (!response.ok) {
 
+        var errorData =
+          await response.json();
+
         get("status").textContent =
-          data.error ||
+          errorData.error ||
           "Sending failed.";
 
         return;
-
       }
 
 
-      get("sent").textContent =
-        data.sent || 0;
+      var reader =
+        response.body.getReader();
 
-      get("failed").textContent =
-        data.failed || 0;
+      var decoder =
+        new TextDecoder();
 
-
-      var done =
-        (data.sent || 0) +
-        (data.failed || 0);
+      var buffer = "";
 
 
-      var percent =
-        recipients.length
-        ? Math.round(
-            done /
-            recipients.length *
-            100
-          )
-        : 0;
+      while (true) {
+
+        var result =
+          await reader.read();
+
+        if (result.done) {
+          break;
+        }
 
 
-      get("progress").style.width =
-        percent + "%";
+        buffer +=
+          decoder.decode(
+            result.value,
+            {
+              stream: true
+            }
+          );
 
 
-      (data.sent_emails || [])
-      .forEach(
-        function (item) {
+        var lines =
+          buffer.split("\n");
 
-          var row =
-            document.createElement("div");
+        buffer =
+          lines.pop();
 
-          row.className =
-            "recipient-row";
 
-          row.innerHTML =
-            "✓ " +
-            item.email +
-            "<small>" +
-            item.ref +
-            "</small>";
+        for (
+          var i = 0;
+          i < lines.length;
+          i++
+        ) {
 
-          get("list")
-            .appendChild(row);
+          var line =
+            lines[i].trim();
+
+          if (!line) {
+            continue;
+          }
+
+
+          var data;
+
+          try {
+
+            data =
+              JSON.parse(line);
+
+          } catch (e) {
+
+            continue;
+
+          }
+
+
+          if (data.type === "sent") {
+
+            get("sent").textContent =
+              data.sent;
+
+            get("failed").textContent =
+              data.failed;
+
+            var percent =
+              Math.round(
+                (
+                  data.sent +
+                  data.failed
+                ) /
+                data.total *
+                100
+              );
+
+            get("progress")
+              .style.width =
+              percent + "%";
+
+
+            addRow(
+              data.email,
+              data.ref,
+              false
+            );
+
+
+            get("status").textContent =
+              "Sending " +
+              (
+                data.sent +
+                data.failed
+              ) +
+              " of " +
+              data.total +
+              "...";
+
+          }
+
+
+          if (data.type === "failed") {
+
+            get("sent").textContent =
+              data.sent;
+
+            get("failed").textContent =
+              data.failed;
+
+
+            var failedPercent =
+              Math.round(
+                (
+                  data.sent +
+                  data.failed
+                ) /
+                data.total *
+                100
+              );
+
+
+            get("progress")
+              .style.width =
+              failedPercent + "%";
+
+
+            addRow(
+              data.email,
+              data.ref,
+              true
+            );
+
+          }
+
+
+          if (data.type === "error") {
+
+            get("status").textContent =
+              data.error ||
+              "Sending failed.";
+
+          }
+
+
+          if (data.type === "done") {
+
+            get("sent").textContent =
+              data.sent;
+
+            get("failed").textContent =
+              data.failed;
+
+            get("progress")
+              .style.width =
+              "100%";
+
+
+            get("status").textContent =
+              "Completed: " +
+              data.sent +
+              " sent, " +
+              data.failed +
+              " failed.";
+
+          }
 
         }
-      );
 
-
-      (data.failed_emails || [])
-      .forEach(
-        function (item) {
-
-          var row =
-            document.createElement("div");
-
-          row.className =
-            "recipient-row failed";
-
-          row.textContent =
-            "✕ " +
-            item.email;
-
-          get("list")
-            .appendChild(row);
-
-        }
-      );
-
-
-      get("status").textContent =
-        "Completed: " +
-        (data.sent || 0) +
-        " sent, " +
-        (data.failed || 0) +
-        " failed.";
+      }
 
     }
 
@@ -492,4 +829,5 @@ get("send").addEventListener(
 </script>
 
 </body>
+
 </html>
