@@ -3,23 +3,37 @@ import re
 import ssl
 import smtplib
 import secrets
+import json
 
 from functools import wraps
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, jsonify, session, redirect
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    session,
+    redirect,
+    Response,
+    stream_with_context,
+)
 
-
-BASE = os.getcwd()
 
 app = Flask(
     __name__,
-    template_folder=os.path.join(BASE, "templates"),
-    static_folder=os.path.join(BASE, "static")
+    template_folder="../templates",
+    static_folder="../static",
 )
 
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
     "change-this-secret"
+)
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=True,
 )
 
 LOGIN_PASSWORD = os.environ.get(
@@ -31,21 +45,28 @@ EMAIL_RE = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 )
 
+MAX_RECIPIENTS = 25
 
-def valid_email(email):
+
+def valid_email(value):
     return bool(
-        EMAIL_RE.fullmatch(email.strip())
+        EMAIL_RE.fullmatch(
+            str(value).strip()
+        )
     )
 
 
-def clean_password(value):
+def clean_app_password(value):
     return "".join(
         str(value).split()
     )
 
 
 def make_ref():
-    return "#REF-" + secrets.token_hex(2).upper()
+    return (
+        "#REF-"
+        + secrets.token_hex(3).upper()
+    )
 
 
 def protected(view):
@@ -67,13 +88,99 @@ def protected(view):
     return wrapper
 
 
+def parse_recipients(raw):
+
+    items = re.split(
+        r"[\s,;]+",
+        str(raw).strip()
+    )
+
+    result = []
+    seen = set()
+
+    for item in items:
+
+        email = item.strip().lower()
+
+        if not email:
+            continue
+
+        if email not in seen:
+            seen.add(email)
+            result.append(email)
+
+    return result
+
+
+def message_checks(subject, message):
+
+    text = (
+        str(subject)
+        + " "
+        + str(message)
+    )
+
+    issues = []
+
+    if len(str(subject)) > 200:
+        issues.append(
+            "Subject is unusually long."
+        )
+
+    if re.search(
+        r"(.)\1{7,}",
+        text
+    ):
+        issues.append(
+            "Repeated characters detected."
+        )
+
+    link_count = len(
+        re.findall(
+            r"https?://",
+            text,
+            flags=re.I
+        )
+    )
+
+    if link_count > 5:
+        issues.append(
+            "Message contains many links."
+        )
+
+    if re.search(
+        r"<script|javascript:|<iframe",
+        text,
+        flags=re.I
+    ):
+        issues.append(
+            "Unsafe HTML content detected."
+        )
+
+    return issues
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
+    if session.get("logged_in"):
+        return redirect("/")
+
     if request.method == "POST":
 
-        if request.form.get("password", "") == LOGIN_PASSWORD:
+        password = request.form.get(
+            "password",
+            ""
+        )
 
+        if (
+            LOGIN_PASSWORD
+            and secrets.compare_digest(
+                password,
+                LOGIN_PASSWORD
+            )
+        ):
+            session.clear()
             session["logged_in"] = True
 
             return redirect("/")
@@ -83,7 +190,9 @@ def login():
             error="Wrong password."
         )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html"
+    )
 
 
 @app.route("/logout")
@@ -98,16 +207,57 @@ def logout():
 @protected
 def home():
 
-    return render_template("index.html")
+    return render_template(
+        "index.html"
+    )
 
 
-@app.route("/api/send", methods=["POST"])
+@app.route(
+    "/api/check-message",
+    methods=["POST"]
+)
+@protected
+def check_message():
+
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+    subject = str(
+        data.get("subject", "")
+    )
+
+    message = str(
+        data.get("message", "")
+    )
+
+    issues = message_checks(
+        subject,
+        message
+    )
+
+    return jsonify(
+        safe=not bool(issues),
+        issues=issues
+    )
+
+
+@app.route(
+    "/api/send",
+    methods=["POST"]
+)
 @protected
 def send():
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
 
     sender_name = str(
         data.get("sender_name", "")
@@ -117,7 +267,7 @@ def send():
         data.get("gmail", "")
     ).strip().lower()
 
-    app_password = clean_password(
+    app_password = clean_app_password(
         data.get("app_password", "")
     )
 
@@ -129,23 +279,8 @@ def send():
         data.get("message", "")
     )
 
-    raw = str(
+    recipients = parse_recipients(
         data.get("recipients", "")
-    )
-
-    recipients = re.split(
-        r"[\s,;]+",
-        raw.strip()
-    )
-
-    recipients = [
-        x.lower()
-        for x in recipients
-        if x
-    ]
-
-    recipients = list(
-        dict.fromkeys(recipients)
     )
 
     if not sender_name:
@@ -178,14 +313,15 @@ def send():
             error="Add at least one recipient."
         ), 400
 
-    if len(recipients) > 25:
+    if len(recipients) > MAX_RECIPIENTS:
         return jsonify(
             error="Maximum 25 recipients."
         ), 400
 
     invalid = [
-        x for x in recipients
-        if not valid_email(x)
+        email
+        for email in recipients
+        if not valid_email(email)
     ]
 
     if invalid:
@@ -194,99 +330,178 @@ def send():
             invalid=invalid
         ), 400
 
-    sent = []
-    failed = []
+    issues = message_checks(
+        subject,
+        message
+    )
 
-    try:
+    if issues:
+        return jsonify(
+            error="Please review the message before sending.",
+            issues=issues
+        ), 400
 
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com",
-            465,
-            context=ssl.create_default_context(),
-            timeout=30
-        ) as smtp:
+    @stream_with_context
+    def generate():
 
-            smtp.login(
-                gmail,
-                app_password
+        sent_count = 0
+        failed_count = 0
+
+        try:
+
+            context = (
+                ssl.create_default_context()
             )
 
-            for recipient in recipients:
+            with smtplib.SMTP_SSL(
+                "smtp.gmail.com",
+                465,
+                context=context,
+                timeout=30
+            ) as smtp:
 
                 try:
 
-                    recipient_name = (
-                        recipient.split("@")[0]
+                    smtp.login(
+                        gmail,
+                        app_password
                     )
+
+                except smtplib.SMTPAuthenticationError:
+
+                    yield json.dumps({
+                        "type": "error",
+                        "error":
+                            "Gmail authentication failed. Check your App Password."
+                    }) + "\n"
+
+                    return
+
+                for recipient in recipients:
 
                     ref = make_ref()
 
-                    text = message.replace(
-                        "{name}",
-                        recipient_name
+                    recipient_name = (
+                        recipient
+                        .split("@")[0]
                     )
 
-                    text = text.replace(
-                        "{ref}",
-                        ref
+                    final_subject = (
+                        subject
+                        .replace(
+                            "{name}",
+                            recipient_name
+                        )
+                        .replace(
+                            "{ref}",
+                            ref
+                        )
                     )
 
-                    mail = MIMEText(
-                        text,
-                        "plain",
-                        "utf-8"
+                    final_message = (
+                        message
+                        .replace(
+                            "{name}",
+                            recipient_name
+                        )
+                        .replace(
+                            "{ref}",
+                            ref
+                        )
                     )
 
-                    mail["Subject"] = subject
+                    try:
 
-                    mail["From"] = (
-                        sender_name
-                        + " <"
-                        + gmail
-                        + ">"
-                    )
+                        mail = MIMEText(
+                            final_message,
+                            "plain",
+                            "utf-8"
+                        )
 
-                    mail["To"] = recipient
+                        mail["Subject"] = (
+                            final_subject
+                        )
 
-                    smtp.sendmail(
-                        gmail,
-                        [recipient],
-                        mail.as_string()
-                    )
+                        mail["From"] = (
+                            sender_name
+                            + " <"
+                            + gmail
+                            + ">"
+                        )
 
-                    sent.append({
-                        "email": recipient,
-                        "ref": ref
-                    })
+                        mail["To"] = recipient
 
-                except Exception as error:
+                        refused = smtp.sendmail(
+                            gmail,
+                            [recipient],
+                            mail.as_string()
+                        )
 
-                    failed.append({
-                        "email": recipient,
-                        "error": str(error)
-                    })
+                        if refused:
 
-        return jsonify(
-            success=bool(sent),
-            total=len(recipients),
-            sent=len(sent),
-            failed=len(failed),
-            remaining=0,
-            sent_emails=sent,
-            failed_emails=failed
-        )
+                            failed_count += 1
 
-    except smtplib.SMTPAuthenticationError:
+                            yield json.dumps({
+                                "type": "failed",
+                                "email": recipient,
+                                "ref": ref,
+                                "error": str(refused),
+                                "sent": sent_count,
+                                "failed": failed_count,
+                                "total": len(recipients)
+                            }) + "\n"
 
-        return jsonify(
-            error="Gmail authentication failed. Check your App Password."
-        ), 401
+                        else:
 
-    except Exception as error:
+                            sent_count += 1
 
-        return jsonify(
-            error=str(error)
-        ), 500
+                            yield json.dumps({
+                                "type": "sent",
+                                "email": recipient,
+                                "ref": ref,
+                                "sent": sent_count,
+                                "failed": failed_count,
+                                "total": len(recipients)
+                            }) + "\n"
+
+                    except Exception as error:
+
+                        failed_count += 1
+
+                        yield json.dumps({
+                            "type": "failed",
+                            "email": recipient,
+                            "ref": ref,
+                            "error": str(error),
+                            "sent": sent_count,
+                            "failed": failed_count,
+                            "total": len(recipients)
+                        }) + "\n"
+
+                yield json.dumps({
+                    "type": "done",
+                    "sent": sent_count,
+                    "failed": failed_count,
+                    "total": len(recipients)
+                }) + "\n"
+
+        except Exception as error:
+
+            yield json.dumps({
+                "type": "error",
+                "error": str(error),
+                "sent": sent_count,
+                "failed": failed_count
+            }) + "\n"
+
+    return Response(
+        generate(),
+        mimetype="application/x-ndjson",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 if __name__ == "__main__":
@@ -294,6 +509,9 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(
-            os.environ.get("PORT", "5000")
+            os.environ.get(
+                "PORT",
+                "5000"
+            )
         )
     )
