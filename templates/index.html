@@ -1,139 +1,312 @@
 <!doctype html>
 <html>
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
 <title>Secure Mail Console</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<link
+  rel="stylesheet"
+  href="/static/style.css"
+>
+
 </head>
+
 
 <body>
 
+
 <header>
+
   <div>
+
     <b>✉ Secure Mail Console</b>
-    <small>Gmail Mail Sender</small>
+
+    <small>
+      Gmail Mail Sender
+    </small>
+
   </div>
-  <a href="/logout">Logout</a>
+
+  <a href="/logout">
+    Logout
+  </a>
+
 </header>
 
+
 <main>
+
+
+<!-- =========================
+     SENDER
+========================= -->
 
 <section class="card">
 
   <h2>Sender</h2>
 
-  <label>Sender Name</label>
-  <input id="name" placeholder="Your name">
 
-  <label>Your Gmail</label>
-  <input id="gmail" type="email" placeholder="your@gmail.com">
+  <label>
+    Sender Name
+  </label>
 
-  <label>App Password</label>
-  <input id="pass" type="password" placeholder="Gmail App Password">
+  <input
+    id="name"
+    placeholder="Your name"
+  >
 
-  <label>Subject</label>
-  <input id="sub" placeholder="Email subject">
 
-  <label>Message Body</label>
-  <textarea id="msg" placeholder="Write your message..."></textarea>
+  <label>
+    Your Gmail
+  </label>
 
-  <button id="send">Send Emails</button>
+  <input
+    id="gmail"
+    type="email"
+    placeholder="your@gmail.com"
+  >
+
+
+  <label>
+    App Password
+  </label>
+
+  <input
+    id="pass"
+    type="password"
+    placeholder="Gmail App Password"
+  >
+
+
+  <label>
+    Subject
+  </label>
+
+  <input
+    id="sub"
+    placeholder="Email subject"
+  >
+
+
+  <label>
+    Message Body
+  </label>
+
+  <textarea
+    id="msg"
+    placeholder="Write your message..."
+  ></textarea>
+
+
+  <div class="placeholder-info">
+
+    <b>Available placeholders</b>
+
+    <span>
+      {name}
+    </span>
+
+    <span>
+      {ref}
+    </span>
+
+    <small>
+      {ref} creates a different reference ID
+      for each recipient.
+    </small>
+
+  </div>
+
+
+  <button id="send">
+    Send Emails
+  </button>
+
 
   <p id="status"></p>
 
+
+  <!-- =========================
+       SPAM PROTECTION
+  ========================= -->
+
   <div class="protect">
-    <h3>✓ Spam Protection</h3>
 
-    <div id="check1">✓ Duplicate recipients filtered</div>
-    <div id="check2">✓ Invalid email filter</div>
-    <div id="check3">✓ Message content checked</div>
-    <div id="check4">✓ Controlled sending</div>
+    <h3>
+      ✓ Spam Protection
+    </h3>
 
-    <p id="protectMsg">Ready to check message.</p>
+    <div>
+      ✓ Duplicate recipients filtered
+    </div>
+
+    <div>
+      ✓ Invalid email filter
+    </div>
+
+    <div>
+      ✓ Message content checked
+    </div>
+
+    <div>
+      ✓ Controlled sending
+    </div>
+
+    <p id="protectMsg">
+      Ready to check message.
+    </p>
+
   </div>
 
 </section>
 
+
+
+<!-- =========================
+     RECIPIENTS
+========================= -->
 
 <section class="card">
 
-  <h2>Recipients</h2>
+  <h2>
+    Recipients
+  </h2>
 
-  <textarea id="recipients"
-    placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
+
+  <textarea
+    id="recipients"
+    placeholder="one@email.com&#10;two@email.com&#10;three@email.com"
+  ></textarea>
+
 
   <div class="stats">
 
-    <div>
-      <b id="total">0</b>
-      <span>Total</span>
-    </div>
 
     <div>
-      <b id="sent">0</b>
-      <span>Sent</span>
+
+      <b id="total">
+        0
+      </b>
+
+      <span>
+        Total
+      </span>
+
     </div>
 
+
     <div>
-      <b id="failed">0</b>
-      <span>Failed</span>
+
+      <b id="sent">
+        0
+      </b>
+
+      <span>
+        Sent
+      </span>
+
     </div>
+
+
+    <div>
+
+      <b id="failed">
+        0
+      </b>
+
+      <span>
+        Failed
+      </span>
+
+    </div>
+
 
   </div>
+
 
   <div class="bar">
+
     <i id="progress"></i>
+
   </div>
 
-  <h3>Live Recipients Dispatch</h3>
+
+  <h3>
+    Live Recipients Dispatch
+  </h3>
+
 
   <div id="list"></div>
 
+
 </section>
+
 
 </main>
 
 
+
 <script>
 
-const $ = id => document.getElementById(id);
+
+const $ = id =>
+  document.getElementById(id);
 
 
-/* --------------------------------
-   Spam Protection
--------------------------------- */
+
+/* =========================
+   MESSAGE CHECK
+========================= */
 
 function checkMessage(){
 
-  let subject = $("sub").value.trim();
-  let message = $("msg").value.trim();
+  let subject =
+    $("sub").value.trim();
+
+  let message =
+    $("msg").value.trim();
 
   if(!subject && !message){
+
     $("protectMsg").textContent =
       "Ready to check message.";
+
     return;
   }
 
-  let text = (subject + " " + message).toLowerCase();
 
-  let checks = [];
+  let text =
+    (subject + " " + message)
+    .toLowerCase();
 
-  if(subject)
-    checks.push("subject");
 
-  if(message)
-    checks.push("message");
+  let repeated =
+    /(.)\1{5,}/.test(text);
 
-  let repeated = /(.)\1{5,}/.test(text);
 
   let excessiveLinks =
-    (text.match(/https?:\/\//g) || []).length > 5;
+    (text.match(/https?:\/\//g) || [])
+    .length > 5;
+
 
   let suspiciousMarkup =
-    /<script|javascript:|<iframe/i.test(text);
+    /<script|javascript:|<iframe/i
+    .test(text);
 
-  if(repeated || excessiveLinks || suspiciousMarkup){
+
+  if(
+    repeated ||
+    excessiveLinks ||
+    suspiciousMarkup
+  ){
 
     $("protectMsg").textContent =
       "⚠ Review message before sending.";
@@ -148,14 +321,16 @@ function checkMessage(){
 }
 
 
-/* --------------------------------
-   Live message checking
--------------------------------- */
+
+/* =========================
+   LIVE CHECK
+========================= */
 
 $("sub").addEventListener(
   "input",
   checkMessage
 );
+
 
 $("msg").addEventListener(
   "input",
@@ -163,21 +338,29 @@ $("msg").addEventListener(
 );
 
 
-/* --------------------------------
-   Recipients
--------------------------------- */
+
+/* =========================
+   RECIPIENT COUNT
+========================= */
 
 $("recipients").addEventListener(
   "input",
   () => {
 
-    let r = $("recipients").value
+    let recipients =
+      $("recipients").value
       .split(/[\s,;]+/)
       .filter(Boolean);
 
-    let unique = [...new Set(
-      r.map(x => x.toLowerCase())
-    )];
+
+    let unique = [
+      ...new Set(
+        recipients.map(
+          email => email.toLowerCase()
+        )
+      )
+    ];
+
 
     $("total").textContent =
       unique.length;
@@ -186,153 +369,211 @@ $("recipients").addEventListener(
 );
 
 
-/* --------------------------------
-   Send
--------------------------------- */
 
-$("send").onclick = async () => {
+/* =========================
+   SEND EMAILS
+========================= */
 
-  checkMessage();
-
-  let r = $("recipients").value
-    .split(/[\s,;]+/)
-    .filter(Boolean);
-
-  $("total").textContent = r.length;
-  $("sent").textContent = 0;
-  $("failed").textContent = 0;
-  $("progress").style.width = "0%";
-  $("list").innerHTML = "";
-
-  if(!r.length){
-
-    $("status").textContent =
-      "Add recipients first.";
-
-    return;
-
-  }
+$("send").onclick =
+  async () => {
 
 
-  $("send").disabled = true;
-
-  $("status").textContent =
-    "Sending...";
+    checkMessage();
 
 
-  try{
-
-    let res = await fetch(
-      "/api/send",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":
-            "application/json"
-        },
-        body:JSON.stringify({
-
-          sender_name:
-            $("name").value,
-
-          gmail:
-            $("gmail").value,
-
-          app_password:
-            $("pass").value,
-
-          subject:
-            $("sub").value,
-
-          message:
-            $("msg").value,
-
-          recipients:
-            r.join("\n")
-
-        })
-      }
-    );
+    let recipients =
+      $("recipients").value
+      .split(/[\s,;]+/)
+      .filter(Boolean);
 
 
-    let d = await res.json();
+    $("total").textContent =
+      recipients.length;
 
 
-    if(!res.ok){
+    $("sent").textContent =
+      0;
+
+
+    $("failed").textContent =
+      0;
+
+
+    $("progress").style.width =
+      "0%";
+
+
+    $("list").innerHTML =
+      "";
+
+
+    if(!recipients.length){
 
       $("status").textContent =
-        d.error || "Sending failed.";
+        "Add recipients first.";
 
       return;
 
     }
 
 
-    $("sent").textContent =
-      d.sent || 0;
+    if(recipients.length > 25){
 
-    $("failed").textContent =
-      d.failed || 0;
+      $("status").textContent =
+        "Maximum 25 recipients.";
 
+      return;
 
-    let done =
-      (d.sent || 0) +
-      (d.failed || 0);
+    }
 
 
-    let percent =
-      r.length
-      ? Math.round(done / r.length * 100)
-      : 0;
-
-
-    $("progress").style.width =
-      percent + "%";
-
-
-    (d.sent_emails || []).forEach(
-      email => {
-
-        $("list").innerHTML +=
-          `<div>✓ ${email}</div>`;
-
-      }
-    );
-
-
-    (d.failed_emails || []).forEach(
-      item => {
-
-        $("list").innerHTML +=
-          `<div>✕ ${item.email}</div>`;
-
-      }
-    );
+    $("send").disabled =
+      true;
 
 
     $("status").textContent =
-      `Completed: ${d.sent || 0} sent, ${d.failed || 0} failed.`;
-
-  }
+      "Sending...";
 
 
-  catch(e){
-
-    $("status").textContent =
-      "Server connection failed.";
-
-  }
+    try{
 
 
-  finally{
+      let response =
+        await fetch(
+          "/api/send",
+          {
 
-    $("send").disabled = false;
+            method:"POST",
 
-  }
+            headers:{
+              "Content-Type":
+                "application/json"
+            },
 
-};
+            body:JSON.stringify({
+
+              sender_name:
+                $("name").value,
+
+              gmail:
+                $("gmail").value,
+
+              app_password:
+                $("pass").value,
+
+              subject:
+                $("sub").value,
+
+              message:
+                $("msg").value,
+
+              recipients:
+                recipients.join("\n")
+
+            })
+
+          }
+        );
+
+
+      let data =
+        await response.json();
+
+
+      if(!response.ok){
+
+        $("status").textContent =
+          data.error ||
+          "Sending failed.";
+
+        return;
+
+      }
+
+
+      $("sent").textContent =
+        data.sent || 0;
+
+
+      $("failed").textContent =
+        data.failed || 0;
+
+
+      let done =
+        (data.sent || 0) +
+        (data.failed || 0);
+
+
+      let percent =
+        recipients.length
+        ? Math.round(
+            done /
+            recipients.length *
+            100
+          )
+        : 0;
+
+
+      $("progress").style.width =
+        percent + "%";
+
+
+      /*
+        Show recipient + reference
+      */
+
+      (data.sent_emails || [])
+        .forEach(item => {
+
+          $("list").innerHTML +=
+            `<div>
+              ✓ ${item.email}
+              <small>
+                ${item.ref}
+              </small>
+            </div>`;
+
+        });
+
+
+      (data.failed_emails || [])
+        .forEach(item => {
+
+          $("list").innerHTML +=
+            `<div>
+              ✕ ${item.email}
+            </div>`;
+
+        });
+
+
+      $("status").textContent =
+        `Completed: ${data.sent || 0} sent, ${data.failed || 0} failed.`;
+
+    }
+
+
+    catch(error){
+
+      $("status").textContent =
+        "Server connection failed.";
+
+    }
+
+
+    finally{
+
+      $("send").disabled =
+        false;
+
+    }
+
+  };
+
 
 </script>
 
+
 </body>
+
 </html>
