@@ -19,7 +19,9 @@
 
 </head>
 
+
 <body>
+
 
 <header class="topbar">
 
@@ -30,10 +32,11 @@
         </div>
 
         <div class="brand-sub">
-            Gmail SMTP + Deliverability Diagnostics
+            Authenticated Gmail SMTP
         </div>
 
     </div>
+
 
     <a
         href="/logout"
@@ -45,16 +48,19 @@
 </header>
 
 
+
 <main class="container">
+
 
 <div class="main-grid">
 
 
 <!-- =====================================================
-     SENDER
+     LEFT CARD
 ===================================================== -->
 
 <section class="card">
+
 
     <div class="section-title">
 
@@ -63,15 +69,17 @@
         </h2>
 
         <p>
-            Authenticated Gmail account
+            Gmail SMTP account
         </p>
 
     </div>
 
 
+
     <label>
         Sender Name
     </label>
+
 
     <input
         id="senderName"
@@ -81,9 +89,11 @@
     >
 
 
+
     <label>
         Gmail Address
     </label>
+
 
     <input
         id="gmail"
@@ -93,9 +103,11 @@
     >
 
 
+
     <label>
         Gmail App Password
     </label>
+
 
     <input
         id="appPassword"
@@ -105,41 +117,127 @@
     >
 
 
+
     <div class="info-box">
 
         <b>
-            SMTP security
+            SMTP Security
         </b>
 
         <span>
-            TLS + Gmail authentication are used.
+            Gmail SMTP uses an encrypted TLS connection.
         </span>
 
     </div>
 
 
-    <button
-        id="diagnoseBtn"
-        class="diagnose-button"
+
+    <div class="divider"></div>
+
+
+
+    <div class="section-title">
+
+        <h2>
+            Email
+        </h2>
+
+        <p>
+            Message content
+        </p>
+
+    </div>
+
+
+
+    <label>
+        Subject
+    </label>
+
+
+    <input
+        id="subject"
+        type="text"
+        placeholder="Email subject"
     >
-        🔎 Run Gmail Diagnostics
+
+
+
+    <label>
+        Message Body
+    </label>
+
+
+    <textarea
+        id="message"
+        rows="10"
+        placeholder="Hello {name},
+
+Your message here..."
+    ></textarea>
+
+
+
+    <div class="variable-box">
+
+        <b>
+            Personalization
+        </b>
+
+        <code>
+            {name}
+        </code>
+
+        <span>
+            uses the recipient's email name
+        </span>
+
+    </div>
+
+
+
+    <label>
+        Unsubscribe URL
+        <small>
+            (optional)
+        </small>
+    </label>
+
+
+    <input
+        id="unsubscribe"
+        type="url"
+        placeholder="https://example.com/unsubscribe"
+    >
+
+
+
+    <!-- SEND BUTTON -->
+
+    <button
+        id="sendBtn"
+        class="send-button"
+    >
+        ⚡ Send All
     </button>
 
 
+
     <div
-        id="diagnosticError"
-        class="diagnostic-error"
-    ></div>
+        id="status"
+        class="status"
+    >
+        Ready
+    </div>
+
 
 
     <!-- =================================================
-         DIAGNOSTICS PANEL
+         DIAGNOSTICS AT BOTTOM
     ================================================= -->
 
-    <div
-        id="diagnostics"
-        class="diagnostics"
-    >
+    <div class="diagnostics-bottom">
+
 
         <div class="diagnostics-title">
 
@@ -150,10 +248,11 @@
                 </h3>
 
                 <p>
-                    Local SMTP and sender-domain checks
+                    SMTP connection and sender checks
                 </p>
 
             </div>
+
 
             <span
                 id="diagnosticBadge"
@@ -163,6 +262,23 @@
             </span>
 
         </div>
+
+
+
+        <button
+            id="diagnoseBtn"
+            class="diagnose-button"
+        >
+            🔎 Run Gmail Diagnostics
+        </button>
+
+
+
+        <div
+            id="diagnosticError"
+            class="diagnostic-error"
+        ></div>
+
 
 
         <div class="diagnostic-grid">
@@ -181,6 +297,7 @@
             </div>
 
 
+
             <div class="diagnostic-item">
 
                 <span>
@@ -192,6 +309,7 @@
                 </b>
 
             </div>
+
 
 
             <div class="diagnostic-item">
@@ -207,6 +325,7 @@
             </div>
 
 
+
             <div class="diagnostic-item">
 
                 <span>
@@ -220,6 +339,7 @@
             </div>
 
 
+
             <div class="diagnostic-item">
 
                 <span>
@@ -231,6 +351,7 @@
                 </b>
 
             </div>
+
 
 
             <div class="diagnostic-item">
@@ -249,12 +370,14 @@
         </div>
 
 
+
         <div
             id="diagMessage"
             class="diag-message"
         >
-            Enter your Gmail details and run diagnostics.
+            Enter Gmail details and run diagnostics.
         </div>
+
 
 
         <div class="recommendations">
@@ -263,27 +386,29 @@
                 Recommended checks
             </strong>
 
-            <ul id="recommendationList">
 
-                <li>
-                    Authenticate your sending domain.
-                </li>
+            <ul id="recommendationList">
 
                 <li>
                     Keep TLS enabled.
                 </li>
 
                 <li>
-                    Monitor Gmail Postmaster Tools.
+                    Use a valid Gmail App Password.
                 </li>
 
                 <li>
-                    Send only to recipients who expect your messages.
+                    Use a consistent authenticated sender.
+                </li>
+
+                <li>
+                    Monitor Gmail Postmaster Tools.
                 </li>
 
             </ul>
 
         </div>
+
 
 
         <a
@@ -299,101 +424,12 @@
     </div>
 
 
-    <div class="divider"></div>
-
-
-    <!-- =================================================
-         EMAIL
-    ================================================= -->
-
-    <div class="section-title">
-
-        <h2>
-            Email
-        </h2>
-
-        <p>
-            Message content
-        </p>
-
-    </div>
-
-
-    <label>
-        Subject
-    </label>
-
-    <input
-        id="subject"
-        type="text"
-        placeholder="Email subject"
-    >
-
-
-    <label>
-        Message Body
-    </label>
-
-    <textarea
-        id="message"
-        rows="10"
-        placeholder="Hello {name},
-
-Your message here..."
-    ></textarea>
-
-
-    <div class="variable-box">
-
-        <b>
-            Personalization
-        </b>
-
-        <code>
-            {name}
-        </code>
-
-        <span>
-            becomes the recipient's email name.
-        </span>
-
-    </div>
-
-
-    <label>
-        Unsubscribe URL
-        <small>
-            optional
-        </small>
-    </label>
-
-    <input
-        id="unsubscribe"
-        type="url"
-        placeholder="https://example.com/unsubscribe"
-    >
-
-
-    <button
-        id="sendBtn"
-        class="send-button"
-    >
-        ⚡ Send All
-    </button>
-
-
-    <div
-        id="status"
-        class="status"
-    >
-        Ready
-    </div>
-
 </section>
 
 
+
 <!-- =====================================================
-     RIGHT SIDE
+     RIGHT CARD
 ===================================================== -->
 
 <section class="card">
@@ -408,10 +444,11 @@ Your message here..."
             </h2>
 
             <p>
-                Message and SMTP checks
+                Delivery safeguards
             </p>
 
         </div>
+
 
         <span
             id="protectBadge"
@@ -423,49 +460,43 @@ Your message here..."
     </div>
 
 
+
     <div class="checks">
 
         <div class="check">
-            <span>✓</span>
-            TLS SMTP
+            ✓ TLS SMTP
         </div>
 
         <div class="check">
-            <span>✓</span>
-            Authenticated SMTP
+            ✓ Gmail Authentication
         </div>
 
         <div class="check">
-            <span>✓</span>
-            RFC headers
+            ✓ RFC Headers
         </div>
 
         <div class="check">
-            <span>✓</span>
-            Duplicate filter
+            ✓ Duplicate Filter
         </div>
 
         <div class="check">
-            <span>✓</span>
-            Invalid email filter
+            ✓ Invalid Email Filter
         </div>
 
         <div class="check">
-            <span>✓</span>
-            Controlled rate
+            ✓ Controlled Rate
         </div>
 
         <div class="check">
-            <span>✓</span>
-            Persistent connection
+            ✓ Persistent SMTP
         </div>
 
         <div class="check">
-            <span>✓</span>
-            No hidden text
+            ✓ Normal Text
         </div>
 
     </div>
+
 
 
     <div class="recipient-title">
@@ -481,6 +512,7 @@ Your message here..."
     </div>
 
 
+
     <textarea
         id="recipients"
         class="recipient-input"
@@ -491,6 +523,7 @@ three@example.com"
     ></textarea>
 
 
+
     <div
         id="recipientCounter"
         class="recipient-counter"
@@ -499,7 +532,9 @@ three@example.com"
     </div>
 
 
+
     <div class="stats">
+
 
         <div class="stat">
 
@@ -512,6 +547,7 @@ three@example.com"
             </span>
 
         </div>
+
 
 
         <div class="stat">
@@ -527,6 +563,7 @@ three@example.com"
         </div>
 
 
+
         <div class="stat">
 
             <strong id="failed">
@@ -538,6 +575,7 @@ three@example.com"
             </span>
 
         </div>
+
 
 
         <div class="stat">
@@ -552,7 +590,9 @@ three@example.com"
 
         </div>
 
+
     </div>
+
 
 
     <div class="progress">
@@ -562,12 +602,14 @@ three@example.com"
     </div>
 
 
+
     <div
         id="progressText"
         class="progress-text"
     >
         0%
     </div>
+
 
 
     <div class="dispatch-title">
@@ -584,6 +626,7 @@ three@example.com"
 
         </div>
 
+
         <span
             id="dispatchCount"
             class="dispatch-count"
@@ -592,6 +635,7 @@ three@example.com"
         </span>
 
     </div>
+
 
 
     <div
@@ -608,30 +652,33 @@ three@example.com"
 
 </section>
 
+
 </div>
+
 
 </main>
 
 
+
 <script>
 
-
-/* =========================================================
-   HELPERS
-========================================================= */
+/* =====================================================
+   HELPER
+===================================================== */
 
 const $ = id =>
     document.getElementById(id);
 
 
-/* =========================================================
+/* =====================================================
    RECIPIENTS
-========================================================= */
+===================================================== */
 
 function getRecipients() {
 
     const raw =
-        $("recipients").value
+        $("recipients")
+            .value
             .replaceAll(",", "\n")
             .replaceAll(";", "\n")
             .replaceAll("\r", "\n");
@@ -677,9 +724,9 @@ $("recipients")
     );
 
 
-/* =========================================================
+/* =====================================================
    PROTECTION
-========================================================= */
+===================================================== */
 
 async function loadProtection() {
 
@@ -687,12 +734,18 @@ async function loadProtection() {
 
         const response =
             await fetch(
-                "/api/protection"
+                "/api/protection",
+                {
+                    credentials:
+                        "same-origin"
+                }
             );
 
 
-        if (!response.ok)
+        if (!response.ok) {
+
             throw new Error();
+        }
 
 
         $("protectBadge")
@@ -719,34 +772,37 @@ async function loadProtection() {
 }
 
 
-/* =========================================================
+/* =====================================================
    DIAGNOSTIC STATUS
-========================================================= */
+===================================================== */
 
 function setDiag(
-    element,
-    ok,
+    id,
+    value,
     yesText = "PASS",
     noText = "FAIL"
 ) {
 
-    const el = $(element);
+    const element =
+        $(id);
 
-    el.textContent =
-        ok
+
+    element.textContent =
+        value
             ? yesText
             : noText;
 
-    el.className =
-        ok
+
+    element.className =
+        value
             ? "diag-pass"
             : "diag-fail";
 }
 
 
-/* =========================================================
-   RUN DIAGNOSTICS
-========================================================= */
+/* =====================================================
+   DIAGNOSTICS
+===================================================== */
 
 $("diagnoseBtn")
     .addEventListener(
@@ -756,7 +812,9 @@ $("diagnoseBtn")
             const gmail =
                 $("gmail")
                     .value
-                    .trim();
+                    .trim()
+                    .toLowerCase();
+
 
             const password =
                 $("appPassword")
@@ -773,7 +831,7 @@ $("diagnoseBtn")
 
                 $("diagnosticError")
                     .textContent =
-                    "Enter your Gmail address.";
+                    "Enter Gmail address first.";
 
                 return;
             }
@@ -783,7 +841,7 @@ $("diagnoseBtn")
 
                 $("diagnosticError")
                     .textContent =
-                    "Enter your Gmail App Password.";
+                    "Enter Gmail App Password first.";
 
                 return;
             }
@@ -815,7 +873,11 @@ $("diagnoseBtn")
                     await fetch(
                         "/api/diagnostics",
                         {
-                            method: "POST",
+                            method:
+                                "POST",
+
+                            credentials:
+                                "same-origin",
 
                             headers: {
                                 "Content-Type":
@@ -824,11 +886,13 @@ $("diagnoseBtn")
 
                             body:
                                 JSON.stringify({
+
                                     gmail:
                                         gmail,
 
                                     app_password:
                                         password
+
                                 })
                         }
                     );
@@ -936,19 +1000,22 @@ $("diagnoseBtn")
                     data.recommendations ||
                     []
                 ).forEach(
-                    recommendation => {
+                    item => {
 
                         const li =
                             document.createElement(
                                 "li"
                             );
 
+
                         li.textContent =
-                            recommendation;
+                            item;
+
 
                         list.appendChild(
                             li
                         );
+
                     }
                 );
 
@@ -980,15 +1047,16 @@ $("diagnoseBtn")
                 $("diagnoseBtn")
                     .textContent =
                     "🔎 Run Gmail Diagnostics";
+
             }
 
         }
     );
 
 
-/* =========================================================
+/* =====================================================
    RESET MONITOR
-========================================================= */
+===================================================== */
 
 function resetMonitor(total) {
 
@@ -996,39 +1064,47 @@ function resetMonitor(total) {
         .textContent =
         total;
 
+
     $("sent")
         .textContent =
         0;
+
 
     $("failed")
         .textContent =
         0;
 
+
     $("remaining")
         .textContent =
         total;
+
 
     $("bar")
         .style.width =
         "0%";
 
+
     $("progressText")
         .textContent =
         "0%";
+
 
     $("dispatchCount")
         .textContent =
         "0 / " + total;
 
+
     $("dispatch")
         .innerHTML =
         "";
+
 }
 
 
-/* =========================================================
+/* =====================================================
    DISPATCH ROW
-========================================================= */
+===================================================== */
 
 function addRow(
     email,
@@ -1107,9 +1183,9 @@ function addRow(
 }
 
 
-/* =========================================================
+/* =====================================================
    SEND
-========================================================= */
+===================================================== */
 
 $("sendBtn")
     .addEventListener(
@@ -1173,6 +1249,7 @@ $("sendBtn")
                     $("unsubscribe")
                         .value
                         .trim()
+
             };
 
 
@@ -1199,6 +1276,9 @@ $("sendBtn")
                         {
                             method:
                                 "POST",
+
+                            credentials:
+                                "same-origin",
 
                             headers: {
                                 "Content-Type":
@@ -1237,6 +1317,7 @@ $("sendBtn")
                             "sent",
                             "SMTP accepted ✓"
                         );
+
                     }
                 );
 
@@ -1252,6 +1333,7 @@ $("sendBtn")
                             "failed",
                             item.error
                         );
+
                     }
                 );
 
@@ -1324,15 +1406,16 @@ $("sendBtn")
                 $("sendBtn")
                     .disabled =
                     false;
+
             }
 
         }
     );
 
 
-/* =========================================================
+/* =====================================================
    START
-========================================================= */
+===================================================== */
 
 updateRecipientCounter();
 
@@ -1340,5 +1423,7 @@ loadProtection();
 
 </script>
 
+
 </body>
+
 </html>
