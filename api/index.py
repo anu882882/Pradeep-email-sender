@@ -33,26 +33,19 @@ ROOT = os.path.dirname(
 
 app = Flask(
     __name__,
-    template_folder=os.path.join(
-        ROOT,
-        "templates"
-    ),
-    static_folder=os.path.join(
-        ROOT,
-        "static"
-    )
+    template_folder=os.path.join(ROOT, "templates"),
+    static_folder=os.path.join(ROOT, "static")
 )
 
 
 # =========================================================
-# SECURITY
+# SESSION SECURITY
 # =========================================================
 
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
     "change-this-secret"
 )
-
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -61,6 +54,10 @@ app.config.update(
 )
 
 
+# =========================================================
+# LOGIN PASSWORD
+# =========================================================
+
 LOGIN_PASSWORD = os.environ.get(
     "APP_LOGIN_PASSWORD",
     ""
@@ -68,7 +65,7 @@ LOGIN_PASSWORD = os.environ.get(
 
 
 # =========================================================
-# GMAIL SMTP
+# SMTP
 # =========================================================
 
 SMTP_HOST = "smtp.gmail.com"
@@ -76,14 +73,12 @@ SMTP_PORT = 465
 
 
 # =========================================================
-# SEND LIMITS
+# LIMITS
 # =========================================================
 
 MAX_RECIPIENTS = 25
 
-# Controlled pace.
-# This is for responsible delivery,
-# not for bypassing spam filters.
+# Controlled sending pace.
 SEND_DELAY_SECONDS = 1.0
 
 
@@ -98,7 +93,6 @@ EMAIL_RE = re.compile(
 
 
 def valid_email(email):
-
     return bool(
         EMAIL_RE.fullmatch(
             str(email).strip()
@@ -112,9 +106,7 @@ def valid_email(email):
 
 def parse_recipients(raw):
 
-    raw = str(
-        raw or ""
-    )
+    raw = str(raw or "")
 
     raw = (
         raw
@@ -139,14 +131,13 @@ def parse_recipients(raw):
                 continue
 
             seen.add(email)
-
             recipients.append(email)
 
     return recipients
 
 
 # =========================================================
-# LOGIN PROTECTION
+# LOGIN DECORATOR
 # =========================================================
 
 def login_required(view):
@@ -154,13 +145,9 @@ def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
 
-        if not session.get(
-            "logged_in"
-        ):
+        if not session.get("logged_in"):
 
-            if request.path.startswith(
-                "/api/"
-            ):
+            if request.path.startswith("/api/"):
 
                 return jsonify({
                     "success": False,
@@ -189,14 +176,11 @@ def login_required(view):
 )
 def login():
 
-    if session.get(
-        "logged_in"
-    ):
+    if session.get("logged_in"):
 
         return redirect(
             url_for("home")
         )
-
 
     if request.method == "POST":
 
@@ -205,17 +189,15 @@ def login():
             ""
         )
 
-
         if not LOGIN_PASSWORD:
 
             return render_template(
                 "login.html",
                 error=(
                     "APP_LOGIN_PASSWORD "
-                    "is not configured."
+                    "is not configured in Vercel."
                 )
             )
-
 
         if password != LOGIN_PASSWORD:
 
@@ -224,7 +206,6 @@ def login():
                 error="Incorrect password."
             )
 
-
         session.clear()
 
         session["logged_in"] = True
@@ -232,7 +213,6 @@ def login():
         return redirect(
             url_for("home")
         )
-
 
     return render_template(
         "login.html"
@@ -243,9 +223,7 @@ def login():
 # LOGOUT
 # =========================================================
 
-@app.route(
-    "/logout"
-)
+@app.route("/logout")
 def logout():
 
     session.clear()
@@ -286,9 +264,7 @@ def health():
 # PROTECTION STATUS
 # =========================================================
 
-@app.route(
-    "/api/protection"
-)
+@app.route("/api/protection")
 @login_required
 def protection():
 
@@ -337,32 +313,22 @@ def build_message(
         )[0]
     )
 
-
     message = MIMEText(
         personalized_body,
         "plain",
         "utf-8"
     )
 
-
-    # Standard email headers
-
     message["Date"] = formatdate(
         localtime=True
     )
 
-
     message["Message-ID"] = make_msgid()
-
 
     message["Subject"] = Header(
         subject,
         "utf-8"
     )
-
-
-    # Authenticated Gmail account
-    # remains the actual From address.
 
     message["From"] = formataddr(
         (
@@ -371,15 +337,12 @@ def build_message(
         )
     )
 
-
     message["To"] = recipient
-
 
     message["Reply-To"] = sender_email
 
-
-    # Only use this when the URL is
-    # a real unsubscribe endpoint.
+    # Only use this if you have a real
+    # unsubscribe endpoint.
 
     if unsubscribe_url:
 
@@ -391,12 +354,11 @@ def build_message(
             "List-Unsubscribe=One-Click"
         )
 
-
     return message
 
 
 # =========================================================
-# SEND EMAILS
+# SEND
 # =========================================================
 
 @app.route(
@@ -410,14 +372,12 @@ def send_emails():
         silent=True
     ) or {}
 
-
     sender_name = str(
         data.get(
             "sender_name",
             ""
         )
     ).strip()
-
 
     gmail = str(
         data.get(
@@ -426,14 +386,12 @@ def send_emails():
         )
     ).strip().lower()
 
-
     app_password = str(
         data.get(
             "app_password",
             ""
         )
     ).strip()
-
 
     subject = str(
         data.get(
@@ -442,7 +400,6 @@ def send_emails():
         )
     ).strip()
 
-
     message = str(
         data.get(
             "message",
@@ -450,14 +407,12 @@ def send_emails():
         )
     )
 
-
     raw_recipients = str(
         data.get(
             "recipients",
             ""
         )
     )
-
 
     unsubscribe_url = str(
         data.get(
@@ -475,8 +430,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Sender name required."
+            "error": "Sender name required."
         }), 400
 
 
@@ -484,8 +438,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Valid sender email required."
+            "error": "Valid sender email required."
         }), 400
 
 
@@ -493,8 +446,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Gmail App Password required."
+            "error": "Gmail App Password required."
         }), 400
 
 
@@ -502,8 +454,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Subject required."
+            "error": "Subject required."
         }), 400
 
 
@@ -511,8 +462,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Message required."
+            "error": "Message required."
         }), 400
 
 
@@ -529,8 +479,7 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
-                "Add recipients."
+            "error": "Add recipients."
         }), 400
 
 
@@ -538,10 +487,11 @@ def send_emails():
 
         return jsonify({
             "success": False,
-            "error":
+            "error": (
                 f"Maximum "
                 f"{MAX_RECIPIENTS} "
                 f"recipients per send."
+            )
         }), 400
 
 
@@ -559,8 +509,7 @@ def send_emails():
             "success": False,
 
             "error":
-                "Invalid recipient "
-                "email address.",
+                "Invalid recipient email address.",
 
             "invalid":
                 invalid
@@ -569,11 +518,10 @@ def send_emails():
 
 
     # =====================================================
-    # SMTP CONNECTION
+    # SEND
     # =====================================================
 
     sent = []
-
     failed = []
 
     ssl_context = (
@@ -583,8 +531,8 @@ def send_emails():
 
     try:
 
-        # One SMTP connection for the
-        # complete sending job.
+        # One authenticated connection
+        # for the complete send job.
 
         with smtplib.SMTP_SSL(
             SMTP_HOST,
@@ -593,18 +541,11 @@ def send_emails():
             timeout=30
         ) as smtp:
 
-
-            # Gmail authentication
-
             smtp.login(
                 gmail,
                 app_password
             )
 
-
-            # =================================================
-            # SEND RECIPIENTS
-            # =================================================
 
             for index, recipient in enumerate(
                 recipients
@@ -660,9 +601,6 @@ def send_emails():
 
                     })
 
-                    # Do not continuously retry
-                    # an SMTP-level failure.
-
                     break
 
 
@@ -679,8 +617,7 @@ def send_emails():
                     })
 
 
-                # Controlled pace between
-                # individual messages.
+                # Controlled delay
 
                 if (
                     index <
@@ -691,10 +628,6 @@ def send_emails():
                         SEND_DELAY_SECONDS
                     )
 
-
-    # =====================================================
-    # SMTP ERRORS
-    # =====================================================
 
     except smtplib.SMTPAuthenticationError:
 
@@ -716,8 +649,7 @@ def send_emails():
             "success": False,
 
             "error":
-                "Could not connect "
-                "to Gmail SMTP."
+                "Could not connect to Gmail SMTP."
 
         }), 502
 
@@ -800,7 +732,7 @@ def send_emails():
 
 
 # =========================================================
-# LOCAL SERVER
+# LOCAL RUN
 # =========================================================
 
 if __name__ == "__main__":
