@@ -7,6 +7,7 @@ import json
 
 from functools import wraps
 from email.mime.text import MIMEText
+
 from flask import (
     Flask,
     render_template,
@@ -22,8 +23,13 @@ from flask import (
 app = Flask(
     __name__,
     template_folder="../templates",
-    static_folder="../static",
+    static_folder="../static"
 )
+
+
+# --------------------------------------------------
+# Security / Login
+# --------------------------------------------------
 
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
@@ -33,7 +39,7 @@ app.secret_key = os.environ.get(
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=True
 )
 
 LOGIN_PASSWORD = os.environ.get(
@@ -41,12 +47,24 @@ LOGIN_PASSWORD = os.environ.get(
     ""
 )
 
+
+# --------------------------------------------------
+# Email settings
+# --------------------------------------------------
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 465
+
+MAX_RECIPIENTS = 25
+
 EMAIL_RE = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 )
 
-MAX_RECIPIENTS = 25
 
+# --------------------------------------------------
+# Helpers
+# --------------------------------------------------
 
 def valid_email(value):
     return bool(
@@ -57,15 +75,24 @@ def valid_email(value):
 
 
 def clean_app_password(value):
+    # Removes spaces accidentally copied into
+    # a Gmail App Password.
     return "".join(
         str(value).split()
     )
 
 
 def make_ref():
+    """
+    Creates a different reference for every email.
+
+    Example:
+    #REF-8A42F1C7
+    """
+
     return (
         "#REF-"
-        + secrets.token_hex(3).upper()
+        + secrets.token_hex(4).upper()
     )
 
 
@@ -106,11 +133,28 @@ def parse_recipients(raw):
             continue
 
         if email not in seen:
+
             seen.add(email)
             result.append(email)
 
     return result
 
+
+def get_recipient_name(email):
+
+    """
+    Uses the part before @ as a simple recipient name.
+
+    example:
+    rahul123@gmail.com -> rahul123
+    """
+
+    return email.split("@")[0]
+
+
+# --------------------------------------------------
+# Message checks
+# --------------------------------------------------
 
 def message_checks(subject, message):
 
@@ -123,6 +167,7 @@ def message_checks(subject, message):
     issues = []
 
     if len(str(subject)) > 200:
+
         issues.append(
             "Subject is unusually long."
         )
@@ -131,6 +176,7 @@ def message_checks(subject, message):
         r"(.)\1{7,}",
         text
     ):
+
         issues.append(
             "Repeated characters detected."
         )
@@ -144,6 +190,7 @@ def message_checks(subject, message):
     )
 
     if link_count > 5:
+
         issues.append(
             "Message contains many links."
         )
@@ -153,6 +200,7 @@ def message_checks(subject, message):
         text,
         flags=re.I
     ):
+
         issues.append(
             "Unsafe HTML content detected."
         )
@@ -160,10 +208,18 @@ def message_checks(subject, message):
     return issues
 
 
-@app.route("/login", methods=["GET", "POST"])
+# --------------------------------------------------
+# Login
+# --------------------------------------------------
+
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
 
     if session.get("logged_in"):
+
         return redirect("/")
 
     if request.method == "POST":
@@ -180,7 +236,9 @@ def login():
                 LOGIN_PASSWORD
             )
         ):
+
             session.clear()
+
             session["logged_in"] = True
 
             return redirect("/")
@@ -203,6 +261,10 @@ def logout():
     return redirect("/login")
 
 
+# --------------------------------------------------
+# Home
+# --------------------------------------------------
+
 @app.route("/")
 @protected
 def home():
@@ -211,6 +273,10 @@ def home():
         "index.html"
     )
 
+
+# --------------------------------------------------
+# Message checking API
+# --------------------------------------------------
 
 @app.route(
     "/api/check-message",
@@ -227,11 +293,17 @@ def check_message():
     )
 
     subject = str(
-        data.get("subject", "")
+        data.get(
+            "subject",
+            ""
+        )
     )
 
     message = str(
-        data.get("message", "")
+        data.get(
+            "message",
+            ""
+        )
     )
 
     issues = message_checks(
@@ -244,6 +316,10 @@ def check_message():
         issues=issues
     )
 
+
+# --------------------------------------------------
+# SEND EMAILS
+# --------------------------------------------------
 
 @app.route(
     "/api/send",
@@ -260,63 +336,100 @@ def send():
     )
 
     sender_name = str(
-        data.get("sender_name", "")
+        data.get(
+            "sender_name",
+            ""
+        )
     ).strip()
 
     gmail = str(
-        data.get("gmail", "")
+        data.get(
+            "gmail",
+            ""
+        )
     ).strip().lower()
 
     app_password = clean_app_password(
-        data.get("app_password", "")
+        data.get(
+            "app_password",
+            ""
+        )
     )
 
     subject = str(
-        data.get("subject", "")
+        data.get(
+            "subject",
+            ""
+        )
     ).strip()
 
     message = str(
-        data.get("message", "")
+        data.get(
+            "message",
+            ""
+        )
     )
 
     recipients = parse_recipients(
-        data.get("recipients", "")
+        data.get(
+            "recipients",
+            ""
+        )
     )
 
+
+    # --------------------------------------------------
+    # Validation
+    # --------------------------------------------------
+
     if not sender_name:
+
         return jsonify(
             error="Sender name required."
         ), 400
 
+
     if not valid_email(gmail):
+
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
+
     if not app_password:
+
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
+
     if not subject:
+
         return jsonify(
             error="Subject required."
         ), 400
 
+
     if not message.strip():
+
         return jsonify(
             error="Message required."
         ), 400
 
+
     if not recipients:
+
         return jsonify(
             error="Add at least one recipient."
         ), 400
 
+
     if len(recipients) > MAX_RECIPIENTS:
+
         return jsonify(
             error="Maximum 25 recipients."
         ), 400
+
 
     invalid = [
         email
@@ -324,22 +437,32 @@ def send():
         if not valid_email(email)
     ]
 
+
     if invalid:
+
         return jsonify(
             error="Invalid recipient email.",
             invalid=invalid
         ), 400
+
 
     issues = message_checks(
         subject,
         message
     )
 
+
     if issues:
+
         return jsonify(
             error="Please review the message before sending.",
             issues=issues
         ), 400
+
+
+    # --------------------------------------------------
+    # Streaming response
+    # --------------------------------------------------
 
     @stream_with_context
     def generate():
@@ -347,18 +470,25 @@ def send():
         sent_count = 0
         failed_count = 0
 
+
         try:
 
             context = (
                 ssl.create_default_context()
             )
 
+
             with smtplib.SMTP_SSL(
-                "smtp.gmail.com",
-                465,
+                SMTP_HOST,
+                SMTP_PORT,
                 context=context,
                 timeout=30
             ) as smtp:
+
+
+                # --------------------------------------
+                # Gmail login
+                # --------------------------------------
 
                 try:
 
@@ -377,14 +507,30 @@ def send():
 
                     return
 
+
+                # --------------------------------------
+                # Send one recipient at a time
+                # --------------------------------------
+
                 for recipient in recipients:
 
+
+                    # IMPORTANT:
+                    # A completely new reference is
+                    # generated for every recipient.
                     ref = make_ref()
 
+
                     recipient_name = (
-                        recipient
-                        .split("@")[0]
+                        get_recipient_name(
+                            recipient
+                        )
                     )
+
+
+                    # ----------------------------------
+                    # Replace placeholders
+                    # ----------------------------------
 
                     final_subject = (
                         subject
@@ -398,6 +544,7 @@ def send():
                         )
                     )
 
+
                     final_message = (
                         message
                         .replace(
@@ -410,6 +557,7 @@ def send():
                         )
                     )
 
+
                     try:
 
                         mail = MIMEText(
@@ -418,9 +566,11 @@ def send():
                             "utf-8"
                         )
 
+
                         mail["Subject"] = (
                             final_subject
                         )
+
 
                         mail["From"] = (
                             sender_name
@@ -429,7 +579,9 @@ def send():
                             + ">"
                         )
 
+
                         mail["To"] = recipient
+
 
                         refused = smtp.sendmail(
                             gmail,
@@ -437,19 +589,42 @@ def send():
                             mail.as_string()
                         )
 
+
+                        # ----------------------------------
+                        # Failed recipient
+                        # ----------------------------------
+
                         if refused:
 
                             failed_count += 1
 
                             yield json.dumps({
                                 "type": "failed",
-                                "email": recipient,
-                                "ref": ref,
-                                "error": str(refused),
-                                "sent": sent_count,
-                                "failed": failed_count,
-                                "total": len(recipients)
+
+                                "email":
+                                    recipient,
+
+                                "ref":
+                                    ref,
+
+                                "error":
+                                    str(refused),
+
+                                "sent":
+                                    sent_count,
+
+                                "failed":
+                                    failed_count,
+
+                                "total":
+                                    len(recipients)
+
                             }) + "\n"
+
+
+                        # ----------------------------------
+                        # Successful recipient
+                        # ----------------------------------
 
                         else:
 
@@ -457,12 +632,24 @@ def send():
 
                             yield json.dumps({
                                 "type": "sent",
-                                "email": recipient,
-                                "ref": ref,
-                                "sent": sent_count,
-                                "failed": failed_count,
-                                "total": len(recipients)
+
+                                "email":
+                                    recipient,
+
+                                "ref":
+                                    ref,
+
+                                "sent":
+                                    sent_count,
+
+                                "failed":
+                                    failed_count,
+
+                                "total":
+                                    len(recipients)
+
                             }) + "\n"
+
 
                     except Exception as error:
 
@@ -470,44 +657,95 @@ def send():
 
                         yield json.dumps({
                             "type": "failed",
-                            "email": recipient,
-                            "ref": ref,
-                            "error": str(error),
-                            "sent": sent_count,
-                            "failed": failed_count,
-                            "total": len(recipients)
+
+                            "email":
+                                recipient,
+
+                            "ref":
+                                ref,
+
+                            "error":
+                                str(error),
+
+                            "sent":
+                                sent_count,
+
+                            "failed":
+                                failed_count,
+
+                            "total":
+                                len(recipients)
+
                         }) + "\n"
 
+
+                # --------------------------------------
+                # Completed
+                # --------------------------------------
+
                 yield json.dumps({
-                    "type": "done",
-                    "sent": sent_count,
-                    "failed": failed_count,
-                    "total": len(recipients)
+
+                    "type":
+                        "done",
+
+                    "sent":
+                        sent_count,
+
+                    "failed":
+                        failed_count,
+
+                    "total":
+                        len(recipients)
+
                 }) + "\n"
+
 
         except Exception as error:
 
             yield json.dumps({
-                "type": "error",
-                "error": str(error),
-                "sent": sent_count,
-                "failed": failed_count
+
+                "type":
+                    "error",
+
+                "error":
+                    str(error),
+
+                "sent":
+                    sent_count,
+
+                "failed":
+                    failed_count
+
             }) + "\n"
 
+
     return Response(
+
         generate(),
-        mimetype="application/x-ndjson",
+
+        mimetype=
+            "application/x-ndjson",
+
         headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no"
+            "Cache-Control":
+                "no-cache",
+
+            "X-Accel-Buffering":
+                "no"
         }
+
     )
 
+
+# --------------------------------------------------
+# Local development
+# --------------------------------------------------
 
 if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
+
         port=int(
             os.environ.get(
                 "PORT",
