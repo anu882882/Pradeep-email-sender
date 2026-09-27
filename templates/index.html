@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
 
@@ -14,30 +14,21 @@
 
 <link
   rel="stylesheet"
-  href="/static/style.css"
+  href="{{ url_for('static', filename='style.css') }}"
 >
 
 </head>
 
-
 <body>
-
 
 <header>
 
-  <div>
-
-    <b>✉ Secure Mail Console</b>
-
-    <small>
-      Gmail Mail Sender
-    </small>
-
+  <div class="brand">
+    <strong>✉ Secure Mail Console</strong>
+    <small>Gmail Mail Sender</small>
   </div>
 
-  <a href="/logout">
-    Logout
-  </a>
+  <a href="/logout">Logout</a>
 
 </header>
 
@@ -45,28 +36,21 @@
 <main>
 
 
-<!-- =========================
-     SENDER
-========================= -->
-
 <section class="card">
 
   <h2>Sender</h2>
 
 
-  <label>
-    Sender Name
-  </label>
+  <label>Sender Name</label>
 
   <input
     id="name"
+    type="text"
     placeholder="Your name"
   >
 
 
-  <label>
-    Your Gmail
-  </label>
+  <label>Your Gmail</label>
 
   <input
     id="gmail"
@@ -75,9 +59,7 @@
   >
 
 
-  <label>
-    App Password
-  </label>
+  <label>App Password</label>
 
   <input
     id="pass"
@@ -86,19 +68,16 @@
   >
 
 
-  <label>
-    Subject
-  </label>
+  <label>Subject</label>
 
   <input
     id="sub"
+    type="text"
     placeholder="Email subject"
   >
 
 
-  <label>
-    Message Body
-  </label>
+  <label>Message Body</label>
 
   <textarea
     id="msg"
@@ -106,19 +85,17 @@
   ></textarea>
 
 
-  <div class="placeholder-info">
+  <div class="placeholders">
 
-    <b>Available placeholders</b>
+    <strong>Available placeholders</strong>
 
-    <span>
-      {name}
-    </span>
-
-    <span>
-      {ref}
-    </span>
+    <div class="tags">
+      <span>{name}</span>
+      <span>{ref}</span>
+    </div>
 
     <small>
+      {name} adds the recipient name.
       {ref} creates a different reference ID
       for each recipient.
     </small>
@@ -126,7 +103,10 @@
   </div>
 
 
-  <button id="send">
+  <button
+    id="send"
+    type="button"
+  >
     Send Emails
   </button>
 
@@ -134,31 +114,17 @@
   <p id="status"></p>
 
 
-  <!-- =========================
-       SPAM PROTECTION
-  ========================= -->
+  <div class="protection">
 
-  <div class="protect">
+    <h3>✓ Spam Protection</h3>
 
-    <h3>
-      ✓ Spam Protection
-    </h3>
+    <div>✓ Duplicate recipients filtered</div>
 
-    <div>
-      ✓ Duplicate recipients filtered
-    </div>
+    <div>✓ Invalid email filter</div>
 
-    <div>
-      ✓ Invalid email filter
-    </div>
+    <div>✓ Message content checked</div>
 
-    <div>
-      ✓ Message content checked
-    </div>
-
-    <div>
-      ✓ Controlled sending
-    </div>
+    <div>✓ Controlled sending</div>
 
     <p id="protectMsg">
       Ready to check message.
@@ -170,15 +136,9 @@
 
 
 
-<!-- =========================
-     RECIPIENTS
-========================= -->
-
 <section class="card">
 
-  <h2>
-    Recipients
-  </h2>
+  <h2>Recipients</h2>
 
 
   <textarea
@@ -189,63 +149,32 @@
 
   <div class="stats">
 
-
     <div>
-
-      <b id="total">
-        0
-      </b>
-
-      <span>
-        Total
-      </span>
-
+      <strong id="total">0</strong>
+      <span>Total</span>
     </div>
 
-
     <div>
-
-      <b id="sent">
-        0
-      </b>
-
-      <span>
-        Sent
-      </span>
-
+      <strong id="sent">0</strong>
+      <span>Sent</span>
     </div>
 
-
     <div>
-
-      <b id="failed">
-        0
-      </b>
-
-      <span>
-        Failed
-      </span>
-
+      <strong id="failed">0</strong>
+      <span>Failed</span>
     </div>
-
 
   </div>
 
 
-  <div class="bar">
-
-    <i id="progress"></i>
-
+  <div class="progress">
+    <div id="progress"></div>
   </div>
 
 
-  <h3>
-    Live Recipients Dispatch
-  </h3>
-
+  <h3>Live Recipients Dispatch</h3>
 
   <div id="list"></div>
-
 
 </section>
 
@@ -253,67 +182,59 @@
 </main>
 
 
-
 <script>
 
+function get(id) {
+  return document.getElementById(id);
+}
 
-const $ = id =>
-  document.getElementById(id);
 
+/* Message check */
 
+function checkMessage() {
 
-/* =========================
-   MESSAGE CHECK
-========================= */
+  var subject =
+    get("sub").value.trim();
 
-function checkMessage(){
+  var message =
+    get("msg").value.trim();
 
-  let subject =
-    $("sub").value.trim();
+  if (!subject && !message) {
 
-  let message =
-    $("msg").value.trim();
-
-  if(!subject && !message){
-
-    $("protectMsg").textContent =
+    get("protectMsg").textContent =
       "Ready to check message.";
 
     return;
+
   }
 
-
-  let text =
+  var text =
     (subject + " " + message)
     .toLowerCase();
 
-
-  let repeated =
+  var repeated =
     /(.)\1{5,}/.test(text);
 
-
-  let excessiveLinks =
+  var links =
     (text.match(/https?:\/\//g) || [])
-    .length > 5;
+    .length;
 
-
-  let suspiciousMarkup =
+  var suspicious =
     /<script|javascript:|<iframe/i
     .test(text);
 
-
-  if(
+  if (
     repeated ||
-    excessiveLinks ||
-    suspiciousMarkup
-  ){
+    links > 5 ||
+    suspicious
+  ) {
 
-    $("protectMsg").textContent =
+    get("protectMsg").textContent =
       "⚠ Review message before sending.";
 
-  }else{
+  } else {
 
-    $("protectMsg").textContent =
+    get("protectMsg").textContent =
       "✓ Message passed basic checks.";
 
   }
@@ -321,105 +242,78 @@ function checkMessage(){
 }
 
 
+get("sub").addEventListener(
+  "input",
+  checkMessage
+);
 
-/* =========================
-   LIVE CHECK
-========================= */
-
-$("sub").addEventListener(
+get("msg").addEventListener(
   "input",
   checkMessage
 );
 
 
-$("msg").addEventListener(
+/* Recipient counter */
+
+get("recipients").addEventListener(
   "input",
-  checkMessage
-);
+  function () {
 
-
-
-/* =========================
-   RECIPIENT COUNT
-========================= */
-
-$("recipients").addEventListener(
-  "input",
-  () => {
-
-    let recipients =
-      $("recipients").value
+    var list =
+      get("recipients").value
       .split(/[\s,;]+/)
       .filter(Boolean);
 
+    var unique =
+      [];
 
-    let unique = [
-      ...new Set(
-        recipients.map(
-          email => email.toLowerCase()
-        )
-      )
-    ];
+    list.forEach(
+      function (email) {
 
+        email =
+          email.toLowerCase();
 
-    $("total").textContent =
+        if (
+          unique.indexOf(email) === -1
+        ) {
+          unique.push(email);
+        }
+
+      }
+    );
+
+    get("total").textContent =
       unique.length;
 
   }
 );
 
 
+/* Send */
 
-/* =========================
-   SEND EMAILS
-========================= */
-
-$("send").onclick =
-  async () => {
-
+get("send").addEventListener(
+  "click",
+  async function () {
 
     checkMessage();
 
-
-    let recipients =
-      $("recipients").value
+    var recipients =
+      get("recipients").value
       .split(/[\s,;]+/)
       .filter(Boolean);
 
+    if (!recipients.length) {
 
-    $("total").textContent =
-      recipients.length;
-
-
-    $("sent").textContent =
-      0;
-
-
-    $("failed").textContent =
-      0;
-
-
-    $("progress").style.width =
-      "0%";
-
-
-    $("list").innerHTML =
-      "";
-
-
-    if(!recipients.length){
-
-      $("status").textContent =
+      get("status").textContent =
         "Add recipients first.";
 
       return;
 
     }
 
+    if (recipients.length > 25) {
 
-    if(recipients.length > 25){
-
-      $("status").textContent =
+      get("status").textContent =
         "Maximum 25 recipients.";
 
       return;
@@ -427,62 +321,69 @@ $("send").onclick =
     }
 
 
-    $("send").disabled =
-      true;
+    get("send").disabled = true;
 
-
-    $("status").textContent =
+    get("status").textContent =
       "Sending...";
 
+    get("sent").textContent =
+      "0";
 
-    try{
+    get("failed").textContent =
+      "0";
+
+    get("progress").style.width =
+      "0%";
+
+    get("list").innerHTML =
+      "";
 
 
-      let response =
+    try {
+
+      var response =
         await fetch(
           "/api/send",
           {
+            method: "POST",
 
-            method:"POST",
-
-            headers:{
+            headers: {
               "Content-Type":
                 "application/json"
             },
 
-            body:JSON.stringify({
+            body: JSON.stringify({
 
               sender_name:
-                $("name").value,
+                get("name").value,
 
               gmail:
-                $("gmail").value,
+                get("gmail").value,
 
               app_password:
-                $("pass").value,
+                get("pass").value,
 
               subject:
-                $("sub").value,
+                get("sub").value,
 
               message:
-                $("msg").value,
+                get("msg").value,
 
               recipients:
                 recipients.join("\n")
 
             })
-
           }
         );
 
 
-      let data =
+      var data =
         await response.json();
 
 
-      if(!response.ok){
+      if (!response.ok) {
 
-        $("status").textContent =
+        get("status").textContent =
           data.error ||
           "Sending failed.";
 
@@ -491,20 +392,19 @@ $("send").onclick =
       }
 
 
-      $("sent").textContent =
+      get("sent").textContent =
         data.sent || 0;
 
-
-      $("failed").textContent =
+      get("failed").textContent =
         data.failed || 0;
 
 
-      let done =
+      var done =
         (data.sent || 0) +
         (data.failed || 0);
 
 
-      let percent =
+      var percent =
         recipients.length
         ? Math.round(
             done /
@@ -514,66 +414,82 @@ $("send").onclick =
         : 0;
 
 
-      $("progress").style.width =
+      get("progress").style.width =
         percent + "%";
 
 
-      /*
-        Show recipient + reference
-      */
-
       (data.sent_emails || [])
-        .forEach(item => {
+      .forEach(
+        function (item) {
 
-          $("list").innerHTML +=
-            `<div>
-              ✓ ${item.email}
-              <small>
-                ${item.ref}
-              </small>
-            </div>`;
+          var row =
+            document.createElement("div");
 
-        });
+          row.className =
+            "recipient-row";
+
+          row.innerHTML =
+            "✓ " +
+            item.email +
+            "<small>" +
+            item.ref +
+            "</small>";
+
+          get("list")
+            .appendChild(row);
+
+        }
+      );
 
 
       (data.failed_emails || [])
-        .forEach(item => {
+      .forEach(
+        function (item) {
 
-          $("list").innerHTML +=
-            `<div>
-              ✕ ${item.email}
-            </div>`;
+          var row =
+            document.createElement("div");
 
-        });
+          row.className =
+            "recipient-row failed";
+
+          row.textContent =
+            "✕ " +
+            item.email;
+
+          get("list")
+            .appendChild(row);
+
+        }
+      );
 
 
-      $("status").textContent =
-        `Completed: ${data.sent || 0} sent, ${data.failed || 0} failed.`;
+      get("status").textContent =
+        "Completed: " +
+        (data.sent || 0) +
+        " sent, " +
+        (data.failed || 0) +
+        " failed.";
 
     }
 
+    catch (error) {
 
-    catch(error){
-
-      $("status").textContent =
+      get("status").textContent =
         "Server connection failed.";
 
     }
 
+    finally {
 
-    finally{
-
-      $("send").disabled =
+      get("send").disabled =
         false;
 
     }
 
-  };
-
+  }
+);
 
 </script>
 
-
 </body>
-
 </html>
