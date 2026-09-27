@@ -1,54 +1,367 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    Secure Mail Console
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+  >
+
+</head>
+
+
+<body>
+
+
+<header>
+
+  <div class="brand">
+
+    <strong>
+      ✉ Secure Mail Console
+    </strong>
+
+    <small>
+      Gmail Mail Sender
+    </small>
+
+  </div>
+
+
+  <a href="/logout">
+    Logout
+  </a>
+
+</header>
+
+
+
+<main>
+
+
+  <!-- =================================
+       SENDER
+  ================================== -->
+
+  <section class="card">
+
+
+    <h2>
+      Sender
+    </h2>
+
+
+    <label>
+      Sender Name
+    </label>
+
+    <input
+      id="name"
+      type="text"
+      placeholder="Your name"
+      autocomplete="off"
+    >
+
+
+    <label>
+      Your Gmail
+    </label>
+
+    <input
+      id="gmail"
+      type="email"
+      placeholder="your@gmail.com"
+      autocomplete="off"
+    >
+
+
+    <label>
+      App Password
+    </label>
+
+    <input
+      id="pass"
+      type="password"
+      placeholder="Gmail App Password"
+      autocomplete="new-password"
+    >
+
+
+    <label>
+      Subject
+    </label>
+
+    <input
+      id="sub"
+      type="text"
+      placeholder="Email subject"
+      autocomplete="off"
+    >
+
+
+    <label>
+      Message Body
+    </label>
+
+    <textarea
+      id="msg"
+      placeholder="Write your message..."
+    ></textarea>
+
+
+    <button
+      id="send"
+      type="button"
+    >
+      Send Emails
+    </button>
+
+
+    <p id="status"></p>
+
+
+
+    <!-- =================================
+         SPAM PROTECTION
+    ================================== -->
+
+    <div class="protection">
+
+
+      <h3>
+        ✓ Spam Protection
+      </h3>
+
+
+      <div>
+        ✓ Duplicate recipients filtered
+      </div>
+
+
+      <div>
+        ✓ Invalid email addresses checked
+      </div>
+
+
+      <div>
+        ✓ Message content checked
+      </div>
+
+
+      <div>
+        ✓ Maximum 25 recipients
+      </div>
+
+
+      <div>
+        ✓ Controlled sending
+      </div>
+
+
+      <p id="protectMsg">
+        Ready to check message.
+      </p>
+
+
+    </div>
+
+
+  </section>
+
+
+
+  <!-- =================================
+       RECIPIENTS
+  ================================== -->
+
+  <section class="card">
+
+
+    <h2>
+      Recipients
+    </h2>
+
+
+    <textarea
+      id="recipients"
+      placeholder="one@email.com&#10;two@email.com&#10;three@email.com"
+    ></textarea>
+
+
+
+    <!-- =================================
+         STATS
+    ================================== -->
+
+    <div class="stats">
+
+
+      <div>
+
+        <strong id="total">
+          0
+        </strong>
+
+        <span>
+          Total
+        </span>
+
+      </div>
+
+
+      <div>
+
+        <strong id="sent">
+          0
+        </strong>
+
+        <span>
+          Sent
+        </span>
+
+      </div>
+
+
+      <div>
+
+        <strong id="failed">
+          0
+        </strong>
+
+        <span>
+          Failed
+        </span>
+
+      </div>
+
+
+    </div>
+
+
+
+    <!-- =================================
+         PROGRESS
+    ================================== -->
+
+    <div class="progress">
+
+      <div id="progress"></div>
+
+    </div>
+
+
+
+    <h3>
+      Live Recipients Dispatch
+    </h3>
+
+
+    <div id="list"></div>
+
+
+  </section>
+
+
+</main>
+
+
+
 <script>
 
+
+/* =========================================
+   ELEMENT HELPER
+========================================= */
+
 function get(id) {
+
   return document.getElementById(id);
+
 }
 
 
-/* =================================
-   RECIPIENTS
-================================= */
+
+/* =========================================
+   RECIPIENT LIST
+========================================= */
 
 function getRecipients() {
 
-  var raw = get("recipients").value;
+  var raw =
+    get("recipients").value;
 
-  var list = raw
-    .split(/[\s,;]+/)
-    .filter(Boolean);
+
+  var list =
+    raw
+      .split(/[\s,;]+/)
+      .filter(Boolean);
+
 
   var unique = [];
 
-  list.forEach(function(email) {
 
-    email = email.trim().toLowerCase();
+  list.forEach(
+    function(email) {
 
-    if (
-      email &&
-      unique.indexOf(email) === -1
-    ) {
-      unique.push(email);
+      email =
+        email
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        email &&
+        unique.indexOf(email) === -1
+      ) {
+
+        unique.push(email);
+
+      }
+
     }
+  );
 
-  });
 
   return unique;
+
 }
 
 
-/* =================================
+
+/* =========================================
    COUNTER
-================================= */
+========================================= */
 
 function updateCounter() {
 
-  var list = getRecipients();
+  var recipients =
+    getRecipients();
 
-  get("total").textContent = list.length;
 
-  if (list.length > 25) {
+  get("total")
+    .textContent =
+    recipients.length;
 
-    get("protectMsg").textContent =
+
+  if (
+    recipients.length > 25
+  ) {
+
+    get("protectMsg")
+      .textContent =
       "⚠ Maximum 25 recipients.";
 
   } else {
@@ -60,36 +373,50 @@ function updateCounter() {
 }
 
 
-get("recipients").addEventListener(
-  "input",
-  updateCounter
-);
+get("recipients")
+  .addEventListener(
+    "input",
+    updateCounter
+  );
 
 
-/* =================================
+
+/* =========================================
    MESSAGE CHECK
-================================= */
+========================================= */
 
 function checkMessage() {
 
   var subject =
-    get("sub").value.trim();
+    get("sub")
+      .value
+      .trim();
+
 
   var message =
-    get("msg").value.trim();
+    get("msg")
+      .value
+      .trim();
 
 
-  if (!subject && !message) {
+  if (
+    !subject &&
+    !message
+  ) {
 
-    get("protectMsg").textContent =
+    get("protectMsg")
+      .textContent =
       "Ready to check message.";
 
     return;
+
   }
 
 
   var text =
-    subject + " " + message;
+    subject +
+    " " +
+    message;
 
 
   var repeated =
@@ -109,67 +436,101 @@ function checkMessage() {
 
   if (repeated) {
 
-    get("protectMsg").textContent =
+    get("protectMsg")
+      .textContent =
       "⚠ Repeated characters detected.";
 
     return;
+
   }
 
 
-  if (links.length > 5) {
+  if (
+    links.length > 5
+  ) {
 
-    get("protectMsg").textContent =
+    get("protectMsg")
+      .textContent =
       "⚠ Message contains many links.";
 
     return;
+
   }
 
 
   if (unsafe) {
 
-    get("protectMsg").textContent =
+    get("protectMsg")
+      .textContent =
       "⚠ Unsafe HTML detected.";
 
     return;
+
   }
 
 
-  get("protectMsg").textContent =
+  get("protectMsg")
+    .textContent =
     "✓ Basic message checks passed.";
 
 }
 
 
-get("sub").addEventListener(
-  "input",
-  checkMessage
-);
-
-get("msg").addEventListener(
-  "input",
-  checkMessage
-);
+get("sub")
+  .addEventListener(
+    "input",
+    checkMessage
+  );
 
 
-/* =================================
+get("msg")
+  .addEventListener(
+    "input",
+    checkMessage
+  );
+
+
+
+/* =========================================
    HTML ESCAPE
-================================= */
+========================================= */
 
 function escapeHtml(value) {
 
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 
 }
 
 
-/* =================================
-   LIVE ROW
-================================= */
+
+/* =========================================
+   LIVE RECIPIENT ROW
+========================================= */
 
 function addRow(
   email,
@@ -177,8 +538,12 @@ function addRow(
   failed
 ) {
 
+
   var row =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   row.className =
     failed
@@ -188,19 +553,25 @@ function addRow(
 
   if (failed) {
 
+
     row.innerHTML =
       "✕ " +
       escapeHtml(email);
 
+
   } else {
+
 
     row.innerHTML =
       "✓ " +
       escapeHtml(email) +
 
       "<small>" +
+
       "Reference: " +
+
       escapeHtml(ref) +
+
       "</small>";
 
   }
@@ -208,290 +579,395 @@ function addRow(
 
   get("list")
     .appendChild(row);
+
 }
 
 
-/* =================================
+
+/* =========================================
    SEND EMAILS
-================================= */
+========================================= */
 
-get("send").addEventListener(
-  "click",
-  async function() {
-
-    var recipients =
-      getRecipients();
+get("send")
+  .addEventListener(
+    "click",
+    async function() {
 
 
-    /* -----------------------------
-       Validation
-    ----------------------------- */
-
-    if (!recipients.length) {
-
-      get("status").textContent =
-        "Add recipients first.";
-
-      return;
-    }
+      var recipients =
+        getRecipients();
 
 
-    if (recipients.length > 25) {
+      /* ---------------------------------
+         VALIDATION
+      --------------------------------- */
 
-      get("status").textContent =
-        "Maximum 25 recipients.";
+      if (
+        !recipients.length
+      ) {
 
-      return;
-    }
+        get("status")
+          .textContent =
+          "Add recipients first.";
 
+        return;
 
-    if (!get("name").value.trim()) {
-
-      get("status").textContent =
-        "Enter sender name.";
-
-      return;
-    }
-
-
-    if (!get("gmail").value.trim()) {
-
-      get("status").textContent =
-        "Enter Gmail address.";
-
-      return;
-    }
+      }
 
 
-    if (!get("pass").value.trim()) {
+      if (
+        recipients.length > 25
+      ) {
 
-      get("status").textContent =
-        "Enter Gmail App Password.";
+        get("status")
+          .textContent =
+          "Maximum 25 recipients.";
 
-      return;
-    }
+        return;
 
-
-    if (!get("sub").value.trim()) {
-
-      get("status").textContent =
-        "Enter subject.";
-
-      return;
-    }
+      }
 
 
-    if (!get("msg").value.trim()) {
+      if (
+        !get("name")
+          .value
+          .trim()
+      ) {
 
-      get("status").textContent =
-        "Enter message.";
+        get("status")
+          .textContent =
+          "Enter sender name.";
 
-      return;
-    }
+        return;
 
-
-    /* -----------------------------
-       NO CONFIRM POPUP HERE
-       Sending starts immediately.
-    ----------------------------- */
-
-    get("send").disabled = true;
-
-    get("status").textContent =
-      "Sending emails...";
+      }
 
 
-    get("sent").textContent =
-      "0";
+      if (
+        !get("gmail")
+          .value
+          .trim()
+      ) {
 
-    get("failed").textContent =
-      "0";
+        get("status")
+          .textContent =
+          "Enter Gmail address.";
 
-    get("progress").style.width =
-      "0%";
+        return;
 
-    get("list").innerHTML =
-      "";
+      }
 
 
-    try {
+      if (
+        !get("pass")
+          .value
+          .trim()
+      ) {
 
-      var response =
-        await fetch(
-          "/api/send",
-          {
-            method: "POST",
+        get("status")
+          .textContent =
+          "Enter Gmail App Password.";
 
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
+        return;
 
-            body: JSON.stringify({
+      }
 
-              sender_name:
-                get("name").value,
 
-              gmail:
-                get("gmail").value,
+      if (
+        !get("sub")
+          .value
+          .trim()
+      ) {
 
-              app_password:
-                get("pass").value,
+        get("status")
+          .textContent =
+          "Enter subject.";
 
-              subject:
-                get("sub").value,
+        return;
 
-              message:
-                get("msg").value,
+      }
 
-              recipients:
-                recipients.join("\n")
 
-            })
+      if (
+        !get("msg")
+          .value
+          .trim()
+      ) {
+
+        get("status")
+          .textContent =
+          "Enter message.";
+
+        return;
+
+      }
+
+
+
+      /* ---------------------------------
+         DIRECT SEND
+         
+         NO CONFIRMATION POPUP
+      --------------------------------- */
+
+      get("send")
+        .disabled =
+        true;
+
+
+      get("status")
+        .textContent =
+        "Sending emails...";
+
+
+      get("sent")
+        .textContent =
+        "0";
+
+
+      get("failed")
+        .textContent =
+        "0";
+
+
+      get("progress")
+        .style
+        .width =
+        "0%";
+
+
+      get("list")
+        .innerHTML =
+        "";
+
+
+
+      try {
+
+
+        /* ---------------------------------
+           API
+        --------------------------------- */
+
+        var response =
+          await fetch(
+            "/api/send",
+            {
+
+              method:
+                "POST",
+
+              headers: {
+
+                "Content-Type":
+                  "application/json"
+
+              },
+
+              body:
+                JSON.stringify({
+
+                  sender_name:
+                    get("name").value,
+
+                  gmail:
+                    get("gmail").value,
+
+                  app_password:
+                    get("pass").value,
+
+                  subject:
+                    get("sub").value,
+
+                  message:
+                    get("msg").value,
+
+                  recipients:
+                    recipients.join("\n")
+
+                })
+
+            }
+          );
+
+
+
+        /* ---------------------------------
+           JSON RESPONSE
+        --------------------------------- */
+
+        var data =
+          await response.json();
+
+
+
+        /* ---------------------------------
+           ERROR
+        --------------------------------- */
+
+        if (
+          !response.ok
+        ) {
+
+          get("status")
+            .textContent =
+            data.error ||
+            "Sending failed.";
+
+          return;
+
+        }
+
+
+
+        /* ---------------------------------
+           COUNTS
+        --------------------------------- */
+
+        get("sent")
+          .textContent =
+          data.sent || 0;
+
+
+        get("failed")
+          .textContent =
+          data.failed || 0;
+
+
+
+        /* ---------------------------------
+           PROGRESS
+        --------------------------------- */
+
+        var done =
+          (data.sent || 0) +
+          (data.failed || 0);
+
+
+        var percent =
+          data.total
+            ? Math.round(
+                done /
+                data.total *
+                100
+              )
+            : 0;
+
+
+        get("progress")
+          .style
+          .width =
+          percent + "%";
+
+
+
+        /* ---------------------------------
+           SENT
+        --------------------------------- */
+
+        (
+          data.sent_emails || []
+        ).forEach(
+          function(item) {
+
+            addRow(
+              item.email,
+              item.ref,
+              false
+            );
 
           }
         );
 
 
-      var data =
-        await response.json();
 
+        /* ---------------------------------
+           FAILED
+        --------------------------------- */
 
-      /* -----------------------------
-         SERVER ERROR
-      ----------------------------- */
+        (
+          data.failed_emails || []
+        ).forEach(
+          function(item) {
 
-      if (!response.ok) {
+            addRow(
+              item.email,
+              item.ref,
+              true
+            );
 
-        get("status").textContent =
-          data.error ||
-          "Sending failed.";
-
-        return;
-      }
-
-
-      /* -----------------------------
-         COUNTS
-      ----------------------------- */
-
-      get("sent").textContent =
-        data.sent || 0;
-
-      get("failed").textContent =
-        data.failed || 0;
-
-
-      /* -----------------------------
-         PROGRESS
-      ----------------------------- */
-
-      var done =
-        (data.sent || 0) +
-        (data.failed || 0);
-
-
-      var percent =
-        data.total
-          ? Math.round(
-              done /
-              data.total *
-              100
-            )
-          : 0;
-
-
-      get("progress").style.width =
-        percent + "%";
-
-
-      /* -----------------------------
-         SENT RECIPIENTS
-      ----------------------------- */
-
-      (
-        data.sent_emails || []
-      ).forEach(function(item) {
-
-        addRow(
-          item.email,
-          item.ref,
-          false
+          }
         );
 
-      });
 
 
-      /* -----------------------------
-         FAILED RECIPIENTS
-      ----------------------------- */
+        /* ---------------------------------
+           FINAL STATUS
+        --------------------------------- */
 
-      (
-        data.failed_emails || []
-      ).forEach(function(item) {
-
-        addRow(
-          item.email,
-          item.ref,
-          true
-        );
-
-      });
-
-
-      /* -----------------------------
-         COMPLETED
-      ----------------------------- */
-
-      get("status").textContent =
-        "Completed: " +
-        (data.sent || 0) +
-        " sent, " +
-        (data.failed || 0) +
-        " failed.";
-
-
-      /* =============================
-         POPUP ONLY AFTER SENDING
-      ============================= */
-
-      if (
-        (data.failed || 0) === 0 &&
-        (data.sent || 0) > 0
-      ) {
-
-        alert(
-          data.sent +
-          " emails sent successfully."
-        );
-
-      } else {
-
-        alert(
-          "Sending completed.\n\n" +
-          "Sent: " +
+        get("status")
+          .textContent =
+          "Completed: " +
           (data.sent || 0) +
-          "\n" +
-          "Failed: " +
-          (data.failed || 0)
-        );
+          " sent, " +
+          (data.failed || 0) +
+          " failed.";
+
+
+
+        /* =================================
+           POPUP AFTER SENDING ONLY
+        ================================= */
+
+        if (
+          (data.failed || 0) === 0 &&
+          (data.sent || 0) > 0
+        ) {
+
+          alert(
+            data.sent +
+            " emails sent successfully."
+          );
+
+
+        } else {
+
+          alert(
+            "Sending completed.\n\n" +
+            "Sent: " +
+            (data.sent || 0) +
+            "\n" +
+            "Failed: " +
+            (data.failed || 0)
+          );
+
+        }
+
+
+      } catch (error) {
+
+
+        get("status")
+          .textContent =
+          "Server connection failed.";
+
+
+      } finally {
+
+
+        get("send")
+          .disabled =
+          false;
 
       }
-
-
-    } catch (error) {
-
-      get("status").textContent =
-        "Server connection failed.";
-
-    } finally {
-
-      get("send").disabled =
-        false;
 
     }
+  );
 
-  }
-);
 
 </script>
+
+
+</body>
+
+</html>
