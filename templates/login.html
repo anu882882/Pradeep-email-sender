@@ -1,47 +1,84 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+
+<html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
 
-<title>Secure Mail Console</title>
+<meta charset="utf-8">
 
-<link rel="stylesheet"
-href="{{ url_for('static',filename='style.css') }}">
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
+
+<title>
+    Secure Mail Console
+</title>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
+
 </head>
+
 
 <body class="login-page">
 
-<div class="login-box">
 
-<h1>🛡️ Secure Mail Console</h1>
+<div class="login-card">
 
-<p>Private access</p>
+    <div class="login-icon">
+        🛡️
+    </div>
 
-<form method="POST">
 
-<input
-type="password"
-name="password"
-placeholder="Enter login password"
-required
-autofocus
->
+    <h1>
+        Secure Mail Console
+    </h1>
 
-<button type="submit">
-Login
-</button>
 
-{% if error %}
-<div class="login-error">
-{{ error }}
+    <p>
+        Private access
+    </p>
+
+
+    <form
+        method="post"
+        autocomplete="off"
+    >
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Login password"
+            autocomplete="current-password"
+            required
+            autofocus
+        >
+
+
+        <button
+            type="submit"
+        >
+            Login
+        </button>
+
+    </form>
+
+
+    {% if error %}
+
+    <div class="error">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
 </div>
-{% endif %}
 
-</form>
-
-</div>
 
 </body>
+
 </html>
