@@ -1,27 +1,28 @@
 import os
+import re
 import ssl
 import smtplib
-import re
 import secrets
 
+from flask import Flask, render_template, request, jsonify, session, redirect
 from functools import wraps
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, jsonify, session, redirect
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(
     __name__,
-    template_folder=ROOT + "/templates",
-    static_folder=ROOT + "/static"
+    template_folder=os.path.join(BASE, "templates"),
+    static_folder=os.path.join(BASE, "static")
 )
 
-app.secret_key = os.getenv(
+app.secret_key = os.environ.get(
     "SESSION_SECRET",
-    "change-me"
+    "change-this-secret"
 )
 
-LOGIN_PASS = os.getenv(
+LOGIN_PASSWORD = os.environ.get(
     "APP_LOGIN_PASSWORD",
     ""
 )
@@ -33,15 +34,13 @@ EMAIL_RE = re.compile(
 
 def valid_email(email):
     return bool(
-        EMAIL_RE.fullmatch(
-            email.strip()
-        )
+        EMAIL_RE.fullmatch(email.strip())
     )
 
 
-def clean_password(password):
+def clean_password(value):
     return "".join(
-        str(password).split()
+        str(value).split()
     )
 
 
@@ -49,43 +48,48 @@ def make_ref():
     return "#REF-" + secrets.token_hex(2).upper()
 
 
-def login_required(function):
+def protected(view):
 
-    @wraps(function)
-    def check(*args, **kwargs):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
 
-        if not session.get("login"):
+        if not session.get("logged_in"):
 
             if request.path.startswith("/api/"):
                 return jsonify(
-                    error="Login required"
+                    error="Login required."
                 ), 401
 
             return redirect("/login")
 
-        return function(*args, **kwargs)
+        return view(*args, **kwargs)
 
-    return check
+    return wrapper
 
 
-# =========================
+# -------------------------
 # LOGIN
-# =========================
+# -------------------------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        if request.form.get("password") == LOGIN_PASS:
+        password = request.form.get(
+            "password",
+            ""
+        )
 
-            session["login"] = True
+        if password == LOGIN_PASSWORD:
+
+            session["logged_in"] = True
 
             return redirect("/")
 
         return render_template(
             "login.html",
-            error="Wrong password"
+            error="Wrong password."
         )
 
     return render_template(
@@ -101,12 +105,12 @@ def logout():
     return redirect("/login")
 
 
-# =========================
+# -------------------------
 # HOME
-# =========================
+# -------------------------
 
 @app.route("/")
-@login_required
+@protected
 def home():
 
     return render_template(
@@ -114,33 +118,19 @@ def home():
     )
 
 
-# =========================
-# PROTECTION STATUS
-# =========================
-
-@app.route("/api/protection")
-@login_required
-def protection():
-
-    return jsonify(
-        active=True,
-        duplicate_filter=True,
-        invalid_email_filter=True,
-        controlled_sending=True
-    )
-
-
-# =========================
-# SEND EMAIL
-# =========================
+# -------------------------
+# SEND
+# -------------------------
 
 @app.route("/api/send", methods=["POST"])
-@login_required
+@protected
 def send():
 
-    data = request.get_json() or {}
+    data = request.get_json(
+        silent=True
+    ) or {}
 
-    name = str(
+    sender_name = str(
         data.get("sender_name", "")
     ).strip()
 
@@ -148,7 +138,7 @@ def send():
         data.get("gmail", "")
     ).strip().lower()
 
-    password = clean_password(
+    app_password = clean_password(
         data.get("app_password", "")
     )
 
@@ -156,17 +146,17 @@ def send():
         data.get("subject", "")
     ).strip()
 
-    body = str(
+    message = str(
         data.get("message", "")
     )
 
-    raw_recipients = str(
+    raw = str(
         data.get("recipients", "")
     )
 
     recipients = re.split(
         r"[\s,;]+",
-        raw_recipients.strip()
+        raw.strip()
     )
 
     recipients = [
@@ -184,44 +174,37 @@ def send():
     # Validation
     # -------------------------
 
-    if not name:
-
+    if not sender_name:
         return jsonify(
             error="Sender name required."
         ), 400
 
     if not valid_email(gmail):
-
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
-    if not password:
-
+    if not app_password:
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
     if not subject:
-
         return jsonify(
             error="Subject required."
         ), 400
 
-    if not body.strip():
-
+    if not message.strip():
         return jsonify(
             error="Message required."
         ), 400
 
     if not recipients:
-
         return jsonify(
-            error="Add recipients."
+            error="Add at least one recipient."
         ), 400
 
     if len(recipients) > 25:
-
         return jsonify(
             error="Maximum 25 recipients."
         ), 400
@@ -233,7 +216,6 @@ def send():
     ]
 
     if invalid:
-
         return jsonify(
             error="Invalid recipient email.",
             invalid=invalid
@@ -242,9 +224,9 @@ def send():
     sent = []
     failed = []
 
-    # =========================
-    # SMTP CONNECTION
-    # =========================
+    # -------------------------
+    # Gmail SMTP
+    # -------------------------
 
     try:
 
@@ -257,33 +239,23 @@ def send():
             timeout=30
         ) as smtp:
 
-            # Gmail authentication
             smtp.login(
                 gmail,
-                password
+                app_password
             )
-
-            # =========================
-            # SEND TO EACH RECIPIENT
-            # =========================
 
             for recipient in recipients:
 
                 try:
 
-                    recipient_name = (
-                        recipient
-                        .split("@")[0]
-                    )
+                    name = recipient.split("@")[0]
 
-                    # Unique reference for
-                    # every individual email
+                    # Unique reference for this email
                     ref = make_ref()
 
-                    # Personalize message
-                    text = body.replace(
+                    text = message.replace(
                         "{name}",
-                        recipient_name
+                        name
                     )
 
                     text = text.replace(
@@ -300,7 +272,10 @@ def send():
                     mail["Subject"] = subject
 
                     mail["From"] = (
-                        f"{name} <{gmail}>"
+                        sender_name
+                        + " <"
+                        + gmail
+                        + ">"
                     )
 
                     mail["To"] = recipient
@@ -323,42 +298,29 @@ def send():
                         "error": str(error)
                     })
 
-        return jsonify(
-
-            success=bool(sent),
-
-            total=len(recipients),
-
-            sent=len(sent),
-
-            failed=len(failed),
-
-            remaining=(
-                len(recipients)
-                - len(sent)
-                - len(failed)
-            ),
-
-            sent_emails=sent,
-
-            failed_emails=failed
-        )
+        return jsonify({
+            "success": len(sent) > 0,
+            "total": len(recipients),
+            "sent": len(sent),
+            "failed": len(failed),
+            "remaining": 0,
+            "sent_emails": sent,
+            "failed_emails": failed
+        })
 
     except smtplib.SMTPAuthenticationError:
 
         return jsonify(
             error=(
                 "Gmail authentication failed. "
-                "Check your Gmail App Password."
+                "Use the correct Gmail App Password."
             )
         ), 401
 
-    except smtplib.SMTPConnectError:
+    except smtplib.SMTPException as error:
 
         return jsonify(
-            error=(
-                "Could not connect to Gmail SMTP."
-            )
+            error="Gmail SMTP error: " + str(error)
         ), 502
 
     except Exception as error:
@@ -368,18 +330,14 @@ def send():
         ), 500
 
 
-# =========================
-# LOCAL RUN
-# =========================
-
 if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
         port=int(
-            os.getenv(
+            os.environ.get(
                 "PORT",
-                5000
+                "5000"
             )
         )
     )
