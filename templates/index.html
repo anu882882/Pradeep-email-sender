@@ -1,194 +1,170 @@
 <!doctype html>
 <html>
 <head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
-<link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+<link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
 <header>
-<b>🛡 Secure Mail Console</b>
-<a href="/logout">Logout</a>
+  <div>
+    <b>✉ Secure Mail Console</b>
+    <small>Gmail Mail Sender</small>
+  </div>
+  <a href="/logout">Logout</a>
 </header>
 
 <main>
 
 <section class="card">
 
-<h3>Sender</h3>
+  <h2>Sender</h2>
 
-<label>Sender Name</label>
-<input id="name" placeholder="Your name">
+  <label>Sender Name</label>
+  <input id="name" placeholder="Your name">
 
-<label>Gmail Address</label>
-<input id="gmail" placeholder="you@gmail.com">
+  <label>Your Gmail</label>
+  <input id="gmail" type="email" placeholder="your@gmail.com">
 
-<label>Gmail App Password</label>
-<input id="pass" type="password" placeholder="App Password">
+  <label>App Password</label>
+  <input id="pass" type="password" placeholder="Gmail App Password">
 
-<h3>Email</h3>
+  <label>Subject</label>
+  <input id="sub" placeholder="Email subject">
 
-<label>Subject</label>
-<input id="sub" placeholder="Email subject">
+  <label>Message Body</label>
+  <textarea id="msg" placeholder="Write your message..."></textarea>
 
-<label>Message Body</label>
-<textarea id="msg" rows="8" placeholder="Hello {name},"></textarea>
+  <button id="send">Send Emails</button>
 
-<label>Unsubscribe URL <small>(optional)</small></label>
-<input id="unsub" placeholder="https://example.com/unsubscribe">
-
-<button id="send">⚡ Send All</button>
-
-<div id="status">Ready</div>
-
-
-<!-- DIAGNOSTICS BOTTOM -->
-
-<div class="diag">
-
-<h3>Gmail Deliverability Diagnostics</h3>
-
-<button id="check">🔎 Run Gmail Diagnostics</button>
-
-<p id="dmsg">Enter Gmail details and run diagnostics.</p>
-
-<div class="checks">
-<div>SMTP Connection: <b id="con">—</b></div>
-<div>TLS: <b id="tls">—</b></div>
-<div>Gmail Authentication: <b id="auth">—</b></div>
-<div>Sender Domain: <b id="domain">—</b></div>
-</div>
-
-<a href="https://postmaster.google.com/" target="_blank">
-Open Gmail Postmaster Tools ↗
-</a>
-
-</div>
+  <p id="status"></p>
 
 </section>
 
 
 <section class="card">
 
-<h3>🛡 Sending Protection</h3>
+  <h2>Recipients</h2>
 
-<div class="protect">
-✓ TLS SMTP<br>
-✓ Gmail Authentication<br>
-✓ Duplicate Filter<br>
-✓ Invalid Email Filter<br>
-✓ Controlled Sending
-</div>
+  <textarea id="recipients"
+    placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
-<h3>Recipients <small>MAX 25</small></h3>
+  <div class="stats">
+    <div>
+      <b id="total">0</b>
+      <span>Total</span>
+    </div>
 
-<textarea id="rec" rows="9" placeholder="one@example.com&#10;two@example.com"></textarea>
+    <div>
+      <b id="sent">0</b>
+      <span>Sent</span>
+    </div>
 
-<p id="count">0 / 25 recipients</p>
+    <div>
+      <b id="failed">0</b>
+      <span>Failed</span>
+    </div>
+  </div>
 
-<div class="stats">
-<div><b id="total">0</b><small>Total</small></div>
-<div><b id="sent">0</b><small>Sent</small></div>
-<div><b id="fail">0</b><small>Failed</small></div>
-<div><b id="left">0</b><small>Remaining</small></div>
-</div>
+  <div class="bar">
+    <i id="progress"></i>
+  </div>
 
-<div class="bar"><i id="bar"></i></div>
+  <h3>Live Recipients Dispatch</h3>
 
-<h3>⚡ Live Recipients Dispatch</h3>
-<div id="list">Waiting...</div>
+  <div id="list"></div>
 
 </section>
 
 </main>
 
+
 <script>
-const $=x=>document.getElementById(x);
 
-function rec(){
- return [...new Set(
-  $("rec").value.replaceAll(",","\n").replaceAll(";","\n")
-  .split(/\s+/).filter(Boolean).map(x=>x.toLowerCase())
- )]
-}
+const $ = id => document.getElementById(id);
 
-$("rec").oninput=()=>$("count").textContent=rec().length+" / 25 recipients";
+$("send").onclick = async () => {
 
-$("check").onclick=async()=>{
- $("check").disabled=true;
- $("dmsg").textContent="Checking...";
- try{
-  let r=await fetch("/api/diagnostics",{
-   method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    gmail:$("gmail").value,
-    app_password:$("pass").value
-   })
-  });
-  let d=await r.json();
-  $("con").textContent=d.connection?"PASS":"FAIL";
-  $("tls").textContent=d.tls?"PASS":"FAIL";
-  $("auth").textContent=d.authentication?"PASS":"FAIL";
-  $("domain").textContent=d.domain||"—";
-  $("dmsg").textContent=d.message||d.error;
- }catch(e){$("dmsg").textContent=e.message}
- $("check").disabled=false;
+  let r = $("recipients").value
+    .split(/[\s,;]+/)
+    .filter(Boolean);
+
+  $("total").textContent = r.length;
+  $("sent").textContent = 0;
+  $("failed").textContent = 0;
+  $("progress").style.width = "0%";
+  $("list").innerHTML = "";
+
+  if (!r.length) {
+    $("status").textContent = "Add recipients first.";
+    return;
+  }
+
+  $("send").disabled = true;
+  $("status").textContent = "Sending...";
+
+  try {
+
+    let res = await fetch("/api/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        sender_name: $("name").value,
+        gmail: $("gmail").value,
+        app_password: $("pass").value,
+        subject: $("sub").value,
+        message: $("msg").value,
+        recipients: r.join("\n")
+      })
+    });
+
+    let d = await res.json();
+
+    if (!res.ok) {
+      $("status").textContent = d.error || "Sending failed.";
+      return;
+    }
+
+    $("sent").textContent = d.sent || 0;
+    $("failed").textContent = d.failed || 0;
+
+    let done = (d.sent || 0) + (d.failed || 0);
+    let percent = r.length
+      ? Math.round(done / r.length * 100)
+      : 0;
+
+    $("progress").style.width = percent + "%";
+
+    (d.sent_emails || []).forEach(x => {
+      $("list").innerHTML +=
+        `<div>✓ ${x}</div>`;
+    });
+
+    (d.failed_emails || []).forEach(x => {
+      $("list").innerHTML +=
+        `<div>✕ ${x.email}</div>`;
+    });
+
+    $("status").textContent =
+      `Completed: ${d.sent || 0} sent, ${d.failed || 0} failed.`;
+
+  } catch (e) {
+
+    $("status").textContent =
+      "Server connection failed.";
+
+  } finally {
+
+    $("send").disabled = false;
+
+  }
 };
 
-$("send").onclick=async()=>{
- let r=rec();
-
- if(!r.length)return $("status").textContent="Add recipients.";
- if(r.length>25)return $("status").textContent="Maximum 25 recipients.";
-
- $("send").disabled=true;
- $("status").textContent="Sending...";
- $("total").textContent=r.length;
- $("sent").textContent=0;
- $("fail").textContent=0;
- $("left").textContent=r.length;
- $("list").innerHTML="";
- $("bar").style.width="0%";
-
- try{
-  let x=await fetch("/api/send",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    sender_name:$("name").value,
-    gmail:$("gmail").value,
-    app_password:$("pass").value,
-    subject:$("sub").value,
-    message:$("msg").value,
-    recipients:r.join("\n"),
-    unsubscribe_url:$("unsub").value
-   })
-  });
-
-  let d=await x.json();
-  if(!x.ok)throw Error(d.error||"Send failed");
-
-  (d.sent_emails||[]).forEach(e=>{
-   $("list").innerHTML+=`<div>✓ ${e}</div>`;
-  });
-
-  (d.failed_emails||[]).forEach(e=>{
-   $("list").innerHTML+=`<div>× ${e.email}</div>`;
-  });
-
-  $("sent").textContent=d.sent;
-  $("fail").textContent=d.failed;
-  $("left").textContent=d.remaining;
-  $("bar").style.width=((d.sent+d.failed)/d.total*100)+"%";
-  $("status").textContent=`Finished: ${d.sent} sent, ${d.failed} failed.`;
-
- }catch(e){
-  $("status").textContent=e.message;
- }
-
- $("send").disabled=false;
-};
 </script>
 
 </body>
