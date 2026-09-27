@@ -4,19 +4,21 @@
 
 <head>
 
-<meta charset="utf-8">
+  <meta charset="utf-8">
 
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1"
->
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
 
-<title>Secure Mail Console</title>
+  <title>
+    Secure Mail Console
+  </title>
 
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='style.css') }}"
->
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+  >
 
 </head>
 
@@ -27,63 +29,63 @@
 <main class="login-main">
 
 
-<section class="card login-card">
+  <section class="card login-card">
 
 
-<div class="login-brand">
+    <div class="login-brand">
 
-<strong>
-✉ Secure Mail Console
-</strong>
+      <strong>
+        ✉ Secure Mail Console
+      </strong>
 
-<small>
-Gmail Mail Sender
-</small>
+      <small>
+        Gmail Mail Sender
+      </small>
 
-</div>
-
-
-<h2>
-Login
-</h2>
+    </div>
 
 
-<form method="post">
+    <h2>
+      Login
+    </h2>
 
 
-<label>
-Password
-</label>
+    <form method="post">
 
 
-<input
-  type="password"
-  name="password"
-  placeholder="Enter password"
-  autocomplete="current-password"
-  required
-  autofocus
->
+      <label>
+        Password
+      </label>
 
 
-<button type="submit">
-Login
-</button>
+      <input
+        type="password"
+        name="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        required
+        autofocus
+      >
 
 
-</form>
+      <button type="submit">
+        Login
+      </button>
 
 
-{% if error %}
-
-<p class="error-text">
-{{ error }}
-</p>
-
-{% endif %}
+    </form>
 
 
-</section>
+    {% if error %}
+
+      <p class="error-text">
+        {{ error }}
+      </p>
+
+    {% endif %}
+
+
+  </section>
 
 
 </main>
