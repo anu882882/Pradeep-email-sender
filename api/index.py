@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 from flask import Flask, render_template, request, jsonify, session, redirect
 
 
-BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE = os.getcwd()
 
 app = Flask(
     __name__,
@@ -67,21 +67,12 @@ def protected(view):
     return wrapper
 
 
-# -------------------------
-# LOGIN
-# -------------------------
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-        if password == LOGIN_PASSWORD:
+        if request.form.get("password", "") == LOGIN_PASSWORD:
 
             session["logged_in"] = True
 
@@ -103,20 +94,12 @@ def logout():
     return redirect("/login")
 
 
-# -------------------------
-# HOME
-# -------------------------
-
 @app.route("/")
 @protected
 def home():
 
     return render_template("index.html")
 
-
-# -------------------------
-# SEND EMAIL
-# -------------------------
 
 @app.route("/api/send", methods=["POST"])
 @protected
@@ -156,19 +139,14 @@ def send():
     )
 
     recipients = [
-        email.lower()
-        for email in recipients
-        if email
+        x.lower()
+        for x in recipients
+        if x
     ]
 
-    # Remove duplicate recipients
     recipients = list(
         dict.fromkeys(recipients)
     )
-
-    # -------------------------
-    # Validation
-    # -------------------------
 
     if not sender_name:
         return jsonify(
@@ -206,9 +184,8 @@ def send():
         ), 400
 
     invalid = [
-        email
-        for email in recipients
-        if not valid_email(email)
+        x for x in recipients
+        if not valid_email(x)
     ]
 
     if invalid:
@@ -220,18 +197,12 @@ def send():
     sent = []
     failed = []
 
-    # -------------------------
-    # Gmail SMTP
-    # -------------------------
-
     try:
-
-        context = ssl.create_default_context()
 
         with smtplib.SMTP_SSL(
             "smtp.gmail.com",
             465,
-            context=context,
+            context=ssl.create_default_context(),
             timeout=30
         ) as smtp:
 
@@ -248,10 +219,8 @@ def send():
                         recipient.split("@")[0]
                     )
 
-                    # Unique reference
                     ref = make_ref()
 
-                    # Personalization
                     text = message.replace(
                         "{name}",
                         recipient_name
@@ -297,30 +266,21 @@ def send():
                         "error": str(error)
                     })
 
-        return jsonify({
-            "success": bool(sent),
-            "total": len(recipients),
-            "sent": len(sent),
-            "failed": len(failed),
-            "remaining": 0,
-            "sent_emails": sent,
-            "failed_emails": failed
-        })
+        return jsonify(
+            success=bool(sent),
+            total=len(recipients),
+            sent=len(sent),
+            failed=len(failed),
+            remaining=0,
+            sent_emails=sent,
+            failed_emails=failed
+        )
 
     except smtplib.SMTPAuthenticationError:
 
         return jsonify(
-            error=(
-                "Gmail authentication failed. "
-                "Check your Gmail App Password."
-            )
+            error="Gmail authentication failed. Check your App Password."
         ), 401
-
-    except smtplib.SMTPException as error:
-
-        return jsonify(
-            error="Gmail SMTP error: " + str(error)
-        ), 502
 
     except Exception as error:
 
