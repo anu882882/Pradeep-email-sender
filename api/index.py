@@ -13,20 +13,41 @@ from flask import (
     request,
     jsonify,
     session,
-    redirect,
+    redirect
 )
 
+
+# =========================================================
+# PATHS
+# =========================================================
+
+BASE = os.getcwd()
+
+TEMPLATES_DIR = os.path.join(
+    BASE,
+    "templates"
+)
+
+STATIC_DIR = os.path.join(
+    BASE,
+    "static"
+)
+
+
+# =========================================================
+# FLASK
+# =========================================================
 
 app = Flask(
     __name__,
-    template_folder="../templates",
-    static_folder="../static"
+    template_folder=TEMPLATES_DIR,
+    static_folder=STATIC_DIR
 )
 
 
-# ==========================================
-# LOGIN
-# ==========================================
+# =========================================================
+# SESSION
+# =========================================================
 
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
@@ -39,31 +60,39 @@ app.config.update(
     SESSION_COOKIE_SECURE=True
 )
 
+
+# =========================================================
+# LOGIN PASSWORD
+# =========================================================
+
 LOGIN_PASSWORD = os.environ.get(
     "APP_LOGIN_PASSWORD",
     ""
 )
 
 
-# ==========================================
+# =========================================================
 # EMAIL SETTINGS
-# ==========================================
+# =========================================================
 
 SMTP_HOST = "smtp.gmail.com"
+
 SMTP_PORT = 465
 
 MAX_RECIPIENTS = 25
+
+
+# =========================================================
+# EMAIL VALIDATION
+# =========================================================
 
 EMAIL_RE = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 )
 
 
-# ==========================================
-# HELPERS
-# ==========================================
-
 def valid_email(value):
+
     return bool(
         EMAIL_RE.fullmatch(
             str(value).strip()
@@ -71,17 +100,22 @@ def valid_email(value):
     )
 
 
+# =========================================================
+# APP PASSWORD CLEANER
+# =========================================================
+
 def clean_app_password(value):
+
     return "".join(
         str(value).split()
     )
 
 
+# =========================================================
+# UNIQUE REFERENCE
+# =========================================================
+
 def make_ref():
-    """
-    Example:
-    #REF-5395A6CA
-    """
 
     return (
         "#REF-"
@@ -89,25 +123,22 @@ def make_ref():
     )
 
 
-def protected(view):
+# Example:
+# #REF-5395A6CA
 
-    @wraps(view)
-    def wrapper(*args, **kwargs):
 
-        if not session.get("logged_in"):
+# =========================================================
+# RECIPIENT NAME
+# =========================================================
 
-            if request.path.startswith("/api/"):
+def get_recipient_name(email):
 
-                return jsonify(
-                    error="Login required."
-                ), 401
+    return email.split("@")[0]
 
-            return redirect("/login")
 
-        return view(*args, **kwargs)
-
-    return wrapper
-
+# =========================================================
+# RECIPIENT PARSER
+# =========================================================
 
 def parse_recipients(raw):
 
@@ -117,11 +148,16 @@ def parse_recipients(raw):
     )
 
     result = []
+
     seen = set()
 
     for item in items:
 
-        email = item.strip().lower()
+        email = (
+            item
+            .strip()
+            .lower()
+        )
 
         if not email:
             continue
@@ -129,21 +165,53 @@ def parse_recipients(raw):
         if email not in seen:
 
             seen.add(email)
+
             result.append(email)
 
     return result
 
 
-def recipient_name(email):
+# =========================================================
+# LOGIN PROTECTION
+# =========================================================
 
-    return email.split("@")[0]
+def protected(view):
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+
+        if not session.get(
+            "logged_in"
+        ):
+
+            if request.path.startswith(
+                "/api/"
+            ):
+
+                return jsonify(
+                    error="Login required."
+                ), 401
+
+            return redirect(
+                "/login"
+            )
+
+        return view(
+            *args,
+            **kwargs
+        )
+
+    return wrapper
 
 
-# ==========================================
+# =========================================================
 # BASIC MESSAGE CHECK
-# ==========================================
+# =========================================================
 
-def message_checks(subject, message):
+def message_checks(
+    subject,
+    message
+):
 
     text = (
         str(subject)
@@ -153,11 +221,17 @@ def message_checks(subject, message):
 
     issues = []
 
+
+    # Very long subject
+
     if len(subject) > 200:
 
         issues.append(
             "Subject is unusually long."
         )
+
+
+    # Repeated characters
 
     if re.search(
         r"(.)\1{7,}",
@@ -167,6 +241,9 @@ def message_checks(subject, message):
         issues.append(
             "Repeated characters detected."
         )
+
+
+    # Excessive links
 
     links = re.findall(
         r"https?://",
@@ -180,6 +257,9 @@ def message_checks(subject, message):
             "Message contains many links."
         )
 
+
+    # Unsafe HTML/script
+
     if re.search(
         r"<script|javascript:|<iframe",
         text,
@@ -190,12 +270,13 @@ def message_checks(subject, message):
             "Unsafe HTML content detected."
         )
 
+
     return issues
 
 
-# ==========================================
+# =========================================================
 # LOGIN
-# ==========================================
+# =========================================================
 
 @app.route(
     "/login",
@@ -203,9 +284,12 @@ def message_checks(subject, message):
 )
 def login():
 
-    if session.get("logged_in"):
+    if session.get(
+        "logged_in"
+    ):
 
         return redirect("/")
+
 
     if request.method == "POST":
 
@@ -213,6 +297,7 @@ def login():
             "password",
             ""
         )
+
 
         if (
             LOGIN_PASSWORD
@@ -228,27 +313,35 @@ def login():
 
             return redirect("/")
 
+
         return render_template(
             "login.html",
             error="Wrong password."
         )
+
 
     return render_template(
         "login.html"
     )
 
 
+# =========================================================
+# LOGOUT
+# =========================================================
+
 @app.route("/logout")
 def logout():
 
     session.clear()
 
-    return redirect("/login")
+    return redirect(
+        "/login"
+    )
 
 
-# ==========================================
+# =========================================================
 # HOME
-# ==========================================
+# =========================================================
 
 @app.route("/")
 @protected
@@ -259,9 +352,9 @@ def home():
     )
 
 
-# ==========================================
-# MESSAGE CHECK
-# ==========================================
+# =========================================================
+# MESSAGE CHECK API
+# =========================================================
 
 @app.route(
     "/api/check-message",
@@ -277,12 +370,14 @@ def check_message():
         or {}
     )
 
+
     subject = str(
         data.get(
             "subject",
             ""
         )
     )
+
 
     message = str(
         data.get(
@@ -291,10 +386,12 @@ def check_message():
         )
     )
 
+
     issues = message_checks(
         subject,
         message
     )
+
 
     return jsonify(
         safe=not bool(issues),
@@ -302,9 +399,9 @@ def check_message():
     )
 
 
-# ==========================================
-# SEND
-# ==========================================
+# =========================================================
+# SEND EMAILS
+# =========================================================
 
 @app.route(
     "/api/send",
@@ -320,6 +417,10 @@ def send():
         or {}
     )
 
+
+    # -----------------------------------------------------
+    # INPUTS
+    # -----------------------------------------------------
 
     sender_name = str(
         data.get(
@@ -369,9 +470,9 @@ def send():
     )
 
 
-    # ======================================
+    # -----------------------------------------------------
     # VALIDATION
-    # ======================================
+    # -----------------------------------------------------
 
     if not sender_name:
 
@@ -422,6 +523,10 @@ def send():
         ), 400
 
 
+    # -----------------------------------------------------
+    # INVALID RECIPIENTS
+    # -----------------------------------------------------
+
     invalid = [
         email
         for email in recipients
@@ -437,9 +542,9 @@ def send():
         ), 400
 
 
-    # ======================================
+    # -----------------------------------------------------
     # BASIC MESSAGE CHECK
-    # ======================================
+    # -----------------------------------------------------
 
     issues = message_checks(
         subject,
@@ -455,17 +560,24 @@ def send():
         ), 400
 
 
+    # -----------------------------------------------------
+    # RESULTS
+    # -----------------------------------------------------
+
     sent = []
+
     failed = []
 
 
-    # ======================================
-    # GMAIL CONNECTION
-    # ======================================
+    # -----------------------------------------------------
+    # SMTP CONNECTION
+    # -----------------------------------------------------
 
     try:
 
-        context = ssl.create_default_context()
+        context = (
+            ssl.create_default_context()
+        )
 
 
         with smtplib.SMTP_SSL(
@@ -476,9 +588,9 @@ def send():
         ) as smtp:
 
 
-            # ------------------------------
-            # Gmail login
-            # ------------------------------
+            # -------------------------------------------------
+            # GMAIL LOGIN
+            # -------------------------------------------------
 
             try:
 
@@ -490,70 +602,71 @@ def send():
             except smtplib.SMTPAuthenticationError:
 
                 return jsonify(
-                    error="Gmail authentication failed. Check your App Password."
+                    error=(
+                        "Gmail authentication failed. "
+                        "Check your App Password."
+                    )
                 ), 401
 
 
-            # ==================================
-            # SEND ONE EMAIL AT A TIME
-            # ==================================
+            # -------------------------------------------------
+            # SEND EACH RECIPIENT
+            # -------------------------------------------------
 
             for email in recipients:
 
 
-                # NEW UNIQUE REFERENCE
-                # FOR EVERY RECIPIENT
+                # Unique reference for THIS recipient
 
                 ref = make_ref()
 
 
-                name = recipient_name(
+                # Recipient name
+
+                name = get_recipient_name(
                     email
                 )
 
 
-                # ------------------------------
-                # Replace name
-                # ------------------------------
+                # -------------------------------------------------
+                # Replace {name}
+                # -------------------------------------------------
 
                 final_message = (
-                    message
-                    .replace(
+                    message.replace(
                         "{name}",
                         name
                     )
                 )
 
 
-                # ------------------------------
-                # If {ref} is manually used,
-                # replace it.
-                # ------------------------------
+                # -------------------------------------------------
+                # Support {ref} if user happens to use it
+                # -------------------------------------------------
 
-                had_ref_placeholder = (
+                used_ref_placeholder = (
                     "{ref}" in final_message
                 )
 
 
                 final_message = (
-                    final_message
-                    .replace(
+                    final_message.replace(
                         "{ref}",
                         ref
                     )
                 )
 
 
-                # ------------------------------
+                # -------------------------------------------------
                 # AUTOMATIC REFERENCE
                 #
-                # If user did not put {ref}
-                # in the message, backend adds:
+                # If user did NOT use {ref},
+                # automatically append:
                 #
                 # Reference: #REF-XXXXXXXX
-                # ------------------------------
+                # -------------------------------------------------
 
-                if not had_ref_placeholder:
+                if not used_ref_placeholder:
 
                     final_message = (
                         final_message.rstrip()
@@ -563,9 +676,9 @@ def send():
                     )
 
 
-                # ------------------------------
-                # Subject
-                # ------------------------------
+                # -------------------------------------------------
+                # Subject placeholders
+                # -------------------------------------------------
 
                 final_subject = (
                     subject
@@ -580,9 +693,9 @@ def send():
                 )
 
 
-                # ------------------------------
-                # Create email
-                # ------------------------------
+                # -------------------------------------------------
+                # MIME EMAIL
+                # -------------------------------------------------
 
                 mail = MIMEText(
                     final_message,
@@ -607,9 +720,9 @@ def send():
                 mail["To"] = email
 
 
-                # ------------------------------
-                # Send
-                # ------------------------------
+                # -------------------------------------------------
+                # SEND
+                # -------------------------------------------------
 
                 try:
 
@@ -623,31 +736,51 @@ def send():
                     if refused:
 
                         failed.append({
-                            "email": email,
-                            "ref": ref,
-                            "error": str(refused)
+
+                            "email":
+                                email,
+
+                            "ref":
+                                ref,
+
+                            "error":
+                                str(refused)
+
                         })
+
 
                     else:
 
                         sent.append({
-                            "email": email,
-                            "ref": ref
+
+                            "email":
+                                email,
+
+                            "ref":
+                                ref
+
                         })
 
 
                 except Exception as error:
 
                     failed.append({
-                        "email": email,
-                        "ref": ref,
-                        "error": str(error)
+
+                        "email":
+                            email,
+
+                        "ref":
+                            ref,
+
+                        "error":
+                            str(error)
+
                     })
 
 
-        # ==================================
-        # RESPONSE
-        # ==================================
+        # -----------------------------------------------------
+        # FINAL RESPONSE
+        # -----------------------------------------------------
 
         return jsonify(
 
@@ -675,9 +808,9 @@ def send():
         ), 500
 
 
-# ==========================================
+# =========================================================
 # LOCAL DEVELOPMENT
-# ==========================================
+# =========================================================
 
 if __name__ == "__main__":
 
