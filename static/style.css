@@ -21,9 +21,9 @@ body {
 }
 
 
-/* ==========================
+/* =================================
    HEADER
-========================== */
+================================= */
 
 header {
 
@@ -74,9 +74,9 @@ header a {
 }
 
 
-/* ==========================
+/* =================================
    MAIN
-========================== */
+================================= */
 
 main {
 
@@ -100,20 +100,23 @@ main {
 }
 
 
-/* ==========================
+/* =================================
    CARD
-========================== */
+================================= */
 
 .card {
 
   border:
     1px solid #ddd;
 
-  border-radius: 10px;
+  border-radius:
+    10px;
 
-  padding: 18px;
+  padding:
+    18px;
 
-  background: #fff;
+  background:
+    #fff;
 
 }
 
@@ -123,7 +126,8 @@ h2 {
   margin:
     0 0 18px;
 
-  font-size: 18px;
+  font-size:
+    18px;
 
 }
 
@@ -133,18 +137,20 @@ h3 {
   margin:
     20px 0 10px;
 
-  font-size: 14px;
+  font-size:
+    14px;
 
 }
 
 
-/* ==========================
+/* =================================
    FORM
-========================== */
+================================= */
 
 label {
 
-  display: block;
+  display:
+    block;
 
   margin:
     12px 0 6px;
@@ -155,23 +161,29 @@ label {
 input,
 textarea {
 
-  width: 100%;
+  width:
+    100%;
 
-  padding: 10px;
+  padding:
+    10px;
 
   border:
     1px solid #bbb;
 
-  border-radius: 6px;
+  border-radius:
+    6px;
 
-  background: #fff;
+  background:
+    #fff;
 
-  color: #222;
+  color:
+    #222;
 
   font:
     14px Arial;
 
-  outline: none;
+  outline:
+    none;
 
 }
 
@@ -179,107 +191,129 @@ textarea {
 input:focus,
 textarea:focus {
 
-  border-color: #222;
+  border-color:
+    #222;
 
 }
 
 
 textarea {
 
-  min-height: 150px;
+  min-height:
+    150px;
 
-  resize: vertical;
+  resize:
+    vertical;
 
 }
 
 
 #msg {
 
-  min-height: 190px;
+  min-height:
+    190px;
 
 }
 
 
 #recipients {
 
-  min-height: 220px;
+  min-height:
+    220px;
 
 }
 
 
-/* ==========================
+/* =================================
    BUTTON
-========================== */
+================================= */
 
 button {
 
-  width: 100%;
+  width:
+    100%;
 
-  margin-top: 16px;
+  margin-top:
+    16px;
 
-  padding: 11px;
+  padding:
+    11px;
 
   border:
     1px solid #222;
 
-  border-radius: 6px;
+  border-radius:
+    6px;
 
-  background: #222;
+  background:
+    #222;
 
-  color: #fff;
+  color:
+    #fff;
 
-  cursor: pointer;
+  cursor:
+    pointer;
 
-  font-size: 14px;
+  font-size:
+    14px;
 
 }
 
 
 button:hover {
 
-  opacity: .92;
+  opacity:
+    .92;
 
 }
 
 
 button:disabled {
 
-  opacity: .5;
+  opacity:
+    .5;
 
-  cursor: not-allowed;
+  cursor:
+    not-allowed;
 
 }
 
 
-/* ==========================
+/* =================================
    STATUS
-========================== */
+================================= */
 
 #status {
 
-  min-height: 18px;
+  min-height:
+    18px;
 
   margin:
     10px 0 0;
 
-  line-height: 1.4;
+  line-height:
+    1.4;
 
 }
 
 
-/* ==========================
+/* =================================
    SPAM PROTECTION
-========================== */
+================================= */
 
 .protection {
 
-  margin-top: 18px;
+  margin-top:
+    18px;
 
-  padding: 14px;
+  padding:
+    14px;
 
-  background: #f6f6f6;
+  background:
+    #f6f6f6;
 
-  border-radius: 8px;
+  border-radius:
+    8px;
 
 }
 
@@ -305,96 +339,121 @@ button:disabled {
   margin:
     10px 0 0;
 
-  color: #666;
+  color:
+    #666;
 
-  font-size: 12px;
+  font-size:
+    12px;
 
-  line-height: 1.4;
+  line-height:
+    1.4;
 
 }
 
 
-/* ==========================
+/* =================================
    STATS
-========================== */
+================================= */
 
 .stats {
 
-  display: grid;
+  display:
+    grid;
 
   grid-template-columns:
     repeat(3, 1fr);
 
-  gap: 8px;
+  gap:
+    8px;
 
-  margin-top: 15px;
+  margin-top:
+    15px;
 
 }
 
 
 .stats div {
 
-  padding: 12px;
+  padding:
+    12px;
 
-  background: #f5f5f5;
+  background:
+    #f5f5f5;
 
-  text-align: center;
+  text-align:
+    center;
 
 }
 
 
 .stats strong {
 
-  display: block;
+  display:
+    block;
 
-  font-size: 16px;
+  font-size:
+    16px;
 
 }
 
 
 .stats span {
 
-  display: block;
+  display:
+    block;
 
-  margin-top: 4px;
+  margin-top:
+    4px;
 
-  color: #777;
+  color:
+    #777;
 
-  font-size: 12px;
+  font-size:
+    12px;
 
 }
 
 
-/* ==========================
+/* =================================
    PROGRESS
-========================== */
+================================= */
 
 .progress {
 
-  width: 100%;
+  width:
+    100%;
 
-  height: 7px;
+  height:
+    7px;
 
-  margin-top: 15px;
+  margin-top:
+    15px;
 
-  background: #eee;
+  background:
+    #eee;
 
-  border-radius: 10px;
+  border-radius:
+    10px;
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
 }
 
 
 #progress {
 
-  display: block;
+  display:
+    block;
 
-  width: 0;
+  width:
+    0;
 
-  height: 100%;
+  height:
+    100%;
 
-  background: #222;
+  background:
+    #222;
 
   transition:
     width .2s ease;
@@ -402,15 +461,17 @@ button:disabled {
 }
 
 
-/* ==========================
+/* =================================
    LIVE RECIPIENTS
-========================== */
+================================= */
 
 #list {
 
-  max-height: 260px;
+  max-height:
+    260px;
 
-  overflow-y: auto;
+  overflow-y:
+    auto;
 
   border-top:
     1px solid #eee;
@@ -429,18 +490,22 @@ button:disabled {
   word-break:
     break-all;
 
-  line-height: 1.4;
+  line-height:
+    1.4;
 
 }
 
 
 .recipient-row small {
 
-  display: block;
+  display:
+    block;
 
-  margin-top: 3px;
+  margin-top:
+    3px;
 
-  color: #777;
+  color:
+    #777;
 
   font-family:
     monospace;
@@ -450,25 +515,29 @@ button:disabled {
 
 .recipient-row.failed {
 
-  color: #555;
+  color:
+    #555;
 
 }
 
 
-/* ==========================
+/* =================================
    LOGIN
-========================== */
+================================= */
 
 .login-main {
 
-  width: 100%;
+  width:
+    100%;
 
   min-height:
     calc(100vh - 40px);
 
-  max-width: 430px;
+  max-width:
+    430px;
 
-  display: block;
+  display:
+    block;
 
   margin:
     20px auto;
@@ -481,50 +550,59 @@ button:disabled {
 
 .login-card {
 
-  margin-top: 80px;
+  margin-top:
+    80px;
 
 }
 
 
 .login-brand {
 
-  margin-bottom: 24px;
+  margin-bottom:
+    24px;
 
 }
 
 
 .login-brand strong {
 
-  display: block;
+  display:
+    block;
 
-  font-size: 18px;
+  font-size:
+    18px;
 
 }
 
 
 .login-brand small {
 
-  display: block;
+  display:
+    block;
 
-  margin-top: 4px;
+  margin-top:
+    4px;
 
-  color: #777;
+  color:
+    #777;
 
 }
 
 
 .error-text {
 
-  margin-top: 12px;
+  margin-top:
+    12px;
 
-  color: #555;
+  color:
+    #555;
 
 }
 
 
-/* ==========================
+/* =================================
    MOBILE
-========================== */
+================================= */
 
 @media (max-width: 750px) {
 
@@ -546,7 +624,8 @@ button:disabled {
 
   .login-card {
 
-    margin-top: 35px;
+    margin-top:
+      35px;
 
   }
 
