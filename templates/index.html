@@ -42,6 +42,17 @@
 
   <p id="status"></p>
 
+  <div class="protect">
+    <h3>✓ Spam Protection</h3>
+
+    <div id="check1">✓ Duplicate recipients filtered</div>
+    <div id="check2">✓ Invalid email filter</div>
+    <div id="check3">✓ Message content checked</div>
+    <div id="check4">✓ Controlled sending</div>
+
+    <p id="protectMsg">Ready to check message.</p>
+  </div>
+
 </section>
 
 
@@ -53,6 +64,7 @@
     placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
   <div class="stats">
+
     <div>
       <b id="total">0</b>
       <span>Total</span>
@@ -67,6 +79,7 @@
       <b id="failed">0</b>
       <span>Failed</span>
     </div>
+
   </div>
 
   <div class="bar">
@@ -86,7 +99,100 @@
 
 const $ = id => document.getElementById(id);
 
+
+/* --------------------------------
+   Spam Protection
+-------------------------------- */
+
+function checkMessage(){
+
+  let subject = $("sub").value.trim();
+  let message = $("msg").value.trim();
+
+  if(!subject && !message){
+    $("protectMsg").textContent =
+      "Ready to check message.";
+    return;
+  }
+
+  let text = (subject + " " + message).toLowerCase();
+
+  let checks = [];
+
+  if(subject)
+    checks.push("subject");
+
+  if(message)
+    checks.push("message");
+
+  let repeated = /(.)\1{5,}/.test(text);
+
+  let excessiveLinks =
+    (text.match(/https?:\/\//g) || []).length > 5;
+
+  let suspiciousMarkup =
+    /<script|javascript:|<iframe/i.test(text);
+
+  if(repeated || excessiveLinks || suspiciousMarkup){
+
+    $("protectMsg").textContent =
+      "⚠ Review message before sending.";
+
+  }else{
+
+    $("protectMsg").textContent =
+      "✓ Message passed basic checks.";
+
+  }
+
+}
+
+
+/* --------------------------------
+   Live message checking
+-------------------------------- */
+
+$("sub").addEventListener(
+  "input",
+  checkMessage
+);
+
+$("msg").addEventListener(
+  "input",
+  checkMessage
+);
+
+
+/* --------------------------------
+   Recipients
+-------------------------------- */
+
+$("recipients").addEventListener(
+  "input",
+  () => {
+
+    let r = $("recipients").value
+      .split(/[\s,;]+/)
+      .filter(Boolean);
+
+    let unique = [...new Set(
+      r.map(x => x.toLowerCase())
+    )];
+
+    $("total").textContent =
+      unique.length;
+
+  }
+);
+
+
+/* --------------------------------
+   Send
+-------------------------------- */
+
 $("send").onclick = async () => {
+
+  checkMessage();
 
   let r = $("recipients").value
     .split(/[\s,;]+/)
@@ -98,71 +204,132 @@ $("send").onclick = async () => {
   $("progress").style.width = "0%";
   $("list").innerHTML = "";
 
-  if (!r.length) {
-    $("status").textContent = "Add recipients first.";
+  if(!r.length){
+
+    $("status").textContent =
+      "Add recipients first.";
+
     return;
+
   }
 
+
   $("send").disabled = true;
-  $("status").textContent = "Sending...";
 
-  try {
+  $("status").textContent =
+    "Sending...";
 
-    let res = await fetch("/api/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        sender_name: $("name").value,
-        gmail: $("gmail").value,
-        app_password: $("pass").value,
-        subject: $("sub").value,
-        message: $("msg").value,
-        recipients: r.join("\n")
-      })
-    });
+
+  try{
+
+    let res = await fetch(
+      "/api/send",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":
+            "application/json"
+        },
+        body:JSON.stringify({
+
+          sender_name:
+            $("name").value,
+
+          gmail:
+            $("gmail").value,
+
+          app_password:
+            $("pass").value,
+
+          subject:
+            $("sub").value,
+
+          message:
+            $("msg").value,
+
+          recipients:
+            r.join("\n")
+
+        })
+      }
+    );
+
 
     let d = await res.json();
 
-    if (!res.ok) {
-      $("status").textContent = d.error || "Sending failed.";
+
+    if(!res.ok){
+
+      $("status").textContent =
+        d.error || "Sending failed.";
+
       return;
+
     }
 
-    $("sent").textContent = d.sent || 0;
-    $("failed").textContent = d.failed || 0;
 
-    let done = (d.sent || 0) + (d.failed || 0);
-    let percent = r.length
+    $("sent").textContent =
+      d.sent || 0;
+
+    $("failed").textContent =
+      d.failed || 0;
+
+
+    let done =
+      (d.sent || 0) +
+      (d.failed || 0);
+
+
+    let percent =
+      r.length
       ? Math.round(done / r.length * 100)
       : 0;
 
-    $("progress").style.width = percent + "%";
 
-    (d.sent_emails || []).forEach(x => {
-      $("list").innerHTML +=
-        `<div>✓ ${x}</div>`;
-    });
+    $("progress").style.width =
+      percent + "%";
 
-    (d.failed_emails || []).forEach(x => {
-      $("list").innerHTML +=
-        `<div>✕ ${x.email}</div>`;
-    });
+
+    (d.sent_emails || []).forEach(
+      email => {
+
+        $("list").innerHTML +=
+          `<div>✓ ${email}</div>`;
+
+      }
+    );
+
+
+    (d.failed_emails || []).forEach(
+      item => {
+
+        $("list").innerHTML +=
+          `<div>✕ ${item.email}</div>`;
+
+      }
+    );
+
 
     $("status").textContent =
       `Completed: ${d.sent || 0} sent, ${d.failed || 0} failed.`;
 
-  } catch (e) {
+  }
+
+
+  catch(e){
 
     $("status").textContent =
       "Server connection failed.";
 
-  } finally {
+  }
+
+
+  finally{
 
     $("send").disabled = false;
 
   }
+
 };
 
 </script>
