@@ -1,4 +1,6 @@
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box
+}
 
 body{
   margin:0;
@@ -100,9 +102,38 @@ button:disabled{
   margin-bottom:0
 }
 
+
+/* Spam Protection */
+
+.protect{
+  margin-top:18px;
+  padding:14px;
+  background:#f6f6f6;
+  border-radius:8px
+}
+
+.protect h3{
+  margin:0 0 10px;
+  font-size:14px
+}
+
+.protect div{
+  padding:3px 0
+}
+
+#protectMsg{
+  margin:10px 0 0;
+  font-size:12px;
+  color:#666
+}
+
+
+/* Stats */
+
 .stats{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:
+    repeat(3,1fr);
   gap:8px;
   margin-top:15px
 }
@@ -124,6 +155,9 @@ button:disabled{
   font-size:12px
 }
 
+
+/* Progress */
+
 .bar{
   height:7px;
   background:#eee;
@@ -139,6 +173,9 @@ button:disabled{
   background:#222
 }
 
+
+/* Dispatch */
+
 #list{
   max-height:260px;
   overflow:auto;
@@ -151,8 +188,11 @@ button:disabled{
   word-break:break-all
 }
 
+
 @media(max-width:750px){
+
   main{
     grid-template-columns:1fr
   }
+
 }
