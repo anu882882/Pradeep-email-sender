@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
 
 <head>
@@ -11,9 +10,7 @@
     content="width=device-width,initial-scale=1"
 >
 
-<title>
-    Secure Mail Console
-</title>
+<title>Secure Mail Console</title>
 
 <link
     rel="stylesheet"
@@ -22,24 +19,21 @@
 
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
-    <div class="brand">
+    <div>
 
         <div class="brand-title">
             🛡️ Secure Mail Console
         </div>
 
         <div class="brand-sub">
-            Authenticated SMTP delivery
+            Gmail SMTP + Deliverability Diagnostics
         </div>
 
     </div>
-
 
     <a
         href="/logout"
@@ -51,31 +45,26 @@
 </header>
 
 
-
 <main class="container">
-
 
 <div class="main-grid">
 
 
 <!-- =====================================================
-     LEFT PANEL
+     SENDER
 ===================================================== -->
 
 <section class="card">
 
-
     <div class="section-title">
 
-        <div>
-            <h2>
-                Sender
-            </h2>
+        <h2>
+            Sender
+        </h2>
 
-            <p>
-                SMTP account
-            </p>
-        </div>
+        <p>
+            Authenticated Gmail account
+        </p>
 
     </div>
 
@@ -118,35 +107,214 @@
 
     <div class="info-box">
 
-        <strong>
-            Gmail SMTP
-        </strong>
+        <b>
+            SMTP security
+        </b>
 
         <span>
-            Use an App Password, not your normal Gmail password.
+            TLS + Gmail authentication are used.
         </span>
 
     </div>
 
 
+    <button
+        id="diagnoseBtn"
+        class="diagnose-button"
+    >
+        🔎 Run Gmail Diagnostics
+    </button>
+
+
+    <div
+        id="diagnosticError"
+        class="diagnostic-error"
+    ></div>
+
+
+    <!-- =================================================
+         DIAGNOSTICS PANEL
+    ================================================= -->
+
+    <div
+        id="diagnostics"
+        class="diagnostics"
+    >
+
+        <div class="diagnostics-title">
+
+            <div>
+
+                <h3>
+                    Gmail Deliverability Diagnostics
+                </h3>
+
+                <p>
+                    Local SMTP and sender-domain checks
+                </p>
+
+            </div>
+
+            <span
+                id="diagnosticBadge"
+                class="badge"
+            >
+                Not checked
+            </span>
+
+        </div>
+
+
+        <div class="diagnostic-grid">
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    SMTP Connection
+                </span>
+
+                <b id="diagConnection">
+                    —
+                </b>
+
+            </div>
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    TLS
+                </span>
+
+                <b id="diagTls">
+                    —
+                </b>
+
+            </div>
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    Gmail Authentication
+                </span>
+
+                <b id="diagAuth">
+                    —
+                </b>
+
+            </div>
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    Sender Domain
+                </span>
+
+                <b id="diagDomain">
+                    —
+                </b>
+
+            </div>
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    Domain DNS
+                </span>
+
+                <b id="diagDns">
+                    —
+                </b>
+
+            </div>
+
+
+            <div class="diagnostic-item">
+
+                <span>
+                    SPF / DKIM / DMARC
+                </span>
+
+                <b class="status-info">
+                    Provider check
+                </b>
+
+            </div>
+
+
+        </div>
+
+
+        <div
+            id="diagMessage"
+            class="diag-message"
+        >
+            Enter your Gmail details and run diagnostics.
+        </div>
+
+
+        <div class="recommendations">
+
+            <strong>
+                Recommended checks
+            </strong>
+
+            <ul id="recommendationList">
+
+                <li>
+                    Authenticate your sending domain.
+                </li>
+
+                <li>
+                    Keep TLS enabled.
+                </li>
+
+                <li>
+                    Monitor Gmail Postmaster Tools.
+                </li>
+
+                <li>
+                    Send only to recipients who expect your messages.
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <a
+            class="postmaster-link"
+            href="https://postmaster.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Open Gmail Postmaster Tools ↗
+        </a>
+
+
+    </div>
+
 
     <div class="divider"></div>
 
 
+    <!-- =================================================
+         EMAIL
+    ================================================= -->
 
     <div class="section-title">
 
-        <div>
+        <h2>
+            Email
+        </h2>
 
-            <h2>
-                Email
-            </h2>
-
-            <p>
-                Message content
-            </p>
-
-        </div>
+        <p>
+            Message content
+        </p>
 
     </div>
 
@@ -178,7 +346,7 @@ Your message here..."
     <div class="variable-box">
 
         <b>
-            Personalization:
+            Personalization
         </b>
 
         <code>
@@ -206,21 +374,11 @@ Your message here..."
     >
 
 
-    <div class="small-note">
-        Only enter a real unsubscribe endpoint if your message
-        is promotional/marketing email.
-    </div>
-
-
     <button
         id="sendBtn"
         class="send-button"
     >
-        <span>
-            ⚡
-        </span>
-
-        Send All
+        ⚡ Send All
     </button>
 
 
@@ -231,34 +389,29 @@ Your message here..."
         Ready
     </div>
 
-
 </section>
 
 
-
 <!-- =====================================================
-     RIGHT PANEL
+     RIGHT SIDE
 ===================================================== -->
 
 <section class="card">
 
-
-    <!-- Protection -->
 
     <div class="protection-header">
 
         <div>
 
             <h2>
-                🛡️ Spam Protection
+                🛡️ Sending Protection
             </h2>
 
             <p>
-                Deliverability checks
+                Message and SMTP checks
             </p>
 
         </div>
-
 
         <span
             id="protectBadge"
@@ -272,60 +425,48 @@ Your message here..."
 
     <div class="checks">
 
-
         <div class="check">
             <span>✓</span>
-            TLS SMTP connection
+            TLS SMTP
         </div>
-
 
         <div class="check">
             <span>✓</span>
             Authenticated SMTP
         </div>
 
+        <div class="check">
+            <span>✓</span>
+            RFC headers
+        </div>
 
         <div class="check">
             <span>✓</span>
-            RFC email headers
+            Duplicate filter
         </div>
-
 
         <div class="check">
             <span>✓</span>
-            Duplicate filtering
+            Invalid email filter
         </div>
-
 
         <div class="check">
             <span>✓</span>
-            Invalid address filtering
+            Controlled rate
         </div>
-
 
         <div class="check">
             <span>✓</span>
-            Controlled send rate
+            Persistent connection
         </div>
-
 
         <div class="check">
             <span>✓</span>
-            Persistent SMTP session
+            No hidden text
         </div>
-
-
-        <div class="check">
-            <span>✓</span>
-            No filter bypass
-        </div>
-
 
     </div>
 
-
-
-    <!-- Recipients -->
 
     <div class="recipient-title">
 
@@ -358,11 +499,7 @@ three@example.com"
     </div>
 
 
-
-    <!-- Stats -->
-
     <div class="stats">
-
 
         <div class="stat">
 
@@ -415,33 +552,23 @@ three@example.com"
 
         </div>
 
+    </div>
+
+
+    <div class="progress">
+
+        <i id="bar"></i>
 
     </div>
 
 
-
-    <!-- Progress -->
-
-    <div class="progress-wrapper">
-
-        <div class="progress">
-
-            <i id="bar"></i>
-
-        </div>
-
-        <div
-            id="progressText"
-            class="progress-text"
-        >
-            0%
-        </div>
-
+    <div
+        id="progressText"
+        class="progress-text"
+    >
+        0%
     </div>
 
-
-
-    <!-- Dispatch -->
 
     <div class="dispatch-title">
 
@@ -456,7 +583,6 @@ three@example.com"
             </p>
 
         </div>
-
 
         <span
             id="dispatchCount"
@@ -482,12 +608,9 @@ three@example.com"
 
 </section>
 
-
 </div>
 
-
 </main>
-
 
 
 <script>
@@ -497,13 +620,12 @@ three@example.com"
    HELPERS
 ========================================================= */
 
-const $ = (id) =>
+const $ = id =>
     document.getElementById(id);
 
 
-
 /* =========================================================
-   RECIPIENT PARSER
+   RECIPIENTS
 ========================================================= */
 
 function getRecipients() {
@@ -515,26 +637,19 @@ function getRecipients() {
             .replaceAll("\r", "\n");
 
 
-    const values =
-        raw
-            .split(/\s+/)
-            .map(
-                value =>
-                    value.trim().toLowerCase()
-            )
-            .filter(Boolean);
-
-
     return [
-        ...new Set(values)
+        ...new Set(
+            raw
+                .split(/\s+/)
+                .map(
+                    x =>
+                        x.trim().toLowerCase()
+                )
+                .filter(Boolean)
+        )
     ];
 }
 
-
-
-/* =========================================================
-   RECIPIENT COUNTER
-========================================================= */
 
 function updateRecipientCounter() {
 
@@ -547,17 +662,11 @@ function updateRecipientCounter() {
         count + " / 25 recipients";
 
 
-    if (count > 25) {
-
-        $("recipientCounter")
-            .classList.add("counter-danger");
-
-    } else {
-
-        $("recipientCounter")
-            .classList.remove("counter-danger");
-
-    }
+    $("recipientCounter")
+        .classList.toggle(
+            "counter-danger",
+            count > 25
+        );
 }
 
 
@@ -566,7 +675,6 @@ $("recipients")
         "input",
         updateRecipientCounter
     );
-
 
 
 /* =========================================================
@@ -583,9 +691,8 @@ async function loadProtection() {
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
             throw new Error();
-        }
 
 
         $("protectBadge")
@@ -598,7 +705,7 @@ async function loadProtection() {
             "badge good";
 
 
-    } catch (error) {
+    } catch {
 
         $("protectBadge")
             .textContent =
@@ -608,11 +715,275 @@ async function loadProtection() {
         $("protectBadge")
             .className =
             "badge bad";
-
     }
-
 }
 
+
+/* =========================================================
+   DIAGNOSTIC STATUS
+========================================================= */
+
+function setDiag(
+    element,
+    ok,
+    yesText = "PASS",
+    noText = "FAIL"
+) {
+
+    const el = $(element);
+
+    el.textContent =
+        ok
+            ? yesText
+            : noText;
+
+    el.className =
+        ok
+            ? "diag-pass"
+            : "diag-fail";
+}
+
+
+/* =========================================================
+   RUN DIAGNOSTICS
+========================================================= */
+
+$("diagnoseBtn")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const gmail =
+                $("gmail")
+                    .value
+                    .trim();
+
+            const password =
+                $("appPassword")
+                    .value
+                    .trim();
+
+
+            $("diagnosticError")
+                .textContent =
+                "";
+
+
+            if (!gmail) {
+
+                $("diagnosticError")
+                    .textContent =
+                    "Enter your Gmail address.";
+
+                return;
+            }
+
+
+            if (!password) {
+
+                $("diagnosticError")
+                    .textContent =
+                    "Enter your Gmail App Password.";
+
+                return;
+            }
+
+
+            $("diagnoseBtn")
+                .disabled =
+                true;
+
+
+            $("diagnoseBtn")
+                .textContent =
+                "Checking Gmail...";
+
+
+            $("diagnosticBadge")
+                .textContent =
+                "Checking";
+
+
+            $("diagnosticBadge")
+                .className =
+                "badge";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/diagnostics",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    gmail:
+                                        gmail,
+
+                                    app_password:
+                                        password
+                                })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Diagnostics failed."
+                    );
+                }
+
+
+                const smtp =
+                    data.smtp || {};
+
+
+                const domain =
+                    data.domain || {};
+
+
+                setDiag(
+                    "diagConnection",
+                    smtp.connection
+                );
+
+
+                setDiag(
+                    "diagTls",
+                    smtp.tls
+                );
+
+
+                setDiag(
+                    "diagAuth",
+                    smtp.authentication
+                );
+
+
+                $("diagDomain")
+                    .textContent =
+                    domain.domain ||
+                    "—";
+
+
+                setDiag(
+                    "diagDns",
+                    domain.dns_resolves,
+                    "RESOLVES",
+                    "NOT RESOLVING"
+                );
+
+
+                if (
+                    smtp.connection &&
+                    smtp.tls &&
+                    smtp.authentication
+                ) {
+
+                    $("diagnosticBadge")
+                        .textContent =
+                        "SMTP Ready ✓";
+
+
+                    $("diagnosticBadge")
+                        .className =
+                        "badge good";
+
+
+                } else {
+
+                    $("diagnosticBadge")
+                        .textContent =
+                        "Action Needed";
+
+
+                    $("diagnosticBadge")
+                        .className =
+                        "badge bad";
+                }
+
+
+                $("diagMessage")
+                    .textContent =
+                    smtp.error ||
+                    domain.note ||
+                    data.inbox_note ||
+                    "Diagnostics completed.";
+
+
+                const list =
+                    $("recommendationList");
+
+
+                list.innerHTML =
+                    "";
+
+
+                (
+                    data.recommendations ||
+                    []
+                ).forEach(
+                    recommendation => {
+
+                        const li =
+                            document.createElement(
+                                "li"
+                            );
+
+                        li.textContent =
+                            recommendation;
+
+                        list.appendChild(
+                            li
+                        );
+                    }
+                );
+
+
+            } catch (error) {
+
+                $("diagnosticBadge")
+                    .textContent =
+                    "Error";
+
+
+                $("diagnosticBadge")
+                    .className =
+                    "badge bad";
+
+
+                $("diagnosticError")
+                    .textContent =
+                    error.message ||
+                    "Diagnostics failed.";
+
+            } finally {
+
+                $("diagnoseBtn")
+                    .disabled =
+                    false;
+
+
+                $("diagnoseBtn")
+                    .textContent =
+                    "🔎 Run Gmail Diagnostics";
+            }
+
+        }
+    );
 
 
 /* =========================================================
@@ -625,47 +996,38 @@ function resetMonitor(total) {
         .textContent =
         total;
 
-
     $("sent")
         .textContent =
-        "0";
-
+        0;
 
     $("failed")
         .textContent =
-        "0";
-
+        0;
 
     $("remaining")
         .textContent =
         total;
 
-
     $("bar")
         .style.width =
         "0%";
-
 
     $("progressText")
         .textContent =
         "0%";
 
-
     $("dispatchCount")
         .textContent =
         "0 / " + total;
 
-
     $("dispatch")
         .innerHTML =
         "";
-
 }
 
 
-
 /* =========================================================
-   ADD DISPATCH ROW
+   DISPATCH ROW
 ========================================================= */
 
 function addRow(
@@ -733,53 +1095,30 @@ function addRow(
         message || status;
 
 
-    row.appendChild(
-        icon
-    );
+    row.appendChild(icon);
 
+    row.appendChild(emailBox);
 
-    row.appendChild(
-        emailBox
-    );
-
-
-    row.appendChild(
-        statusBox
-    );
+    row.appendChild(statusBox);
 
 
     $("dispatch")
-        .appendChild(
-            row
-        );
-
-
-    row.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-    });
-
+        .appendChild(row);
 }
 
 
-
 /* =========================================================
-   SEND BUTTON
+   SEND
 ========================================================= */
 
 $("sendBtn")
     .addEventListener(
         "click",
-        async function () {
-
+        async () => {
 
             const recipients =
                 getRecipients();
 
-
-            /* ---------------------------------------------
-               Basic validation
-            --------------------------------------------- */
 
             if (!recipients.length) {
 
@@ -788,7 +1127,6 @@ $("sendBtn")
                     "Add recipients.";
 
                 return;
-
             }
 
 
@@ -799,7 +1137,6 @@ $("sendBtn")
                     "Maximum 25 recipients.";
 
                 return;
-
             }
 
 
@@ -836,13 +1173,8 @@ $("sendBtn")
                     $("unsubscribe")
                         .value
                         .trim()
-
             };
 
-
-            /* ---------------------------------------------
-               Reset UI
-            --------------------------------------------- */
 
             resetMonitor(
                 recipients.length
@@ -856,15 +1188,10 @@ $("sendBtn")
 
             $("status")
                 .textContent =
-                "Connecting to Gmail SMTP...";
+                "Sending...";
 
 
             try {
-
-
-                /* -----------------------------------------
-                   SEND
-                ----------------------------------------- */
 
                 const response =
                     await fetch(
@@ -896,20 +1223,13 @@ $("sendBtn")
                         data.error ||
                         "Sending failed."
                     );
-
                 }
 
 
-                /* -----------------------------------------
-                   Successful recipients
-                ----------------------------------------- */
-
-                const sent =
+                (
                     data.sent_emails ||
-                    [];
-
-
-                sent.forEach(
+                    []
+                ).forEach(
                     email => {
 
                         addRow(
@@ -917,37 +1237,24 @@ $("sendBtn")
                             "sent",
                             "SMTP accepted ✓"
                         );
-
                     }
                 );
 
 
-                /* -----------------------------------------
-                   Failed recipients
-                ----------------------------------------- */
-
-                const failed =
+                (
                     data.failed_emails ||
-                    [];
-
-
-                failed.forEach(
+                    []
+                ).forEach(
                     item => {
 
                         addRow(
                             item.email,
                             "failed",
-                            item.error ||
-                            "Failed"
+                            item.error
                         );
-
                     }
                 );
 
-
-                /* -----------------------------------------
-                   Stats
-                ----------------------------------------- */
 
                 $("sent")
                     .textContent =
@@ -969,25 +1276,24 @@ $("sendBtn")
                     data.failed;
 
 
-                const percentage =
+                const percent =
                     data.total
                         ? Math.round(
-                            (
-                                processed /
-                                data.total
-                            ) * 100
+                            processed /
+                            data.total *
+                            100
                         )
                         : 0;
 
 
                 $("bar")
                     .style.width =
-                    percentage + "%";
+                    percent + "%";
 
 
                 $("progressText")
                     .textContent =
-                    percentage + "%";
+                    percent + "%";
 
 
                 $("dispatchCount")
@@ -996,10 +1302,6 @@ $("sendBtn")
                     " / " +
                     data.total;
 
-
-                /* -----------------------------------------
-                   Final status
-                ----------------------------------------- */
 
                 $("status")
                     .textContent =
@@ -1022,12 +1324,10 @@ $("sendBtn")
                 $("sendBtn")
                     .disabled =
                     false;
-
             }
 
         }
     );
-
 
 
 /* =========================================================
@@ -1040,7 +1340,5 @@ loadProtection();
 
 </script>
 
-
 </body>
-
 </html>
