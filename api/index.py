@@ -4,9 +4,9 @@ import ssl
 import smtplib
 import secrets
 
-from flask import Flask, render_template, request, jsonify, session, redirect
 from functools import wraps
 from email.mime.text import MIMEText
+from flask import Flask, render_template, request, jsonify, session, redirect
 
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -92,9 +92,7 @@ def login():
             error="Wrong password."
         )
 
-    return render_template(
-        "login.html"
-    )
+    return render_template("login.html")
 
 
 @app.route("/logout")
@@ -113,13 +111,11 @@ def logout():
 @protected
 def home():
 
-    return render_template(
-        "index.html"
-    )
+    return render_template("index.html")
 
 
 # -------------------------
-# SEND
+# SEND EMAIL
 # -------------------------
 
 @app.route("/api/send", methods=["POST"])
@@ -160,12 +156,12 @@ def send():
     )
 
     recipients = [
-        x.lower()
-        for x in recipients
-        if x
+        email.lower()
+        for email in recipients
+        if email
     ]
 
-    # Remove duplicates
+    # Remove duplicate recipients
     recipients = list(
         dict.fromkeys(recipients)
     )
@@ -248,14 +244,17 @@ def send():
 
                 try:
 
-                    name = recipient.split("@")[0]
+                    recipient_name = (
+                        recipient.split("@")[0]
+                    )
 
-                    # Unique reference for this email
+                    # Unique reference
                     ref = make_ref()
 
+                    # Personalization
                     text = message.replace(
                         "{name}",
-                        name
+                        recipient_name
                     )
 
                     text = text.replace(
@@ -299,7 +298,7 @@ def send():
                     })
 
         return jsonify({
-            "success": len(sent) > 0,
+            "success": bool(sent),
             "total": len(recipients),
             "sent": len(sent),
             "failed": len(failed),
@@ -313,7 +312,7 @@ def send():
         return jsonify(
             error=(
                 "Gmail authentication failed. "
-                "Use the correct Gmail App Password."
+                "Check your Gmail App Password."
             )
         ), 401
 
@@ -335,9 +334,6 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(
-            os.environ.get(
-                "PORT",
-                "5000"
-            )
+            os.environ.get("PORT", "5000")
         )
     )
