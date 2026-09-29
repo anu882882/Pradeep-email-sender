@@ -93,6 +93,36 @@ placeholder="Gmail App Password"
 autocomplete="new-password">
 
 
+<label>
+Subject
+</label>
+
+<input
+id="sub"
+placeholder="Email subject">
+
+
+<label>
+Message Body
+</label>
+
+<textarea
+id="msg"
+placeholder="Write your message..."></textarea>
+
+
+<!-- SEND BUTTON -->
+
+<button id="send">
+Send Emails
+</button>
+
+
+<p id="status"></p>
+
+
+<!-- SMTP CONNECTION -->
+
 <div class="smtp-box">
 
 <div class="smtp-head">
@@ -135,28 +165,9 @@ SMTP not checked yet.
 </div>
 
 
-
-<label>
-Subject
-</label>
-
-<input
-id="sub"
-placeholder="Email subject">
-
-
-<label>
-Message Body
-</label>
-
-<textarea
-id="msg"
-placeholder="Write your message..."></textarea>
-
-
+<!-- SPAM PROTECTION -->
 
 <div class="protection">
-
 
 <h3>
 🛡 Spam Protection
@@ -171,8 +182,7 @@ placeholder="Write your message..."></textarea>
 <div
 class="cf-turnstile"
 data-sitekey="{{turnstile_sitekey}}"
-data-action="send_email"
-data-theme="light">
+data-action="send_email">
 </div>
 
 {% else %}
@@ -191,8 +201,7 @@ Turnstile site key is not configured.
 
 <div class="protection-status">
 
-<span
-id="shieldIcon">
+<span id="shieldIcon">
 ✓
 </span>
 
@@ -211,21 +220,11 @@ Cloudflare verification is required before sending.
 </div>
 
 
-
-<button
-id="send">
-
-Send Emails
-
-</button>
-
-
-<p id="status"></p>
-
-
 </section>
 
 
+
+<!-- RECIPIENTS -->
 
 <section class="card">
 
@@ -285,14 +284,12 @@ Failed
 </div>
 
 
-
 <div class="progress">
 
 <div id="progress">
 </div>
 
 </div>
-
 
 
 <div class="delivery-box">
@@ -314,7 +311,6 @@ No emails sent yet.
 </div>
 
 </div>
-
 
 
 <h3>
@@ -339,11 +335,6 @@ const $ = id =>
 document.getElementById(id);
 
 
-
-let smtpVerified = false;
-
-
-
 function recipients(){
 
     return [
@@ -360,7 +351,6 @@ function recipients(){
     ];
 
 }
-
 
 
 function count(){
@@ -390,7 +380,6 @@ function count(){
 
 $("recipients").oninput =
     count;
-
 
 
 function checkMessage(){
@@ -447,7 +436,6 @@ $("sub").oninput =
 
 $("msg").oninput =
     checkMessage;
-
 
 
 function row(
@@ -518,7 +506,6 @@ function row(
 }
 
 
-
 function getTurnstileToken(){
 
     const input =
@@ -531,25 +518,6 @@ function getTurnstileToken(){
         : "";
 
 }
-
-
-
-window.turnstileDone =
-function(){
-
-    $("shieldIcon")
-        .textContent = "✓";
-
-    $("protectionText")
-        .textContent =
-        "Success!";
-
-    $("protectMsg")
-        .textContent =
-        "Spam Protection verified.";
-
-};
-
 
 
 $("smtpCheck").onclick =
@@ -582,7 +550,9 @@ async function(){
     }
 
 
-    $("smtpCheck").disabled = true;
+    $("smtpCheck").disabled =
+        true;
+
 
     $("smtpMessage").textContent =
         "Checking SMTP connection...";
@@ -594,6 +564,7 @@ async function(){
             await fetch(
                 "/api/smtp-check",
                 {
+
                     method: "POST",
 
                     headers: {
@@ -620,8 +591,6 @@ async function(){
 
         if(!response.ok){
 
-            smtpVerified = false;
-
             $("smtpStatus")
                 .classList
                 .remove("ok");
@@ -634,9 +603,6 @@ async function(){
             return;
 
         }
-
-
-        smtpVerified = true;
 
 
         $("smtpStatus")
@@ -653,7 +619,9 @@ async function(){
 
     catch(error){
 
-        smtpVerified = false;
+        $("smtpStatus")
+            .classList
+            .remove("ok");
 
         $("smtpMessage")
             .textContent =
@@ -669,7 +637,6 @@ async function(){
     }
 
 };
-
 
 
 $("send").onclick =
@@ -749,7 +716,6 @@ async function(){
     }
 
 
-
     const token =
         getTurnstileToken();
 
@@ -762,7 +728,6 @@ async function(){
         return;
 
     }
-
 
 
     $("send").disabled =
@@ -779,10 +744,8 @@ async function(){
     $("failed").textContent =
         "0";
 
-
     $("progress").style.width =
         "0%";
-
 
     $("list").innerHTML =
         "";
@@ -866,7 +829,6 @@ async function(){
 
         $("sent").textContent =
             data.sent;
-
 
         $("failed").textContent =
             data.failed;
@@ -966,6 +928,7 @@ async function(){
 };
 
 </script>
+
 
 </body>
 
