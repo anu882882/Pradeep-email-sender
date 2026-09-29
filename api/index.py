@@ -3,7 +3,9 @@ import re
 import ssl
 import smtplib
 import secrets
-import time
+import json
+import urllib.request
+import urllib.parse
 
 from flask import Flask, render_template, request, jsonify, session, redirect
 from functools import wraps
@@ -18,99 +20,42 @@ app = Flask(
 
 app.secret_key = os.getenv(
     "SESSION_SECRET",
-    "RakshakSecureSession_2026_9xP7mQ4vL8"
+    "change-this-secret"
 )
 
-LOGIN = os.getenv("APP_LOGIN_PASSWORD", "Baby882@#")
+LOGIN = os.getenv(
+    "APP_LOGIN_PASSWORD",
+    "Baby882@#"
+)
 
-SEND_DELAY = float(os.getenv("SEND_DELAY", "1.5"))
+TURNSTILE_SECRET = os.getenv(
+    "TURNSTILE_SECRET_KEY",
+    ""
+)
 
-ER = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+TURNSTILE_SITEKEY = os.getenv(
+    "TURNSTILE_SITE_KEY",
+    ""
+)
 
-
-# Display / monitoring information only.
-# These addresses are NOT used as SMTP source IPs.
-COUNTRY_IP_POOL = [
-    {
-        "name": "United States",
-        "code": "US",
-        "flag": "🇺🇸",
-        "ip": "198.51.100.42",
-        "city": "New York"
-    },
-    {
-        "name": "United Kingdom",
-        "code": "GB",
-        "flag": "🇬🇧",
-        "ip": "185.199.110.153",
-        "city": "London"
-    },
-    {
-        "name": "Germany",
-        "code": "DE",
-        "flag": "🇩🇪",
-        "ip": "194.109.6.92",
-        "city": "Frankfurt"
-    },
-    {
-        "name": "India",
-        "code": "IN",
-        "flag": "🇮🇳",
-        "ip": "103.21.244.18",
-        "city": "Mumbai"
-    },
-    {
-        "name": "Singapore",
-        "code": "SG",
-        "flag": "🇸🇬",
-        "ip": "104.244.42.1",
-        "city": "Singapore"
-    },
-    {
-        "name": "Japan",
-        "code": "JP",
-        "flag": "🇯🇵",
-        "ip": "133.242.18.2",
-        "city": "Tokyo"
-    },
-    {
-        "name": "Canada",
-        "code": "CA",
-        "flag": "🇨🇦",
-        "ip": "192.206.151.131",
-        "city": "Toronto"
-    },
-    {
-        "name": "Australia",
-        "code": "AU",
-        "flag": "🇦🇺",
-        "ip": "139.130.4.5",
-        "city": "Sydney"
-    },
-    {
-        "name": "France",
-        "code": "FR",
-        "flag": "🇫🇷",
-        "ip": "195.154.122.3",
-        "city": "Paris"
-    },
-    {
-        "name": "Netherlands",
-        "code": "NL",
-        "flag": "🇳🇱",
-        "ip": "188.166.0.4",
-        "city": "Amsterdam"
-    }
-]
+ER = re.compile(
+    r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+)
 
 
 def valid(value):
-    return bool(ER.fullmatch(str(value).strip()))
+    return bool(
+        ER.fullmatch(
+            str(value).strip()
+        )
+    )
 
 
 def auth(function):
+
     @wraps(function)
     def wrapper(*args, **kwargs):
+
         if not session.get("login"):
             return redirect("/login")
 
@@ -120,19 +65,84 @@ def auth(function):
 
 
 def recipients(value):
-    items = re.split(r"[\s,;]+", str(value))
+
+    parts = re.split(
+        r"[\s,;]+",
+        str(value)
+    )
 
     return list(
         dict.fromkeys(
             item.strip().lower()
-            for item in items
+            for item in parts
             if item.strip()
         )
     )
 
 
 def make_reference():
-    return "#REF-" + secrets.token_hex(4).upper()
+
+    return (
+        "#REF-"
+        + secrets.token_hex(4).upper()
+    )
+
+
+def verify_turnstile(token, remote_ip=None):
+
+    if not TURNSTILE_SECRET:
+        return {
+            "success": False,
+            "error-codes": [
+                "turnstile-secret-not-configured"
+            ]
+        }
+
+    if not token:
+        return {
+            "success": False,
+            "error-codes": [
+                "missing-input-response"
+            ]
+        }
+
+    data = {
+        "secret": TURNSTILE_SECRET,
+        "response": token
+    }
+
+    if remote_ip:
+        data["remoteip"] = remote_ip
+
+    encoded = urllib.parse.urlencode(
+        data
+    ).encode()
+
+    req = urllib.request.Request(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        data=encoded,
+        method="POST"
+    )
+
+    try:
+
+        with urllib.request.urlopen(
+            req,
+            timeout=10
+        ) as response:
+
+            return json.loads(
+                response.read().decode()
+            )
+
+    except Exception:
+
+        return {
+            "success": False,
+            "error-codes": [
+                "turnstile-validation-error"
+            ]
+        }
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -140,10 +150,18 @@ def login():
 
     if request.method == "POST":
 
-        password = request.form.get("password", "")
+        password = request.form.get(
+            "password",
+            ""
+        )
 
-        if secrets.compare_digest(password, LOGIN):
+        if secrets.compare_digest(
+            password,
+            LOGIN
+        ):
+
             session["login"] = True
+
             return redirect("/")
 
         return render_template(
@@ -151,7 +169,9 @@ def login():
             error="Wrong password."
         )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html"
+    )
 
 
 @app.route("/logout")
@@ -168,18 +188,79 @@ def home():
 
     return render_template(
         "index.html",
-        country_pool=COUNTRY_IP_POOL
+        turnstile_sitekey=TURNSTILE_SITEKEY
     )
 
 
-@app.route("/api/pool")
+@app.route("/api/smtp-check", methods=["POST"])
 @auth
-def pool():
+def smtp_check():
 
-    return jsonify(
-        success=True,
-        countries=COUNTRY_IP_POOL
+    data = request.get_json() or {}
+
+    gmail = str(
+        data.get("gmail", "")
+    ).strip().lower()
+
+    password = "".join(
+        str(
+            data.get(
+                "app_password",
+                ""
+            )
+        ).split()
     )
+
+    if not valid(gmail):
+
+        return jsonify(
+            success=False,
+            error="Enter a valid Gmail address."
+        ), 400
+
+    if not password:
+
+        return jsonify(
+            success=False,
+            error="Enter your Gmail App Password."
+        ), 400
+
+    try:
+
+        context = ssl.create_default_context()
+
+        with smtplib.SMTP_SSL(
+            "smtp.gmail.com",
+            465,
+            context=context,
+            timeout=20
+        ) as smtp:
+
+            smtp.login(
+                gmail,
+                password
+            )
+
+        return jsonify(
+            success=True,
+            status="SMTP connection verified.",
+            server="smtp.gmail.com",
+            port=465
+        )
+
+    except smtplib.SMTPAuthenticationError:
+
+        return jsonify(
+            success=False,
+            error="Gmail authentication failed. Check the App Password."
+        ), 401
+
+    except Exception as error:
+
+        return jsonify(
+            success=False,
+            error=f"SMTP connection failed: {error}"
+        ), 500
 
 
 @app.route("/api/send", methods=["POST"])
@@ -189,77 +270,150 @@ def send():
     data = request.get_json() or {}
 
     sender = str(
-        data.get("sender_name", "")
+        data.get(
+            "sender_name",
+            ""
+        )
     ).strip()
 
     gmail = str(
-        data.get("gmail", "")
+        data.get(
+            "gmail",
+            ""
+        )
     ).strip().lower()
 
     password = "".join(
-        str(data.get("app_password", "")).split()
+        str(
+            data.get(
+                "app_password",
+                ""
+            )
+        ).split()
     )
 
     subject = str(
-        data.get("subject", "")
+        data.get(
+            "subject",
+            ""
+        )
     ).strip()
 
     message = str(
-        data.get("message", "")
+        data.get(
+            "message",
+            ""
+        )
     )
 
     to = recipients(
-        data.get("recipients", "")
+        data.get(
+            "recipients",
+            ""
+        )
     )
 
+    turnstile_token = str(
+        data.get(
+            "turnstile_token",
+            ""
+        )
+    ).strip()
+
+
+    # -------------------------
+    # Turnstile verification
+    # -------------------------
+
+    remote_ip = request.headers.get(
+        "CF-Connecting-IP"
+    )
+
+    if not remote_ip:
+
+        remote_ip = request.remote_addr
+
+    verification = verify_turnstile(
+        turnstile_token,
+        remote_ip
+    )
+
+    if not verification.get("success"):
+
+        return jsonify(
+            error="Spam Protection verification failed.",
+            verification="failed"
+        ), 403
+
+
+    # -------------------------
+    # Basic validation
+    # -------------------------
+
     if not sender:
+
         return jsonify(
             error="Sender name required."
         ), 400
 
     if not valid(gmail):
+
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
     if not password:
+
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
     if not subject:
+
         return jsonify(
             error="Subject required."
         ), 400
 
     if not message.strip():
+
         return jsonify(
             error="Message required."
         ), 400
 
     if not to:
+
         return jsonify(
             error="Add recipients first."
         ), 400
 
     if len(to) > 25:
+
         return jsonify(
             error="Maximum 25 recipients."
         ), 400
 
+
     invalid = [
-        email for email in to
+        email
+        for email in to
         if not valid(email)
     ]
 
     if invalid:
+
         return jsonify(
             error="Invalid recipient email.",
             invalid=invalid
         ), 400
 
+
     sent = []
     failed = []
+
+
+    # -------------------------
+    # Gmail SMTP
+    # -------------------------
 
     try:
 
@@ -277,13 +431,16 @@ def send():
                 password
             )
 
-            for index, email in enumerate(to):
+
+            for email in to:
 
                 reference = make_reference()
 
                 try:
 
-                    name = email.split("@")[0]
+                    name = email.split(
+                        "@"
+                    )[0]
 
                     text = message.replace(
                         "{name}",
@@ -295,6 +452,7 @@ def send():
                         + f"\n\nReference: {reference}"
                     )
 
+
                     mail = MIMEText(
                         text,
                         "plain",
@@ -302,10 +460,13 @@ def send():
                     )
 
                     mail["Subject"] = subject
+
                     mail["From"] = (
                         f"{sender} <{gmail}>"
                     )
+
                     mail["To"] = email
+
 
                     refused = smtp.sendmail(
                         gmail,
@@ -313,20 +474,23 @@ def send():
                         mail.as_string()
                     )
 
+
                     if refused:
 
                         failed.append({
                             "email": email,
                             "ref": reference,
-                            "error": "Recipient refused."
+                            "error": "SMTP recipient refused."
                         })
 
                     else:
 
                         sent.append({
                             "email": email,
-                            "ref": reference
+                            "ref": reference,
+                            "smtp": "accepted"
                         })
+
 
                 except Exception as error:
 
@@ -336,20 +500,18 @@ def send():
                         "error": str(error)
                     })
 
-                # Controlled sending interval.
-                if index < len(to) - 1:
-                    time.sleep(
-                        max(0, SEND_DELAY)
-                    )
 
         return jsonify(
             success=True,
             total=len(to),
             sent=len(sent),
             failed=len(failed),
+            turnstile="verified",
+            smtp="connected",
             sent_emails=sent,
             failed_emails=failed
         )
+
 
     except smtplib.SMTPAuthenticationError:
 
@@ -357,11 +519,13 @@ def send():
             error="Gmail authentication failed. Check the Gmail address and App Password."
         ), 401
 
+
     except smtplib.SMTPException as error:
 
         return jsonify(
             error=f"SMTP error: {error}"
         ), 500
+
 
     except Exception as error:
 
@@ -375,6 +539,9 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(
-            os.getenv("PORT", "5000")
+            os.getenv(
+                "PORT",
+                "5000"
+            )
         )
     )
