@@ -1,9 +1,13 @@
 <!doctype html>
 <html>
+
 <head>
 
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
 
 <title>Secure Mail Console</title>
 
@@ -11,20 +15,39 @@
 rel="stylesheet"
 href="{{url_for('static',filename='style.css')}}">
 
+<script
+src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+async
+defer>
+</script>
+
 </head>
 
+
 <body>
+
 
 <header>
 
 <div class="brand">
-<strong>✉ Secure Mail Console</strong>
-<small>Gmail Mail Sender</small>
+
+<strong>
+✉ Secure Mail Console
+</strong>
+
+<small>
+Gmail Mail Sender
+</small>
+
 </div>
 
-<a href="/logout">Logout</a>
+
+<a href="/logout">
+Logout
+</a>
 
 </header>
+
 
 
 <main>
@@ -32,10 +55,15 @@ href="{{url_for('static',filename='style.css')}}">
 
 <section class="card">
 
-<h2>Sender</h2>
+
+<h2>
+Sender
+</h2>
 
 
-<label>Sender Name</label>
+<label>
+Sender Name
+</label>
 
 <input
 id="name"
@@ -43,7 +71,9 @@ placeholder="Your name"
 autocomplete="off">
 
 
-<label>Your Gmail</label>
+<label>
+Your Gmail
+</label>
 
 <input
 id="gmail"
@@ -52,7 +82,9 @@ placeholder="your@gmail.com"
 autocomplete="off">
 
 
-<label>App Password</label>
+<label>
+App Password
+</label>
 
 <input
 id="pass"
@@ -61,113 +93,146 @@ placeholder="Gmail App Password"
 autocomplete="new-password">
 
 
-<label>Subject</label>
+<div class="smtp-box">
+
+<div class="smtp-head">
+
+<div>
+
+<strong>
+SMTP Connection
+</strong>
+
+<small>
+Gmail SMTP · SSL · Port 465
+</small>
+
+</div>
+
+<span
+id="smtpStatus"
+class="smtp-dot">
+●
+</span>
+
+</div>
+
+
+<button
+type="button"
+id="smtpCheck"
+class="secondary-btn">
+
+Test SMTP
+
+</button>
+
+
+<p id="smtpMessage">
+SMTP not checked yet.
+</p>
+
+</div>
+
+
+
+<label>
+Subject
+</label>
 
 <input
 id="sub"
 placeholder="Email subject">
 
 
-<label>Message Body</label>
+<label>
+Message Body
+</label>
 
 <textarea
 id="msg"
 placeholder="Write your message..."></textarea>
 
 
-<button id="send">
+
+<div class="protection">
+
+
+<h3>
+🛡 Spam Protection
+</h3>
+
+
+<div class="turnstile-wrap">
+
+
+{% if turnstile_sitekey %}
+
+<div
+class="cf-turnstile"
+data-sitekey="{{turnstile_sitekey}}"
+data-action="send_email"
+data-theme="light">
+</div>
+
+{% else %}
+
+<div class="turnstile-missing">
+
+Turnstile site key is not configured.
+
+</div>
+
+{% endif %}
+
+
+</div>
+
+
+<div class="protection-status">
+
+<span
+id="shieldIcon">
+✓
+</span>
+
+<span id="protectionText">
+Waiting for verification...
+</span>
+
+</div>
+
+
+<p id="protectMsg">
+Cloudflare verification is required before sending.
+</p>
+
+
+</div>
+
+
+
+<button
+id="send">
+
 Send Emails
+
 </button>
 
 
 <p id="status"></p>
 
 
-<div class="protection">
-
-<h3>✓ Spam Protection</h3>
-
-<div>✓ Duplicate recipients filtered</div>
-<div>✓ Invalid addresses checked</div>
-<div>✓ Basic message checks</div>
-<div>✓ Maximum 25 recipients</div>
-<div>✓ Controlled sending interval</div>
-
-<p id="protectMsg">
-Ready to check message.
-</p>
-
-</div>
-
-
-<div class="country-panel">
-
-<div class="panel-title">
-
-<div>
-<h3>Country / IP Pool</h3>
-<small>Display & monitoring</small>
-</div>
-
-<span class="pool-badge">
-10 locations
-</span>
-
-</div>
-
-
-<div class="country-list">
-
-{% for country in country_pool %}
-
-<div class="country-row">
-
-<div class="country-left">
-
-<span class="flag">
-{{country.flag}}
-</span>
-
-<div>
-
-<strong>
-{{country.name}}
-</strong>
-
-<small>
-{{country.city}} · {{country.code}}
-</small>
-
-</div>
-
-</div>
-
-<div class="ip">
-{{country.ip}}
-</div>
-
-</div>
-
-{% endfor %}
-
-</div>
-
-
-<p class="pool-note">
-These entries are informational only.
-Gmail SMTP determines the actual outbound
-mail-server IP.
-</p>
-
-</div>
-
-
 </section>
+
 
 
 <section class="card">
 
-<h2>Recipients</h2>
+
+<h2>
+Recipients
+</h2>
 
 
 <textarea
@@ -177,32 +242,88 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 <div class="stats">
 
-<div>
-<strong id="total">0</strong>
-<span>Total</span>
-</div>
 
 <div>
-<strong id="sent">0</strong>
-<span>Sent</span>
+
+<strong id="total">
+0
+</strong>
+
+<span>
+Total
+</span>
+
 </div>
+
 
 <div>
-<strong id="failed">0</strong>
-<span>Failed</span>
-</div>
+
+<strong id="sent">
+0
+</strong>
+
+<span>
+Sent
+</span>
 
 </div>
+
+
+<div>
+
+<strong id="failed">
+0
+</strong>
+
+<span>
+Failed
+</span>
+
+</div>
+
+
+</div>
+
 
 
 <div class="progress">
-<div id="progress"></div>
+
+<div id="progress">
+</div>
+
 </div>
 
 
-<h3>Live Recipients Dispatch</h3>
 
-<div id="list"></div>
+<div class="delivery-box">
+
+<div class="delivery-head">
+
+<strong>
+Delivery Status
+</strong>
+
+<span id="deliveryStatus">
+Ready
+</span>
+
+</div>
+
+<div id="deliveryMessage">
+No emails sent yet.
+</div>
+
+</div>
+
+
+
+<h3>
+Live Recipients Dispatch
+</h3>
+
+
+<div id="list">
+</div>
 
 
 </section>
@@ -211,10 +332,16 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 </main>
 
 
+
 <script>
 
 const $ = id =>
 document.getElementById(id);
+
+
+
+let smtpVerified = false;
+
 
 
 function recipients(){
@@ -226,7 +353,8 @@ function recipients(){
             .split(/[\s,;]+/)
             .filter(Boolean)
             .map(
-                x => x.trim().toLowerCase()
+                x =>
+                x.trim().toLowerCase()
             )
         )
     ];
@@ -234,28 +362,35 @@ function recipients(){
 }
 
 
+
 function count(){
 
     const list = recipients();
 
-    $("total").textContent = list.length;
+    $("total").textContent =
+        list.length;
+
 
     if(list.length > 25){
 
         $("protectMsg").textContent =
             "⚠ Maximum 25 recipients.";
 
-    }else{
+    }
+
+    else{
 
         $("protectMsg").textContent =
-            "Ready to check message.";
+            "Cloudflare verification is required before sending.";
 
     }
 
 }
 
 
-$("recipients").oninput = count;
+$("recipients").oninput =
+    count;
+
 
 
 function checkMessage(){
@@ -265,9 +400,13 @@ function checkMessage(){
         " " +
         $("msg").value;
 
+
     const links =
-        (text.match(/https?:\/\//gi) || [])
-        .length;
+        (
+            text.match(
+                /https?:\/\//gi
+            ) || []
+        ).length;
 
 
     if(/(.)\1{7,}/.test(text)){
@@ -275,72 +414,269 @@ function checkMessage(){
         $("protectMsg").textContent =
             "⚠ Repeated characters detected.";
 
-    }else if(links > 5){
+    }
+
+    else if(links > 5){
 
         $("protectMsg").textContent =
             "⚠ Message contains many links.";
 
-    }else if(
+    }
+
+    else if(
         /<script|javascript:|<iframe/i.test(text)
     ){
 
         $("protectMsg").textContent =
             "⚠ Unsafe HTML detected.";
 
-    }else{
+    }
+
+    else{
 
         $("protectMsg").textContent =
-            "✓ Basic message checks passed.";
+            "Basic message checks passed.";
 
     }
 
 }
 
 
-$("sub").oninput = checkMessage;
-$("msg").oninput = checkMessage;
+$("sub").oninput =
+    checkMessage;
+
+$("msg").oninput =
+    checkMessage;
 
 
-function row(email, reference, failed){
+
+function row(
+    email,
+    reference,
+    failed,
+    smtp
+){
 
     const div =
         document.createElement("div");
 
+
     div.className =
         "recipient-row" +
-        (failed ? " failed" : "");
+        (
+            failed
+            ? " failed"
+            : ""
+        );
 
 
     div.textContent =
-        (failed ? "✕ " : "✓ ") +
+        (
+            failed
+            ? "✕ "
+            : "✓ "
+        ) +
         email;
 
 
-    if(!failed){
-
-        const small =
-            document.createElement("small");
-
-        small.textContent =
-            "Reference: " + reference;
-
-        div.appendChild(
-            document.createElement("br")
+    const small =
+        document.createElement(
+            "small"
         );
 
-        div.appendChild(small);
+
+    if(failed){
+
+        small.textContent =
+            "SMTP failed";
+
+    }
+
+    else{
+
+        small.textContent =
+            "Reference: " +
+            reference +
+            " · SMTP accepted";
 
     }
 
 
-    $("list").appendChild(div);
+    div.appendChild(
+        document.createElement("br")
+    );
+
+    div.appendChild(
+        small
+    );
+
+
+    $("list").appendChild(
+        div
+    );
 
 }
 
 
-$("send").onclick = async function(){
 
-    const list = recipients();
+function getTurnstileToken(){
+
+    const input =
+        document.querySelector(
+            '[name="cf-turnstile-response"]'
+        );
+
+    return input
+        ? input.value
+        : "";
+
+}
+
+
+
+window.turnstileDone =
+function(){
+
+    $("shieldIcon")
+        .textContent = "✓";
+
+    $("protectionText")
+        .textContent =
+        "Success!";
+
+    $("protectMsg")
+        .textContent =
+        "Spam Protection verified.";
+
+};
+
+
+
+$("smtpCheck").onclick =
+async function(){
+
+    const gmail =
+        $("gmail").value.trim();
+
+    const password =
+        $("pass").value;
+
+
+    if(!gmail){
+
+        $("smtpMessage").textContent =
+            "Enter your Gmail address.";
+
+        return;
+
+    }
+
+
+    if(!password){
+
+        $("smtpMessage").textContent =
+            "Enter your Gmail App Password.";
+
+        return;
+
+    }
+
+
+    $("smtpCheck").disabled = true;
+
+    $("smtpMessage").textContent =
+        "Checking SMTP connection...";
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/smtp-check",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        gmail: gmail,
+
+                        app_password:
+                            password
+
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            smtpVerified = false;
+
+            $("smtpStatus")
+                .classList
+                .remove("ok");
+
+            $("smtpMessage")
+                .textContent =
+                data.error ||
+                "SMTP check failed.";
+
+            return;
+
+        }
+
+
+        smtpVerified = true;
+
+
+        $("smtpStatus")
+            .classList
+            .add("ok");
+
+
+        $("smtpMessage")
+            .textContent =
+            "✓ SMTP connection verified.";
+
+
+    }
+
+    catch(error){
+
+        smtpVerified = false;
+
+        $("smtpMessage")
+            .textContent =
+            "SMTP server check failed.";
+
+    }
+
+    finally{
+
+        $("smtpCheck").disabled =
+            false;
+
+    }
+
+};
+
+
+
+$("send").onclick =
+async function(){
+
+    const list =
+        recipients();
 
 
     if(!list.length){
@@ -365,23 +701,46 @@ $("send").onclick = async function(){
 
     const fields = [
 
-        ["name", "Enter sender name."],
-        ["gmail", "Enter Gmail address."],
-        ["pass", "Enter Gmail App Password."],
-        ["sub", "Enter subject."],
-        ["msg", "Enter message."]
+        [
+            "name",
+            "Enter sender name."
+        ],
+
+        [
+            "gmail",
+            "Enter Gmail address."
+        ],
+
+        [
+            "pass",
+            "Enter Gmail App Password."
+        ],
+
+        [
+            "sub",
+            "Enter subject."
+        ],
+
+        [
+            "msg",
+            "Enter message."
+        ]
 
     ];
 
 
-    for(const item of fields){
+    for(
+        const item of fields
+    ){
 
-        const id = item[0];
-        const error = item[1];
+        if(
+            !$(item[0])
+            .value
+            .trim()
+        ){
 
-        if(!$(`${id}`).value.trim()){
-
-            $("status").textContent = error;
+            $("status").textContent =
+                item[1];
 
             return;
 
@@ -390,17 +749,53 @@ $("send").onclick = async function(){
     }
 
 
-    $("send").disabled = true;
+
+    const token =
+        getTurnstileToken();
+
+
+    if(!token){
+
+        $("status").textContent =
+            "Complete Spam Protection verification first.";
+
+        return;
+
+    }
+
+
+
+    $("send").disabled =
+        true;
+
 
     $("status").textContent =
-        "Sending emails...";
+        "Verifying protection and connecting to SMTP...";
 
-    $("sent").textContent = "0";
-    $("failed").textContent = "0";
 
-    $("progress").style.width = "0%";
+    $("sent").textContent =
+        "0";
 
-    $("list").innerHTML = "";
+    $("failed").textContent =
+        "0";
+
+
+    $("progress").style.width =
+        "0%";
+
+
+    $("list").innerHTML =
+        "";
+
+
+    $("deliveryStatus")
+        .textContent =
+        "Sending";
+
+
+    $("deliveryMessage")
+        .textContent =
+        "Cloudflare verified. Sending through Gmail SMTP...";
 
 
     try{
@@ -409,11 +804,14 @@ $("send").onclick = async function(){
             await fetch(
                 "/api/send",
                 {
+
                     method: "POST",
+
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
+
                     body: JSON.stringify({
 
                         sender_name:
@@ -432,9 +830,13 @@ $("send").onclick = async function(){
                             $("msg").value,
 
                         recipients:
-                            list.join("\n")
+                            list.join("\n"),
+
+                        turnstile_token:
+                            token
 
                     })
+
                 }
             );
 
@@ -449,6 +851,14 @@ $("send").onclick = async function(){
                 data.error ||
                 "Sending failed.";
 
+            $("deliveryStatus")
+                .textContent =
+                "Failed";
+
+            $("deliveryMessage")
+                .textContent =
+                "Verification or SMTP processing failed.";
+
             return;
 
         }
@@ -456,6 +866,7 @@ $("send").onclick = async function(){
 
         $("sent").textContent =
             data.sent;
+
 
         $("failed").textContent =
             data.failed;
@@ -466,30 +877,50 @@ $("send").onclick = async function(){
                 (
                     data.sent +
                     data.failed
-                ) /
-                data.total *
+                )
+                /
+                data.total
+                *
                 100
             ) + "%";
 
 
-        data.sent_emails.forEach(
-            item =>
+        data.sent_emails
+            .forEach(item => {
+
                 row(
                     item.email,
                     item.ref,
-                    false
-                )
-        );
+                    false,
+                    item.smtp
+                );
+
+            });
 
 
-        data.failed_emails.forEach(
-            item =>
+        data.failed_emails
+            .forEach(item => {
+
                 row(
                     item.email,
                     item.ref,
-                    true
-                )
-        );
+                    true,
+                    ""
+                );
+
+            });
+
+
+        $("deliveryStatus")
+            .textContent =
+            data.failed
+            ? "Completed"
+            : "SMTP Accepted";
+
+
+        $("deliveryMessage")
+            .textContent =
+            `Cloudflare verified · SMTP accepted ${data.sent} message(s) · ${data.failed} failed.`;
 
 
         $("status").textContent =
@@ -498,19 +929,37 @@ $("send").onclick = async function(){
 
         alert(
             `Sending completed.\n\n` +
+            `Spam Protection: Verified\n` +
+            `SMTP: Connected\n` +
             `Sent: ${data.sent}\n` +
             `Failed: ${data.failed}`
         );
 
 
-    }catch(error){
+        if(
+            window.turnstile &&
+            typeof turnstile.reset ===
+            "function"
+        ){
+
+            turnstile.reset();
+
+        }
+
+
+    }
+
+    catch(error){
 
         $("status").textContent =
             "Server connection failed.";
 
-    }finally{
+    }
 
-        $("send").disabled = false;
+    finally{
+
+        $("send").disabled =
+            false;
 
     }
 
@@ -519,4 +968,5 @@ $("send").onclick = async function(){
 </script>
 
 </body>
+
 </html>
