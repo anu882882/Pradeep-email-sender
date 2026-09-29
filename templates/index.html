@@ -9,12 +9,17 @@
 <body>
 
 <header>
-<div class="brand"><strong>✉ Secure Mail Console</strong><small>Gmail Mail Sender</small></div>
+<div class="brand">
+<strong>✉ Secure Mail Console</strong>
+<small>Gmail Mail Sender</small>
+</div>
 <a href="/logout">Logout</a>
 </header>
 
 <main>
+
 <section class="card">
+
 <h2>Sender</h2>
 
 <label>Sender Name</label>
@@ -36,44 +41,79 @@
 <p id="status"></p>
 
 <div class="protection">
+
 <h3>✓ Spam Protection</h3>
+
 <div>✓ Duplicate recipients filtered</div>
 <div>✓ Invalid email addresses checked</div>
 <div>✓ Message content checked</div>
 <div>✓ Maximum 25 recipients</div>
 <div>✓ Controlled sending</div>
+
 <p id="protectMsg">Ready to check message.</p>
+
 </div>
+
 </section>
 
 <section class="card">
+
 <h2>Recipients</h2>
-<textarea id="recipients" placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
+
+<textarea id="recipients"
+placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 <div class="stats">
-<div><strong id="total">0</strong><span>Total</span></div>
-<div><strong id="sent">0</strong><span>Sent</span></div>
-<div><strong id="failed">0</strong><span>Failed</span></div>
+
+<div>
+<strong id="total">0</strong>
+<span>Total</span>
 </div>
 
-<div class="progress"><div id="progress"></div></div>
+<div>
+<strong id="sent">0</strong>
+<span>Sent</span>
+</div>
+
+<div>
+<strong id="failed">0</strong>
+<span>Failed</span>
+</div>
+
+</div>
+
+<div class="progress">
+<div id="progress"></div>
+</div>
+
 <h3>Live Recipients Dispatch</h3>
+
 <div id="list"></div>
+
 </section>
+
 </main>
 
 <script>
+
 const $=id=>document.getElementById(id);
 
 function recipients(){
- return [...new Set($("recipients").value.split(/[\s,;]+/).filter(Boolean)
- .map(x=>x.trim().toLowerCase()))];
+ return [...new Set(
+  $("recipients").value
+  .split(/[\s,;]+/)
+  .filter(Boolean)
+  .map(x=>x.trim().toLowerCase())
+ )];
 }
 
 function count(){
  let r=recipients();
  $("total").textContent=r.length;
- $("protectMsg").textContent=r.length>25?"⚠ Maximum 25 recipients.":"Ready to check message.";
+ $("protectMsg").textContent=
+  r.length>25
+  ?"⚠ Maximum 25 recipients."
+  :"Ready to check message.";
 }
 
 $("recipients").oninput=count;
@@ -81,50 +121,114 @@ $("recipients").oninput=count;
 function check(){
  let t=$("sub").value+" "+$("msg").value;
  let links=(t.match(/https?:\/\//gi)||[]).length;
- if(/(.)\1{7,}/.test(t)) $("protectMsg").textContent="⚠ Repeated characters detected.";
- else if(links>5) $("protectMsg").textContent="⚠ Message contains many links.";
- else if(/<script|javascript:|<iframe/i.test(t)) $("protectMsg").textContent="⚠ Unsafe HTML detected.";
- else $("protectMsg").textContent="✓ Basic message checks passed.";
+
+ if(/(.)\1{7,}/.test(t))
+  $("protectMsg").textContent="⚠ Repeated characters detected.";
+ else if(links>5)
+  $("protectMsg").textContent="⚠ Message contains many links.";
+ else if(/<script|javascript:|<iframe/i.test(t))
+  $("protectMsg").textContent="⚠ Unsafe HTML detected.";
+ else
+  $("protectMsg").textContent="✓ Basic message checks passed.";
 }
 
 $("sub").oninput=$("msg").oninput=check;
 
-function row(email,fail){
+function row(email,ref,fail){
+
  let d=document.createElement("div");
+
  d.className="recipient-row"+(fail?" failed":"");
+
  d.textContent=(fail?"✕ ":"✓ ")+email;
+
+ if(!fail){
+  let s=document.createElement("small");
+  s.textContent="Reference: "+ref;
+  d.appendChild(document.createElement("br"));
+  d.appendChild(s);
+ }
+
  $("list").appendChild(d);
 }
 
 $("send").onclick=async()=>{
- let r=recipients();
- if(!r.length)return $("status").textContent="Add recipients first.";
- if(r.length>25)return $("status").textContent="Maximum 25 recipients.";
- for(let [id,msg] of [["name","Enter sender name."],["gmail","Enter Gmail address."],
- ["pass","Enter Gmail App Password."],["sub","Enter subject."],["msg","Enter message."]])
-  if(!$(`${id}`).value.trim())return $("status").textContent=msg;
 
- $("send").disabled=true;$("status").textContent="Sending emails...";
- $("sent").textContent=0;$("failed").textContent=0;$("progress").style.width="0%";$("list").innerHTML="";
+ let r=recipients();
+
+ if(!r.length)
+  return $("status").textContent="Add recipients first.";
+
+ if(r.length>25)
+  return $("status").textContent="Maximum 25 recipients.";
+
+ for(let [id,msg] of [
+  ["name","Enter sender name."],
+  ["gmail","Enter Gmail address."],
+  ["pass","Enter Gmail App Password."],
+  ["sub","Enter subject."],
+  ["msg","Enter message."]
+ ]){
+  if(!$(`${id}`).value.trim())
+   return $("status").textContent=msg;
+ }
+
+ $("send").disabled=true;
+ $("status").textContent="Sending emails...";
+ $("sent").textContent=0;
+ $("failed").textContent=0;
+ $("progress").style.width="0%";
+ $("list").innerHTML="";
 
  try{
-  let res=await fetch("/api/send",{method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    sender_name:$("name").value,gmail:$("gmail").value,app_password:$("pass").value,
-    subject:$("sub").value,message:$("msg").value,recipients:r.join("\n")
-   })});
-  let d=await res.json();
-  if(!res.ok)return $("status").textContent=d.error||"Sending failed.";
 
-  $("sent").textContent=d.sent;$("failed").textContent=d.failed;
-  $("progress").style.width=Math.round((d.sent+d.failed)/d.total*100)+"%";
-  d.sent_emails.forEach(x=>row(x.email,0));
-  d.failed_emails.forEach(x=>row(x.email,1));
-  $("status").textContent=`Completed: ${d.sent} sent, ${d.failed} failed.`;
-  alert(`Sending completed.\n\nSent: ${d.sent}\nFailed: ${d.failed}`);
- }catch(e){$("status").textContent="Server connection failed."}
- finally{$("send").disabled=false}
+  let res=await fetch("/api/send",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    sender_name:$("name").value,
+    gmail:$("gmail").value,
+    app_password:$("pass").value,
+    subject:$("sub").value,
+    message:$("msg").value,
+    recipients:r.join("\n")
+   })
+  });
+
+  let d=await res.json();
+
+  if(!res.ok)
+   return $("status").textContent=d.error||"Sending failed.";
+
+  $("sent").textContent=d.sent;
+  $("failed").textContent=d.failed;
+
+  $("progress").style.width=
+   Math.round((d.sent+d.failed)/d.total*100)+"%";
+
+  d.sent_emails.forEach(x=>row(x.email,x.ref,false));
+  d.failed_emails.forEach(x=>row(x.email,x.ref,true));
+
+  $("status").textContent=
+   `Completed: ${d.sent} sent, ${d.failed} failed.`;
+
+  alert(
+   `Sending completed.\n\nSent: ${d.sent}\nFailed: ${d.failed}`
+  );
+
+ }catch(e){
+
+  $("status").textContent="Server connection failed.";
+
+ }finally{
+
+  $("send").disabled=false;
+
+ }
+
 };
+
 </script>
+
 </body>
 </html>
