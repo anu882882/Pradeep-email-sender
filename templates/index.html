@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
-<link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<link rel="stylesheet"
+href="{{url_for('static',filename='style.css')}}">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+async defer></script>
 </head>
+
 <body>
 
 <header>
@@ -27,35 +30,49 @@
 <input id="name" placeholder="Your name">
 
 <label>Your Gmail</label>
-<input id="gmail" type="email" placeholder="your@gmail.com">
+<input id="gmail" type="email"
+placeholder="your@gmail.com">
 
 <label>App Password</label>
-<input id="pass" type="password" placeholder="Gmail App Password">
+<input id="pass" type="password"
+placeholder="Gmail App Password">
 
 <label>Subject</label>
 <input id="sub" placeholder="Email subject">
 
 <label>Message Body</label>
-<textarea id="msg" placeholder="Write your message..."></textarea>
+<textarea id="msg"
+placeholder="Write your message..."></textarea>
 
 <button id="send">Send Emails</button>
+
 <p id="status"></p>
 
 <div class="protection">
+
 <h3>🛡 Spam Protection</h3>
 
 {%if turnstile_sitekey%}
+
 <div class="cf-turnstile"
 data-sitekey="{{turnstile_sitekey}}"
-data-action="send_email"></div>
+data-action="send_email">
+</div>
+
 {%else%}
+
 <p>Turnstile site key is not configured.</p>
+
 {%endif%}
 
-<p id="protectMsg">Complete verification before sending.</p>
+<p id="protectMsg">
+Complete verification before sending.
+</p>
+
 </div>
 
 </section>
+
 
 <section class="card">
 
@@ -65,124 +82,206 @@ data-action="send_email"></div>
 placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 <div class="stats">
-<div><strong id="total">0</strong><span>Total</span></div>
-<div><strong id="sent">0</strong><span>Sent</span></div>
-<div><strong id="failed">0</strong><span>Failed</span></div>
+
+<div>
+<strong id="total">0</strong>
+<span>Total</span>
 </div>
 
-<div class="progress"><div id="progress"></div></div>
+<div>
+<strong id="sent">0</strong>
+<span>Sent</span>
+</div>
+
+<div>
+<strong id="failed">0</strong>
+<span>Failed</span>
+</div>
+
+</div>
+
+<div class="progress">
+<div id="progress"></div>
+</div>
 
 <h3>Live Recipients Dispatch</h3>
+
 <div id="list"></div>
 
 </section>
 
 </main>
 
+
 <script>
+
 const $=id=>document.getElementById(id);
 
 function rec(){
- return [...new Set(
-  $("recipients").value.split(/[\s,;]+/)
-  .filter(Boolean).map(x=>x.trim().toLowerCase())
- )];
+    return [...new Set(
+        $("recipients").value
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map(x=>x.trim().toLowerCase())
+    )];
 }
 
 function count(){
- let n=rec().length;
- $("total").textContent=n;
- $("protectMsg").textContent=n>25?
- "⚠ Maximum 25 recipients.":"Complete verification before sending.";
+    const n=rec().length;
+
+    $("total").textContent=n;
+
+    $("protectMsg").textContent=
+        n>25
+        ?"⚠ Maximum 25 recipients."
+        :"Complete verification before sending.";
 }
+
 $("recipients").oninput=count;
 
+
 function token(){
- let x=document.querySelector('[name="cf-turnstile-response"]');
- return x?x.value:"";
+    const x=document.querySelector(
+        '[name="cf-turnstile-response"]'
+    );
+    return x?x.value:"";
 }
+
 
 function row(x,fail){
- let d=document.createElement("div");
- d.className="recipient-row"+(fail?" failed":"");
- d.innerHTML=(fail?"✕ ":"✓ ")+x.email+
- "<br><small>"+(fail?"Sending failed":
- "Reference: "+x.ref)+"</small>";
- $("list").appendChild(d);
+
+    const d=document.createElement("div");
+
+    d.className=
+        "recipient-row"+(fail?" failed":"");
+
+    d.innerHTML=
+        (fail?"✕ ":"✓ ")+
+        x.email+
+        "<br><small>"+
+        (fail?"Sending failed":"Sent successfully")+
+        "</small>";
+
+    $("list").appendChild(d);
 }
 
+
 $("send").onclick=async()=>{
- let r=rec();
 
- if(!r.length)return $("status").textContent="Add recipients first.";
- if(r.length>25)return $("status").textContent="Maximum 25 recipients.";
+    const r=rec();
 
- for(let [id,t] of [
-  ["name","Enter sender name."],
-  ["gmail","Enter Gmail address."],
-  ["pass","Enter Gmail App Password."],
-  ["sub","Enter subject."],
-  ["msg","Enter message."]
- ]){
-  if(!$(`${id}`).value.trim())
-   return $("status").textContent=t;
- }
+    if(!r.length)
+        return $("status").textContent=
+        "Add recipients first.";
 
- if(!token())
-  return $("status").textContent="Complete Spam Protection verification first.";
+    if(r.length>25)
+        return $("status").textContent=
+        "Maximum 25 recipients.";
 
- $("send").disabled=true;
- $("status").textContent="Sending...";
- $("list").innerHTML="";
- $("sent").textContent=0;
- $("failed").textContent=0;
- $("progress").style.width="0%";
+    for(const [id,text] of [
+        ["name","Enter sender name."],
+        ["gmail","Enter Gmail address."],
+        ["pass","Enter Gmail App Password."],
+        ["sub","Enter subject."],
+        ["msg","Enter message."]
+    ]){
+        if(!$(`${id}`).value.trim())
+            return $("status").textContent=text;
+    }
 
- try{
-  let res=await fetch("/api/send",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    sender_name:$("name").value,
-    gmail:$("gmail").value,
-    app_password:$("pass").value,
-    subject:$("sub").value,
-    message:$("msg").value,
-    recipients:r.join("\n"),
-    turnstile_token:token()
-   })
-  });
+    if(!token())
+        return $("status").textContent=
+        "Complete Spam Protection verification first.";
 
-  let d=await res.json();
+    $("send").disabled=true;
+    $("status").textContent="Sending...";
 
-  if(!res.ok){
-   $("status").textContent=d.error||"Sending failed.";
-   return;
-  }
+    $("sent").textContent=0;
+    $("failed").textContent=0;
+    $("progress").style.width="0%";
+    $("list").innerHTML="";
 
-  $("sent").textContent=d.sent;
-  $("failed").textContent=d.failed;
-  $("progress").style.width=
-   Math.round((d.sent+d.failed)/d.total*100)+"%";
+    try{
 
-  d.sent_emails.forEach(x=>row(x,false));
-  d.failed_emails.forEach(x=>row(x,true));
+        const res=await fetch(
+            "/api/send",
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
 
-  $("status").textContent=
-   `Completed: ${d.sent} sent, ${d.failed} failed.`;
+                    sender_name:$("name").value,
 
-  alert(
-   `Sending completed.\n\nSent: ${d.sent}\nFailed: ${d.failed}`
-  );
+                    gmail:$("gmail").value,
 
-  if(window.turnstile)turnstile.reset();
+                    app_password:$("pass").value,
 
- }catch(e){
-  $("status").textContent="Server connection failed.";
- }finally{
-  $("send").disabled=false;
- }
+                    subject:$("sub").value,
+
+                    message:$("msg").value,
+
+                    recipients:r.join("\n"),
+
+                    turnstile_token:token()
+
+                })
+            }
+        );
+
+        const d=await res.json();
+
+        if(!res.ok){
+
+            $("status").textContent=
+                d.error||"Sending failed.";
+
+            return;
+        }
+
+        $("sent").textContent=d.sent;
+        $("failed").textContent=d.failed;
+
+        $("progress").style.width=
+            Math.round(
+                (d.sent+d.failed)/
+                d.total*100
+            )+"%";
+
+        d.sent_emails.forEach(
+            x=>row(x,false)
+        );
+
+        d.failed_emails.forEach(
+            x=>row(x,true)
+        );
+
+        $("status").textContent=
+            `Completed: ${d.sent} sent, ${d.failed} failed.`;
+
+        alert(
+            `Sending completed.\n\n`+
+            `Sent: ${d.sent}\n`+
+            `Failed: ${d.failed}`
+        );
+
+        if(window.turnstile)
+            turnstile.reset();
+
+    }catch(e){
+
+        $("status").textContent=
+            "Server connection failed.";
+
+    }finally{
+
+        $("send").disabled=false;
+
+    }
+
 };
+
 </script>
 
 </body>
