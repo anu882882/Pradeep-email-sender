@@ -7,17 +7,30 @@
 <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
 </head>
 <body>
+
 <main class="login-main">
 <section class="card login-card">
-<div class="login-brand"><strong>✉ Secure Mail Console</strong><small>Gmail Mail Sender</small></div>
+
+<div class="login-brand">
+<strong>✉ Secure Mail Console</strong>
+<small>Gmail Mail Sender</small>
+</div>
+
 <h2>Login</h2>
+
 <form method="post">
 <label>Password</label>
-<input type="password" name="password" placeholder="Enter password" required autofocus>
+<input type="password" name="password"
+placeholder="Enter password" required autofocus>
 <button>Login</button>
 </form>
-{%if error%}<p class="error-text">{{error}}</p>{%endif%}
+
+{%if error%}
+<p class="error-text">{{error}}</p>
+{%endif%}
+
 </section>
 </main>
+
 </body>
 </html>
