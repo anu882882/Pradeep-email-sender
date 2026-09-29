@@ -1,67 +1,179 @@
 <!doctype html>
 <html>
 <head>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
-<link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+
+<link
+rel="stylesheet"
+href="{{url_for('static',filename='style.css')}}">
+
 </head>
+
 <body>
 
 <header>
+
 <div class="brand">
 <strong>✉ Secure Mail Console</strong>
 <small>Gmail Mail Sender</small>
 </div>
+
 <a href="/logout">Logout</a>
+
 </header>
 
+
 <main>
+
 
 <section class="card">
 
 <h2>Sender</h2>
 
+
 <label>Sender Name</label>
-<input id="name" placeholder="Your name">
+
+<input
+id="name"
+placeholder="Your name"
+autocomplete="off">
+
 
 <label>Your Gmail</label>
-<input id="gmail" type="email" placeholder="your@gmail.com">
+
+<input
+id="gmail"
+type="email"
+placeholder="your@gmail.com"
+autocomplete="off">
+
 
 <label>App Password</label>
-<input id="pass" type="password" placeholder="Gmail App Password">
+
+<input
+id="pass"
+type="password"
+placeholder="Gmail App Password"
+autocomplete="new-password">
+
 
 <label>Subject</label>
-<input id="sub" placeholder="Email subject">
+
+<input
+id="sub"
+placeholder="Email subject">
+
 
 <label>Message Body</label>
-<textarea id="msg" placeholder="Write your message..."></textarea>
 
-<button id="send">Send Emails</button>
+<textarea
+id="msg"
+placeholder="Write your message..."></textarea>
+
+
+<button id="send">
+Send Emails
+</button>
+
+
 <p id="status"></p>
+
 
 <div class="protection">
 
 <h3>✓ Spam Protection</h3>
 
 <div>✓ Duplicate recipients filtered</div>
-<div>✓ Invalid email addresses checked</div>
-<div>✓ Message content checked</div>
+<div>✓ Invalid addresses checked</div>
+<div>✓ Basic message checks</div>
 <div>✓ Maximum 25 recipients</div>
-<div>✓ Controlled sending</div>
+<div>✓ Controlled sending interval</div>
 
-<p id="protectMsg">Ready to check message.</p>
+<p id="protectMsg">
+Ready to check message.
+</p>
 
 </div>
 
+
+<div class="country-panel">
+
+<div class="panel-title">
+
+<div>
+<h3>Country / IP Pool</h3>
+<small>Display & monitoring</small>
+</div>
+
+<span class="pool-badge">
+10 locations
+</span>
+
+</div>
+
+
+<div class="country-list">
+
+{% for country in country_pool %}
+
+<div class="country-row">
+
+<div class="country-left">
+
+<span class="flag">
+{{country.flag}}
+</span>
+
+<div>
+
+<strong>
+{{country.name}}
+</strong>
+
+<small>
+{{country.city}} · {{country.code}}
+</small>
+
+</div>
+
+</div>
+
+<div class="ip">
+{{country.ip}}
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<p class="pool-note">
+These entries are informational only.
+Gmail SMTP determines the actual outbound
+mail-server IP.
+</p>
+
+</div>
+
+
 </section>
+
 
 <section class="card">
 
 <h2>Recipients</h2>
 
-<textarea id="recipients"
+
+<textarea
+id="recipients"
 placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
+
 
 <div class="stats">
 
@@ -82,149 +194,325 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 </div>
 
+
 <div class="progress">
 <div id="progress"></div>
 </div>
+
 
 <h3>Live Recipients Dispatch</h3>
 
 <div id="list"></div>
 
+
 </section>
+
 
 </main>
 
+
 <script>
 
-const $=id=>document.getElementById(id);
+const $ = id =>
+document.getElementById(id);
+
 
 function recipients(){
- return [...new Set(
-  $("recipients").value
-  .split(/[\s,;]+/)
-  .filter(Boolean)
-  .map(x=>x.trim().toLowerCase())
- )];
+
+    return [
+        ...new Set(
+            $("recipients")
+            .value
+            .split(/[\s,;]+/)
+            .filter(Boolean)
+            .map(
+                x => x.trim().toLowerCase()
+            )
+        )
+    ];
+
 }
+
 
 function count(){
- let r=recipients();
- $("total").textContent=r.length;
- $("protectMsg").textContent=
-  r.length>25
-  ?"⚠ Maximum 25 recipients."
-  :"Ready to check message.";
+
+    const list = recipients();
+
+    $("total").textContent = list.length;
+
+    if(list.length > 25){
+
+        $("protectMsg").textContent =
+            "⚠ Maximum 25 recipients.";
+
+    }else{
+
+        $("protectMsg").textContent =
+            "Ready to check message.";
+
+    }
+
 }
 
-$("recipients").oninput=count;
 
-function check(){
- let t=$("sub").value+" "+$("msg").value;
- let links=(t.match(/https?:\/\//gi)||[]).length;
+$("recipients").oninput = count;
 
- if(/(.)\1{7,}/.test(t))
-  $("protectMsg").textContent="⚠ Repeated characters detected.";
- else if(links>5)
-  $("protectMsg").textContent="⚠ Message contains many links.";
- else if(/<script|javascript:|<iframe/i.test(t))
-  $("protectMsg").textContent="⚠ Unsafe HTML detected.";
- else
-  $("protectMsg").textContent="✓ Basic message checks passed.";
+
+function checkMessage(){
+
+    const text =
+        $("sub").value +
+        " " +
+        $("msg").value;
+
+    const links =
+        (text.match(/https?:\/\//gi) || [])
+        .length;
+
+
+    if(/(.)\1{7,}/.test(text)){
+
+        $("protectMsg").textContent =
+            "⚠ Repeated characters detected.";
+
+    }else if(links > 5){
+
+        $("protectMsg").textContent =
+            "⚠ Message contains many links.";
+
+    }else if(
+        /<script|javascript:|<iframe/i.test(text)
+    ){
+
+        $("protectMsg").textContent =
+            "⚠ Unsafe HTML detected.";
+
+    }else{
+
+        $("protectMsg").textContent =
+            "✓ Basic message checks passed.";
+
+    }
+
 }
 
-$("sub").oninput=$("msg").oninput=check;
 
-function row(email,ref,fail){
+$("sub").oninput = checkMessage;
+$("msg").oninput = checkMessage;
 
- let d=document.createElement("div");
 
- d.className="recipient-row"+(fail?" failed":"");
+function row(email, reference, failed){
 
- d.textContent=(fail?"✕ ":"✓ ")+email;
+    const div =
+        document.createElement("div");
 
- if(!fail){
-  let s=document.createElement("small");
-  s.textContent="Reference: "+ref;
-  d.appendChild(document.createElement("br"));
-  d.appendChild(s);
- }
+    div.className =
+        "recipient-row" +
+        (failed ? " failed" : "");
 
- $("list").appendChild(d);
+
+    div.textContent =
+        (failed ? "✕ " : "✓ ") +
+        email;
+
+
+    if(!failed){
+
+        const small =
+            document.createElement("small");
+
+        small.textContent =
+            "Reference: " + reference;
+
+        div.appendChild(
+            document.createElement("br")
+        );
+
+        div.appendChild(small);
+
+    }
+
+
+    $("list").appendChild(div);
+
 }
 
-$("send").onclick=async()=>{
 
- let r=recipients();
+$("send").onclick = async function(){
 
- if(!r.length)
-  return $("status").textContent="Add recipients first.";
+    const list = recipients();
 
- if(r.length>25)
-  return $("status").textContent="Maximum 25 recipients.";
 
- for(let [id,msg] of [
-  ["name","Enter sender name."],
-  ["gmail","Enter Gmail address."],
-  ["pass","Enter Gmail App Password."],
-  ["sub","Enter subject."],
-  ["msg","Enter message."]
- ]){
-  if(!$(`${id}`).value.trim())
-   return $("status").textContent=msg;
- }
+    if(!list.length){
 
- $("send").disabled=true;
- $("status").textContent="Sending emails...";
- $("sent").textContent=0;
- $("failed").textContent=0;
- $("progress").style.width="0%";
- $("list").innerHTML="";
+        $("status").textContent =
+            "Add recipients first.";
 
- try{
+        return;
 
-  let res=await fetch("/api/send",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    sender_name:$("name").value,
-    gmail:$("gmail").value,
-    app_password:$("pass").value,
-    subject:$("sub").value,
-    message:$("msg").value,
-    recipients:r.join("\n")
-   })
-  });
+    }
 
-  let d=await res.json();
 
-  if(!res.ok)
-   return $("status").textContent=d.error||"Sending failed.";
+    if(list.length > 25){
 
-  $("sent").textContent=d.sent;
-  $("failed").textContent=d.failed;
+        $("status").textContent =
+            "Maximum 25 recipients.";
 
-  $("progress").style.width=
-   Math.round((d.sent+d.failed)/d.total*100)+"%";
+        return;
 
-  d.sent_emails.forEach(x=>row(x.email,x.ref,false));
-  d.failed_emails.forEach(x=>row(x.email,x.ref,true));
+    }
 
-  $("status").textContent=
-   `Completed: ${d.sent} sent, ${d.failed} failed.`;
 
-  alert(
-   `Sending completed.\n\nSent: ${d.sent}\nFailed: ${d.failed}`
-  );
+    const fields = [
 
- }catch(e){
+        ["name", "Enter sender name."],
+        ["gmail", "Enter Gmail address."],
+        ["pass", "Enter Gmail App Password."],
+        ["sub", "Enter subject."],
+        ["msg", "Enter message."]
 
-  $("status").textContent="Server connection failed.";
+    ];
 
- }finally{
 
-  $("send").disabled=false;
+    for(const item of fields){
 
- }
+        const id = item[0];
+        const error = item[1];
+
+        if(!$(`${id}`).value.trim()){
+
+            $("status").textContent = error;
+
+            return;
+
+        }
+
+    }
+
+
+    $("send").disabled = true;
+
+    $("status").textContent =
+        "Sending emails...";
+
+    $("sent").textContent = "0";
+    $("failed").textContent = "0";
+
+    $("progress").style.width = "0%";
+
+    $("list").innerHTML = "";
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/send",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+
+                        sender_name:
+                            $("name").value,
+
+                        gmail:
+                            $("gmail").value,
+
+                        app_password:
+                            $("pass").value,
+
+                        subject:
+                            $("sub").value,
+
+                        message:
+                            $("msg").value,
+
+                        recipients:
+                            list.join("\n")
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            $("status").textContent =
+                data.error ||
+                "Sending failed.";
+
+            return;
+
+        }
+
+
+        $("sent").textContent =
+            data.sent;
+
+        $("failed").textContent =
+            data.failed;
+
+
+        $("progress").style.width =
+            Math.round(
+                (
+                    data.sent +
+                    data.failed
+                ) /
+                data.total *
+                100
+            ) + "%";
+
+
+        data.sent_emails.forEach(
+            item =>
+                row(
+                    item.email,
+                    item.ref,
+                    false
+                )
+        );
+
+
+        data.failed_emails.forEach(
+            item =>
+                row(
+                    item.email,
+                    item.ref,
+                    true
+                )
+        );
+
+
+        $("status").textContent =
+            `Completed: ${data.sent} sent, ${data.failed} failed.`;
+
+
+        alert(
+            `Sending completed.\n\n` +
+            `Sent: ${data.sent}\n` +
+            `Failed: ${data.failed}`
+        );
+
+
+    }catch(error){
+
+        $("status").textContent =
+            "Server connection failed.";
+
+    }finally{
+
+        $("send").disabled = false;
+
+    }
 
 };
 
