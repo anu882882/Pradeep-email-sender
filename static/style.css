@@ -9,6 +9,7 @@ color:#222;
 font:14px Arial
 }
 
+
 header{
 height:64px;
 border-bottom:1px solid #ddd;
@@ -18,24 +19,29 @@ justify-content:space-between;
 padding:0 24px
 }
 
+
 .brand strong,
 .brand small{
 display:block
 }
 
+
 .brand strong{
 font-size:17px
 }
+
 
 .brand small{
 margin-top:3px;
 color:#777
 }
 
+
 header a{
 color:#222;
 text-decoration:none
 }
+
 
 main{
 width:100%;
@@ -47,6 +53,7 @@ grid-template-columns:1fr 1fr;
 gap:18px
 }
 
+
 .card{
 border:1px solid #ddd;
 border-radius:10px;
@@ -54,20 +61,24 @@ padding:18px;
 background:#fff
 }
 
+
 h2{
 margin:0 0 18px;
 font-size:18px
 }
+
 
 h3{
 margin:20px 0 10px;
 font-size:14px
 }
 
+
 label{
 display:block;
 margin:12px 0 6px
 }
+
 
 input,
 textarea{
@@ -81,23 +92,28 @@ font:14px Arial;
 outline:0
 }
 
+
 input:focus,
 textarea:focus{
 border-color:#222
 }
+
 
 textarea{
 min-height:150px;
 resize:vertical
 }
 
+
 #msg{
 min-height:190px
 }
 
+
 #recipients{
 min-height:220px
 }
+
 
 button{
 width:100%;
@@ -111,14 +127,25 @@ cursor:pointer;
 font-size:14px
 }
 
+
 button:hover{
 opacity:.92
 }
+
 
 button:disabled{
 opacity:.5;
 cursor:not-allowed
 }
+
+
+.secondary-btn{
+margin-top:12px;
+background:#fff;
+color:#222;
+border-color:#bbb
+}
+
 
 #status{
 min-height:18px;
@@ -126,119 +153,124 @@ margin:10px 0 0;
 line-height:1.4
 }
 
-.protection{
-margin-top:18px;
-padding:14px;
-background:#f6f6f6;
-border-radius:8px
-}
 
-.protection h3{
-margin:0 0 9px
-}
+/* SMTP */
 
-.protection div{
-padding:3px 0
-}
-
-#protectMsg{
-margin:10px 0 0;
-color:#666;
-font-size:12px;
-line-height:1.4
-}
-
-
-/* Country / IP Pool */
-
-.country-panel{
-margin-top:18px;
+.smtp-box{
+margin-top:15px;
+padding:13px;
 border:1px solid #ddd;
 border-radius:8px;
-overflow:hidden
+background:#fafafa
 }
 
-.panel-title{
-padding:13px 14px;
-background:#f6f6f6;
+
+.smtp-head{
 display:flex;
 align-items:center;
 justify-content:space-between
 }
 
-.panel-title h3{
-margin:0;
-font-size:14px
+
+.smtp-head strong{
+display:block;
+font-size:13px
 }
 
-.panel-title small{
+
+.smtp-head small{
 display:block;
 margin-top:3px;
 color:#777;
 font-size:11px
 }
 
-.pool-badge{
+
+.smtp-dot{
+color:#aaa;
+font-size:16px
+}
+
+
+.smtp-dot.ok{
+color:#16803c
+}
+
+
+#smtpMessage{
+margin:8px 0 0;
 font-size:11px;
-padding:5px 8px;
-border:1px solid #ccc;
-border-radius:20px;
-background:#fff
+color:#666;
+line-height:1.4
 }
 
-.country-list{
-max-height:300px;
-overflow-y:auto
+
+/* Spam protection */
+
+.protection{
+margin-top:18px;
+padding:14px;
+background:#f6f6f6;
+border-radius:8px;
+border:1px solid #e4e4e4
 }
 
-.country-row{
+
+.protection h3{
+margin:0 0 12px
+}
+
+
+.turnstile-wrap{
+background:#fff;
+border:1px solid #ddd;
+border-radius:6px;
+padding:8px;
+min-height:75px;
 display:flex;
 align-items:center;
-justify-content:space-between;
-gap:12px;
-padding:10px 12px;
-border-top:1px solid #eee
+justify-content:flex-start
 }
 
-.country-left{
+
+.turnstile-missing{
+font-size:12px;
+color:#777;
+padding:10px
+}
+
+
+.protection-status{
+margin-top:10px;
 display:flex;
 align-items:center;
-gap:9px;
-min-width:0
-}
-
-.flag{
-font-size:20px
-}
-
-.country-left strong{
-display:block;
+gap:7px;
 font-size:13px
 }
 
-.country-left small{
-display:block;
-margin-top:2px;
-color:#777;
-font-size:11px
+
+#shieldIcon{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:20px;
+height:20px;
+border-radius:50%;
+background:#222;
+color:#fff;
+font-size:12px
 }
 
-.ip{
-font-family:monospace;
-font-size:11px;
+
+#protectMsg{
+margin:8px 0 0;
 color:#666;
-white-space:nowrap
-}
-
-.pool-note{
-margin:0;
-padding:10px 12px;
-border-top:1px solid #eee;
-color:#777;
 font-size:11px;
 line-height:1.4
 }
 
+
+/* Stats */
 
 .stats{
 display:grid;
@@ -247,16 +279,19 @@ gap:8px;
 margin-top:15px
 }
 
+
 .stats div{
 padding:12px;
 background:#f5f5f5;
 text-align:center
 }
 
+
 .stats strong{
 display:block;
 font-size:16px
 }
+
 
 .stats span{
 display:block;
@@ -264,6 +299,9 @@ margin-top:4px;
 color:#777;
 font-size:12px
 }
+
+
+/* Progress */
 
 .progress{
 width:100%;
@@ -274,6 +312,7 @@ border-radius:10px;
 overflow:hidden
 }
 
+
 #progress{
 display:block;
 width:0;
@@ -282,11 +321,55 @@ background:#222;
 transition:width .2s
 }
 
+
+/* Delivery */
+
+.delivery-box{
+margin-top:16px;
+padding:12px;
+border:1px solid #ddd;
+border-radius:8px;
+background:#fafafa
+}
+
+
+.delivery-head{
+display:flex;
+align-items:center;
+justify-content:space-between
+}
+
+
+.delivery-head strong{
+font-size:13px
+}
+
+
+#deliveryStatus{
+font-size:11px;
+padding:4px 7px;
+border:1px solid #ccc;
+border-radius:20px;
+background:#fff
+}
+
+
+#deliveryMessage{
+margin-top:7px;
+font-size:11px;
+color:#666;
+line-height:1.4
+}
+
+
+/* Recipient list */
+
 #list{
 max-height:260px;
 overflow-y:auto;
 border-top:1px solid #eee
 }
+
 
 .recipient-row{
 padding:9px 0;
@@ -295,10 +378,12 @@ word-break:break-all;
 line-height:1.4
 }
 
+
 .recipient-row small{
 color:#777;
 font-size:11px
 }
+
 
 .recipient-row.failed{
 color:#555
@@ -316,24 +401,29 @@ margin:20px auto;
 padding:0 14px
 }
 
+
 .login-card{
 margin-top:80px
 }
 
+
 .login-brand{
 margin-bottom:24px
 }
+
 
 .login-brand strong{
 display:block;
 font-size:18px
 }
 
+
 .login-brand small{
 display:block;
 margin-top:4px;
 color:#777
 }
+
 
 .error-text{
 margin-top:12px;
@@ -353,14 +443,6 @@ padding:0 15px
 
 .login-card{
 margin-top:35px
-}
-
-.country-row{
-align-items:flex-start
-}
-
-.ip{
-font-size:10px
 }
 
 }
