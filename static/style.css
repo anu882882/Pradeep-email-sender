@@ -1,126 +1,366 @@
-*{box-sizing:border-box}
-body{margin:0;background:#fff;color:#222;font:14px Arial}
-
-header{
-height:64px;border-bottom:1px solid #ddd;
-display:flex;align-items:center;
-justify-content:space-between;padding:0 24px
+*{
+box-sizing:border-box
 }
 
-.brand strong,.brand small{display:block}
-.brand strong{font-size:17px}
-.brand small{margin-top:3px;color:#777}
-header a{color:#222;text-decoration:none}
+body{
+margin:0;
+background:#fff;
+color:#222;
+font:14px Arial
+}
+
+header{
+height:64px;
+border-bottom:1px solid #ddd;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 24px
+}
+
+.brand strong,
+.brand small{
+display:block
+}
+
+.brand strong{
+font-size:17px
+}
+
+.brand small{
+margin-top:3px;
+color:#777
+}
+
+header a{
+color:#222;
+text-decoration:none
+}
 
 main{
-width:100%;max-width:1050px;margin:22px auto;
-padding:0 14px;display:grid;
-grid-template-columns:1fr 1fr;gap:18px
+width:100%;
+max-width:1100px;
+margin:22px auto;
+padding:0 14px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px
 }
 
 .card{
-border:1px solid #ddd;border-radius:10px;
-padding:18px;background:#fff
+border:1px solid #ddd;
+border-radius:10px;
+padding:18px;
+background:#fff
 }
 
-h2{margin:0 0 18px;font-size:18px}
-h3{margin:20px 0 10px;font-size:14px}
-
-label{display:block;margin:12px 0 6px}
-
-input,textarea{
-width:100%;padding:10px;border:1px solid #bbb;
-border-radius:6px;background:#fff;color:#222;
-font:14px Arial;outline:0
+h2{
+margin:0 0 18px;
+font-size:18px
 }
 
-input:focus,textarea:focus{border-color:#222}
-textarea{min-height:150px;resize:vertical}
-#msg{min-height:190px}
-#recipients{min-height:220px}
+h3{
+margin:20px 0 10px;
+font-size:14px
+}
+
+label{
+display:block;
+margin:12px 0 6px
+}
+
+input,
+textarea{
+width:100%;
+padding:10px;
+border:1px solid #bbb;
+border-radius:6px;
+background:#fff;
+color:#222;
+font:14px Arial;
+outline:0
+}
+
+input:focus,
+textarea:focus{
+border-color:#222
+}
+
+textarea{
+min-height:150px;
+resize:vertical
+}
+
+#msg{
+min-height:190px
+}
+
+#recipients{
+min-height:220px
+}
 
 button{
-width:100%;margin-top:16px;padding:11px;
-border:1px solid #222;border-radius:6px;
-background:#222;color:#fff;cursor:pointer;font-size:14px
+width:100%;
+margin-top:16px;
+padding:11px;
+border:1px solid #222;
+border-radius:6px;
+background:#222;
+color:#fff;
+cursor:pointer;
+font-size:14px
 }
 
-button:hover{opacity:.92}
-button:disabled{opacity:.5;cursor:not-allowed}
+button:hover{
+opacity:.92
+}
 
-#status{min-height:18px;margin:10px 0 0;line-height:1.4}
+button:disabled{
+opacity:.5;
+cursor:not-allowed
+}
+
+#status{
+min-height:18px;
+margin:10px 0 0;
+line-height:1.4
+}
 
 .protection{
-margin-top:18px;padding:14px;
-background:#f6f6f6;border-radius:8px
+margin-top:18px;
+padding:14px;
+background:#f6f6f6;
+border-radius:8px
 }
 
-.protection h3{margin:0 0 9px}
-.protection div{padding:3px 0}
+.protection h3{
+margin:0 0 9px
+}
+
+.protection div{
+padding:3px 0
+}
 
 #protectMsg{
-margin:10px 0 0;color:#666;
-font-size:12px;line-height:1.4
+margin:10px 0 0;
+color:#666;
+font-size:12px;
+line-height:1.4
 }
 
+
+/* Country / IP Pool */
+
+.country-panel{
+margin-top:18px;
+border:1px solid #ddd;
+border-radius:8px;
+overflow:hidden
+}
+
+.panel-title{
+padding:13px 14px;
+background:#f6f6f6;
+display:flex;
+align-items:center;
+justify-content:space-between
+}
+
+.panel-title h3{
+margin:0;
+font-size:14px
+}
+
+.panel-title small{
+display:block;
+margin-top:3px;
+color:#777;
+font-size:11px
+}
+
+.pool-badge{
+font-size:11px;
+padding:5px 8px;
+border:1px solid #ccc;
+border-radius:20px;
+background:#fff
+}
+
+.country-list{
+max-height:300px;
+overflow-y:auto
+}
+
+.country-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:10px 12px;
+border-top:1px solid #eee
+}
+
+.country-left{
+display:flex;
+align-items:center;
+gap:9px;
+min-width:0
+}
+
+.flag{
+font-size:20px
+}
+
+.country-left strong{
+display:block;
+font-size:13px
+}
+
+.country-left small{
+display:block;
+margin-top:2px;
+color:#777;
+font-size:11px
+}
+
+.ip{
+font-family:monospace;
+font-size:11px;
+color:#666;
+white-space:nowrap
+}
+
+.pool-note{
+margin:0;
+padding:10px 12px;
+border-top:1px solid #eee;
+color:#777;
+font-size:11px;
+line-height:1.4
+}
+
+
 .stats{
-display:grid;grid-template-columns:repeat(3,1fr);
-gap:8px;margin-top:15px
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+margin-top:15px
 }
 
 .stats div{
-padding:12px;background:#f5f5f5;text-align:center
+padding:12px;
+background:#f5f5f5;
+text-align:center
 }
 
-.stats strong{display:block;font-size:16px}
+.stats strong{
+display:block;
+font-size:16px
+}
+
 .stats span{
-display:block;margin-top:4px;
-color:#777;font-size:12px
+display:block;
+margin-top:4px;
+color:#777;
+font-size:12px
 }
 
 .progress{
-width:100%;height:7px;margin-top:15px;
-background:#eee;border-radius:10px;overflow:hidden
+width:100%;
+height:7px;
+margin-top:15px;
+background:#eee;
+border-radius:10px;
+overflow:hidden
 }
 
 #progress{
-display:block;width:0;height:100%;
-background:#222;transition:width .2s
+display:block;
+width:0;
+height:100%;
+background:#222;
+transition:width .2s
 }
 
 #list{
-max-height:260px;overflow-y:auto;
+max-height:260px;
+overflow-y:auto;
 border-top:1px solid #eee
 }
 
 .recipient-row{
-padding:9px 0;border-bottom:1px solid #eee;
-word-break:break-all;line-height:1.4
+padding:9px 0;
+border-bottom:1px solid #eee;
+word-break:break-all;
+line-height:1.4
 }
 
 .recipient-row small{
-color:#777;font-size:11px
+color:#777;
+font-size:11px
 }
 
-.recipient-row.failed{color:#555}
+.recipient-row.failed{
+color:#555
+}
+
+
+/* Login */
 
 .login-main{
-width:100%;min-height:calc(100vh - 40px);
-max-width:430px;display:block;
-margin:20px auto;padding:0 14px
+width:100%;
+min-height:calc(100vh - 40px);
+max-width:430px;
+display:block;
+margin:20px auto;
+padding:0 14px
 }
 
-.login-card{margin-top:80px}
-.login-brand{margin-bottom:24px}
-.login-brand strong{display:block;font-size:18px}
+.login-card{
+margin-top:80px
+}
+
+.login-brand{
+margin-bottom:24px
+}
+
+.login-brand strong{
+display:block;
+font-size:18px
+}
+
 .login-brand small{
-display:block;margin-top:4px;color:#777
+display:block;
+margin-top:4px;
+color:#777
 }
 
-.error-text{margin-top:12px;color:#555}
+.error-text{
+margin-top:12px;
+color:#555
+}
+
 
 @media(max-width:750px){
-main{grid-template-columns:1fr}
-header{padding:0 15px}
-.login-card{margin-top:35px}
+
+main{
+grid-template-columns:1fr
+}
+
+header{
+padding:0 15px
+}
+
+.login-card{
+margin-top:35px
+}
+
+.country-row{
+align-items:flex-start
+}
+
+.ip{
+font-size:10px
+}
+
 }
