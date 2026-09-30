@@ -24,7 +24,9 @@ defer>
 
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -44,9 +46,7 @@ defer>
 <main>
 
 
-<!-- =========================================
-     SENDER
-========================================= -->
+<!-- SENDER -->
 
 <section class="card">
 
@@ -80,7 +80,7 @@ placeholder="Gmail App Password">
 
 <input
 id="sub"
-placeholder="Example: {Hi|Hello|Hey}, quick question">
+placeholder="{Hi|Hello|Hey}, quick question">
 
 
 <label>Message Body</label>
@@ -107,68 +107,36 @@ Name:
 </div>
 
 
-<div
-class="turnstile-wrap">
+<!-- CLOUDFLARE -->
+
+<div class="turnstile-wrap">
 
 <div
 class="cf-turnstile"
 data-sitekey="{{ turnstile_site_key }}"
-data-theme="light"
-data-size="normal">
+data-theme="light">
 </div>
 
 </div>
 
 
-<button
-id="send">
-
+<button id="send">
 Send Emails
-
 </button>
 
 
 <p id="status"></p>
 
 
-<!-- =========================================
-     PROTECTION
-========================================= -->
-
-<div class="protection">
-
-<h3>🛡 Spam Protection</h3>
-
-<div>✓ Cloudflare Turnstile verification</div>
-
-<div>✓ Duplicate recipients filtered</div>
-
-<div>✓ Invalid email addresses checked</div>
-
-<div>✓ Unsafe content checked</div>
-
-<div>✓ Link count checked</div>
-
-<div>✓ Maximum 25 recipients</div>
-
-<div>✓ Sending cooldown enabled</div>
-
-<p id="protectMsg">
-Basic protection is active.
-</p>
-
-</div>
-
 </section>
 
 
-<!-- =========================================
-     RECIPIENTS
-========================================= -->
+<!-- RECIPIENTS -->
 
 <section class="card">
 
 <h2>Recipients</h2>
+
 
 <textarea
 id="recipients"
@@ -178,6 +146,7 @@ three@email.com"></textarea>
 
 
 <div class="stats">
+
 
 <div>
 
@@ -205,6 +174,7 @@ three@email.com"></textarea>
 
 </div>
 
+
 </div>
 
 
@@ -217,7 +187,9 @@ three@email.com"></textarea>
 
 <h3>Live Recipients Dispatch</h3>
 
+
 <div id="list"></div>
+
 
 </section>
 
@@ -227,13 +199,15 @@ three@email.com"></textarea>
 
 <script>
 
-const $ = id =>
-    document.getElementById(id);
+
+const $ =
+id => document.getElementById(id);
 
 
 function recipients(){
 
     return [
+
         ...new Set(
 
             $("recipients")
@@ -246,6 +220,7 @@ function recipients(){
             )
 
         )
+
     ];
 
 }
@@ -259,23 +234,11 @@ function updateCount(){
     $("total").textContent =
         total;
 
-    if(total > 25){
-
-        $("protectMsg").textContent =
-            "⚠ Maximum 25 recipients.";
-
-    }else{
-
-        $("protectMsg").textContent =
-            "✓ Basic protection is active.";
-
-    }
-
 }
 
 
 $("recipients").oninput =
-    updateCount;
+updateCount;
 
 
 function checkMessage(){
@@ -287,49 +250,44 @@ function checkMessage(){
 
 
     if(
+
         /<\s*(script|iframe|object|embed)\b/i
         .test(text)
+
     ){
 
-        $("protectMsg").textContent =
-            "⚠ Unsafe HTML detected.";
+        $("status").textContent =
+            "Unsafe HTML detected.";
 
     }
 
     else if(
+
         /javascript\s*:/i
         .test(text)
+
     ){
 
-        $("protectMsg").textContent =
-            "⚠ Unsafe content detected.";
+        $("status").textContent =
+            "Unsafe content detected.";
 
     }
 
     else if(
+
         (text.match(/https?:\/\//gi) || [])
         .length > 5
+
     ){
 
-        $("protectMsg").textContent =
-            "⚠ Too many links.";
-
-    }
-
-    else if(
-        /(.)\1{10,}/
-        .test(text)
-    ){
-
-        $("protectMsg").textContent =
-            "⚠ Repeated characters detected.";
+        $("status").textContent =
+            "Too many links.";
 
     }
 
     else{
 
-        $("protectMsg").textContent =
-            "✓ Basic protection is active.";
+        $("status").textContent = "";
 
     }
 
@@ -337,10 +295,11 @@ function checkMessage(){
 
 
 $("sub").oninput =
-    checkMessage;
+checkMessage;
+
 
 $("msg").oninput =
-    checkMessage;
+checkMessage;
 
 
 function getTurnstileToken(){
@@ -350,6 +309,7 @@ function getTurnstileToken(){
             '[name="cf-turnstile-response"]'
         );
 
+
     return input
         ? input.value
         : "";
@@ -357,10 +317,14 @@ function getTurnstileToken(){
 }
 
 
-function recipientRow(item, failed){
+function recipientRow(
+    item,
+    failed
+){
 
     const div =
         document.createElement("div");
+
 
     div.className =
         "recipient-row" +
@@ -382,21 +346,21 @@ function recipientRow(item, failed){
         (
             failed
             ? "Sending failed"
-            : "Reference: " +
-              item.ref
+            : "Sent successfully"
         ) +
 
         "</small>";
 
 
     $("list")
-        .appendChild(div);
+    .appendChild(div);
 
 }
 
 
 $("send").onclick =
 async function(){
+
 
     const list =
         recipients();
@@ -487,6 +451,7 @@ async function(){
     $("send").disabled =
         true;
 
+
     $("status").textContent =
         "Sending...";
 
@@ -494,11 +459,14 @@ async function(){
     $("sent").textContent =
         "0";
 
+
     $("failed").textContent =
         "0";
 
+
     $("progress").style.width =
         "0%";
+
 
     $("list").innerHTML =
         "";
@@ -506,44 +474,52 @@ async function(){
 
     try{
 
+
         const response =
             await fetch(
+
                 "/api/send",
+
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
+
                         "Content-Type":
                         "application/json"
+
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        sender_name:
-                            $("name").value,
+                            sender_name:
+                                $("name").value,
 
-                        gmail:
-                            $("gmail").value,
+                            gmail:
+                                $("gmail").value,
 
-                        app_password:
-                            $("pass").value,
+                            app_password:
+                                $("pass").value,
 
-                        subject:
-                            $("sub").value,
+                            subject:
+                                $("sub").value,
 
-                        message:
-                            $("msg").value,
+                            message:
+                                $("msg").value,
 
-                        recipients:
-                            list.join("\n"),
+                            recipients:
+                                list.join("\n"),
 
-                        turnstile_token:
-                            token
+                            turnstile_token:
+                                token
 
-                    })
+                        })
 
                 }
+
             );
 
 
@@ -565,6 +541,7 @@ async function(){
         $("sent").textContent =
             data.sent;
 
+
         $("failed").textContent =
             data.failed;
 
@@ -585,24 +562,26 @@ async function(){
             ) + "%";
 
 
-        data.sent_emails
-            .forEach(
-                item =>
-                recipientRow(
-                    item,
-                    false
-                )
-            );
+        data.sent_emails.forEach(
+
+            item =>
+            recipientRow(
+                item,
+                false
+            )
+
+        );
 
 
-        data.failed_emails
-            .forEach(
-                item =>
-                recipientRow(
-                    item,
-                    true
-                )
-            );
+        data.failed_emails.forEach(
+
+            item =>
+            recipientRow(
+                item,
+                true
+            )
+
+        );
 
 
         $("status").textContent =
@@ -610,25 +589,25 @@ async function(){
 
 
         alert(
+
             `Sending completed.\n\n` +
+
             `Sent: ${data.sent}\n` +
+
             `Failed: ${data.failed}`
+
         );
 
 
-        /*
-         * Reset Turnstile after successful send.
-         */
-
-        if(
-            window.turnstile
-        ){
+        if(window.turnstile){
 
             window.turnstile.reset();
 
         }
 
+
     }
+
 
     catch(error){
 
@@ -636,6 +615,7 @@ async function(){
             "Server connection failed.";
 
     }
+
 
     finally{
 
@@ -646,7 +626,9 @@ async function(){
 
 };
 
+
 </script>
+
 
 </body>
 
