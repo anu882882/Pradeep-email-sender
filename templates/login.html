@@ -16,12 +16,6 @@ content="width=device-width,initial-scale=1">
 rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
 
-<script
-src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async
-defer>
-</script>
-
 </head>
 
 
@@ -46,8 +40,7 @@ defer>
 <h2>Login</h2>
 
 
-<form
-method="post">
+<form method="post">
 
 
 <label>Password</label>
@@ -59,17 +52,6 @@ name="password"
 placeholder="Enter password"
 required
 autofocus>
-
-
-<div class="turnstile-wrap">
-
-<div
-class="cf-turnstile"
-data-sitekey="{{ turnstile_site_key }}"
-data-theme="light">
-</div>
-
-</div>
 
 
 <button type="submit">
