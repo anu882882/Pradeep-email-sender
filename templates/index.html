@@ -1,60 +1,156 @@
 <!doctype html>
+
 <html>
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
-<link rel="stylesheet"
-href="{{url_for('static',filename='style.css')}}">
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+
+<script
+src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+async
+defer>
+</script>
+
 </head>
 
 <body>
 
 <header>
+
 <div class="brand">
+
 <strong>✉ Secure Mail Console</strong>
+
 <small>Gmail Mail Sender</small>
+
 </div>
+
 <a href="/logout">Logout</a>
+
 </header>
 
+
 <main>
+
+
+<!-- =========================================
+     SENDER
+========================================= -->
 
 <section class="card">
 
 <h2>Sender</h2>
 
+
 <label>Sender Name</label>
-<input id="name" placeholder="Your name">
+
+<input
+id="name"
+placeholder="Your name">
+
 
 <label>Your Gmail</label>
-<input id="gmail" type="email"
+
+<input
+id="gmail"
+type="email"
 placeholder="your@gmail.com">
 
+
 <label>App Password</label>
-<input id="pass" type="password"
+
+<input
+id="pass"
+type="password"
 placeholder="Gmail App Password">
 
+
 <label>Subject</label>
-<input id="sub" placeholder="Email subject">
+
+<input
+id="sub"
+placeholder="Example: {Hi|Hello|Hey}, quick question">
+
 
 <label>Message Body</label>
-<textarea id="msg"
-placeholder="Write your message..."></textarea>
 
-<button id="send">Send Emails</button>
+<textarea
+id="msg"
+placeholder="{Hi|Hello|Hey} {there|friend},
+
+Your site looks {great|good|impressive}.
+
+{Can I send|May I email|Would you like me to send} the details?"></textarea>
+
+
+<div class="hint">
+
+Spintax:
+<code>{Hi|Hello|Hey}</code>
+
+<br>
+
+Name:
+<code>{name}</code>
+
+</div>
+
+
+<div
+class="turnstile-wrap">
+
+<div
+class="cf-turnstile"
+data-sitekey="{{ turnstile_site_key }}"
+data-theme="light"
+data-size="normal">
+</div>
+
+</div>
+
+
+<button
+id="send">
+
+Send Emails
+
+</button>
+
 
 <p id="status"></p>
+
+
+<!-- =========================================
+     PROTECTION
+========================================= -->
 
 <div class="protection">
 
 <h3>🛡 Spam Protection</h3>
 
+<div>✓ Cloudflare Turnstile verification</div>
+
 <div>✓ Duplicate recipients filtered</div>
+
 <div>✓ Invalid email addresses checked</div>
+
 <div>✓ Unsafe content checked</div>
+
 <div>✓ Link count checked</div>
+
 <div>✓ Maximum 25 recipients</div>
+
 <div>✓ Sending cooldown enabled</div>
 
 <p id="protectMsg">
@@ -66,35 +162,58 @@ Basic protection is active.
 </section>
 
 
+<!-- =========================================
+     RECIPIENTS
+========================================= -->
+
 <section class="card">
 
 <h2>Recipients</h2>
 
-<textarea id="recipients"
-placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
+<textarea
+id="recipients"
+placeholder="one@email.com
+two@email.com
+three@email.com"></textarea>
+
 
 <div class="stats">
 
 <div>
+
 <strong id="total">0</strong>
+
 <span>Total</span>
+
 </div>
 
+
 <div>
+
 <strong id="sent">0</strong>
+
 <span>Sent</span>
+
 </div>
+
 
 <div>
+
 <strong id="failed">0</strong>
+
 <span>Failed</span>
+
 </div>
 
 </div>
+
 
 <div class="progress">
+
 <div id="progress"></div>
+
 </div>
+
 
 <h3>Live Recipients Dispatch</h3>
 
@@ -102,222 +221,426 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 </section>
 
+
 </main>
 
 
 <script>
 
-const $=id=>document.getElementById(id);
+const $ = id =>
+    document.getElementById(id);
 
-function rec(){
+
+function recipients(){
 
     return [
         ...new Set(
+
             $("recipients")
             .value
             .split(/[\s,;]+/)
             .filter(Boolean)
-            .map(x=>x.trim().toLowerCase())
+            .map(
+                x =>
+                x.trim().toLowerCase()
+            )
+
         )
     ];
 
 }
 
-function count(){
 
-    const n=rec().length;
+function updateCount(){
 
-    $("total").textContent=n;
+    const total =
+        recipients().length;
 
-    $("protectMsg").textContent=
-        n>25
-        ?"⚠ Maximum 25 recipients."
-        :"✓ Basic protection is active.";
+    $("total").textContent =
+        total;
+
+    if(total > 25){
+
+        $("protectMsg").textContent =
+            "⚠ Maximum 25 recipients.";
+
+    }else{
+
+        $("protectMsg").textContent =
+            "✓ Basic protection is active.";
+
+    }
 
 }
 
-$("recipients").oninput=count;
+
+$("recipients").oninput =
+    updateCount;
 
 
 function checkMessage(){
 
-    const text=
-        $("sub").value+" "+
+    const text =
+        $("sub").value +
+        " " +
         $("msg").value;
 
-    if(/<\s*(script|iframe|object|embed)\b/i.test(text))
-        $("protectMsg").textContent=
-        "⚠ Unsafe HTML detected.";
 
-    else if(/javascript\s*:/i.test(text))
-        $("protectMsg").textContent=
-        "⚠ Unsafe content detected.";
+    if(
+        /<\s*(script|iframe|object|embed)\b/i
+        .test(text)
+    ){
 
-    else if((text.match(/https?:\/\//gi)||[]).length>5)
-        $("protectMsg").textContent=
-        "⚠ Too many links.";
+        $("protectMsg").textContent =
+            "⚠ Unsafe HTML detected.";
 
-    else if(/(.)\1{10,}/.test(text))
-        $("protectMsg").textContent=
-        "⚠ Repeated characters detected.";
+    }
 
-    else
-        $("protectMsg").textContent=
-        "✓ Basic protection is active.";
+    else if(
+        /javascript\s*:/i
+        .test(text)
+    ){
+
+        $("protectMsg").textContent =
+            "⚠ Unsafe content detected.";
+
+    }
+
+    else if(
+        (text.match(/https?:\/\//gi) || [])
+        .length > 5
+    ){
+
+        $("protectMsg").textContent =
+            "⚠ Too many links.";
+
+    }
+
+    else if(
+        /(.)\1{10,}/
+        .test(text)
+    ){
+
+        $("protectMsg").textContent =
+            "⚠ Repeated characters detected.";
+
+    }
+
+    else{
+
+        $("protectMsg").textContent =
+            "✓ Basic protection is active.";
+
+    }
 
 }
 
-$("sub").oninput=checkMessage;
-$("msg").oninput=checkMessage;
+
+$("sub").oninput =
+    checkMessage;
+
+$("msg").oninput =
+    checkMessage;
 
 
-function row(x,failed){
+function getTurnstileToken(){
 
-    const d=document.createElement("div");
+    const input =
+        document.querySelector(
+            '[name="cf-turnstile-response"]'
+        );
 
-    d.className=
-        "recipient-row"+
-        (failed?" failed":"");
+    return input
+        ? input.value
+        : "";
 
-    d.innerHTML=
-        (failed?"✕ ":"✓ ")+
-        x.email+
-        "<br><small>"+
+}
+
+
+function recipientRow(item, failed){
+
+    const div =
+        document.createElement("div");
+
+    div.className =
+        "recipient-row" +
         (
             failed
-            ?"Sending failed"
-            :"Reference: "+x.ref
-        )+
+            ? " failed"
+            : ""
+        );
+
+
+    div.innerHTML =
+
+        (failed ? "✕ " : "✓ ") +
+
+        item.email +
+
+        "<br><small>" +
+
+        (
+            failed
+            ? "Sending failed"
+            : "Reference: " +
+              item.ref
+        ) +
+
         "</small>";
 
-    $("list").appendChild(d);
+
+    $("list")
+        .appendChild(div);
 
 }
 
 
-$("send").onclick=async()=>{
+$("send").onclick =
+async function(){
 
-    const r=rec();
+    const list =
+        recipients();
 
-    if(!r.length)
-        return $("status").textContent=
-        "Add recipients first.";
 
-    if(r.length>25)
-        return $("status").textContent=
-        "Maximum 25 recipients.";
+    if(!list.length){
 
-    for(const [id,text] of [
-        ["name","Enter sender name."],
-        ["gmail","Enter Gmail address."],
-        ["pass","Enter Gmail App Password."],
-        ["sub","Enter subject."],
-        ["msg","Enter message."]
-    ]){
-
-        if(!$(`${id}`).value.trim())
-            return $("status").textContent=text;
-
-    }
-
-    const text=
-        $("sub").value+" "+
-        $("msg").value;
-
-    if(/<\s*(script|iframe|object|embed)\b/i.test(text)||
-       /javascript\s*:/i.test(text)){
-
-        $("status").textContent=
-        "Unsafe content detected.";
+        $("status").textContent =
+            "Add recipients first.";
 
         return;
 
     }
 
-    if((text.match(/https?:\/\//gi)||[]).length>5){
 
-        $("status").textContent=
-        "Too many links in message.";
+    if(list.length > 25){
+
+        $("status").textContent =
+            "Maximum 25 recipients.";
 
         return;
 
     }
 
-    $("send").disabled=true;
-    $("status").textContent="Sending...";
-    $("sent").textContent=0;
-    $("failed").textContent=0;
-    $("progress").style.width="0%";
-    $("list").innerHTML="";
 
-    try{
+    const required = [
 
-        const res=await fetch("/api/send",{
+        [
+            "name",
+            "Enter sender name."
+        ],
 
-            method:"POST",
+        [
+            "gmail",
+            "Enter Gmail address."
+        ],
 
-            headers:{
-                "Content-Type":
-                "application/json"
-            },
+        [
+            "pass",
+            "Enter Gmail App Password."
+        ],
 
-            body:JSON.stringify({
+        [
+            "sub",
+            "Enter subject."
+        ],
 
-                sender_name:$("name").value,
-                gmail:$("gmail").value,
-                app_password:$("pass").value,
-                subject:$("sub").value,
-                message:$("msg").value,
-                recipients:r.join("\n")
+        [
+            "msg",
+            "Enter message."
+        ]
 
-            })
+    ];
 
-        });
 
-        const d=await res.json();
+    for(
+        const [id, error] of required
+    ){
 
-        if(!res.ok){
+        if(
+            !$(id).value.trim()
+        ){
 
-            $("status").textContent=
-            d.error||"Sending failed.";
+            $("status").textContent =
+                error;
 
             return;
 
         }
 
-        $("sent").textContent=d.sent;
-        $("failed").textContent=d.failed;
+    }
 
-        $("progress").style.width=
+
+    const token =
+        getTurnstileToken();
+
+
+    if(!token){
+
+        $("status").textContent =
+            "Please complete the Cloudflare verification.";
+
+        return;
+
+    }
+
+
+    $("send").disabled =
+        true;
+
+    $("status").textContent =
+        "Sending...";
+
+
+    $("sent").textContent =
+        "0";
+
+    $("failed").textContent =
+        "0";
+
+    $("progress").style.width =
+        "0%";
+
+    $("list").innerHTML =
+        "";
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/send",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                        "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        sender_name:
+                            $("name").value,
+
+                        gmail:
+                            $("gmail").value,
+
+                        app_password:
+                            $("pass").value,
+
+                        subject:
+                            $("sub").value,
+
+                        message:
+                            $("msg").value,
+
+                        recipients:
+                            list.join("\n"),
+
+                        turnstile_token:
+                            token
+
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            $("status").textContent =
+                data.error ||
+                "Sending failed.";
+
+            return;
+
+        }
+
+
+        $("sent").textContent =
+            data.sent;
+
+        $("failed").textContent =
+            data.failed;
+
+
+        $("progress").style.width =
+
             Math.round(
-                (d.sent+d.failed)/d.total*100
-            )+"%";
 
-        d.sent_emails.forEach(
-            x=>row(x,false)
-        );
+                (
+                    data.sent +
+                    data.failed
+                )
+                /
+                data.total
+                *
+                100
 
-        d.failed_emails.forEach(
-            x=>row(x,true)
-        );
+            ) + "%";
 
-        $("status").textContent=
-            `Completed: ${d.sent} sent, ${d.failed} failed.`;
+
+        data.sent_emails
+            .forEach(
+                item =>
+                recipientRow(
+                    item,
+                    false
+                )
+            );
+
+
+        data.failed_emails
+            .forEach(
+                item =>
+                recipientRow(
+                    item,
+                    true
+                )
+            );
+
+
+        $("status").textContent =
+            `Completed: ${data.sent} sent, ${data.failed} failed.`;
+
 
         alert(
-            `Sending completed.\n\n`+
-            `Sent: ${d.sent}\n`+
-            `Failed: ${d.failed}`
+            `Sending completed.\n\n` +
+            `Sent: ${data.sent}\n` +
+            `Failed: ${data.failed}`
         );
 
-    }catch(e){
 
-        $("status").textContent=
-        "Server connection failed.";
+        /*
+         * Reset Turnstile after successful send.
+         */
 
-    }finally{
+        if(
+            window.turnstile
+        ){
 
-        $("send").disabled=false;
+            window.turnstile.reset();
+
+        }
+
+    }
+
+    catch(error){
+
+        $("status").textContent =
+            "Server connection failed.";
+
+    }
+
+    finally{
+
+        $("send").disabled =
+            false;
 
     }
 
@@ -326,4 +649,5 @@ $("send").onclick=async()=>{
 </script>
 
 </body>
+
 </html>
