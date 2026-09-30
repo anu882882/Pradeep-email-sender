@@ -1,60 +1,90 @@
 <!doctype html>
 <html>
 <head>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
+
 <link rel="stylesheet"
 href="{{url_for('static',filename='style.css')}}">
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async defer></script>
+
+<script
+src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+async defer>
+</script>
+
 </head>
 
 <body>
 
 <header>
+
 <div class="brand">
 <strong>✉ Secure Mail Console</strong>
 <small>Gmail Mail Sender</small>
 </div>
+
 <a href="/logout">Logout</a>
+
 </header>
 
+
 <main>
+
 
 <section class="card">
 
 <h2>Sender</h2>
 
+
 <label>Sender Name</label>
 <input id="name" placeholder="Your name">
 
+
 <label>Your Gmail</label>
-<input id="gmail" type="email"
+<input
+id="gmail"
+type="email"
 placeholder="your@gmail.com">
 
+
 <label>App Password</label>
-<input id="pass" type="password"
+<input
+id="pass"
+type="password"
 placeholder="Gmail App Password">
 
+
 <label>Subject</label>
-<input id="sub" placeholder="Email subject">
+<input
+id="sub"
+placeholder="Email subject">
+
 
 <label>Message Body</label>
-<textarea id="msg"
+<textarea
+id="msg"
 placeholder="Write your message..."></textarea>
 
-<button id="send">Send Emails</button>
+
+<button id="send">
+Send Emails
+</button>
 
 <p id="status"></p>
+
 
 <div class="protection">
 
 <h3>🛡 Spam Protection</h3>
 
+
 {%if turnstile_sitekey%}
 
-<div class="cf-turnstile"
+<div
+class="cf-turnstile"
 data-sitekey="{{turnstile_sitekey}}"
 data-action="send_email">
 </div>
@@ -64,6 +94,7 @@ data-action="send_email">
 <p>Turnstile site key is not configured.</p>
 
 {%endif%}
+
 
 <p id="protectMsg">
 Complete verification before sending.
@@ -78,8 +109,12 @@ Complete verification before sending.
 
 <h2>Recipients</h2>
 
-<textarea id="recipients"
-placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
+
+<textarea
+id="recipients"
+placeholder="one@email.com&#10;two@email.com&#10;three@email.com">
+</textarea>
+
 
 <div class="stats">
 
@@ -100,15 +135,18 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 </div>
 
+
 <div class="progress">
 <div id="progress"></div>
 </div>
+
 
 <h3>Live Recipients Dispatch</h3>
 
 <div id="list"></div>
 
 </section>
+
 
 </main>
 
@@ -117,52 +155,75 @@ placeholder="one@email.com&#10;two@email.com&#10;three@email.com"></textarea>
 
 const $=id=>document.getElementById(id);
 
+
 function rec(){
-    return [...new Set(
-        $("recipients").value
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(x=>x.trim().toLowerCase())
-    )];
+
+    return [
+        ...new Set(
+            $("recipients")
+            .value
+            .split(/[\s,;]+/)
+            .filter(Boolean)
+            .map(
+                x=>x.trim().toLowerCase()
+            )
+        )
+    ];
+
 }
 
+
 function count(){
+
     const n=rec().length;
 
     $("total").textContent=n;
 
     $("protectMsg").textContent=
         n>25
-        ?"⚠ Maximum 25 recipients."
-        :"Complete verification before sending.";
+        ? "⚠ Maximum 25 recipients."
+        : "Complete verification before sending.";
+
 }
+
 
 $("recipients").oninput=count;
 
 
 function token(){
+
     const x=document.querySelector(
         '[name="cf-turnstile-response"]'
     );
+
     return x?x.value:"";
+
 }
 
 
-function row(x,fail){
+function row(x,failed){
 
     const d=document.createElement("div");
 
     d.className=
-        "recipient-row"+(fail?" failed":"");
+        "recipient-row"+
+        (failed?" failed":"");
+
 
     d.innerHTML=
-        (fail?"✕ ":"✓ ")+
+        (failed?"✕ ":"✓ ")+
         x.email+
         "<br><small>"+
-        (fail?"Sending failed":"Sent successfully")+
+        (
+            failed
+            ? "Sending failed"
+            : "Reference: "+x.ref
+        )+
         "</small>";
 
+
     $("list").appendChild(d);
+
 }
 
 
@@ -170,36 +231,70 @@ $("send").onclick=async()=>{
 
     const r=rec();
 
-    if(!r.length)
-        return $("status").textContent=
-        "Add recipients first.";
 
-    if(r.length>25)
-        return $("status").textContent=
-        "Maximum 25 recipients.";
+    if(!r.length){
 
-    for(const [id,text] of [
-        ["name","Enter sender name."],
-        ["gmail","Enter Gmail address."],
-        ["pass","Enter Gmail App Password."],
-        ["sub","Enter subject."],
-        ["msg","Enter message."]
-    ]){
-        if(!$(`${id}`).value.trim())
-            return $("status").textContent=text;
+        $("status").textContent=
+            "Add recipients first.";
+
+        return;
+
     }
 
-    if(!token())
-        return $("status").textContent=
-        "Complete Spam Protection verification first.";
+
+    if(r.length>25){
+
+        $("status").textContent=
+            "Maximum 25 recipients.";
+
+        return;
+
+    }
+
+
+    for(
+        const [id,text] of [
+            ["name","Enter sender name."],
+            ["gmail","Enter Gmail address."],
+            ["pass","Enter Gmail App Password."],
+            ["sub","Enter subject."],
+            ["msg","Enter message."]
+        ]
+    ){
+
+        if(!$(`${id}`).value.trim()){
+
+            $("status").textContent=text;
+
+            return;
+
+        }
+
+    }
+
+
+    if(!token()){
+
+        $("status").textContent=
+            "Complete Spam Protection verification first.";
+
+        return;
+
+    }
+
 
     $("send").disabled=true;
+
     $("status").textContent="Sending...";
 
     $("sent").textContent=0;
+
     $("failed").textContent=0;
+
     $("progress").style.width="0%";
+
     $("list").innerHTML="";
+
 
     try{
 
@@ -207,41 +302,58 @@ $("send").onclick=async()=>{
             "/api/send",
             {
                 method:"POST",
+
                 headers:{
-                    "Content-Type":"application/json"
+                    "Content-Type":
+                    "application/json"
                 },
+
                 body:JSON.stringify({
 
-                    sender_name:$("name").value,
+                    sender_name:
+                    $("name").value,
 
-                    gmail:$("gmail").value,
+                    gmail:
+                    $("gmail").value,
 
-                    app_password:$("pass").value,
+                    app_password:
+                    $("pass").value,
 
-                    subject:$("sub").value,
+                    subject:
+                    $("sub").value,
 
-                    message:$("msg").value,
+                    message:
+                    $("msg").value,
 
-                    recipients:r.join("\n"),
+                    recipients:
+                    r.join("\n"),
 
-                    turnstile_token:token()
+                    turnstile_token:
+                    token()
 
                 })
             }
         );
 
+
         const d=await res.json();
+
 
         if(!res.ok){
 
             $("status").textContent=
-                d.error||"Sending failed.";
+                d.error||
+                "Sending failed.";
 
             return;
+
         }
 
+
         $("sent").textContent=d.sent;
+
         $("failed").textContent=d.failed;
+
 
         $("progress").style.width=
             Math.round(
@@ -249,16 +361,20 @@ $("send").onclick=async()=>{
                 d.total*100
             )+"%";
 
+
         d.sent_emails.forEach(
             x=>row(x,false)
         );
+
 
         d.failed_emails.forEach(
             x=>row(x,true)
         );
 
+
         $("status").textContent=
             `Completed: ${d.sent} sent, ${d.failed} failed.`;
+
 
         alert(
             `Sending completed.\n\n`+
@@ -266,8 +382,10 @@ $("send").onclick=async()=>{
             `Failed: ${d.failed}`
         );
 
+
         if(window.turnstile)
             turnstile.reset();
+
 
     }catch(e){
 
