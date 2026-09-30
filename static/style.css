@@ -2,13 +2,11 @@
     box-sizing:border-box;
 }
 
-
 html,
 body{
     margin:0;
     min-height:100%;
 }
-
 
 body{
     background:
@@ -28,40 +26,28 @@ body{
 }
 
 
-/* =====================================
-   HEADER
-===================================== */
+/* HEADER */
 
 header{
     width:1170px;
     max-width:calc(100% - 40px);
-
     margin:0 auto;
-
     height:92px;
 
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
 }
 
-
 .top-brand{
     display:flex;
-
     align-items:center;
-
     gap:10px;
 }
 
-
 .top-brand strong{
     font-size:36px;
-
     font-weight:700;
-
     letter-spacing:-1.5px;
 
     background:
@@ -72,275 +58,168 @@ header{
         );
 
     -webkit-background-clip:text;
-
     background-clip:text;
-
     color:transparent;
 }
-
 
 .shield{
     width:34px;
     height:38px;
-
     color:#397ff5;
-
     font-size:38px;
-
     line-height:38px;
-
-    transform:rotate(180deg);
 }
-
 
 .logout{
     text-decoration:none;
-
     color:#ff4141;
 
     border:1px solid #ffcaca;
-
     background:#fff;
 
     border-radius:8px;
-
     padding:8px 15px;
 
     font-size:13px;
-
     font-weight:600;
-
-    box-shadow:
-        0 2px 6px rgba(
-            0,
-            0,
-            0,
-            .04
-        );
 }
 
 
-.logout:hover{
-    background:#fff8f8;
-}
-
-
-/* =====================================
-   MAIN
-===================================== */
+/* MAIN */
 
 main{
     width:1118px;
     max-width:calc(100% - 40px);
-
     margin:10px auto 40px;
 }
 
-
 .page-title{
     display:flex;
-
     align-items:center;
-
     gap:8px;
 
     font-size:24px;
-
     margin-bottom:26px;
 }
 
-
-.page-title span{
-    font-size:27px;
-
-    color:#111827;
-}
-
-
 .dashboard{
     display:grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
-
+    grid-template-columns:1fr 1fr;
     gap:24px;
-
     align-items:start;
 }
 
 
-/* =====================================
-   CARD
-===================================== */
+/* CARD */
 
 .card{
     background:#fff;
-
     border-radius:12px;
 
     box-shadow:
         0 5px 14px
-        rgba(
-            30,
-            50,
-            90,
-            .09
-        );
+        rgba(30,50,90,.09);
 
     border:1px solid #edf0f5;
 }
 
-
 .compose{
     padding:32px;
-
     min-height:738px;
 }
 
-
 .right-column{
     display:flex;
-
     flex-direction:column;
-
     gap:24px;
 }
 
-
 .recipients-card{
     padding:28px 32px 32px;
-
     min-height:265px;
 }
 
-
 .progress-card{
     padding:32px;
-
     min-height:430px;
 }
 
 
-/* =====================================
-   TITLES
-===================================== */
+/* TITLES */
 
 .card-title{
     display:flex;
-
     align-items:center;
-
     gap:6px;
 
     font-size:19px;
-
     color:#141b2d;
 }
-
 
 .card-title > span{
     font-size:20px;
 }
 
-
 .recipients-title{
     justify-content:space-between;
 }
 
-
 .recipients-title > div{
     display:flex;
-
     align-items:center;
-
     gap:6px;
 }
 
-
 .found{
     background:#edf5ff;
-
     color:#397ff5;
 
     padding:6px 10px;
-
     border-radius:20px;
 
     font-size:11px;
-
     font-weight:600;
 }
 
 
-/* =====================================
-   FORM
-===================================== */
+/* FORM */
 
 .form-grid{
     display:grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
-
+    grid-template-columns:1fr 1fr;
     gap:0 16px;
-
-    margin-top:3px;
 }
-
 
 label{
     display:block;
-
     margin-top:10px;
-
     margin-bottom:8px;
 
     font-size:13px;
-
     font-weight:600;
-
     color:#182033;
 }
-
 
 input,
 textarea{
     width:100%;
 
     border:1px solid #dbe2ee;
-
     border-radius:7px;
 
     background:#fff;
-
     color:#172033;
 
     outline:none;
 
     font-family:inherit;
-
     font-size:14px;
-
-    transition:
-        border .15s,
-        box-shadow .15s;
 }
-
 
 input{
     height:47px;
-
     padding:0 14px;
 }
-
-
-input::placeholder,
-textarea::placeholder{
-    color:#8c929d;
-}
-
 
 input:focus,
 textarea:focus{
@@ -348,106 +227,73 @@ textarea:focus{
 
     box-shadow:
         0 0 0 3px
-        rgba(
-            72,
-            128,
-            241,
-            .10
-        );
+        rgba(72,128,241,.10);
 }
-
 
 .message-label{
     margin-top:22px;
 }
 
-
 .message{
     height:293px;
-
     min-height:293px;
-
     padding:14px;
-
     resize:vertical;
 }
-
 
 .password-box{
     position:relative;
 }
 
-
 .password-box input{
     padding-right:44px;
 }
-
 
 .password-box button{
     position:absolute;
 
     right:8px;
-
     top:50%;
 
     transform:translateY(-50%);
 
     width:30px;
-
     height:30px;
 
     margin:0;
-
     padding:0;
 
     border:0;
-
     background:transparent;
 
     color:#74829a;
-
     cursor:pointer;
 }
 
 
-.password-box button:hover{
-    color:#397ff5;
-}
-
-
-/* =====================================
-   TURNSTILE
-===================================== */
+/* CLOUDFLARE */
 
 .turnstile-area{
     margin-top:26px;
-
     min-height:70px;
 
     display:flex;
-
     align-items:center;
 }
 
 
-/* =====================================
-   RECIPIENTS
-===================================== */
+/* RECIPIENTS */
 
 .recipient-help{
     color:#65728a;
-
     font-size:12px;
 
     margin-top:0;
-
     margin-bottom:11px;
 }
 
-
 .recipient-input{
     height:150px;
-
     min-height:150px;
 
     padding:14px;
@@ -463,80 +309,58 @@ textarea:focus{
 }
 
 
-/* =====================================
-   STATS
-===================================== */
+/* PROGRESS */
 
 .stats{
     display:grid;
 
-    grid-template-columns:
-        1fr
-        1fr;
+    grid-template-columns:1fr 1fr;
 
     gap:16px;
 
     margin-top:10px;
 }
 
-
 .stat{
     height:100px;
 
     border:1px solid #dce3ee;
-
     border-radius:8px;
 
     display:flex;
-
     flex-direction:column;
 
     align-items:center;
-
     justify-content:center;
 }
 
-
 .stat span{
     color:#66758e;
-
     font-size:12px;
-
     font-weight:700;
 
     margin-bottom:9px;
 }
 
-
 .stat strong{
     font-size:28px;
-
     color:#397ff5;
 }
-
 
 .sent-stat strong{
     color:#09af7a;
 }
 
-
 .failed-stat strong{
     color:#f04444;
 }
-
 
 .remaining-stat strong{
     color:#f39a00;
 }
 
-
-/* =====================================
-   PROGRESS
-===================================== */
-
 .progress-track{
     width:100%;
-
     height:8px;
 
     margin-top:24px;
@@ -548,10 +372,8 @@ textarea:focus{
     overflow:hidden;
 }
 
-
 .progress-bar{
     width:0;
-
     height:100%;
 
     background:
@@ -567,33 +389,39 @@ textarea:focus{
         width .25s ease;
 }
 
-
 .send-status{
     text-align:center;
 
     margin-top:18px;
 
     font-size:14px;
-
     color:#263149;
 
     font-weight:600;
 }
 
+.batch-status{
+    min-height:20px;
 
-/* =====================================
-   SEND BUTTON
-===================================== */
+    text-align:center;
+
+    margin-top:7px;
+
+    color:#65728a;
+
+    font-size:12px;
+}
+
+
+/* SEND */
 
 .send-button{
     width:100%;
-
     height:45px;
 
-    margin-top:27px;
+    margin-top:20px;
 
     border:0;
-
     border-radius:7px;
 
     background:
@@ -608,95 +436,25 @@ textarea:focus{
     font-family:inherit;
 
     font-size:15px;
-
     font-weight:700;
 
     cursor:pointer;
-
-    box-shadow:
-        0 3px 7px
-        rgba(
-            0,
-            170,
-            120,
-            .15
-        );
 }
-
-
-.send-button:hover{
-    filter:brightness(.97);
-}
-
 
 .send-button:disabled{
     opacity:.55;
-
     cursor:not-allowed;
 }
 
 
-/* =====================================
-   LIVE MAIL ROW
-===================================== */
-
-.mail-row{
-    width:100%;
-
-    margin-top:8px;
-
-    padding:9px 12px;
-
-    border-radius:7px;
-
-    display:flex;
-
-    align-items:center;
-
-    gap:8px;
-
-    font-size:12px;
-
-    background:#f5f9ff;
-
-    border:1px solid #e5edf9;
-}
-
-
-.mail-success{
-    color:#07855e;
-}
-
-
-.mail-failed{
-    color:#e04444;
-
-    background:#fff6f6;
-
-    border-color:#ffe0e0;
-}
-
-
-.mail-icon{
-    width:18px;
-
-    font-weight:700;
-}
-
-
-/* =====================================
-   LOGIN
-===================================== */
+/* LOGIN */
 
 .login-main{
     width:430px;
-
-    max-width:
-        calc(100% - 30px);
+    max-width:calc(100% - 30px);
 
     margin:110px auto;
 }
-
 
 .login-card{
     background:#fff;
@@ -707,25 +465,16 @@ textarea:focus{
 
     box-shadow:
         0 5px 20px
-        rgba(
-            30,
-            50,
-            90,
-            .10
-        );
+        rgba(30,50,90,.10);
 }
-
 
 .login-logo{
     display:flex;
-
     align-items:center;
-
     gap:10px;
 
     margin-bottom:28px;
 }
-
 
 .login-logo strong{
     display:block;
@@ -740,100 +489,75 @@ textarea:focus{
         );
 
     -webkit-background-clip:text;
-
     background-clip:text;
 
     color:transparent;
 }
 
-
 .login-logo small{
     display:block;
-
     color:#7b8494;
-
     margin-top:3px;
 }
 
-
 .shield-big{
     font-size:38px;
-
     color:#397ff5;
 }
 
-
 .login-card h2{
     margin:0 0 15px;
-
     font-size:20px;
 }
 
-
 .login-card button{
     width:100%;
-
     height:44px;
 
     margin-top:18px;
 
     border:0;
-
     border-radius:7px;
 
     background:#397ff5;
-
     color:#fff;
 
     font-family:inherit;
-
     font-weight:600;
 
     cursor:pointer;
 }
 
-
 .error-text{
     color:#e04444;
-
     font-size:13px;
 }
 
 
-/* =====================================
-   RESPONSIVE
-===================================== */
+/* RESPONSIVE */
 
 @media(max-width:900px){
 
     header{
         width:auto;
-
-        max-width:
-            calc(100% - 24px);
+        max-width:calc(100% - 24px);
     }
-
 
     .top-brand strong{
         font-size:25px;
     }
 
-
     main{
-        max-width:
-            calc(100% - 24px);
+        max-width:calc(100% - 24px);
     }
-
 
     .dashboard{
         grid-template-columns:1fr;
     }
 
-
     .compose{
         min-height:auto;
     }
-
 }
 
 
@@ -843,28 +567,13 @@ textarea:focus{
         height:76px;
     }
 
-
-    .logout{
-        padding:7px 10px;
-
-        font-size:11px;
-    }
-
-
     .top-brand strong{
         font-size:20px;
     }
 
-
-    .page-title{
-        font-size:20px;
-    }
-
-
     .form-grid{
         grid-template-columns:1fr;
     }
-
 
     .compose,
     .recipients-card,
@@ -872,11 +581,8 @@ textarea:focus{
         padding:20px;
     }
 
-
     .message{
         min-height:240px;
-
         height:240px;
     }
-
 }
