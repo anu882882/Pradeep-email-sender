@@ -153,30 +153,6 @@ button:disabled{
 }
 
 
-.protection{
-    margin-top:18px;
-    padding:14px;
-    background:#f6f6f6;
-    border-radius:8px
-}
-
-
-.protection h3{
-    margin:0 0 12px
-}
-
-
-.protection div{
-    margin:6px 0
-}
-
-
-#protectMsg{
-    color:#666;
-    font-size:12px
-}
-
-
 .stats{
     display:grid;
     grid-template-columns:repeat(3,1fr);
