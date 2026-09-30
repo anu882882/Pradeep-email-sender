@@ -1,0 +1,93 @@
+<!doctype html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>Unsubscribe</title>
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<main class="login-main">
+
+
+<section class="card login-card">
+
+
+<div class="login-brand">
+
+<strong>✉ Secure Mail Console</strong>
+
+<small>Subscription Preferences</small>
+
+</div>
+
+
+{% if email %}
+
+<h2>Unsubscribe</h2>
+
+<p>
+
+You requested to stop receiving
+emails sent to:
+
+</p>
+
+
+<p>
+<strong>{{ email }}</strong>
+</p>
+
+
+<form
+method="post"
+action="/unsubscribe/confirm">
+
+<input
+type="hidden"
+name="email"
+value="{{ email }}">
+
+
+<button type="submit">
+Unsubscribe
+</button>
+
+</form>
+
+
+{% else %}
+
+<h2>Unsubscribe</h2>
+
+<p>
+The unsubscribe address is missing or invalid.
+</p>
+
+{% endif %}
+
+
+</section>
+
+
+</main>
+
+
+</body>
+
+</html>
