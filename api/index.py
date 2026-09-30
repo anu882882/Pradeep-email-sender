@@ -1,16 +1,14 @@
-import os,re,ssl,smtplib,secrets,json,urllib.request,urllib.parse
+import os,re,ssl,smtplib,secrets,time
 from flask import Flask,render_template,request,jsonify,session,redirect
 from functools import wraps
 from email.mime.text import MIMEText
 
 app=Flask(__name__,template_folder="../templates",static_folder="../static")
 app.secret_key=os.getenv("SESSION_SECRET","change-this-secret")
-
 LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
-TS_SECRET=os.getenv("TURNSTILE_SECRET_KEY","")
-TS_SITE=os.getenv("TURNSTILE_SITE_KEY","")
 
 ER=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+COOLDOWN=10
 
 def valid(x):
     return bool(ER.fullmatch(str(x).strip()))
@@ -28,26 +26,22 @@ def rec(x):
         if i.strip()
     ))
 
-def verify(token):
-    if not TS_SECRET or not token:
-        return False
-    try:
-        data=urllib.parse.urlencode({
-            "secret":TS_SECRET,
-            "response":token
-        }).encode()
+def safe_message(subject,msg):
+    text=subject+" "+msg
 
-        req=urllib.request.Request(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,
-            method="POST"
-        )
+    if re.search(r"<\s*(script|iframe|object|embed)\b",text,re.I):
+        return False,"Unsafe HTML detected."
 
-        with urllib.request.urlopen(req,timeout=10) as r:
-            return json.loads(r.read()).get("success",False)
+    if re.search(r"javascript\s*:",text,re.I):
+        return False,"Unsafe content detected."
 
-    except:
-        return False
+    if len(re.findall(r"https?://",text,re.I))>5:
+        return False,"Too many links in message."
+
+    if re.search(r"(.)\1{10,}",text):
+        return False,"Repeated characters detected."
+
+    return True,"OK"
 
 @app.route("/login",methods=["GET","POST"])
 def login():
@@ -56,6 +50,7 @@ def login():
 
         if request.form.get("password","")==LOGIN:
             session["login"]=1
+            session["last_send"]=0
             return redirect("/")
 
         return render_template(
@@ -75,15 +70,19 @@ def logout():
 @app.route("/")
 @auth
 def home():
-    return render_template(
-        "index.html",
-        turnstile_sitekey=TS_SITE
-    )
+    return render_template("index.html")
 
 
 @app.route("/api/send",methods=["POST"])
 @auth
 def send():
+
+    now=time.time()
+
+    if now-session.get("last_send",0)<COOLDOWN:
+        return jsonify(
+            error=f"Please wait {COOLDOWN} seconds before sending again."
+        ),429
 
     d=request.get_json() or {}
 
@@ -93,12 +92,6 @@ def send():
     sub=str(d.get("subject","")).strip()
     msg=str(d.get("message",""))
     to=rec(d.get("recipients",""))
-    token=str(d.get("turnstile_token","")).strip()
-
-    if not verify(token):
-        return jsonify(
-            error="Complete Spam Protection verification first."
-        ),403
 
     if not sender:
         return jsonify(error="Sender name required."),400
@@ -129,6 +122,11 @@ def send():
             invalid=bad
         ),400
 
+    ok,reason=safe_message(sub,msg)
+
+    if not ok:
+        return jsonify(error=reason),400
+
     sent=[]
     failed=[]
 
@@ -142,6 +140,8 @@ def send():
         ) as smtp:
 
             smtp.login(gmail,pwd)
+
+            session["last_send"]=time.time()
 
             for email in to:
 
@@ -175,14 +175,11 @@ def send():
                     )
 
                     if refused:
-
                         failed.append({
                             "email":email,
                             "ref":reference
                         })
-
                     else:
-
                         sent.append({
                             "email":email,
                             "ref":reference
