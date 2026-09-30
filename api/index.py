@@ -1,13 +1,15 @@
-import os,re,ssl,smtplib,json,urllib.request,urllib.parse
+import os,re,ssl,smtplib,secrets,json,urllib.request,urllib.parse
 from flask import Flask,render_template,request,jsonify,session,redirect
 from functools import wraps
 from email.mime.text import MIMEText
 
 app=Flask(__name__,template_folder="../templates",static_folder="../static")
 app.secret_key=os.getenv("SESSION_SECRET","change-this-secret")
+
 LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
 TS_SECRET=os.getenv("TURNSTILE_SECRET_KEY","")
 TS_SITE=os.getenv("TURNSTILE_SITE_KEY","")
+
 ER=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 def valid(x):
@@ -34,28 +36,41 @@ def verify(token):
             "secret":TS_SECRET,
             "response":token
         }).encode()
+
         req=urllib.request.Request(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,method="POST"
+            data=data,
+            method="POST"
         )
+
         with urllib.request.urlopen(req,timeout=10) as r:
             return json.loads(r.read()).get("success",False)
+
     except:
         return False
 
 @app.route("/login",methods=["GET","POST"])
 def login():
+
     if request.method=="POST":
+
         if request.form.get("password","")==LOGIN:
             session["login"]=1
             return redirect("/")
-        return render_template("login.html",error="Wrong password.")
+
+        return render_template(
+            "login.html",
+            error="Wrong password."
+        )
+
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
+
 
 @app.route("/")
 @auth
@@ -65,9 +80,11 @@ def home():
         turnstile_sitekey=TS_SITE
     )
 
+
 @app.route("/api/send",methods=["POST"])
 @auth
 def send():
+
     d=request.get_json() or {}
 
     sender=str(d.get("sender_name","")).strip()
@@ -85,20 +102,27 @@ def send():
 
     if not sender:
         return jsonify(error="Sender name required."),400
+
     if not valid(gmail):
         return jsonify(error="Valid Gmail address required."),400
+
     if not pwd:
         return jsonify(error="Gmail App Password required."),400
+
     if not sub:
         return jsonify(error="Subject required."),400
+
     if not msg.strip():
         return jsonify(error="Message required."),400
+
     if not to:
         return jsonify(error="Add recipients first."),400
+
     if len(to)>25:
         return jsonify(error="Maximum 25 recipients."),400
 
     bad=[x for x in to if not valid(x)]
+
     if bad:
         return jsonify(
             error="Invalid recipient email.",
@@ -109,8 +133,10 @@ def send():
     failed=[]
 
     try:
+
         with smtplib.SMTP_SSL(
-            "smtp.gmail.com",465,
+            "smtp.gmail.com",
+            465,
             context=ssl.create_default_context(),
             timeout=30
         ) as smtp:
@@ -118,10 +144,18 @@ def send():
             smtp.login(gmail,pwd)
 
             for email in to:
+
+                reference="#REF-"+secrets.token_hex(4).upper()
+
                 try:
+
                     text=msg.replace(
                         "{name}",
                         email.split("@")[0]
+                    )
+
+                    text=text.rstrip()+(
+                        f"\n\nReference: {reference}"
                     )
 
                     mail=MIMEText(
@@ -141,17 +175,24 @@ def send():
                     )
 
                     if refused:
+
                         failed.append({
-                            "email":email
+                            "email":email,
+                            "ref":reference
                         })
+
                     else:
+
                         sent.append({
-                            "email":email
+                            "email":email,
+                            "ref":reference
                         })
 
                 except Exception as e:
+
                     failed.append({
                         "email":email,
+                        "ref":reference,
                         "error":str(e)
                     })
 
@@ -165,14 +206,18 @@ def send():
         )
 
     except smtplib.SMTPAuthenticationError:
+
         return jsonify(
             error="Gmail authentication failed."
         ),401
 
     except Exception as e:
+
         return jsonify(error=str(e)),500
 
+
 if __name__=="__main__":
+
     app.run(
         host="0.0.0.0",
         port=int(os.getenv("PORT",5000))
