@@ -32,13 +32,13 @@ defer>
 
 <div class="top-brand">
 
-<div class="shield">♢</div>
-
-<div>
-
-<strong>Secure Mail Console</strong>
-
+<div class="shield">
+♢
 </div>
+
+<strong>
+Secure Mail Console
+</strong>
 
 </div>
 
@@ -61,7 +61,9 @@ href="/logout">
 
 <span>➤</span>
 
-<strong>Bulk Email Sender</strong>
+<strong>
+Bulk Email Sender
+</strong>
 
 </div>
 
@@ -69,9 +71,9 @@ href="/logout">
 <div class="dashboard">
 
 
-<!-- =================================
-     LEFT
-================================= -->
+<!-- ================================
+     COMPOSE
+================================ -->
 
 <section class="compose card">
 
@@ -80,7 +82,9 @@ href="/logout">
 
 <span>✎</span>
 
-<strong>Compose Message</strong>
+<strong>
+Compose Message
+</strong>
 
 </div>
 
@@ -131,9 +135,7 @@ placeholder="16-char app password">
 <button
 type="button"
 id="togglePassword">
-
 ◉
-
 </button>
 
 </div>
@@ -184,14 +186,12 @@ data-theme="light">
 </section>
 
 
-<!-- =================================
+<!-- ================================
      RIGHT
-================================= -->
+================================ -->
 
 <div class="right-column">
 
-
-<!-- RECIPIENTS -->
 
 <section class="card recipients-card">
 
@@ -202,7 +202,9 @@ data-theme="light">
 
 <span>♣</span>
 
-<strong>Recipients</strong>
+<strong>
+Recipients
+</strong>
 
 </div>
 
@@ -229,13 +231,16 @@ Paste emails (comma separated, new lines, or Excel copy)
 id="recipients"
 class="recipient-input"
 placeholder="recipient1@example.com
-recipient2@example.com"></textarea>
+recipient2@example.com
+recipient3@example.com"></textarea>
 
 
 </section>
 
 
-<!-- PROGRESS -->
+<!-- ================================
+     PROGRESS
+================================ -->
 
 <section class="card progress-card">
 
@@ -244,7 +249,9 @@ recipient2@example.com"></textarea>
 
 <span>◕</span>
 
-<strong>Progress Monitor</strong>
+<strong>
+Progress Monitor
+</strong>
 
 </div>
 
@@ -318,6 +325,13 @@ id="status">
 </div>
 
 
+<div
+class="batch-status"
+id="batchStatus">
+
+</div>
+
+
 <button
 id="send"
 class="send-button">
@@ -353,28 +367,22 @@ let sending = false;
    PASSWORD
 ===================================== */
 
-$("togglePassword").onclick = function(){
+$("togglePassword").onclick =
+function(){
 
     const input =
         $("pass");
 
-    if(
+    input.type =
         input.type === "password"
-    ){
-
-        input.type = "text";
-
-    }else{
-
-        input.type = "password";
-
-    }
+        ? "text"
+        : "password";
 
 };
 
 
 /* =====================================
-   RECIPIENT PARSER
+   RECIPIENTS
 ===================================== */
 
 function getRecipients(){
@@ -499,20 +507,20 @@ $("msg").addEventListener(
 
 function getTurnstileToken(){
 
-    const element =
+    const input =
         document.querySelector(
             '[name="cf-turnstile-response"]'
         );
 
-    return element
-        ? element.value
+    return input
+        ? input.value
         : "";
 
 }
 
 
 /* =====================================
-   DELAY
+   SLEEP
 ===================================== */
 
 function sleep(ms){
@@ -529,55 +537,7 @@ function sleep(ms){
 
 
 /* =====================================
-   ADD ROW
-===================================== */
-
-function addRecipient(
-    email,
-    success
-){
-
-    const row =
-        document.createElement(
-            "div"
-        );
-
-
-    row.className =
-        "mail-row " +
-        (
-            success
-            ? "mail-success"
-            : "mail-failed"
-        );
-
-
-    row.innerHTML =
-
-        `<span class="mail-icon">${
-            success ? "✓" : "×"
-        }</span>` +
-
-        `<span>${email}</span>`;
-
-
-    const list =
-        document.createElement(
-            "div"
-        );
-
-
-    /*
-     * Add to the top of progress area.
-     */
-
-    $("status").before(row);
-
-}
-
-
-/* =====================================
-   SEND
+   SEND ALL
 ===================================== */
 
 $("send").onclick =
@@ -678,6 +638,40 @@ async function(){
     }
 
 
+    /*
+     * IMPORTANT
+     *
+     * Take a complete snapshot BEFORE
+     * sending starts.
+     *
+     * Changing the UI afterwards will NOT
+     * change the active sending operation.
+     */
+
+    const sendSnapshot = {
+
+        sender_name:
+            $("name").value,
+
+        gmail:
+            $("gmail").value,
+
+        app_password:
+            $("pass").value,
+
+        subject:
+            $("sub").value,
+
+        message:
+            $("msg").value
+
+    };
+
+
+    const recipientsSnapshot =
+        [...all];
+
+
     sending = true;
 
     $("send").disabled =
@@ -691,25 +685,13 @@ async function(){
         "0";
 
     $("remaining").textContent =
-        all.length;
-
+        recipientsSnapshot.length;
 
     $("progress").style.width =
         "0%";
 
-
-    /*
-     * Clear previous live rows.
-     */
-
-    document
-        .querySelectorAll(
-            ".mail-row"
-        )
-        .forEach(
-            row =>
-            row.remove()
-        );
+    $("batchStatus").textContent =
+        "";
 
 
     let sentCount = 0;
@@ -720,190 +702,224 @@ async function(){
 
 
     /*
-     * ----------------------------------
-     * BATCH SIZE = 5
-     * ----------------------------------
+     * ==================================
+     * 5 EMAILS PER BATCH
+     * ==================================
      */
 
     for(
         let start = 0;
-        start < all.length;
+        start < recipientsSnapshot.length;
         start += 5
     ){
 
+
         const batch =
-            all.slice(
+            recipientsSnapshot.slice(
                 start,
                 start + 5
             );
 
 
+        const batchNumber =
+            Math.floor(start / 5) + 1;
+
+
+        const totalBatches =
+            Math.ceil(
+                recipientsSnapshot.length / 5
+            );
+
+
         $("status").textContent =
-            `● Sending ${start + 1}-${Math.min(
-                start + 5,
-                all.length
-            )} of ${all.length}`;
+            "● Sending...";
 
 
-        try{
+        $("batchStatus").textContent =
+            `Batch ${batchNumber} of ${totalBatches} — ${batch.length} emails`;
 
 
-            const response =
-                await fetch(
-
-                    "/api/send-batch",
-
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-
-                            "Content-Type":
-                            "application/json"
-
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                sender_name:
-                                    $("name").value,
-
-                                gmail:
-                                    $("gmail").value,
-
-                                app_password:
-                                    $("pass").value,
-
-                                subject:
-                                    $("sub").value,
-
-                                message:
-                                    $("msg").value,
-
-                                recipients:
-                                    batch,
-
-                                turnstile_token:
-                                    start === 0
-                                    ? token
-                                    : ""
-
-                            })
-
-                    }
-
-                );
+        let responseData = null;
 
 
-            const data =
-                await response.json();
+        /*
+         * Retry a temporary server failure.
+         *
+         * Credentials remain the SAME
+         * snapshot throughout the operation.
+         */
+
+        for(
+            let attempt = 1;
+            attempt <= 2;
+            attempt++
+        ){
+
+            try{
+
+                const response =
+                    await fetch(
+                        "/api/send-batch",
+                        {
+                            method:
+                                "POST",
+
+                            headers:{
+                                "Content-Type":
+                                "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    ...sendSnapshot,
+
+                                    recipients:
+                                        batch,
+
+                                    turnstile_token:
+                                        start === 0
+                                        ? token
+                                        : ""
+
+                                })
+                        }
+                    );
 
 
-            if(!response.ok){
-
-                $("status").textContent =
-                    data.error ||
-                    "Batch failed.";
-
-                break;
-
-            }
+                responseData =
+                    await response.json();
 
 
-            /*
-             * --------------------------------
-             * UPDATE IMMEDIATELY AFTER BATCH
-             * --------------------------------
-             */
-
-            for(
-                const item of data.sent
-            ){
-
-                sentCount++;
-
-                processed++;
-
-                addRecipient(
-                    item.email,
-                    true
-                );
-
-            }
+                if(response.ok){
+                    break;
+                }
 
 
-            for(
-                const item of data.failed
-            ){
+                /*
+                 * Authentication errors should not
+                 * be retried repeatedly.
+                 */
 
-                failedCount++;
+                if(response.status === 401){
 
-                processed++;
+                    $("status").textContent =
+                        "✕ Gmail authentication failed.";
 
-                addRecipient(
-                    item.email,
-                    false
-                );
+                    $("batchStatus").textContent =
+                        "Sending stopped. Check the Gmail App Password.";
+
+                    sending = false;
+
+                    $("send").disabled =
+                        false;
+
+                    return;
+
+                }
+
+
+                if(attempt < 2){
+
+                    await sleep(1500);
+
+                }
+
+            }catch(error){
+
+                if(attempt < 2){
+
+                    await sleep(1500);
+
+                }
 
             }
 
-
-            const remaining =
-                all.length -
-                processed;
+        }
 
 
-            $("sent").textContent =
-                sentCount;
-
-
-            $("failed").textContent =
-                failedCount;
-
-
-            $("remaining").textContent =
-                remaining;
-
-
-            $("progress").style.width =
-
-                Math.round(
-
-                    (
-                        processed /
-                        all.length
-                    ) * 100
-
-                ) + "%";
-
-
-            /*
-             * --------------------------------
-             * WAIT BETWEEN 5-MAIL BATCHES
-             * --------------------------------
-             */
-
-            if(
-                start + 5 < all.length
-            ){
-
-                $("status").textContent =
-                    `✓ ${processed} sent/processed — next batch starting...`;
-
-                await sleep(2500);
-
-            }
-
-
-        }catch(error){
+        if(
+            !responseData
+        ){
 
             $("status").textContent =
-                "Server connection failed.";
+                "✕ Server connection failed.";
 
             break;
+
+        }
+
+
+        if(
+            responseData.error
+        ){
+
+            $("status").textContent =
+                responseData.error;
+
+            break;
+
+        }
+
+
+        /*
+         * ==================================
+         * UPDATE PROGRESS IMMEDIATELY
+         * ==================================
+         */
+
+        sentCount +=
+            responseData.sent.length;
+
+
+        failedCount +=
+            responseData.failed.length;
+
+
+        processed =
+            sentCount +
+            failedCount;
+
+
+        $("sent").textContent =
+            sentCount;
+
+
+        $("failed").textContent =
+            failedCount;
+
+
+        $("remaining").textContent =
+            recipientsSnapshot.length -
+            processed;
+
+
+        $("progress").style.width =
+
+            Math.round(
+
+                (
+                    processed /
+                    recipientsSnapshot.length
+                ) * 100
+
+            ) + "%";
+
+
+        $("status").textContent =
+            `✓ ${processed} of ${recipientsSnapshot.length} processed`;
+
+
+        /*
+         * Wait before next 5.
+         */
+
+        if(
+            start + 5 <
+            recipientsSnapshot.length
+        ){
+
+            await sleep(2500);
 
         }
 
@@ -911,26 +927,27 @@ async function(){
 
 
     /*
-     * ----------------------------------
+     * ==================================
      * COMPLETE
-     * ----------------------------------
+     * ==================================
      */
 
     if(
-        sentCount + failedCount === all.length
+        processed ===
+        recipientsSnapshot.length
     ){
 
         $("status").textContent =
             `● Completed — ${sentCount} sent, ${failedCount} failed.`;
 
+        $("batchStatus").textContent =
+            "All batches completed.";
+
+        $("remaining").textContent =
+            "0";
+
         $("progress").style.width =
             "100%";
-
-        if(window.turnstile){
-
-            window.turnstile.reset();
-
-        }
 
     }
 
@@ -939,6 +956,13 @@ async function(){
 
     $("send").disabled =
         false;
+
+
+    if(window.turnstile){
+
+        window.turnstile.reset();
+
+    }
 
 };
 
