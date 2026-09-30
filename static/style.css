@@ -1,224 +1,298 @@
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box
+}
+
 
 body{
-margin:0;
-background:#fff;
-color:#222;
-font:14px Arial
+    margin:0;
+    background:#fff;
+    color:#222;
+    font:14px Arial,sans-serif
 }
+
 
 header{
-height:64px;
-border-bottom:1px solid #ddd;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 24px
+    height:64px;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px
 }
 
-.brand strong,.brand small{
-display:block
+
+.brand strong,
+.brand small{
+    display:block
 }
+
 
 .brand strong{
-font-size:17px
+    font-size:17px
 }
+
 
 .brand small{
-margin-top:3px;
-color:#777
+    margin-top:3px;
+    color:#777
 }
+
 
 header a{
-color:#222;
-text-decoration:none
+    color:#222;
+    text-decoration:none
 }
+
 
 main{
-max-width:1050px;
-margin:22px auto;
-padding:0 14px;
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:18px
+    max-width:1050px;
+    margin:22px auto;
+    padding:0 14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px
 }
+
 
 .card{
-border:1px solid #ddd;
-border-radius:10px;
-padding:18px;
-background:#fff
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:18px;
+    background:#fff
 }
+
 
 h2{
-margin:0 0 18px;
-font-size:18px
+    margin:0 0 18px;
+    font-size:18px
 }
+
 
 h3{
-margin:20px 0 10px;
-font-size:14px
+    margin:20px 0 10px;
+    font-size:14px
 }
+
 
 label{
-display:block;
-margin:12px 0 6px
+    display:block;
+    margin:12px 0 6px
 }
 
-input,textarea{
-width:100%;
-padding:10px;
-border:1px solid #bbb;
-border-radius:6px;
-background:#fff;
-color:#222;
-font:14px Arial
+
+input,
+textarea{
+    width:100%;
+    padding:10px;
+    border:1px solid #bbb;
+    border-radius:6px;
+    background:#fff;
+    color:#222;
+    font:14px Arial,sans-serif
 }
+
 
 textarea{
-min-height:150px;
-resize:vertical
+    min-height:150px;
+    resize:vertical
 }
+
 
 #msg{
-min-height:190px
+    min-height:190px
 }
+
 
 #recipients{
-min-height:220px
+    min-height:220px
 }
+
 
 button{
-width:100%;
-margin-top:16px;
-padding:11px;
-border:0;
-border-radius:6px;
-background:#222;
-color:#fff;
-cursor:pointer
+    width:100%;
+    margin-top:16px;
+    padding:11px;
+    border:0;
+    border-radius:6px;
+    background:#222;
+    color:#fff;
+    cursor:pointer
 }
+
 
 button:disabled{
-opacity:.5
+    opacity:.5;
+    cursor:not-allowed
 }
+
 
 #status{
-min-height:18px
+    min-height:18px
 }
+
+
+.hint{
+    margin-top:8px;
+    color:#777;
+    font-size:12px;
+    line-height:1.7
+}
+
+
+.hint code{
+    background:#f2f2f2;
+    padding:2px 5px;
+    border-radius:4px;
+    color:#333
+}
+
+
+.turnstile-wrap{
+    margin-top:16px;
+    min-height:65px
+}
+
 
 .protection{
-margin-top:18px;
-padding:14px;
-background:#f6f6f6;
-border-radius:8px
+    margin-top:18px;
+    padding:14px;
+    background:#f6f6f6;
+    border-radius:8px
 }
+
 
 .protection h3{
-margin:0 0 12px
+    margin:0 0 12px
 }
+
+
+.protection div{
+    margin:6px 0
+}
+
 
 #protectMsg{
-color:#666;
-font-size:12px
+    color:#666;
+    font-size:12px
 }
+
 
 .stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
-margin-top:15px
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-top:15px
 }
 
+
 .stats div{
-padding:12px;
-background:#f5f5f5;
-text-align:center
+    padding:12px;
+    background:#f5f5f5;
+    text-align:center
 }
+
 
 .stats strong,
 .stats span{
-display:block
+    display:block
 }
+
 
 .stats span{
-margin-top:4px;
-color:#777;
-font-size:12px
+    margin-top:4px;
+    color:#777;
+    font-size:12px
 }
+
 
 .progress{
-height:7px;
-margin-top:15px;
-background:#eee;
-border-radius:10px;
-overflow:hidden
+    height:7px;
+    margin-top:15px;
+    background:#eee;
+    border-radius:10px;
+    overflow:hidden
 }
+
 
 #progress{
-width:0;
-height:100%;
-background:#222;
-transition:.2s
+    width:0;
+    height:100%;
+    background:#222;
+    transition:.2s
 }
+
 
 #list{
-max-height:260px;
-overflow:auto
+    max-height:260px;
+    overflow:auto
 }
+
 
 .recipient-row{
-padding:9px 0;
-border-bottom:1px solid #eee;
-line-height:1.4
+    padding:9px 0;
+    border-bottom:1px solid #eee;
+    line-height:1.4
 }
+
 
 .recipient-row small{
-color:#777;
-font-size:11px
+    color:#777;
+    font-size:11px
 }
+
 
 .recipient-row.failed{
-color:#555
+    color:#555
 }
+
 
 .login-main{
-max-width:430px;
-display:block;
-margin:80px auto;
-padding:0 14px
+    max-width:430px;
+    display:block;
+    margin:80px auto;
+    padding:0 14px
 }
 
-.login-brand{
-margin-bottom:24px
+
+.login-card{
+    width:100%
 }
+
+
+.login-brand{
+    margin-bottom:24px
+}
+
 
 .login-brand strong,
 .login-brand small{
-display:block
+    display:block
 }
+
 
 .login-brand small{
-margin-top:4px;
-color:#777
+    margin-top:4px;
+    color:#777
 }
 
+
 .error-text{
-color:#555
+    color:#555
 }
+
 
 @media(max-width:750px){
 
-main{
-grid-template-columns:1fr
-}
+    main{
+        grid-template-columns:1fr
+    }
 
-header{
-padding:0 15px
-}
+    header{
+        padding:0 15px
+    }
 
-.login-main{
-margin-top:35px
-}
+    .login-main{
+        margin-top:35px
+    }
 
 }
