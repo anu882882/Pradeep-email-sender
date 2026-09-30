@@ -1,201 +1,627 @@
-import os,re,ssl,smtplib,secrets,time
-from flask import Flask,render_template,request,jsonify,session,redirect
+import os
+import re
+import ssl
+import smtplib
+import secrets
+import time
+import json
+import urllib.request
+import urllib.parse
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    session,
+    redirect
+)
+
 from functools import wraps
 from email.mime.text import MIMEText
 
-app=Flask(__name__,template_folder="../templates",static_folder="../static")
-app.secret_key=os.getenv("SESSION_SECRET","change-this-secret")
-LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
 
-ER=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-COOLDOWN=10
+app = Flask(
+    __name__,
+    template_folder="../templates",
+    static_folder="../static"
+)
 
-def valid(x):
-    return bool(ER.fullmatch(str(x).strip()))
+app.secret_key = os.getenv(
+    "SESSION_SECRET",
+    "change-this-secret"
+)
 
-def auth(f):
-    @wraps(f)
-    def w(*a,**k):
-        return f(*a,**k) if session.get("login") else redirect("/login")
-    return w
+LOGIN = os.getenv(
+    "APP_LOGIN_PASSWORD",
+    "change-login-password"
+)
 
-def rec(x):
-    return list(dict.fromkeys(
-        i.strip().lower()
-        for i in re.split(r"[\s,;]+",str(x))
-        if i.strip()
-    ))
+TURNSTILE_SITE_KEY = os.getenv(
+    "TURNSTILE_SITE_KEY",
+    ""
+)
 
-def safe_message(subject,msg):
-    text=subject+" "+msg
+TURNSTILE_SECRET_KEY = os.getenv(
+    "TURNSTILE_SECRET_KEY",
+    ""
+)
 
-    if re.search(r"<\s*(script|iframe|object|embed)\b",text,re.I):
-        return False,"Unsafe HTML detected."
+BASE_URL = os.getenv(
+    "APP_BASE_URL",
+    "https://rakshakmxmx.co.in"
+).rstrip("/")
 
-    if re.search(r"javascript\s*:",text,re.I):
-        return False,"Unsafe content detected."
+COOLDOWN = 10
+MAX_RECIPIENTS = 25
 
-    if len(re.findall(r"https?://",text,re.I))>5:
-        return False,"Too many links in message."
 
-    if re.search(r"(.)\1{10,}",text):
-        return False,"Repeated characters detected."
+EMAIL_PATTERN = re.compile(
+    r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+)
 
-    return True,"OK"
 
-@app.route("/login",methods=["GET","POST"])
+def valid_email(email):
+    return bool(
+        EMAIL_PATTERN.fullmatch(
+            str(email).strip()
+        )
+    )
+
+
+def auth_required(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+
+        if session.get("login"):
+            return func(*args, **kwargs)
+
+        return redirect("/login")
+
+    return wrapper
+
+
+def parse_recipients(value):
+
+    return list(
+        dict.fromkeys(
+            item.strip().lower()
+            for item in re.split(
+                r"[\s,;]+",
+                str(value)
+            )
+            if item.strip()
+        )
+    )
+
+
+# ---------------------------------------------------------
+# SPINTAX
+# Example:
+# {Hi|Hello|Hey} {there|friend}
+# ---------------------------------------------------------
+
+SPINTAX_PATTERN = re.compile(
+    r"\{([^{}]+)\}"
+)
+
+
+def spintax(text):
+
+    def replace(match):
+
+        choices = [
+            item.strip()
+            for item in match.group(1).split("|")
+            if item.strip()
+        ]
+
+        if not choices:
+            return match.group(0)
+
+        return secrets.choice(choices)
+
+    previous = None
+    current = str(text)
+
+    # Supports nested/simple multiple spintax blocks
+    for _ in range(20):
+
+        if current == previous:
+            break
+
+        previous = current
+
+        if not SPINTAX_PATTERN.search(current):
+            break
+
+        current = SPINTAX_PATTERN.sub(
+            replace,
+            current
+        )
+
+    return current
+
+
+# ---------------------------------------------------------
+# BASIC MESSAGE SAFETY
+# ---------------------------------------------------------
+
+def safe_message(subject, message):
+
+    text = subject + " " + message
+
+    if re.search(
+        r"<\s*(script|iframe|object|embed)\b",
+        text,
+        re.I
+    ):
+        return False, "Unsafe HTML detected."
+
+    if re.search(
+        r"javascript\s*:",
+        text,
+        re.I
+    ):
+        return False, "Unsafe content detected."
+
+    links = re.findall(
+        r"https?://",
+        text,
+        re.I
+    )
+
+    if len(links) > 5:
+        return False, "Too many links in message."
+
+    if re.search(
+        r"(.)\1{10,}",
+        text
+    ):
+        return False, "Repeated characters detected."
+
+    return True, "OK"
+
+
+# ---------------------------------------------------------
+# CLOUDFLARE TURNSTILE
+# ---------------------------------------------------------
+
+def verify_turnstile(token, remote_ip):
+
+    if not TURNSTILE_SECRET_KEY:
+        return False, "Turnstile secret key is not configured."
+
+    if not token:
+        return False, "Please complete the Cloudflare verification."
+
+    payload = urllib.parse.urlencode({
+        "secret": TURNSTILE_SECRET_KEY,
+        "response": token,
+        "remoteip": remote_ip or ""
+    }).encode()
+
+    try:
+
+        req = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=payload,
+            headers={
+                "Content-Type":
+                "application/x-www-form-urlencoded"
+            },
+            method="POST"
+        )
+
+        with urllib.request.urlopen(
+            req,
+            timeout=10
+        ) as response:
+
+            result = json.loads(
+                response.read().decode("utf-8")
+            )
+
+        if result.get("success"):
+            return True, "OK"
+
+        return False, "Cloudflare verification failed."
+
+    except Exception:
+
+        return False, "Cloudflare verification could not be completed."
+
+
+# ---------------------------------------------------------
+# LOGIN
+# ---------------------------------------------------------
+
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
 
-    if request.method=="POST":
+    if request.method == "POST":
 
-        if request.form.get("password","")==LOGIN:
-            session["login"]=1
-            session["last_send"]=0
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        if secrets.compare_digest(
+            password,
+            LOGIN
+        ):
+
+            session.clear()
+            session["login"] = 1
+            session["last_send"] = 0
+
             return redirect("/")
 
         return render_template(
             "login.html",
-            error="Wrong password."
+            error="Wrong password.",
+            turnstile_site_key=TURNSTILE_SITE_KEY
         )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        error=None,
+        turnstile_site_key=TURNSTILE_SITE_KEY
+    )
 
 
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect("/login")
 
 
+# ---------------------------------------------------------
+# HOME
+# ---------------------------------------------------------
+
 @app.route("/")
-@auth
+@auth_required
 def home():
-    return render_template("index.html")
+
+    return render_template(
+        "index.html",
+        turnstile_site_key=TURNSTILE_SITE_KEY,
+        unsubscribe_base=BASE_URL
+    )
 
 
-@app.route("/api/send",methods=["POST"])
-@auth
+# ---------------------------------------------------------
+# UNSUBSCRIBE PAGE
+# ---------------------------------------------------------
+
+@app.route("/unsubscribe")
+def unsubscribe():
+
+    email = request.args.get(
+        "email",
+        ""
+    ).strip().lower()
+
+    if email and valid_email(email):
+
+        return render_template(
+            "unsubscribe.html",
+            email=email
+        )
+
+    return render_template(
+        "unsubscribe.html",
+        email=""
+    )
+
+
+# ---------------------------------------------------------
+# SEND
+# ---------------------------------------------------------
+
+@app.route(
+    "/api/send",
+    methods=["POST"]
+)
+@auth_required
 def send():
 
-    now=time.time()
+    now = time.time()
 
-    if now-session.get("last_send",0)<COOLDOWN:
+    last_send = session.get(
+        "last_send",
+        0
+    )
+
+    if now - last_send < COOLDOWN:
+
+        wait = int(
+            COOLDOWN -
+            (now - last_send)
+        ) + 1
+
         return jsonify(
-            error=f"Please wait {COOLDOWN} seconds before sending again."
-        ),429
+            error=f"Please wait {wait} seconds before sending again."
+        ), 429
 
-    d=request.get_json() or {}
+    data = request.get_json() or {}
 
-    sender=str(d.get("sender_name","")).strip()
-    gmail=str(d.get("gmail","")).strip().lower()
-    pwd="".join(str(d.get("app_password","")).split())
-    sub=str(d.get("subject","")).strip()
-    msg=str(d.get("message",""))
-    to=rec(d.get("recipients",""))
+    # ---------------------------------------------
+    # CLOUDFLARE
+    # ---------------------------------------------
+
+    turnstile_token = str(
+        data.get(
+            "turnstile_token",
+            ""
+        )
+    ).strip()
+
+    verified, reason = verify_turnstile(
+        turnstile_token,
+        request.headers.get(
+            "CF-Connecting-IP",
+            request.remote_addr
+        )
+    )
+
+    if not verified:
+
+        return jsonify(
+            error=reason
+        ), 403
+
+    # ---------------------------------------------
+    # INPUTS
+    # ---------------------------------------------
+
+    sender = str(
+        data.get(
+            "sender_name",
+            ""
+        )
+    ).strip()
+
+    gmail = str(
+        data.get(
+            "gmail",
+            ""
+        )
+    ).strip().lower()
+
+    password = "".join(
+        str(
+            data.get(
+                "app_password",
+                ""
+            )
+        ).split()
+    )
+
+    subject = str(
+        data.get(
+            "subject",
+            ""
+        )
+    ).strip()
+
+    message = str(
+        data.get(
+            "message",
+            ""
+        )
+    )
+
+    recipients = parse_recipients(
+        data.get(
+            "recipients",
+            ""
+        )
+    )
+
+    # ---------------------------------------------
+    # VALIDATION
+    # ---------------------------------------------
 
     if not sender:
-        return jsonify(error="Sender name required."),400
 
-    if not valid(gmail):
-        return jsonify(error="Valid Gmail address required."),400
+        return jsonify(
+            error="Sender name required."
+        ), 400
 
-    if not pwd:
-        return jsonify(error="Gmail App Password required."),400
+    if not valid_email(gmail):
 
-    if not sub:
-        return jsonify(error="Subject required."),400
+        return jsonify(
+            error="Valid Gmail address required."
+        ), 400
 
-    if not msg.strip():
-        return jsonify(error="Message required."),400
+    if not password:
 
-    if not to:
-        return jsonify(error="Add recipients first."),400
+        return jsonify(
+            error="Gmail App Password required."
+        ), 400
 
-    if len(to)>25:
-        return jsonify(error="Maximum 25 recipients."),400
+    if not subject:
 
-    bad=[x for x in to if not valid(x)]
+        return jsonify(
+            error="Subject required."
+        ), 400
 
-    if bad:
+    if not message.strip():
+
+        return jsonify(
+            error="Message required."
+        ), 400
+
+    if not recipients:
+
+        return jsonify(
+            error="Add recipients first."
+        ), 400
+
+    if len(recipients) > MAX_RECIPIENTS:
+
+        return jsonify(
+            error="Maximum 25 recipients."
+        ), 400
+
+    invalid = [
+        email
+        for email in recipients
+        if not valid_email(email)
+    ]
+
+    if invalid:
+
         return jsonify(
             error="Invalid recipient email.",
-            invalid=bad
-        ),400
+            invalid=invalid
+        ), 400
 
-    ok,reason=safe_message(sub,msg)
+    # ---------------------------------------------
+    # MESSAGE SAFETY
+    # ---------------------------------------------
 
-    if not ok:
-        return jsonify(error=reason),400
+    safe, reason = safe_message(
+        subject,
+        message
+    )
 
-    sent=[]
-    failed=[]
+    if not safe:
+
+        return jsonify(
+            error=reason
+        ), 400
+
+    sent = []
+    failed = []
 
     try:
+
+        context = ssl.create_default_context()
 
         with smtplib.SMTP_SSL(
             "smtp.gmail.com",
             465,
-            context=ssl.create_default_context(),
+            context=context,
             timeout=30
         ) as smtp:
 
-            smtp.login(gmail,pwd)
+            smtp.login(
+                gmail,
+                password
+            )
 
-            session["last_send"]=time.time()
+            session["last_send"] = time.time()
 
-            for email in to:
+            for email in recipients:
 
-                reference="#REF-"+secrets.token_hex(4).upper()
+                reference = (
+                    "#REF-" +
+                    secrets.token_hex(4).upper()
+                )
 
                 try:
 
-                    text=msg.replace(
-                        "{name}",
-                        email.split("@")[0]
+                    # ---------------------------------
+                    # SPINTAX
+                    # Each recipient gets a new
+                    # variation.
+                    # ---------------------------------
+
+                    personalized_subject = spintax(
+                        subject
                     )
 
-                    text=text.rstrip()+(
-                        f"\n\nReference: {reference}"
+                    personalized_message = spintax(
+                        message
                     )
 
-                    mail=MIMEText(
-                        text,
+                    personalized_message = (
+                        personalized_message
+                        .replace(
+                            "{name}",
+                            email.split("@")[0]
+                        )
+                    )
+
+                    # ---------------------------------
+                    # UNSUBSCRIBE LINK
+                    # ---------------------------------
+
+                    unsubscribe_url = (
+                        f"{BASE_URL}/unsubscribe?"
+                        f"email={urllib.parse.quote(email)}"
+                    )
+
+                    final_message = (
+                        personalized_message.rstrip()
+                        +
+                        "\n\n"
+                        +
+                        f"Reference: {reference}"
+                        +
+                        "\n\n"
+                        +
+                        "Unsubscribe: "
+                        +
+                        unsubscribe_url
+                    )
+
+                    mail = MIMEText(
+                        final_message,
                         "plain",
                         "utf-8"
                     )
 
-                    mail["Subject"]=sub
-                    mail["From"]=f"{sender} <{gmail}>"
-                    mail["To"]=email
+                    mail["Subject"] = (
+                        personalized_subject
+                    )
 
-                    refused=smtp.sendmail(
+                    mail["From"] = (
+                        f"{sender} <{gmail}>"
+                    )
+
+                    mail["To"] = email
+
+                    refused = smtp.sendmail(
                         gmail,
                         [email],
                         mail.as_string()
                     )
 
                     if refused:
+
                         failed.append({
-                            "email":email,
-                            "ref":reference
-                        })
-                    else:
-                        sent.append({
-                            "email":email,
-                            "ref":reference
+                            "email": email,
+                            "ref": reference
                         })
 
-                except Exception as e:
+                    else:
+
+                        sent.append({
+                            "email": email,
+                            "ref": reference
+                        })
+
+                except Exception as error:
 
                     failed.append({
-                        "email":email,
-                        "ref":reference,
-                        "error":str(e)
+                        "email": email,
+                        "ref": reference,
+                        "error": str(error)
                     })
 
         return jsonify(
             success=True,
-            total=len(to),
+            total=len(recipients),
             sent=len(sent),
             failed=len(failed),
             sent_emails=sent,
@@ -206,16 +632,27 @@ def send():
 
         return jsonify(
             error="Gmail authentication failed."
-        ),401
+        ), 401
 
-    except Exception as e:
+    except Exception as error:
 
-        return jsonify(error=str(e)),500
+        return jsonify(
+            error=str(error)
+        ), 500
 
 
-if __name__=="__main__":
+# ---------------------------------------------------------
+# LOCAL DEVELOPMENT
+# ---------------------------------------------------------
+
+if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=int(os.getenv("PORT",5000))
+        port=int(
+            os.getenv(
+                "PORT",
+                5000
+            )
+        )
     )
