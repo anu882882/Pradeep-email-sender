@@ -30,15 +30,26 @@ defer>
 
 <header>
 
-<div class="brand">
+<div class="top-brand">
 
-<strong>✉ Secure Mail Console</strong>
+<div class="shield">♢</div>
 
-<small>Gmail Mail Sender</small>
+<div>
+
+<strong>Secure Mail Console</strong>
 
 </div>
 
-<a href="/logout">Logout</a>
+</div>
+
+
+<a
+class="logout"
+href="/logout">
+
+↪ Logout
+
+</a>
 
 </header>
 
@@ -46,70 +57,120 @@ defer>
 <main>
 
 
-<!-- SENDER -->
+<div class="page-title">
 
-<section class="card">
+<span>➤</span>
 
-<h2>Sender</h2>
-
-
-<label>Sender Name</label>
-
-<input
-id="name"
-placeholder="Your name">
-
-
-<label>Your Gmail</label>
-
-<input
-id="gmail"
-type="email"
-placeholder="your@gmail.com">
-
-
-<label>App Password</label>
-
-<input
-id="pass"
-type="password"
-placeholder="Gmail App Password">
-
-
-<label>Subject</label>
-
-<input
-id="sub"
-placeholder="{Hi|Hello|Hey}, quick question">
-
-
-<label>Message Body</label>
-
-<textarea
-id="msg"
-placeholder="{Hi|Hello|Hey} {there|friend},
-
-Your site looks {great|good|impressive}.
-
-{Can I send|May I email|Would you like me to send} the details?"></textarea>
-
-
-<div class="hint">
-
-Spintax:
-<code>{Hi|Hello|Hey}</code>
-
-<br>
-
-Name:
-<code>{name}</code>
+<strong>Bulk Email Sender</strong>
 
 </div>
 
 
-<!-- CLOUDFLARE -->
+<div class="dashboard">
 
-<div class="turnstile-wrap">
+
+<!-- =================================
+     LEFT
+================================= -->
+
+<section class="compose card">
+
+
+<div class="card-title">
+
+<span>✎</span>
+
+<strong>Compose Message</strong>
+
+</div>
+
+
+<div class="form-grid">
+
+
+<div>
+
+<label>
+Sender Name
+</label>
+
+<input
+id="name"
+placeholder="E.g., John Doe">
+
+</div>
+
+
+<div>
+
+<label>
+Your Gmail
+</label>
+
+<input
+id="gmail"
+type="email"
+placeholder="you@gmail.com">
+
+</div>
+
+
+<div>
+
+<label>
+App Password
+</label>
+
+<div class="password-box">
+
+<input
+id="pass"
+type="password"
+placeholder="16-char app password">
+
+<button
+type="button"
+id="togglePassword">
+
+◉
+
+</button>
+
+</div>
+
+</div>
+
+
+<div>
+
+<label>
+Email Subject
+</label>
+
+<input
+id="sub"
+placeholder="Enter subject line...">
+
+</div>
+
+
+</div>
+
+
+<label class="message-label">
+
+Message Body (Plain Text / HTML)
+
+</label>
+
+
+<textarea
+id="msg"
+class="message"
+placeholder="Write your email here... Spintax supported: {Hi|Hello} {name}"></textarea>
+
+
+<div class="turnstile-area">
 
 <div
 class="cf-turnstile"
@@ -120,57 +181,117 @@ data-theme="light">
 </div>
 
 
-<button id="send">
-Send Emails
-</button>
+</section>
 
 
-<p id="status"></p>
+<!-- =================================
+     RIGHT
+================================= -->
+
+<div class="right-column">
+
+
+<!-- RECIPIENTS -->
+
+<section class="card recipients-card">
+
+
+<div class="card-title recipients-title">
+
+<div>
+
+<span>♣</span>
+
+<strong>Recipients</strong>
+
+</div>
+
+
+<span
+class="found"
+id="found">
+
+0 found
+
+</span>
+
+</div>
+
+
+<div class="recipient-help">
+
+Paste emails (comma separated, new lines, or Excel copy)
+
+</div>
+
+
+<textarea
+id="recipients"
+class="recipient-input"
+placeholder="recipient1@example.com
+recipient2@example.com"></textarea>
 
 
 </section>
 
 
-<!-- RECIPIENTS -->
+<!-- PROGRESS -->
 
-<section class="card">
-
-<h2>Recipients</h2>
+<section class="card progress-card">
 
 
-<textarea
-id="recipients"
-placeholder="one@email.com
-two@email.com
-three@email.com"></textarea>
+<div class="card-title">
+
+<span>◕</span>
+
+<strong>Progress Monitor</strong>
+
+</div>
 
 
 <div class="stats">
 
 
-<div>
+<div class="stat">
 
-<strong id="total">0</strong>
+<span>TOTAL</span>
 
-<span>Total</span>
-
-</div>
-
-
-<div>
-
-<strong id="sent">0</strong>
-
-<span>Sent</span>
+<strong id="total">
+0
+</strong>
 
 </div>
 
 
-<div>
+<div class="stat sent-stat">
 
-<strong id="failed">0</strong>
+<span>SENT</span>
 
-<span>Failed</span>
+<strong id="sent">
+0
+</strong>
+
+</div>
+
+
+<div class="stat failed-stat">
+
+<span>FAILED</span>
+
+<strong id="failed">
+0
+</strong>
+
+</div>
+
+
+<div class="stat remaining-stat">
+
+<span>REMAINING</span>
+
+<strong id="remaining">
+0
+</strong>
 
 </div>
 
@@ -178,20 +299,41 @@ three@email.com"></textarea>
 </div>
 
 
-<div class="progress">
+<div class="progress-track">
 
-<div id="progress"></div>
+<div
+id="progress"
+class="progress-bar">
+</div>
 
 </div>
 
 
-<h3>Live Recipients Dispatch</h3>
+<div
+class="send-status"
+id="status">
+
+● Ready to send
+
+</div>
 
 
-<div id="list"></div>
+<button
+id="send"
+class="send-button">
+
+➤ Send All
+
+</button>
 
 
 </section>
+
+
+</div>
+
+
+</div>
 
 
 </main>
@@ -204,7 +346,38 @@ const $ =
 id => document.getElementById(id);
 
 
-function recipients(){
+let sending = false;
+
+
+/* =====================================
+   PASSWORD
+===================================== */
+
+$("togglePassword").onclick = function(){
+
+    const input =
+        $("pass");
+
+    if(
+        input.type === "password"
+    ){
+
+        input.type = "text";
+
+    }else{
+
+        input.type = "password";
+
+    }
+
+};
+
+
+/* =====================================
+   RECIPIENT PARSER
+===================================== */
+
+function getRecipients(){
 
     return [
 
@@ -213,11 +386,11 @@ function recipients(){
             $("recipients")
             .value
             .split(/[\s,;]+/)
-            .filter(Boolean)
             .map(
                 x =>
                 x.trim().toLowerCase()
             )
+            .filter(Boolean)
 
         )
 
@@ -226,22 +399,38 @@ function recipients(){
 }
 
 
+/* =====================================
+   COUNT
+===================================== */
+
 function updateCount(){
 
-    const total =
-        recipients().length;
+    const list =
+        getRecipients();
+
+    $("found").textContent =
+        `${list.length} found`;
 
     $("total").textContent =
-        total;
+        list.length;
+
+    $("remaining").textContent =
+        list.length;
 
 }
 
 
-$("recipients").oninput =
-updateCount;
+$("recipients").addEventListener(
+    "input",
+    updateCount
+);
 
 
-function checkMessage(){
+/* =====================================
+   MESSAGE CHECK
+===================================== */
+
+function messageCheck(){
 
     const text =
         $("sub").value +
@@ -250,123 +439,160 @@ function checkMessage(){
 
 
     if(
-
         /<\s*(script|iframe|object|embed)\b/i
         .test(text)
-
     ){
 
         $("status").textContent =
-            "Unsafe HTML detected.";
+            "⚠ Unsafe HTML detected.";
+
+        return false;
 
     }
 
-    else if(
 
+    if(
         /javascript\s*:/i
         .test(text)
-
     ){
 
         $("status").textContent =
-            "Unsafe content detected.";
+            "⚠ Unsafe content detected.";
+
+        return false;
 
     }
 
-    else if(
 
+    if(
         (text.match(/https?:\/\//gi) || [])
         .length > 5
-
     ){
 
         $("status").textContent =
-            "Too many links.";
+            "⚠ Too many links.";
+
+        return false;
 
     }
 
-    else{
 
-        $("status").textContent = "";
-
-    }
+    return true;
 
 }
 
 
-$("sub").oninput =
-checkMessage;
+$("sub").addEventListener(
+    "input",
+    messageCheck
+);
+
+$("msg").addEventListener(
+    "input",
+    messageCheck
+);
 
 
-$("msg").oninput =
-checkMessage;
-
+/* =====================================
+   TURNSTILE
+===================================== */
 
 function getTurnstileToken(){
 
-    const input =
+    const element =
         document.querySelector(
             '[name="cf-turnstile-response"]'
         );
 
-
-    return input
-        ? input.value
+    return element
+        ? element.value
         : "";
 
 }
 
 
-function recipientRow(
-    item,
-    failed
-){
+/* =====================================
+   DELAY
+===================================== */
 
-    const div =
-        document.createElement("div");
+function sleep(ms){
 
-
-    div.className =
-        "recipient-row" +
-        (
-            failed
-            ? " failed"
-            : ""
-        );
-
-
-    div.innerHTML =
-
-        (failed ? "✕ " : "✓ ") +
-
-        item.email +
-
-        "<br><small>" +
-
-        (
-            failed
-            ? "Sending failed"
-            : "Sent successfully"
-        ) +
-
-        "</small>";
-
-
-    $("list")
-    .appendChild(div);
+    return new Promise(
+        resolve =>
+        setTimeout(
+            resolve,
+            ms
+        )
+    );
 
 }
 
+
+/* =====================================
+   ADD ROW
+===================================== */
+
+function addRecipient(
+    email,
+    success
+){
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "mail-row " +
+        (
+            success
+            ? "mail-success"
+            : "mail-failed"
+        );
+
+
+    row.innerHTML =
+
+        `<span class="mail-icon">${
+            success ? "✓" : "×"
+        }</span>` +
+
+        `<span>${email}</span>`;
+
+
+    const list =
+        document.createElement(
+            "div"
+        );
+
+
+    /*
+     * Add to the top of progress area.
+     */
+
+    $("status").before(row);
+
+}
+
+
+/* =====================================
+   SEND
+===================================== */
 
 $("send").onclick =
 async function(){
 
 
-    const list =
-        recipients();
+    if(sending)
+        return;
 
 
-    if(!list.length){
+    const all =
+        getRecipients();
+
+
+    if(!all.length){
 
         $("status").textContent =
             "Add recipients first.";
@@ -376,7 +602,7 @@ async function(){
     }
 
 
-    if(list.length > 25){
+    if(all.length > 25){
 
         $("status").textContent =
             "Maximum 25 recipients.";
@@ -405,7 +631,7 @@ async function(){
 
         [
             "sub",
-            "Enter subject."
+            "Enter email subject."
         ],
 
         [
@@ -434,6 +660,10 @@ async function(){
     }
 
 
+    if(!messageCheck())
+        return;
+
+
     const token =
         getTurnstileToken();
 
@@ -441,163 +671,260 @@ async function(){
     if(!token){
 
         $("status").textContent =
-            "Please complete the Cloudflare verification.";
+            "Please complete Cloudflare verification.";
 
         return;
 
     }
 
 
+    sending = true;
+
     $("send").disabled =
         true;
-
-
-    $("status").textContent =
-        "Sending...";
 
 
     $("sent").textContent =
         "0";
 
-
     $("failed").textContent =
         "0";
+
+    $("remaining").textContent =
+        all.length;
 
 
     $("progress").style.width =
         "0%";
 
 
-    $("list").innerHTML =
-        "";
+    /*
+     * Clear previous live rows.
+     */
+
+    document
+        .querySelectorAll(
+            ".mail-row"
+        )
+        .forEach(
+            row =>
+            row.remove()
+        );
 
 
-    try{
+    let sentCount = 0;
+
+    let failedCount = 0;
+
+    let processed = 0;
 
 
-        const response =
-            await fetch(
+    /*
+     * ----------------------------------
+     * BATCH SIZE = 5
+     * ----------------------------------
+     */
 
-                "/api/send",
+    for(
+        let start = 0;
+        start < all.length;
+        start += 5
+    ){
 
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                        "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            sender_name:
-                                $("name").value,
-
-                            gmail:
-                                $("gmail").value,
-
-                            app_password:
-                                $("pass").value,
-
-                            subject:
-                                $("sub").value,
-
-                            message:
-                                $("msg").value,
-
-                            recipients:
-                                list.join("\n"),
-
-                            turnstile_token:
-                                token
-
-                        })
-
-                }
-
+        const batch =
+            all.slice(
+                start,
+                start + 5
             );
 
 
-        const data =
-            await response.json();
+        $("status").textContent =
+            `● Sending ${start + 1}-${Math.min(
+                start + 5,
+                all.length
+            )} of ${all.length}`;
 
 
-        if(!response.ok){
+        try{
+
+
+            const response =
+                await fetch(
+
+                    "/api/send-batch",
+
+                    {
+
+                        method:
+                            "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                            "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                sender_name:
+                                    $("name").value,
+
+                                gmail:
+                                    $("gmail").value,
+
+                                app_password:
+                                    $("pass").value,
+
+                                subject:
+                                    $("sub").value,
+
+                                message:
+                                    $("msg").value,
+
+                                recipients:
+                                    batch,
+
+                                turnstile_token:
+                                    start === 0
+                                    ? token
+                                    : ""
+
+                            })
+
+                    }
+
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if(!response.ok){
+
+                $("status").textContent =
+                    data.error ||
+                    "Batch failed.";
+
+                break;
+
+            }
+
+
+            /*
+             * --------------------------------
+             * UPDATE IMMEDIATELY AFTER BATCH
+             * --------------------------------
+             */
+
+            for(
+                const item of data.sent
+            ){
+
+                sentCount++;
+
+                processed++;
+
+                addRecipient(
+                    item.email,
+                    true
+                );
+
+            }
+
+
+            for(
+                const item of data.failed
+            ){
+
+                failedCount++;
+
+                processed++;
+
+                addRecipient(
+                    item.email,
+                    false
+                );
+
+            }
+
+
+            const remaining =
+                all.length -
+                processed;
+
+
+            $("sent").textContent =
+                sentCount;
+
+
+            $("failed").textContent =
+                failedCount;
+
+
+            $("remaining").textContent =
+                remaining;
+
+
+            $("progress").style.width =
+
+                Math.round(
+
+                    (
+                        processed /
+                        all.length
+                    ) * 100
+
+                ) + "%";
+
+
+            /*
+             * --------------------------------
+             * WAIT BETWEEN 5-MAIL BATCHES
+             * --------------------------------
+             */
+
+            if(
+                start + 5 < all.length
+            ){
+
+                $("status").textContent =
+                    `✓ ${processed} sent/processed — next batch starting...`;
+
+                await sleep(2500);
+
+            }
+
+
+        }catch(error){
 
             $("status").textContent =
-                data.error ||
-                "Sending failed.";
+                "Server connection failed.";
 
-            return;
+            break;
 
         }
 
-
-        $("sent").textContent =
-            data.sent;
+    }
 
 
-        $("failed").textContent =
-            data.failed;
+    /*
+     * ----------------------------------
+     * COMPLETE
+     * ----------------------------------
+     */
 
-
-        $("progress").style.width =
-
-            Math.round(
-
-                (
-                    data.sent +
-                    data.failed
-                )
-                /
-                data.total
-                *
-                100
-
-            ) + "%";
-
-
-        data.sent_emails.forEach(
-
-            item =>
-            recipientRow(
-                item,
-                false
-            )
-
-        );
-
-
-        data.failed_emails.forEach(
-
-            item =>
-            recipientRow(
-                item,
-                true
-            )
-
-        );
-
+    if(
+        sentCount + failedCount === all.length
+    ){
 
         $("status").textContent =
-            `Completed: ${data.sent} sent, ${data.failed} failed.`;
+            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
 
-
-        alert(
-
-            `Sending completed.\n\n` +
-
-            `Sent: ${data.sent}\n` +
-
-            `Failed: ${data.failed}`
-
-        );
-
+        $("progress").style.width =
+            "100%";
 
         if(window.turnstile){
 
@@ -605,26 +932,18 @@ async function(){
 
         }
 
-
     }
 
 
-    catch(error){
+    sending = false;
 
-        $("status").textContent =
-            "Server connection failed.";
-
-    }
-
-
-    finally{
-
-        $("send").disabled =
-            false;
-
-    }
+    $("send").disabled =
+        false;
 
 };
+
+
+updateCount();
 
 
 </script>
