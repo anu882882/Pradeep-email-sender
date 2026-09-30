@@ -5,7 +5,6 @@ import smtplib
 import urllib.request
 import urllib.parse
 import json
-import time
 import secrets
 
 from flask import (
@@ -47,8 +46,8 @@ TURNSTILE_SECRET_KEY = os.getenv(
     ""
 )
 
-COOLDOWN = 10
 MAX_RECIPIENTS = 25
+BATCH_SIZE = 5
 
 
 EMAIL_PATTERN = re.compile(
@@ -115,23 +114,23 @@ def spintax(text):
 
         return secrets.choice(choices)
 
-    current = str(text)
+    result = str(text)
 
     for _ in range(20):
 
-        if not SPINTAX_PATTERN.search(current):
+        if not SPINTAX_PATTERN.search(result):
             break
 
-        current = SPINTAX_PATTERN.sub(
+        result = SPINTAX_PATTERN.sub(
             replace,
-            current
+            result
         )
 
-    return current
+    return result
 
 
 # ==========================================
-# MESSAGE SAFETY
+# MESSAGE CHECK
 # ==========================================
 
 def safe_message(subject, message):
@@ -177,46 +176,26 @@ def safe_message(subject, message):
 def verify_turnstile(token, remote_ip):
 
     if not TURNSTILE_SECRET_KEY:
-
-        return (
-            False,
-            "Turnstile secret key is not configured."
-        )
+        return False, "Turnstile secret key is not configured."
 
     if not token:
-
-        return (
-            False,
-            "Please complete the Cloudflare verification."
-        )
+        return False, "Please complete Cloudflare verification."
 
     payload = urllib.parse.urlencode({
-
-        "secret":
-            TURNSTILE_SECRET_KEY,
-
-        "response":
-            token,
-
-        "remoteip":
-            remote_ip or ""
-
+        "secret": TURNSTILE_SECRET_KEY,
+        "response": token,
+        "remoteip": remote_ip or ""
     }).encode()
 
     try:
 
         req = urllib.request.Request(
-
-            "https://challenges.cloudflare.com/"
-            "turnstile/v0/siteverify",
-
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             data=payload,
-
             headers={
                 "Content-Type":
                 "application/x-www-form-urlencoded"
             },
-
             method="POST"
         )
 
@@ -226,26 +205,16 @@ def verify_turnstile(token, remote_ip):
         ) as response:
 
             result = json.loads(
-                response
-                .read()
-                .decode("utf-8")
+                response.read().decode("utf-8")
             )
 
         if result.get("success"):
-
             return True, "OK"
 
-        return (
-            False,
-            "Cloudflare verification failed."
-        )
+        return False, "Cloudflare verification failed."
 
     except Exception:
-
-        return (
-            False,
-            "Cloudflare verification could not be completed."
-        )
+        return False, "Cloudflare verification could not be completed."
 
 
 # ==========================================
@@ -271,28 +240,20 @@ def login():
         ):
 
             session.clear()
-
             session["login"] = 1
-            session["last_send"] = 0
 
             return redirect("/")
 
         return render_template(
             "login.html",
-            error="Wrong password.",
-            turnstile_site_key=TURNSTILE_SITE_KEY
+            error="Wrong password."
         )
 
     return render_template(
         "login.html",
-        error=None,
-        turnstile_site_key=TURNSTILE_SITE_KEY
+        error=None
     )
 
-
-# ==========================================
-# LOGOUT
-# ==========================================
 
 @app.route("/logout")
 def logout():
@@ -317,72 +278,105 @@ def home():
 
 
 # ==========================================
-# SEND EMAIL
+# SEND BATCH
 # ==========================================
 
 @app.route(
-    "/api/send",
+    "/api/send-batch",
     methods=["POST"]
 )
 @auth_required
-def send():
-
-    now = time.time()
-
-    last_send = session.get(
-        "last_send",
-        0
-    )
-
-    if now - last_send < COOLDOWN:
-
-        wait = int(
-            COOLDOWN -
-            (now - last_send)
-        ) + 1
-
-        return jsonify(
-            error=
-            f"Please wait {wait} seconds before sending again."
-        ), 429
-
+def send_batch():
 
     data = request.get_json() or {}
 
+    batch = data.get(
+        "recipients",
+        []
+    )
+
+    if not isinstance(batch, list):
+        return jsonify(
+            error="Invalid recipient batch."
+        ), 400
+
+    if not batch:
+        return jsonify(
+            error="No recipients in batch."
+        ), 400
+
+    # Server-side limit:
+    # never accept more than 5 in one batch.
+    if len(batch) > BATCH_SIZE:
+        return jsonify(
+            error="Maximum 5 emails per batch."
+        ), 400
+
+    batch = parse_recipients(
+        "\n".join(
+            str(x)
+            for x in batch
+        )
+    )
+
+    if len(batch) > BATCH_SIZE:
+        return jsonify(
+            error="Maximum 5 emails per batch."
+        ), 400
+
+    invalid = [
+        email
+        for email in batch
+        if not valid_email(email)
+    ]
+
+    if invalid:
+        return jsonify(
+            error="Invalid recipient email.",
+            invalid=invalid
+        ), 400
 
     # --------------------------------------
-    # CLOUDFLARE
+    # TURNSTILE
     # --------------------------------------
 
-    turnstile_token = str(
+    token = str(
         data.get(
             "turnstile_token",
             ""
         )
     ).strip()
 
-
-    verified, reason = verify_turnstile(
-
-        turnstile_token,
-
-        request.headers.get(
-            "CF-Connecting-IP",
-            request.remote_addr
-        )
-
+    verified_until = session.get(
+        "turnstile_verified_until",
+        0
     )
 
+    import time
 
-    if not verified:
+    if time.time() > verified_until:
 
-        return jsonify(
-            error=reason
-        ), 403
+        verified, reason = verify_turnstile(
+            token,
+            request.headers.get(
+                "CF-Connecting-IP",
+                request.remote_addr
+            )
+        )
 
+        if not verified:
+            return jsonify(
+                error=reason
+            ), 403
+
+        # Allow the remaining batches
+        # of this send operation to continue.
+        session["turnstile_verified_until"] = (
+            time.time() + 600
+        )
 
     # --------------------------------------
-    # INPUTS
+    # INPUT
     # --------------------------------------
 
     sender = str(
@@ -392,14 +386,12 @@ def send():
         )
     ).strip()
 
-
     gmail = str(
         data.get(
             "gmail",
             ""
         )
     ).strip().lower()
-
 
     password = "".join(
         str(
@@ -410,14 +402,12 @@ def send():
         ).split()
     )
 
-
     subject = str(
         data.get(
             "subject",
             ""
         )
     ).strip()
-
 
     message = str(
         data.get(
@@ -426,209 +416,115 @@ def send():
         )
     )
 
-
-    recipients = parse_recipients(
-        data.get(
-            "recipients",
-            ""
-        )
-    )
-
-
-    # --------------------------------------
-    # VALIDATION
-    # --------------------------------------
-
     if not sender:
-
         return jsonify(
             error="Sender name required."
         ), 400
 
-
     if not valid_email(gmail):
-
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
-
     if not password:
-
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
-
     if not subject:
-
         return jsonify(
             error="Subject required."
         ), 400
 
-
     if not message.strip():
-
         return jsonify(
             error="Message required."
         ), 400
-
-
-    if not recipients:
-
-        return jsonify(
-            error="Add recipients first."
-        ), 400
-
-
-    if len(recipients) > MAX_RECIPIENTS:
-
-        return jsonify(
-            error="Maximum 25 recipients."
-        ), 400
-
-
-    invalid = [
-
-        email
-        for email in recipients
-        if not valid_email(email)
-
-    ]
-
-
-    if invalid:
-
-        return jsonify(
-
-            error=
-            "Invalid recipient email.",
-
-            invalid=invalid
-
-        ), 400
-
-
-    # --------------------------------------
-    # MESSAGE SAFETY
-    # --------------------------------------
 
     safe, reason = safe_message(
         subject,
         message
     )
 
-
     if not safe:
-
         return jsonify(
             error=reason
         ), 400
 
-
     sent = []
     failed = []
 
+    # --------------------------------------
+    # SMTP
+    # --------------------------------------
 
     try:
 
         context = ssl.create_default_context()
 
-
         with smtplib.SMTP_SSL(
-
             "smtp.gmail.com",
             465,
-
             context=context,
             timeout=30
-
         ) as smtp:
-
 
             smtp.login(
                 gmail,
                 password
             )
 
-
-            session["last_send"] = time.time()
-
-
-            for email in recipients:
+            for email in batch:
 
                 try:
 
                     # --------------------------
-                    # SPINTAX
+                    # NEW SPINTAX FOR EACH EMAIL
                     # --------------------------
 
-                    personalized_subject = spintax(
+                    final_subject = spintax(
                         subject
                     )
 
-
-                    personalized_message = spintax(
+                    final_message = spintax(
                         message
                     )
 
-
-                    # --------------------------
-                    # {name}
-                    # --------------------------
-
-                    personalized_message = (
-                        personalized_message
+                    final_message = (
+                        final_message
                         .replace(
                             "{name}",
                             email.split("@")[0]
                         )
                     )
 
-
-                    # --------------------------
-                    # EMAIL
-                    # --------------------------
-
                     mail = MIMEText(
-
-                        personalized_message,
-
+                        final_message,
                         "plain",
-
                         "utf-8"
-
                     )
-
 
                     mail["Subject"] = (
-                        personalized_subject
+                        final_subject
                     )
-
 
                     mail["From"] = (
                         f"{sender} <{gmail}>"
                     )
 
-
                     mail["To"] = email
 
-
                     refused = smtp.sendmail(
-
                         gmail,
-
                         [email],
-
                         mail.as_string()
-
                     )
-
 
                     if refused:
 
                         failed.append({
-                            "email": email
+                            "email": email,
+                            "error": "SMTP refused recipient."
                         })
 
                     else:
@@ -637,71 +533,44 @@ def send():
                             "email": email
                         })
 
-
                 except Exception as error:
 
                     failed.append({
-
-                        "email":
-                            email,
-
-                        "error":
-                            str(error)
-
+                        "email": email,
+                        "error": str(error)
                     })
 
-
         return jsonify(
-
             success=True,
-
-            total=len(recipients),
-
-            sent=len(sent),
-
-            failed=len(failed),
-
-            sent_emails=sent,
-
-            failed_emails=failed
-
+            sent=sent,
+            failed=failed
         )
-
 
     except smtplib.SMTPAuthenticationError:
 
         return jsonify(
-
-            error=
-            "Gmail authentication failed."
-
+            error="Gmail authentication failed."
         ), 401
-
 
     except Exception as error:
 
         return jsonify(
-
             error=str(error)
-
         ), 500
 
 
 # ==========================================
-# LOCAL
+# LOCAL DEVELOPMENT
 # ==========================================
 
 if __name__ == "__main__":
 
     app.run(
-
         host="0.0.0.0",
-
         port=int(
             os.getenv(
                 "PORT",
                 5000
             )
         )
-
     )
