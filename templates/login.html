@@ -1,16 +1,12 @@
 <!doctype html>
 <html>
 <head>
-
 <meta charset="utf-8">
 <meta name="viewport"
 content="width=device-width,initial-scale=1">
-
 <title>Secure Mail Console</title>
-
 <link rel="stylesheet"
 href="{{url_for('static',filename='style.css')}}">
-
 </head>
 
 <body>
@@ -20,16 +16,11 @@ href="{{url_for('static',filename='style.css')}}">
 <section class="card login-card">
 
 <div class="login-brand">
-
 <strong>✉ Secure Mail Console</strong>
-
 <small>Gmail Mail Sender</small>
-
 </div>
 
-
 <h2>Login</h2>
-
 
 <form method="post">
 
@@ -46,13 +37,8 @@ autofocus>
 
 </form>
 
-
 {%if error%}
-
-<p class="error-text">
-{{error}}
-</p>
-
+<p class="error-text">{{error}}</p>
 {%endif%}
 
 </section>
