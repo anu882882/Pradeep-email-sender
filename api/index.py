@@ -6,6 +6,7 @@ import urllib.request
 import urllib.parse
 import json
 import secrets
+import time
 
 from flask import (
     Flask,
@@ -170,7 +171,7 @@ def safe_message(subject, message):
 
 
 # ==========================================
-# CLOUDFLARE TURNSTILE
+# CLOUDFLARE
 # ==========================================
 
 def verify_turnstile(token, remote_ip):
@@ -305,8 +306,6 @@ def send_batch():
             error="No recipients in batch."
         ), 400
 
-    # Server-side limit:
-    # never accept more than 5 in one batch.
     if len(batch) > BATCH_SIZE:
         return jsonify(
             error="Maximum 5 emails per batch."
@@ -331,14 +330,16 @@ def send_batch():
     ]
 
     if invalid:
+
         return jsonify(
             error="Invalid recipient email.",
             invalid=invalid
         ), 400
 
-    # --------------------------------------
-    # TURNSTILE
-    # --------------------------------------
+
+    # ======================================
+    # CLOUDFLARE
+    # ======================================
 
     token = str(
         data.get(
@@ -347,14 +348,7 @@ def send_batch():
         )
     ).strip()
 
-    verified_until = session.get(
-        "turnstile_verified_until",
-        0
-    )
-
-    import time
-
-    if time.time() > verified_until:
+    if token:
 
         verified, reason = verify_turnstile(
             token,
@@ -365,19 +359,15 @@ def send_batch():
         )
 
         if not verified:
+
             return jsonify(
                 error=reason
             ), 403
 
-        # Allow the remaining batches
-        # of this send operation to continue.
-        session["turnstile_verified_until"] = (
-            time.time() + 600
-        )
 
-    # --------------------------------------
-    # INPUT
-    # --------------------------------------
+    # ======================================
+    # SNAPSHOT VALUES
+    # ======================================
 
     sender = str(
         data.get(
@@ -416,6 +406,11 @@ def send_batch():
         )
     )
 
+
+    # ======================================
+    # VALIDATION
+    # ======================================
+
     if not sender:
         return jsonify(
             error="Sender name required."
@@ -441,26 +436,31 @@ def send_batch():
             error="Message required."
         ), 400
 
+
     safe, reason = safe_message(
         subject,
         message
     )
 
     if not safe:
+
         return jsonify(
             error=reason
         ), 400
 
+
     sent = []
     failed = []
 
-    # --------------------------------------
+
+    # ======================================
     # SMTP
-    # --------------------------------------
+    # ======================================
 
     try:
 
         context = ssl.create_default_context()
+
 
         with smtplib.SMTP_SSL(
             "smtp.gmail.com",
@@ -469,18 +469,16 @@ def send_batch():
             timeout=30
         ) as smtp:
 
+
             smtp.login(
                 gmail,
                 password
             )
 
+
             for email in batch:
 
                 try:
-
-                    # --------------------------
-                    # NEW SPINTAX FOR EACH EMAIL
-                    # --------------------------
 
                     final_subject = spintax(
                         subject
@@ -490,6 +488,7 @@ def send_batch():
                         message
                     )
 
+
                     final_message = (
                         final_message
                         .replace(
@@ -498,11 +497,13 @@ def send_batch():
                         )
                     )
 
+
                     mail = MIMEText(
                         final_message,
                         "plain",
                         "utf-8"
                     )
+
 
                     mail["Subject"] = (
                         final_subject
@@ -514,17 +515,20 @@ def send_batch():
 
                     mail["To"] = email
 
+
                     refused = smtp.sendmail(
                         gmail,
                         [email],
                         mail.as_string()
                     )
 
+
                     if refused:
 
                         failed.append({
                             "email": email,
-                            "error": "SMTP refused recipient."
+                            "error":
+                            "SMTP refused recipient."
                         })
 
                     else:
@@ -533,6 +537,7 @@ def send_batch():
                             "email": email
                         })
 
+
                 except Exception as error:
 
                     failed.append({
@@ -540,17 +545,28 @@ def send_batch():
                         "error": str(error)
                     })
 
+
         return jsonify(
+
             success=True,
+
             sent=sent,
+
             failed=failed
+
         )
+
 
     except smtplib.SMTPAuthenticationError:
 
         return jsonify(
-            error="Gmail authentication failed."
+
+            error=
+            "Gmail authentication failed. "
+            "Check the Gmail address and App Password."
+
         ), 401
+
 
     except Exception as error:
 
@@ -560,7 +576,7 @@ def send_batch():
 
 
 # ==========================================
-# LOCAL DEVELOPMENT
+# LOCAL
 # ==========================================
 
 if __name__ == "__main__":
