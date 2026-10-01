@@ -1,1152 +1,358 @@
 <!doctype html>
 <html>
-
 <head>
-
 <meta charset="utf-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
+<link rel="stylesheet" href="/static/style.css">
 
-<link
-rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
-
-<script
-src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async
-defer>
-</script>
-
+{% if turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
 </head>
-
 
 <body>
 
-
-<header>
-
-<div class="top-brand">
-
-<div class="shield">
-♢
+<header class="topbar">
+<div class="brand">
+<div class="shield">◆</div>
+<div class="brand-title">Secure Mail Console</div>
 </div>
-
-<strong>
-Secure Mail Console
-</strong>
-
-</div>
-
-
-<a
-class="logout"
-href="/logout">
-
-↪ Logout
-
-</a>
-
+<a href="/logout" class="logout">⇥ Logout (Double Click)</a>
 </header>
 
-
-<main>
-
+<div class="page">
 
 <div class="page-title">
-
-<span>➤</span>
-
-<strong>
-Bulk Email Sender
-</strong>
-
+<span>➤</span><strong>Bulk Email Sender</strong>
 </div>
-
 
 <div class="dashboard">
 
+<div class="left">
 
-<!-- =========================================
-     COMPOSE MESSAGE
-========================================= -->
+<section class="card compose">
 
-<section class="compose card">
-
-
-<div class="card-title">
-
-<span>✎</span>
-
-<strong>
-Compose Message
-</strong>
-
-</div>
-
+<h2>✐ Compose Message</h2>
 
 <div class="form-grid">
 
-
 <div>
-
-<label>
-Sender Name
-</label>
-
-<input
-id="name"
-placeholder="E.g., John Doe">
-
+<label>Sender Name</label>
+<input id="senderName" placeholder="Your name">
 </div>
 
-
 <div>
-
-<label>
-Your Gmail
-</label>
-
-<input
-id="gmail"
-type="email"
-placeholder="you@gmail.com">
-
+<label>Your Gmail</label>
+<input id="gmail" type="email" placeholder="your@gmail.com">
 </div>
 
-
 <div>
-
-<label>
-App Password
-</label>
-
+<label>App Password</label>
 <div class="password-box">
-
-<input
-id="pass"
-type="password"
-placeholder="16-char app password">
-
-<button
-type="button"
-id="togglePassword">
-◉
-</button>
-
+<input id="appPassword" type="password" placeholder="Gmail App Password">
+<button type="button" onclick="togglePassword()">◉</button>
 </div>
-
 </div>
-
 
 <div>
-
-<label>
-Email Subject
-</label>
-
-<input
-id="sub"
-placeholder="Enter subject line...">
-
-</div>
-
-
-</div>
-
-
-<label class="message-label">
-
-Message Body (Plain Text / HTML)
-
-</label>
-
-
-<textarea
-id="msg"
-class="message"
-placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
-
-
-<!-- =========================================
-     CLOUDFLARE TURNSTILE
-========================================= -->
-
-<div class="turnstile-area">
-
-<div
-class="cf-turnstile"
-data-sitekey="{{ turnstile_site_key }}"
-data-theme="light">
+<label>Email Subject</label>
+<input id="subject" placeholder="Email">
 </div>
 
 </div>
 
+<label class="message-label">Message Body (Plain Text / HTML)</label>
+
+<div class="editor-tools">
+<button onclick="fmt('bold')"><b>B</b></button>
+<button onclick="fmt('italic')"><i>I</i></button>
+<button onclick="fmt('underline')"><u>U</u></button>
+<button onclick="caps()">Small Caps</button>
+<button onclick="fmt('insertUnorderedList')">• List</button>
+<button onclick="link()">Link</button>
+</div>
+
+<div id="editor" class="editor" contenteditable="true">
+Your site is well presented, but an error keeps it off the 1st PAGE.<br>
+Can I email the SCREENSHOT?
+</div>
+
+<div class="editor-hint">
+Supports {name} and {Hi|Hello|Hey}
+</div>
+
+<div class="spam-title">🛡 Spam Protection</div>
+
+{% if turnstile_site_key %}
+<div class="cf-turnstile"
+data-sitekey="{{turnstile_site_key}}"
+data-theme="light"></div>
+{% else %}
+<div class="turnstile-placeholder">
+Spam protection is configured through Cloudflare.
+</div>
+{% endif %}
 
 </section>
+</div>
 
-
-<!-- =========================================
-     RIGHT COLUMN
-========================================= -->
-
-<div class="right-column">
-
-
-<!-- =========================================
-     RECIPIENTS
-========================================= -->
+<div class="right">
 
 <section class="card recipients-card">
 
-
-<div class="card-title recipients-title">
+<div class="section-head">
 
 <div>
-
-<span>♣</span>
-
-<strong>
-Recipients
-</strong>
-
-</div>
-
-
-<span
-class="found"
-id="found">
-
-0 found
-
-</span>
-
-</div>
-
-
-<div class="recipient-help">
-
+<h2>♣ Recipients</h2>
+<div class="sub">
 Paste emails (comma separated, new lines, or Excel copy)
-
+</div>
 </div>
 
+<div id="found" class="found">0 found</div>
+
+</div>
 
 <textarea
 id="recipients"
-class="recipient-input"
-placeholder="recipient1@example.com
-recipient2@example.com
-recipient3@example.com"></textarea>
-
+class="recipient-box"
+placeholder="email@example.com&#10;another@example.com"
+oninput="updateRecipients()"></textarea>
 
 </section>
 
-
-<!-- =========================================
-     PROGRESS MONITOR
-========================================= -->
 
 <section class="card progress-card">
 
-
-<div class="progress-heading">
-
-
-<div class="card-title">
-
-<span>◕</span>
-
-<strong>
-Progress Monitor
-</strong>
-
-</div>
-
-
-<!-- CURRENT SENDING GMAIL -->
-
-<div class="sending-from">
-
-<span>
-SENDING FROM
-</span>
-
-<strong
-id="sendingFrom">
-
-—
-
-</strong>
-
-</div>
-
-
-</div>
-
-
-<!-- =========================================
-     STATS
-========================================= -->
+<h2>◔ Progress Monitor</h2>
 
 <div class="stats">
 
-
-<div class="stat">
-
-<span>
-TOTAL
-</span>
-
-<strong id="total">
-0
-</strong>
-
+<div class="stat total">
+<span>TOTAL</span>
+<strong id="total">0</strong>
 </div>
 
-
-<div class="stat sent-stat">
-
-<span>
-SENT
-</span>
-
-<strong id="sent">
-0
-</strong>
-
+<div class="stat sent">
+<span>SENT</span>
+<strong id="sent">0</strong>
 </div>
 
-
-<div class="stat failed-stat">
-
-<span>
-FAILED
-</span>
-
-<strong id="failed">
-0
-</strong>
-
+<div class="stat failed">
+<span>FAILED</span>
+<strong id="failed">0</strong>
 </div>
 
-
-<div class="stat remaining-stat">
-
-<span>
-REMAINING
-</span>
-
-<strong id="remaining">
-0
-</strong>
-
+<div class="stat remaining">
+<span>REMAINING</span>
+<strong id="remaining">0</strong>
 </div>
 
-
 </div>
-
-
-<!-- =========================================
-     PROGRESS BAR
-========================================= -->
 
 <div class="progress-track">
-
-<div
-id="progress"
-class="progress-bar">
+<div id="progress" class="progress-bar"></div>
 </div>
 
-</div>
+<div id="senderStatus" class="sender-status">◯ Sent: —</div>
 
+<div id="batchStatus" class="batch-status">Ready</div>
 
-<!-- =========================================
-     STATUS
-========================================= -->
+<div class="buttons">
 
-<div
-class="send-status"
-id="status">
-
-● Ready to send
-
-</div>
-
-
-<div
-class="batch-status"
-id="batchStatus">
-
-</div>
-
-
-<!-- =========================================
-     SEND BUTTON
-========================================= -->
-
-<button
-id="send"
-class="send-button">
-
-➤ Send All
-
+<button id="sendButton" class="send-btn" onclick="startSending()">
+✣ &nbsp; Sending...
 </button>
 
+<button id="stopButton" class="stop-btn" onclick="stopSending()">
+■ &nbsp; Stop Sending
+</button>
+
+</div>
+
+<div id="status" class="status"></div>
 
 </section>
 
-
 </div>
-
-
 </div>
-
-
-</main>
-
+</div>
 
 <script>
 
+let stopRequested=false,sending=false;
+const $=x=>document.getElementById(x);
 
-/* ==========================================
-   HELPER
-========================================== */
-
-const $ =
-id => document.getElementById(id);
-
-
-let sending = false;
-
-
-/* ==========================================
-   PASSWORD SHOW / HIDE
-========================================== */
-
-$("togglePassword").onclick =
-function(){
-
-    const input =
-        $("pass");
-
-
-    if(
-        input.type === "password"
-    ){
-
-        input.type = "text";
-
-    }else{
-
-        input.type = "password";
-
-    }
-
-};
-
-
-/* ==========================================
-   RECIPIENT PARSER
-========================================== */
-
-function getRecipients(){
-
-    return [
-
-        ...new Set(
-
-            $("recipients")
-            .value
-            .split(/[\s,;]+/)
-            .map(
-                x =>
-                x.trim().toLowerCase()
-            )
-            .filter(Boolean)
-
-        )
-
-    ];
-
+function parseRecipients(){
+    return [...new Set(
+        $("recipients").value
+        .split(/[\s,;]+/)
+        .map(x=>x.trim().toLowerCase())
+        .filter(Boolean)
+    )].slice(0,25);
 }
 
-
-/* ==========================================
-   RECIPIENT COUNT
-========================================== */
-
-function updateCount(){
-
-    const list =
-        getRecipients();
-
-
-    $("found").textContent =
-        `${list.length} found`;
-
-
-    $("total").textContent =
-        list.length;
-
-
-    $("remaining").textContent =
-        list.length;
-
+function updateRecipients(){
+    const a=parseRecipients();
+    $("found").textContent=a.length+" found";
+    $("total").textContent=a.length;
+    $("remaining").textContent=a.length;
 }
 
-
-$("recipients").addEventListener(
-    "input",
-    updateCount
-);
-
-
-/* ==========================================
-   MESSAGE CHECK
-========================================== */
-
-function messageCheck(){
-
-    const text =
-        $("sub").value +
-        " " +
-        $("msg").value;
-
-
-    if(
-        /<\s*(script|iframe|object|embed)\b/i
-        .test(text)
-    ){
-
-        $("status").textContent =
-            "⚠ Unsafe HTML detected.";
-
-        return false;
-
-    }
-
-
-    if(
-        /javascript\s*:/i
-        .test(text)
-    ){
-
-        $("status").textContent =
-            "⚠ Unsafe content detected.";
-
-        return false;
-
-    }
-
-
-    if(
-        (
-            text.match(
-                /https?:\/\//gi
-            ) || []
-        ).length > 5
-    ){
-
-        $("status").textContent =
-            "⚠ Too many links.";
-
-        return false;
-
-    }
-
-
-    return true;
-
+function togglePassword(){
+    const x=$("appPassword");
+    x.type=x.type==="password"?"text":"password";
 }
 
-
-$("sub").addEventListener(
-    "input",
-    messageCheck
-);
-
-
-$("msg").addEventListener(
-    "input",
-    messageCheck
-);
-
-
-/* ==========================================
-   CLOUDFLARE TOKEN
-========================================== */
-
-function getTurnstileToken(){
-
-    const input =
-        document.querySelector(
-            '[name="cf-turnstile-response"]'
-        );
-
-
-    return input
-        ? input.value
-        : "";
-
+function fmt(x){
+    document.execCommand(x,false,null);
+    $("editor").focus();
 }
 
+function caps(){
+    const s=window.getSelection(),t=s.toString();
+    document.execCommand(
+        "insertHTML",false,
+        '<span class="small-caps">'+(t||"Small Caps")+"</span>"
+    );
+}
 
-/* ==========================================
-   SEND ALL
-========================================== */
+function link(){
+    const x=prompt("Enter URL:");
+    if(x)document.execCommand("createLink",false,x);
+}
 
-$("send").onclick =
-async function(){
+function token(){
+    const x=document.querySelector(
+        'input[name="cf-turnstile-response"]'
+    );
+    return x?x.value:"";
+}
 
+function stopSending(){
+    stopRequested=true;
+    $("status").textContent=
+        "Stop requested. Current batch will finish.";
+}
 
-    if(sending){
+async function startSending(){
 
+    if(sending)return;
+
+    const list=parseRecipients();
+
+    if(!list.length){
+        $("status").textContent="Add at least one recipient.";
         return;
-
     }
 
-
-    const all =
-        getRecipients();
-
-
-    /* ======================================
-       RECIPIENT VALIDATION
-    ====================================== */
-
-    if(!all.length){
-
-        $("status").textContent =
-            "Add recipients first.";
-
+    if(!$("gmail").value.trim()){
+        $("status").textContent="Enter Gmail address.";
         return;
-
     }
 
-
-    if(all.length > 25){
-
-        $("status").textContent =
-            "Maximum 25 recipients.";
-
+    if(!$("appPassword").value.trim()){
+        $("status").textContent="Enter Gmail App Password.";
         return;
-
     }
 
-
-    /* ======================================
-       REQUIRED FIELDS
-    ====================================== */
-
-    const required = [
-
-        [
-            "name",
-            "Enter sender name."
-        ],
-
-        [
-            "gmail",
-            "Enter Gmail address."
-        ],
-
-        [
-            "pass",
-            "Enter Gmail App Password."
-        ],
-
-        [
-            "sub",
-            "Enter email subject."
-        ],
-
-        [
-            "msg",
-            "Enter message."
-        ]
-
-    ];
-
-
-    for(
-        const [id, error] of required
-    ){
-
-        if(
-            !$(id).value.trim()
-        ){
-
-            $("status").textContent =
-                error;
-
-            return;
-
-        }
-
-    }
-
-
-    /* ======================================
-       MESSAGE SAFETY
-    ====================================== */
-
-    if(
-        !messageCheck()
-    ){
-
+    if(!$("subject").value.trim()){
+        $("status").textContent="Enter email subject.";
         return;
-
     }
 
-
-    /* ======================================
-       CLOUDFLARE
-    ====================================== */
-
-    const token =
-        getTurnstileToken();
-
-
-    if(!token){
-
-        $("status").textContent =
-            "Please complete Cloudflare verification.";
-
+    {% if turnstile_site_key %}
+    if(!token()){
+        $("status").textContent="Complete Cloudflare verification.";
         return;
-
     }
+    {% endif %}
 
-
-    /* ======================================
-       SEND SNAPSHOT
-       
-       IMPORTANT:
-       Current Gmail is copied here.
-       
-       If user changes Gmail field later,
-       current sending operation remains
-       connected to this original Gmail.
-    ====================================== */
-
-    const sendSnapshot = {
-
-        sender_name:
-            $("name").value,
-
-        gmail:
-            $("gmail").value,
-
-        app_password:
-            $("pass").value,
-
-        subject:
-            $("sub").value,
-
-        message:
-            $("msg").value
-
+    const snap={
+        sender_name:$("senderName").value.trim(),
+        gmail:$("gmail").value.trim(),
+        app_password:$("appPassword").value,
+        subject:$("subject").value,
+        message_html:$("editor").innerHTML,
+        turnstile_token:token()
     };
 
+    sending=true;
+    stopRequested=false;
 
-    const recipientsSnapshot =
-        [...all];
+    let sent=0,failed=0;
 
+    $("sendButton").disabled=true;
+    $("senderStatus").innerHTML=
+        "◯ Sent: <strong>"+snap.gmail+"</strong>";
 
-    /* ======================================
-       SHOW SENDING GMAIL
-    ====================================== */
+    $("total").textContent=list.length;
+    $("sent").textContent=0;
+    $("failed").textContent=0;
+    $("remaining").textContent=list.length;
+    $("progress").style.width="0%";
 
-    $("sendingFrom").textContent =
-        sendSnapshot.gmail.trim();
+    for(let i=0;i<list.length;i+=5){
 
+        if(stopRequested){
+            $("batchStatus").textContent="Sending stopped.";
+            break;
+        }
 
-    /* ======================================
-       START SENDING
-    ====================================== */
+        const batch=list.slice(i,i+5);
 
-    sending = true;
-
-
-    $("send").disabled =
-        true;
-
-
-    $("sent").textContent =
-        "0";
-
-
-    $("failed").textContent =
-        "0";
-
-
-    $("remaining").textContent =
-        recipientsSnapshot.length;
-
-
-    $("progress").style.width =
-        "0%";
-
-
-    $("batchStatus").textContent =
-        "";
-
-
-    let sentCount = 0;
-
-    let failedCount = 0;
-
-    let processed = 0;
-
-
-    const totalBatches =
-        Math.ceil(
-            recipientsSnapshot.length / 5
-        );
-
-
-    /* ======================================
-       5 EMAILS PER BATCH
-       
-       No artificial delay.
-       
-       Batch 1:
-       1-5
-       
-       Batch 2:
-       6-10
-       
-       Batch 3:
-       11-15
-       
-       Batch 4:
-       16-20
-       
-       Batch 5:
-       21-25
-    ====================================== */
-
-    for(
-        let start = 0;
-
-        start < recipientsSnapshot.length;
-
-        start += 5
-    ){
-
-
-        const batch =
-            recipientsSnapshot.slice(
-                start,
-                start + 5
-            );
-
-
-        const batchNumber =
-            Math.floor(
-                start / 5
-            ) + 1;
-
-
-        $("status").textContent =
-            "● Sending...";
-
-
-        $("batchStatus").textContent =
-            `Batch ${batchNumber} of ${totalBatches} — sending ${batch.length} emails`;
-
-
-        let responseData =
-            null;
-
-
-        /* ==================================
-           SEND REQUEST
-        ================================== */
+        $("batchStatus").textContent=
+            "Sending "+(i+1)+"-"+Math.min(i+5,list.length)+
+            " of "+list.length;
 
         try{
 
-            const response =
-                await fetch(
-                    "/api/send-batch",
-                    {
+            const r=await fetch("/api/send-batch",{
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({...snap,recipients:batch})
+            });
 
-                        method:
-                            "POST",
+            const d=await r.json();
 
-                        headers:{
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                /*
-                                 * Snapshot data
-                                 */
-                                ...sendSnapshot,
-
-
-                                /*
-                                 * Current 5
-                                 */
-                                recipients:
-                                    batch,
-
-
-                                /*
-                                 * Cloudflare is
-                                 * verified for
-                                 * first batch.
-                                 */
-                                turnstile_token:
-                                    start === 0
-                                    ? token
-                                    : ""
-
-                            })
-
-                    }
-                );
-
-
-            responseData =
-                await response.json();
-
-
-            /* ==============================
-               GMAIL AUTH ERROR
-            ============================== */
-
-            if(
-                response.status === 401
-            ){
-
-                $("status").textContent =
-                    "✕ Gmail authentication failed.";
-
-                $("batchStatus").textContent =
-                    "Check the Gmail address and App Password.";
-
-                sending = false;
-
-                $("send").disabled =
-                    false;
-
-                return;
-
-            }
-
-
-            /* ==============================
-               CLOUDFLARE ERROR
-            ============================== */
-
-            if(
-                response.status === 403
-            ){
-
-                $("status").textContent =
-                    responseData.error ||
-                    "Cloudflare verification failed.";
-
-                sending = false;
-
-                $("send").disabled =
-                    false;
-
-                return;
-
-            }
-
-
-            /* ==============================
-               OTHER ERROR
-            ============================== */
-
-            if(!response.ok){
-
-                $("status").textContent =
-                    responseData.error ||
-                    "Sending failed.";
-
+            if(!r.ok){
+                $("status").textContent=d.error||"Sending stopped.";
                 break;
-
             }
 
+            sent+=d.sent.length;
+            failed+=d.failed.length;
 
-        }catch(error){
+            const done=sent+failed;
 
-            $("status").textContent =
-                "Server connection failed.";
+            $("sent").textContent=sent;
+            $("failed").textContent=failed;
+            $("remaining").textContent=list.length-done;
+            $("progress").style.width=
+                done/list.length*100+"%";
 
-            $("batchStatus").textContent =
-                "Sending stopped.";
+            $("status").textContent=
+                "● "+done+"/"+list.length+" processed";
 
+        }catch(e){
+            $("status").textContent="Connection error.";
             break;
-
         }
-
-
-        if(!responseData){
-
-            $("status").textContent =
-                "No server response.";
-
-            break;
-
-        }
-
-
-        if(responseData.error){
-
-            $("status").textContent =
-                responseData.error;
-
-            break;
-
-        }
-
-
-        /* ==================================
-           UPDATE PROGRESS
-        ================================== */
-
-        sentCount +=
-            responseData.sent.length;
-
-
-        failedCount +=
-            responseData.failed.length;
-
-
-        processed =
-            sentCount +
-            failedCount;
-
-
-        $("sent").textContent =
-            sentCount;
-
-
-        $("failed").textContent =
-            failedCount;
-
-
-        $("remaining").textContent =
-            recipientsSnapshot.length -
-            processed;
-
-
-        $("progress").style.width =
-            Math.round(
-
-                (
-                    processed /
-                    recipientsSnapshot.length
-                ) * 100
-
-            ) + "%";
-
-
-        $("status").textContent =
-            `● ${processed} of ${recipientsSnapshot.length} processed`;
-
-
-        if(
-            processed <
-            recipientsSnapshot.length
-        ){
-
-            $("batchStatus").textContent =
-                `Batch ${batchNumber} completed — next batch starting...`;
-
-        }
-
-
-        /*
-         * NO DELAY HERE.
-         *
-         * Next 5 starts immediately.
-         */
-
     }
 
+    sending=false;
+    $("sendButton").disabled=false;
 
-    /* ======================================
-       COMPLETED
-    ====================================== */
-
-    if(
-        processed ===
-        recipientsSnapshot.length
-    ){
-
-        $("status").textContent =
-            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
-
-
-        $("batchStatus").textContent =
-            "All batches completed.";
-
-
-        $("remaining").textContent =
-            "0";
-
-
-        $("progress").style.width =
-            "100%";
-
+    if(!stopRequested){
+        $("batchStatus").textContent="All batches completed.";
+        $("status").textContent="● Sending completed.";
     }
+}
 
-
-    /* ======================================
-       ENABLE BUTTON
-    ====================================== */
-
-    sending = false;
-
-
-    $("send").disabled =
-        false;
-
-
-    /* ======================================
-       RESET CLOUDFLARE
-    ====================================== */
-
-    if(
-        window.turnstile
-    ){
-
-        try{
-
-            window.turnstile.reset();
-
-        }catch(error){
-
-            /* Ignore */
-
-        }
-
-    }
-
-};
-
-
-/* ==========================================
-   INITIAL COUNT
-========================================== */
-
-updateCount();
-
+updateRecipients();
 
 </script>
 
-
 </body>
-
 </html>
