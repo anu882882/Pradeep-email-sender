@@ -1,97 +1,28 @@
 <!doctype html>
 <html>
-
 <head>
-
 <meta charset="utf-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
-
-<link
-rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
-
+<link rel="stylesheet" href="/static/style.css">
 </head>
+<body class="login-page">
 
+<div class="login-card">
+    <h1>Secure Mail Console</h1>
+    <p>Sign in to continue</p>
 
-<body>
+    <form method="post">
+        <label>Password</label>
+        <input type="password" name="password" required autofocus>
 
+        {% if error %}
+        <div class="error">{{error}}</div>
+        {% endif %}
 
-<main class="login-main">
-
-
-<section class="login-card">
-
-
-<div class="login-logo">
-
-<div class="shield-big">
-♢
+        <button type="submit">Login</button>
+    </form>
 </div>
-
-<div>
-
-<strong>
-Secure Mail Console
-</strong>
-
-<small>
-Gmail Mail Sender
-</small>
-
-</div>
-
-</div>
-
-
-<h2>
-Login
-</h2>
-
-
-<form method="post">
-
-
-<label>
-Password
-</label>
-
-
-<input
-type="password"
-name="password"
-placeholder="Enter password"
-required
-autofocus>
-
-
-<button type="submit">
-Login
-</button>
-
-
-</form>
-
-
-{% if error %}
-
-<p class="error-text">
-{{ error }}
-</p>
-
-{% endif %}
-
-
-</section>
-
-
-</main>
-
 
 </body>
-
 </html>
