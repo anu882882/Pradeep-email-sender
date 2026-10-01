@@ -105,13 +105,16 @@ main{
 }
 
 
-/* CARD */
+/* CARDS */
 
 .card{
     background:#fff;
     border-radius:12px;
+
     box-shadow:
-        0 5px 14px rgba(30,50,90,.09);
+        0 5px 14px
+        rgba(30,50,90,.09);
+
     border:1px solid #edf0f5;
 }
 
@@ -143,6 +146,7 @@ main{
     display:flex;
     align-items:center;
     gap:6px;
+
     font-size:19px;
     color:#141b2d;
 }
@@ -164,20 +168,25 @@ main{
 .found{
     background:#edf5ff;
     color:#397ff5;
+
     padding:6px 10px;
+
     border-radius:20px;
+
     font-size:11px;
     font-weight:600;
 }
 
 
-/* PROGRESS */
+/* PROGRESS HEADING */
 
 .progress-heading{
     display:flex;
     align-items:center;
     justify-content:space-between;
+
     gap:18px;
+
     margin-bottom:10px;
 }
 
@@ -185,27 +194,34 @@ main{
     display:flex;
     flex-direction:column;
     align-items:flex-end;
+
     gap:3px;
+
     max-width:48%;
 }
 
 .sending-from span{
     font-size:10px;
     font-weight:700;
+
     color:#7a879d;
+
     text-transform:uppercase;
     letter-spacing:.5px;
 }
 
 .sending-from strong{
     display:block;
+
     max-width:260px;
+
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
 
     font-size:12px;
     font-weight:600;
+
     color:#397ff5;
 }
 
@@ -214,17 +230,22 @@ main{
 
 .form-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
+
+    grid-template-columns:
+        1fr 1fr;
+
     gap:0 16px;
 }
 
 label{
     display:block;
+
     margin-top:10px;
     margin-bottom:8px;
 
     font-size:13px;
     font-weight:600;
+
     color:#182033;
 }
 
@@ -232,7 +253,9 @@ input,
 textarea{
     width:100%;
 
-    border:1px solid #dbe2ee;
+    border:
+        1px solid #dbe2ee;
+
     border-radius:7px;
 
     background:#fff;
@@ -251,6 +274,7 @@ input{
 
 input:focus,
 textarea:focus{
+
     border-color:#7aa7f8;
 
     box-shadow:
@@ -262,12 +286,161 @@ textarea:focus{
     margin-top:22px;
 }
 
-.message{
-    height:293px;
-    min-height:293px;
-    padding:14px;
-    resize:vertical;
+
+/* ==========================================
+   REAL HTML EDITOR
+========================================== */
+
+.editor{
+    width:100%;
+
+    border:
+        1px solid #dbe2ee;
+
+    border-radius:8px;
+
+    background:#fff;
+
+    overflow:hidden;
 }
+
+.editor:focus-within{
+
+    border-color:#7aa7f8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(72,128,241,.10);
+}
+
+
+/* TOOLBAR */
+
+.toolbar{
+
+    min-height:45px;
+
+    display:flex;
+    align-items:center;
+
+    gap:4px;
+
+    padding:6px 8px;
+
+    background:#f8faff;
+
+    border-bottom:
+        1px solid #e4e8f0;
+}
+
+.toolbar button{
+
+    min-width:32px;
+    height:31px;
+
+    padding:0 9px;
+
+    border:
+        1px solid #dce3ee;
+
+    border-radius:5px;
+
+    background:#fff;
+
+    color:#263149;
+
+    cursor:pointer;
+
+    font-family:inherit;
+    font-size:12px;
+
+    transition:
+        background .15s,
+        border-color .15s;
+}
+
+.toolbar button:hover{
+
+    background:#edf4ff;
+
+    border-color:#a9c5f5;
+}
+
+#smallCapsButton{
+
+    color:#397ff5;
+
+    font-weight:600;
+}
+
+
+/* EDITABLE AREA */
+
+.html-editor{
+
+    height:293px;
+
+    min-height:293px;
+
+    padding:15px;
+
+    overflow:auto;
+
+    outline:none;
+
+    color:#172033;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-size:14px;
+
+    line-height:1.65;
+}
+
+
+/* THE ACTUAL SMALL-CAPS STYLE */
+
+.html-editor .small-caps,
+.small-caps{
+
+    font-variant:
+        small-caps;
+
+    font-feature-settings:
+        "smcp";
+
+    letter-spacing:
+        .02em;
+}
+
+
+/* Editor links */
+
+.html-editor a{
+
+    color:#2563eb;
+
+    text-decoration:underline;
+}
+
+
+/* HELP */
+
+.editor-help{
+
+    margin-top:8px;
+
+    color:#8993a5;
+
+    font-size:10px;
+
+    line-height:1.5;
+}
+
+
+/* PASSWORD */
 
 .password-box{
     position:relative;
@@ -278,10 +451,14 @@ textarea:focus{
 }
 
 .password-box button{
+
     position:absolute;
+
     right:8px;
     top:50%;
-    transform:translateY(-50%);
+
+    transform:
+        translateY(-50%);
 
     width:30px;
     height:30px;
@@ -290,56 +467,25 @@ textarea:focus{
     padding:0;
 
     border:0;
+
     background:transparent;
+
     color:#74829a;
-    cursor:pointer;
-}
-
-
-/* SMALL CAPS TOOL */
-
-.format-toolbar{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:10px;
-}
-
-.format-toolbar span{
-    color:#65728a;
-    font-size:11px;
-}
-
-.format-toolbar button{
-    border:1px solid #d7deea;
-    background:#fff;
-    color:#397ff5;
-
-    border-radius:6px;
-
-    padding:6px 10px;
 
     cursor:pointer;
-
-    font-family:inherit;
-    font-size:11px;
-    font-weight:600;
-}
-
-.format-help{
-    margin-top:7px;
-    color:#8993a5;
-    font-size:10px;
 }
 
 
 /* CLOUDFLARE */
 
 .turnstile-area{
+
     margin-top:26px;
+
     min-height:70px;
 
     display:flex;
+
     align-items:center;
 }
 
@@ -347,15 +493,21 @@ textarea:focus{
 /* RECIPIENTS */
 
 .recipient-help{
+
     color:#65728a;
+
     font-size:12px;
+
     margin-bottom:11px;
 }
 
 .recipient-input{
+
     height:150px;
     min-height:150px;
+
     padding:14px;
+
     resize:vertical;
 
     font-family:
@@ -370,33 +522,49 @@ textarea:focus{
 /* STATS */
 
 .stats{
+
     display:grid;
-    grid-template-columns:1fr 1fr;
+
+    grid-template-columns:
+        1fr 1fr;
+
     gap:16px;
+
     margin-top:10px;
 }
 
 .stat{
+
     height:100px;
 
-    border:1px solid #dce3ee;
+    border:
+        1px solid #dce3ee;
+
     border-radius:8px;
 
     display:flex;
+
     flex-direction:column;
+
     align-items:center;
+
     justify-content:center;
 }
 
 .stat span{
+
     color:#66758e;
+
     font-size:12px;
     font-weight:700;
+
     margin-bottom:9px;
 }
 
 .stat strong{
+
     font-size:28px;
+
     color:#397ff5;
 }
 
@@ -416,19 +584,24 @@ textarea:focus{
 /* PROGRESS BAR */
 
 .progress-track{
+
     width:100%;
+
     height:8px;
 
     margin-top:24px;
 
     border-radius:20px;
+
     background:#e2e8f2;
 
     overflow:hidden;
 }
 
 .progress-bar{
+
     width:0;
+
     height:100%;
 
     background:
@@ -440,22 +613,28 @@ textarea:focus{
 
     border-radius:20px;
 
-    transition:width .2s ease;
+    transition:
+        width .2s ease;
 }
 
 
 /* STATUS */
 
 .send-status{
+
     text-align:center;
+
     margin-top:18px;
 
     font-size:14px;
+
     color:#263149;
+
     font-weight:600;
 }
 
 .batch-status{
+
     min-height:20px;
 
     text-align:center;
@@ -463,19 +642,23 @@ textarea:focus{
     margin-top:7px;
 
     color:#65728a;
+
     font-size:12px;
 }
 
 
-/* SEND */
+/* SEND BUTTON */
 
 .send-button{
+
     width:100%;
+
     height:45px;
 
     margin-top:20px;
 
     border:0;
+
     border-radius:7px;
 
     background:
@@ -488,14 +671,18 @@ textarea:focus{
     color:#fff;
 
     font-family:inherit;
+
     font-size:15px;
+
     font-weight:700;
 
     cursor:pointer;
 }
 
 .send-button:disabled{
+
     opacity:.55;
+
     cursor:not-allowed;
 }
 
@@ -503,14 +690,21 @@ textarea:focus{
 /* LOGIN */
 
 .login-main{
+
     width:430px;
-    max-width:calc(100% - 30px);
+
+    max-width:
+        calc(100% - 30px);
+
     margin:110px auto;
 }
 
 .login-card{
+
     background:#fff;
+
     border-radius:12px;
+
     padding:32px;
 
     box-shadow:
@@ -519,14 +713,20 @@ textarea:focus{
 }
 
 .login-logo{
+
     display:flex;
+
     align-items:center;
+
     gap:10px;
+
     margin-bottom:28px;
 }
 
 .login-logo strong{
+
     display:block;
+
     font-size:24px;
 
     background:
@@ -537,45 +737,62 @@ textarea:focus{
         );
 
     -webkit-background-clip:text;
+
     background-clip:text;
+
     color:transparent;
 }
 
 .login-logo small{
+
     display:block;
+
     color:#7b8494;
+
     margin-top:3px;
 }
 
 .shield-big{
+
     font-size:38px;
+
     color:#397ff5;
 }
 
 .login-card h2{
+
     margin:0 0 15px;
+
     font-size:20px;
 }
 
 .login-card button{
+
     width:100%;
+
     height:44px;
+
     margin-top:18px;
 
     border:0;
+
     border-radius:7px;
 
     background:#397ff5;
+
     color:#fff;
 
     font-family:inherit;
+
     font-weight:600;
 
     cursor:pointer;
 }
 
 .error-text{
+
     color:#e04444;
+
     font-size:13px;
 }
 
@@ -585,8 +802,11 @@ textarea:focus{
 @media(max-width:900px){
 
     header{
+
         width:auto;
-        max-width:calc(100% - 24px);
+
+        max-width:
+            calc(100% - 24px);
     }
 
     .top-brand strong{
@@ -594,14 +814,18 @@ textarea:focus{
     }
 
     main{
-        max-width:calc(100% - 24px);
+
+        max-width:
+            calc(100% - 24px);
     }
 
     .dashboard{
+
         grid-template-columns:1fr;
     }
 
     .compose{
+
         min-height:auto;
     }
 }
@@ -627,9 +851,13 @@ textarea:focus{
         padding:20px;
     }
 
-    .message{
+    .html-editor{
         min-height:240px;
         height:240px;
+    }
+
+    .toolbar{
+        flex-wrap:wrap;
     }
 
     .progress-heading{
