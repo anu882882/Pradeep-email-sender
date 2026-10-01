@@ -1,1131 +1,307 @@
 <!doctype html>
 <html>
-
 <head>
-
 <meta charset="utf-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
 
-<link
-rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="/static/style.css">
 
-<script
-src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async
-defer>
-</script>
-
+{% if turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
 </head>
-
 
 <body>
 
-
 <header>
-
-<div class="top-brand">
-
-<div class="shield">
-♢
-</div>
-
-<strong>
-Secure Mail Console
-</strong>
-
-</div>
-
-
-<a
-class="logout"
-href="/logout">
-
-↪ Logout
-
-</a>
-
+    <div>
+        <h1>Secure Mail Console</h1>
+        <span>Gmail Mail Console</span>
+    </div>
+    <a href="/logout">Logout</a>
 </header>
-
 
 <main>
 
+<section class="card">
 
-<div class="page-title">
+<h2>Sender</h2>
 
-<span>➤</span>
-
-<strong>
-Bulk Email Sender
-</strong>
-
-</div>
-
-
-<div class="dashboard">
-
-
-<section class="compose card">
-
-
-<div class="card-title">
-
-<span>✎</span>
-
-<strong>
-Compose Message
-</strong>
-
-</div>
-
-
-<div class="form-grid">
-
+<div class="grid">
 
 <div>
-
-<label>
-Sender Name
-</label>
-
-<input
-id="name"
-placeholder="E.g., John Doe">
-
+<label>Sender Name</label>
+<input id="senderName" placeholder="Your name">
 </div>
-
 
 <div>
-
-<label>
-Your Gmail
-</label>
-
-<input
-id="gmail"
-type="email"
-placeholder="you@gmail.com">
-
+<label>Your Gmail</label>
+<input id="gmail" type="email" placeholder="your@gmail.com">
 </div>
-
 
 <div>
-
-<label>
-App Password
-</label>
-
-<div class="password-box">
-
-<input
-id="pass"
-type="password"
-placeholder="16-char app password">
-
-<button
-type="button"
-id="togglePassword">
-◉
-</button>
-
+<label>App Password</label>
+<input id="appPassword" type="password" placeholder="Gmail App Password">
 </div>
-
-</div>
-
 
 <div>
-
-<label>
-Email Subject
-</label>
-
-<input
-id="sub"
-placeholder="Enter subject line...">
+<label>Subject</label>
+<input id="subject" placeholder="Email subject">
+</div>
 
 </div>
 
-
-</div>
-
-
-<label class="message-label">
-Message Body (HTML Editor)
-</label>
+</section>
 
 
-<!-- =====================================
-     REAL HTML EDITOR
-====================================== -->
+<section class="card">
 
-<div class="editor">
-
+<h2>Message Body</h2>
 
 <div class="toolbar">
-
-
-<button
-type="button"
-data-command="bold"
-title="Bold">
-
-<strong>B</strong>
-
-</button>
-
-
-<button
-type="button"
-data-command="italic"
-title="Italic">
-
-<em>I</em>
-
-</button>
-
-
-<button
-type="button"
-data-command="underline"
-title="Underline">
-
-<u>U</u>
-
-</button>
-
-
-<button
-type="button"
-id="smallCapsButton"
-title="Small Caps">
-
-Small Caps
-
-</button>
-
-
-<button
-type="button"
-data-command="insertUnorderedList"
-title="Bullet List">
-
-☷
-
-</button>
-
-
-<button
-type="button"
-id="linkButton"
-title="Insert Link">
-
-🔗
-
-</button>
-
-
+<button type="button" onclick="cmd('bold')"><b>B</b></button>
+<button type="button" onclick="cmd('italic')"><i>I</i></button>
+<button type="button" onclick="cmd('underline')"><u>U</u></button>
+<button type="button" onclick="smallCaps()">Small Caps</button>
+<button type="button" onclick="cmd('insertUnorderedList')">• List</button>
+<button type="button" onclick="addLink()">Link</button>
 </div>
 
+<div id="editor"
+     class="editor"
+     contenteditable="true"
+     spellcheck="true"><p>Hi {name},</p><p>Your message here.</p></div>
 
-<div
-id="editor"
-class="html-editor"
-contenteditable="true"
-spellcheck="true">
-
-Write your email here...
-
-</div>
-
-
-</div>
-
-
-<div class="editor-help">
-
-Spintax supported:
-<strong>{Hi|Hello|Hey}</strong>
-and
-<strong>{name}</strong>.
-Select text and click
-<strong>Small Caps</strong>
-to format it.
-
-</div>
-
-
-<div class="turnstile-area">
-
-<div
-class="cf-turnstile"
-data-sitekey="{{ turnstile_site_key }}"
-data-theme="light">
-</div>
-
-</div>
-
+<p class="hint">
+Supports {name} and spintax such as {Hi|Hello|Hey}.
+</p>
 
 </section>
 
 
-<div class="right-column">
+<section class="card">
 
+<h2>Recipients</h2>
 
-<section class="card recipients-card">
+<textarea id="recipients"
+placeholder="email@example.com&#10;another@example.com"></textarea>
 
-
-<div class="card-title recipients-title">
-
-<div>
-
-<span>♣</span>
-
-<strong>
-Recipients
-</strong>
-
+<div class="count">
+Maximum 25 recipients
 </div>
-
-<span
-class="found"
-id="found">
-
-0 found
-
-</span>
-
-</div>
-
-
-<div class="recipient-help">
-
-Paste emails (comma separated, new lines, or Excel copy)
-
-</div>
-
-
-<textarea
-id="recipients"
-class="recipient-input"
-placeholder="recipient1@example.com
-recipient2@example.com
-recipient3@example.com"></textarea>
-
 
 </section>
 
 
-<section class="card progress-card">
-
-
-<div class="progress-heading">
-
-
-<div class="card-title">
-
-<span>◕</span>
-
-<strong>
-Progress Monitor
-</strong>
-
+{% if turnstile_site_key %}
+<section class="card security">
+<h2>Spam Protection</h2>
+<div class="cf-turnstile"
+     data-sitekey="{{turnstile_site_key}}"
+     data-theme="light">
 </div>
+</section>
+{% endif %}
 
 
-<div class="sending-from">
+<section class="card">
 
-<span>
+<h2>Progress Monitor</h2>
+
+<div class="sender-id">
 SENDING FROM
-</span>
-
-<strong
-id="sendingFrom">
-
-—
-
-</strong>
-
+<strong id="from">—</strong>
 </div>
-
-
-</div>
-
 
 <div class="stats">
 
-
-<div class="stat">
-
-<span>
-TOTAL
-</span>
-
-<strong id="total">
-0
-</strong>
-
+<div>
+<strong id="total">0</strong>
+<span>Total</span>
 </div>
 
-
-<div class="stat sent-stat">
-
-<span>
-SENT
-</span>
-
-<strong id="sent">
-0
-</strong>
-
+<div>
+<strong id="sent">0</strong>
+<span>Sent</span>
 </div>
 
-
-<div class="stat failed-stat">
-
-<span>
-FAILED
-</span>
-
-<strong id="failed">
-0
-</strong>
-
+<div>
+<strong id="failed">0</strong>
+<span>Failed</span>
 </div>
 
-
-<div class="stat remaining-stat">
-
-<span>
-REMAINING
-</span>
-
-<strong id="remaining">
-0
-</strong>
-
-</div>
-
-
-</div>
-
-
-<div class="progress-track">
-
-<div
-id="progress"
-class="progress-bar">
+<div>
+<strong id="remaining">0</strong>
+<span>Remaining</span>
 </div>
 
 </div>
 
-
-<div
-class="send-status"
-id="status">
-
-● Ready to send
-
+<div class="progress-bg">
+<div id="progress"></div>
 </div>
 
+<div id="batchStatus">Ready</div>
+<div id="status"></div>
 
-<div
-class="batch-status"
-id="batchStatus">
-</div>
-
-
-<button
-id="send"
-class="send-button">
-
-➤ Send All
-
-</button>
-
+<button id="send" onclick="sendAll()">Send All</button>
 
 </section>
-
-
-</div>
-
-
-</div>
-
 
 </main>
 
 
 <script>
 
+const $=id=>document.getElementById(id);
 
-const $ =
-id => document.getElementById(id);
+function cmd(x){
+    document.execCommand(x,false,null);
+    $("editor").focus();
+}
 
-
-let sending = false;
-
-
-/* ==========================================
-   PASSWORD
-========================================== */
-
-$("togglePassword").onclick =
-function(){
-
-    const input =
-        $("pass");
-
-    input.type =
-        input.type === "password"
-        ? "text"
-        : "password";
-
-};
-
-
-/* ==========================================
-   REAL HTML EDITOR
-========================================== */
-
-const editor =
-    $("editor");
-
-
-/*
- * Remove placeholder when user clicks.
- */
-
-editor.addEventListener(
-    "focus",
-    function(){
-
-        if(
-            editor.textContent.trim() ===
-            "Write your email here..."
-        ){
-
-            editor.innerHTML = "";
-
-        }
-
-    }
-);
-
-
-/*
- * Small Caps
- *
- * Select any text in the editor,
- * then press Small Caps.
- */
-
-$("smallCapsButton").onclick =
-function(){
-
-    editor.focus();
-
-    const selection =
-        window.getSelection();
-
-    if(
-        !selection ||
-        selection.rangeCount === 0 ||
-        selection.isCollapsed
-    ){
-
-        $("status").textContent =
-            "Select text first.";
-
-        return;
-
-    }
-
-
-    const range =
-        selection.getRangeAt(0);
-
-
-    /*
-     * Do not allow formatting outside
-     * the editor.
-     */
-
-    if(
-        !editor.contains(
-            range.commonAncestorContainer
-        )
-    ){
-
-        return;
-
-    }
-
-
-    const span =
-        document.createElement(
-            "span"
-        );
-
-    span.className =
-        "small-caps";
-
-
-    try{
-
-        range.surroundContents(
-            span
-        );
-
-    }catch(error){
-
-        /*
-         * Works when selection crosses
-         * existing HTML elements.
-         */
-
-        const fragment =
-            range.extractContents();
-
-        span.appendChild(
-            fragment
-        );
-
-        range.insertNode(
-            span
-        );
-
-    }
-
-
-    selection.removeAllRanges();
-
-    const newRange =
-        document.createRange();
-
-    newRange.selectNodeContents(
-        span
-    );
-
-    selection.addRange(
-        newRange
-    );
-
-};
-
-
-/* ==========================================
-   BOLD / ITALIC / UNDERLINE
-========================================== */
-
-document
-.querySelectorAll(
-    "[data-command]"
-)
-.forEach(
-    button => {
-
-        button.onclick =
-        function(){
-
-            editor.focus();
-
-            document.execCommand(
-                button.dataset.command,
-                false,
-                null
-            );
-
-        };
-
-    }
-);
-
-
-/* ==========================================
-   LINK
-========================================== */
-
-$("linkButton").onclick =
-function(){
-
-    editor.focus();
-
-    const url =
-        prompt(
-            "Enter HTTPS link:"
-        );
-
-    if(!url){
-        return;
-    }
-
-
-    if(
-        !/^https:\/\//i.test(url)
-    ){
-
-        $("status").textContent =
-            "Only HTTPS links are allowed.";
-
-        return;
-
-    }
-
-
+function smallCaps(){
     document.execCommand(
-        "createLink",
+        "insertHTML",
         false,
-        url
+        '<span class="small-caps">'+
+        (window.getSelection()?.toString()||"Small Caps")+
+        '</span>'
     );
-
-};
-
-
-/* ==========================================
-   RECIPIENTS
-========================================== */
-
-function getRecipients(){
-
-    return [
-
-        ...new Set(
-
-            $("recipients")
-            .value
-            .split(/[\s,;]+/)
-            .map(
-                x =>
-                x.trim().toLowerCase()
-            )
-            .filter(Boolean)
-
-        )
-
-    ];
-
 }
 
-
-function updateCount(){
-
-    const list =
-        getRecipients();
-
-
-    $("found").textContent =
-        `${list.length} found`;
-
-
-    $("total").textContent =
-        list.length;
-
-
-    $("remaining").textContent =
-        list.length;
-
+function addLink(){
+    const url=prompt("Enter URL:");
+    if(url) document.execCommand("createLink",false,url);
 }
 
-
-$("recipients").addEventListener(
-    "input",
-    updateCount
-);
-
-
-/* ==========================================
-   CLOUDFLARE
-========================================== */
-
-function getTurnstileToken(){
-
-    const input =
-        document.querySelector(
-            '[name="cf-turnstile-response"]'
-        );
-
-    return input
-        ? input.value
-        : "";
-
+function getTurnstile(){
+    const el=document.querySelector(
+        'input[name="cf-turnstile-response"]'
+    );
+    return el ? el.value : "";
 }
 
+function parseRecipients(){
+    const a=$("recipients").value
+        .split(/[\s,;]+/)
+        .map(x=>x.trim().toLowerCase())
+        .filter(Boolean);
 
-/* ==========================================
-   SEND
-========================================== */
+    return [...new Set(a)].slice(0,25);
+}
 
-$("send").onclick =
-async function(){
+async function sendAll(){
 
-    if(sending){
+    const list=parseRecipients();
+
+    if(!list.length){
+        $("status").textContent="Add at least one recipient.";
         return;
     }
 
-
-    const recipients =
-        getRecipients();
-
-
-    if(!recipients.length){
-
-        $("status").textContent =
-            "Add recipients first.";
-
+    if(!$("gmail").value.trim()){
+        $("status").textContent="Enter Gmail address.";
         return;
-
     }
 
-
-    if(recipients.length > 25){
-
-        $("status").textContent =
-            "Maximum 25 recipients.";
-
+    if(!$("appPassword").value.trim()){
+        $("status").textContent="Enter Gmail App Password.";
         return;
-
     }
 
-
-    const required = [
-
-        [
-            "name",
-            "Enter sender name."
-        ],
-
-        [
-            "gmail",
-            "Enter Gmail address."
-        ],
-
-        [
-            "pass",
-            "Enter Gmail App Password."
-        ],
-
-        [
-            "sub",
-            "Enter email subject."
-        ]
-
-    ];
-
-
-    for(
-        const [id, error] of required
-    ){
-
-        if(
-            !$(id).value.trim()
-        ){
-
-            $("status").textContent =
-                error;
-
-            return;
-
-        }
-
-    }
-
-
-    const editorHTML =
-        editor.innerHTML;
-
-
-    const editorText =
-        editor.innerText.trim();
-
-
-    if(
-        !editorText ||
-        editorText ===
-        "Write your email here..."
-    ){
-
-        $("status").textContent =
-            "Enter message.";
-
+    if(!$("subject").value.trim()){
+        $("status").textContent="Enter subject.";
         return;
-
     }
 
+    {% if turnstile_site_key %}
+    const token=getTurnstile();
 
-    const turnstileToken =
-        getTurnstileToken();
-
-
-    if(!turnstileToken){
-
-        $("status").textContent =
-            "Please complete Cloudflare verification.";
-
+    if(!token){
+        $("status").textContent="Complete Cloudflare verification.";
         return;
-
     }
+    {% endif %}
 
-
-    /*
-     * Snapshot the complete sending
-     * configuration.
-     *
-     * Later changes in the form do not
-     * modify this sending operation.
-     */
-
-    const snapshot = {
-
-        sender_name:
-            $("name").value,
-
-        gmail:
-            $("gmail").value,
-
-        app_password:
-            $("pass").value,
-
-        subject:
-            $("sub").value,
-
-        message_html:
-            editorHTML
-
+    const snapshot={
+        sender_name:$("senderName").value.trim(),
+        gmail:$("gmail").value.trim(),
+        app_password:$("appPassword").value,
+        subject:$("subject").value,
+        message_html:$("editor").innerHTML,
+        turnstile_token:getTurnstile()
     };
 
+    $("from").textContent=snapshot.gmail;
+    $("total").textContent=list.length;
+    $("sent").textContent=0;
+    $("failed").textContent=0;
+    $("remaining").textContent=list.length;
+    $("progress").style.width="0%";
+    $("send").disabled=true;
 
-    $("sendingFrom").textContent =
-        snapshot.gmail.trim();
+    let sent=0;
+    let failed=0;
 
+    for(let i=0;i<list.length;i+=5){
 
-    sending = true;
+        const batch=list.slice(i,i+5);
 
-    $("send").disabled =
-        true;
-
-
-    let sentCount = 0;
-
-    let failedCount = 0;
-
-    let processed = 0;
-
-
-    const total =
-        recipients.length;
-
-
-    const batches =
-        Math.ceil(
-            total / 5
-        );
-
-
-    /*
-     * 5 recipients per request.
-     */
-
-    for(
-        let start = 0;
-        start < total;
-        start += 5
-    ){
-
-        const batch =
-            recipients.slice(
-                start,
-                start + 5
-            );
-
-
-        const batchNumber =
-            Math.floor(
-                start / 5
-            ) + 1;
-
-
-        $("status").textContent =
-            "● Sending...";
-
-
-        $("batchStatus").textContent =
-            `Batch ${batchNumber} of ${batches}`;
-
+        $("batchStatus").textContent=
+            `Sending ${i+1}-${Math.min(i+5,list.length)} of ${list.length}`;
 
         try{
 
-            const response =
-                await fetch(
-                    "/api/send-batch",
-                    {
+            const r=await fetch("/api/send-batch",{
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    ...snapshot,
+                    recipients:batch
+                })
+            });
 
-                        method:"POST",
+            const d=await r.json();
 
-                        headers:{
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                ...snapshot,
-
-                                recipients:
-                                    batch,
-
-                                turnstile_token:
-                                    turnstileToken
-
-                            })
-
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if(
-                response.status === 401
-            ){
-
-                $("status").textContent =
-                    "✕ Gmail authentication failed.";
-
+            if(!r.ok){
+                $("status").textContent=
+                    d.error||"Sending stopped.";
                 break;
-
             }
 
+            sent+=d.sent.length;
+            failed+=d.failed.length;
 
-            if(
-                response.status === 429
-            ){
+            const done=sent+failed;
 
-                $("status").textContent =
-                    data.error ||
-                    "Please wait before sending again.";
+            $("sent").textContent=sent;
+            $("failed").textContent=failed;
+            $("remaining").textContent=list.length-done;
 
-                break;
+            $("progress").style.width=
+                (done/list.length*100)+"%";
 
-            }
+            $("status").textContent=
+                `● ${done}/${list.length} processed`;
 
+        }catch(e){
 
-            if(!response.ok){
-
-                $("status").textContent =
-                    data.error ||
-                    "Sending failed.";
-
-                break;
-
-            }
-
-
-            sentCount +=
-                data.sent.length;
-
-
-            failedCount +=
-                data.failed.length;
-
-
-            processed =
-                sentCount +
-                failedCount;
-
-
-            $("sent").textContent =
-                sentCount;
-
-
-            $("failed").textContent =
-                failedCount;
-
-
-            $("remaining").textContent =
-                total -
-                processed;
-
-
-            $("progress").style.width =
-                Math.round(
-                    (
-                        processed /
-                        total
-                    ) * 100
-                ) + "%";
-
-
-            $("status").textContent =
-                `● ${processed} of ${total} processed`;
-
-
-        }catch(error){
-
-            $("status").textContent =
-                "Server connection failed.";
+            $("status").textContent=
+                "Connection error.";
 
             break;
-
         }
-
     }
 
-
-    if(
-        processed === total
-    ){
-
-        $("remaining").textContent =
-            "0";
-
-
-        $("progress").style.width =
-            "100%";
-
-
-        $("status").textContent =
-            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
-
-
-        $("batchStatus").textContent =
-            "All batches completed.";
-
-    }
-
-
-    sending = false;
-
-    $("send").disabled =
-        false;
-
-
-    if(window.turnstile){
-
-        try{
-
-            window.turnstile.reset();
-
-        }catch(error){}
-
-    }
-
-};
-
-
-updateCount();
-
+    $("batchStatus").textContent="All batches completed.";
+    $("send").disabled=false;
+}
 
 </script>
 
-
 </body>
-
 </html>
