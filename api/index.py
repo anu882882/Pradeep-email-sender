@@ -1,823 +1,219 @@
-import os
-import re
-import ssl
-import smtplib
-import secrets
-import time
+import os,re,ssl,smtplib,secrets,json,urllib.request,urllib.parse
 from functools import wraps
-from html.parser import HTMLParser
-
-from flask import (
-    Flask,
-    render_template,
-    request,
-    jsonify,
-    session,
-    redirect
-)
-
+from flask import Flask,render_template,request,jsonify,session,redirect
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from html.parser import HTMLParser
 
+app=Flask(__name__,template_folder="../templates",static_folder="../static")
+app.secret_key=os.getenv("SESSION_SECRET","change-this-secret")
+LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
+TURNSTILE_SECRET=os.getenv("TURNSTILE_SECRET_KEY","")
 
-app = Flask(
-    __name__,
-    template_folder="../templates",
-    static_folder="../static"
-)
+EMAIL=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-app.secret_key = os.getenv(
-    "SESSION_SECRET",
-    "change-this-secret"
-)
+def valid_email(x):
+    return bool(EMAIL.fullmatch(x.strip()))
 
-LOGIN = os.getenv(
-    "APP_LOGIN_PASSWORD",
-    "Baby882@#"
-)
+def recipients(text):
+    items=re.split(r"[,;\s]+",text or "")
+    out=[]
+    seen=set()
+    for x in items:
+        x=x.strip().lower()
+        if x and x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out[:25]
 
-TURNSTILE_SECRET = os.getenv(
-    "TURNSTILE_SECRET_KEY",
-    ""
-)
+def auth(f):
+    @wraps(f)
+    def w(*a,**k):
+        if not session.get("login"):
+            return redirect("/login")
+        return f(*a,**k)
+    return w
 
-EMAIL_PATTERN = re.compile(
-    r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-)
-
-COOLDOWN = 5
-
-
-def valid_email(value):
-    return bool(
-        EMAIL_PATTERN.fullmatch(
-            str(value).strip()
-        )
-    )
-
-
-def auth_required(function):
-
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-
-        if session.get("login"):
-            return function(*args, **kwargs)
-
-        return redirect("/login")
-
-    return wrapper
-
-
-def parse_recipients(value):
-
-    if isinstance(value, list):
-        items = value
-    else:
-        items = re.split(
-            r"[\s,;]+",
-            str(value or "")
-        )
-
-    result = []
-    seen = set()
-
-    for item in items:
-
-        email = str(item).strip().lower()
-
-        if not email:
-            continue
-
-        if email in seen:
-            continue
-
-        seen.add(email)
-        result.append(email)
-
-    return result
-
-
-def safe_message(subject, message):
-
-    combined = (
-        str(subject) +
-        " " +
-        str(message)
-    )
-
-    if re.search(
-        r"<\s*(script|iframe|object|embed|form)\b",
-        combined,
-        re.I
-    ):
-        return False, "Unsafe HTML detected."
-
-    if re.search(
-        r"javascript\s*:",
-        combined,
-        re.I
-    ):
-        return False, "Unsafe content detected."
-
-    links = re.findall(
-        r"https?://",
-        combined,
-        re.I
-    )
-
-    if len(links) > 5:
-        return False, "Too many links in message."
-
-    if re.search(
-        r"(.)\1{10,}",
-        combined
-    ):
-        return False, "Repeated characters detected."
-
-    return True, "OK"
-
-
-def resolve_spintax(text):
-
-    pattern = re.compile(
-        r"\{([^{}]+)\}"
-    )
-
-    def replace(match):
-
-        options = [
-            x.strip()
-            for x in match.group(1).split("|")
-            if x.strip()
-        ]
-
-        if not options:
-            return ""
-
-        return options[
-            secrets.randbelow(
-                len(options)
-            )
-        ]
-
-    previous = None
-
-    while previous != text:
-
-        previous = text
-
-        text = pattern.sub(
-            replace,
-            text
-        )
-
+def spin(text):
+    def repl(m):
+        return secrets.choice(m.group(1).split("|"))
+    for _ in range(20):
+        new=re.sub(r"\{([^{}|]+(?:\|[^{}|]+)+)\}",repl,text)
+        if new==text:
+            break
+        text=new
     return text
 
-
-# -------------------------------------------------
-# HTML SANITIZER
-# -------------------------------------------------
-
-ALLOWED_TAGS = {
-    "div",
-    "p",
-    "br",
-    "strong",
-    "b",
-    "em",
-    "i",
-    "u",
-    "span",
-    "a",
-    "ul",
-    "ol",
-    "li"
-}
-
-ALLOWED_ATTRS = {
-    "span": {"class"},
-    "a": {"href", "target", "rel"}
-}
-
-
-class EmailHTMLSanitizer(HTMLParser):
-
+class Cleaner(HTMLParser):
+    allowed={"div","p","br","strong","b","em","i","u","span",
+             "a","ul","ol","li","style"}
+    attrs={"a":{"href","target","rel"},"span":{"class"}}
     def __init__(self):
-
-        super().__init__(
-            convert_charrefs=True
-        )
-
-        self.output = []
-
-    def handle_starttag(
-        self,
-        tag,
-        attrs
-    ):
-
-        tag = tag.lower()
-
-        if tag not in ALLOWED_TAGS:
-            return
-
-        allowed = ALLOWED_ATTRS.get(
-            tag,
-            set()
-        )
-
-        clean_attrs = []
-
-        for name, value in attrs:
-
-            name = name.lower()
-
-            if name not in allowed:
-                continue
-
-            value = str(value or "")
-
-            if tag == "span":
-
-                if name == "class" and value != "small-caps":
+        super().__init__()
+        self.out=[]
+    def handle_starttag(self,t,a):
+        if t not in self.allowed:return
+        ok=[]
+        for k,v in a:
+            if k in self.attrs.get(t,set()):
+                if k=="href" and not str(v).lower().startswith(("http://","https://","mailto:")):
                     continue
+                ok.append((k,v))
+        s="<"+t
+        for k,v in ok:
+            s+=f' {k}="{str(v).replace(chr(34),"&quot;")}"'
+        self.out.append(s+">")
+    def handle_endtag(self,t):
+        if t in self.allowed:self.out.append("</"+t+">")
+    def handle_data(self,d):
+        self.out.append(d)
+    def html(self):
+        return "".join(self.out)
 
-            if tag == "a":
+def clean_html(x):
+    p=Cleaner()
+    p.feed(x or "")
+    return p.html()
 
-                if name == "href":
+def html_text(x):
+    x=re.sub(r"<style.*?</style>","",x or "",flags=re.I|re.S)
+    x=re.sub(r"<br\s*/?>","\n",x,flags=re.I)
+    x=re.sub(r"</p>|</div>|</li>","\n",x,flags=re.I)
+    x=re.sub(r"<[^>]+>","",x)
+    return re.sub(r"\n{3,}","\n\n",x).strip()
 
-                    if not re.match(
-                        r"^https?://",
-                        value,
-                        re.I
-                    ):
-                        continue
+def verify_turnstile(token):
+    if not TURNSTILE_SECRET:
+        return True
+    if not token:
+        return False
 
-            clean_attrs.append(
-                (name, value)
-            )
+    data=urllib.parse.urlencode({
+        "secret":TURNSTILE_SECRET,
+        "response":token
+    }).encode()
 
-        self.output.append(
-            "<" + tag
+    try:
+        req=urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=data,
+            method="POST"
         )
+        with urllib.request.urlopen(req,timeout=8) as r:
+            result=json.loads(r.read().decode())
+        return bool(result.get("success"))
+    except Exception:
+        return False
 
-        for name, value in clean_attrs:
-
-            escaped = (
-                value
-                .replace("&", "&amp;")
-                .replace('"', "&quot;")
-            )
-
-            self.output.append(
-                f' {name}="{escaped}"'
-            )
-
-        self.output.append(">")
-
-    def handle_startendtag(
-        self,
-        tag,
-        attrs
-    ):
-
-        self.handle_starttag(
-            tag,
-            attrs
-        )
-
-    def handle_endtag(self, tag):
-
-        tag = tag.lower()
-
-        if tag in ALLOWED_TAGS:
-
-            self.output.append(
-                f"</{tag}>"
-            )
-
-    def handle_data(self, data):
-
-        self.output.append(
-            escape_html(data)
-        )
-
-    def get_html(self):
-
-        return "".join(
-            self.output
-        )
-
-
-def sanitize_html(html):
-
-    parser = EmailHTMLSanitizer()
-
-    parser.feed(
-        str(html or "")
-    )
-
-    parser.close()
-
-    return parser.get_html()
-
-
-def html_to_plain(html):
-
-    text = str(html or "")
-
-    text = re.sub(
-        r"<br\s*/?>",
-        "\n",
-        text,
-        flags=re.I
-    )
-
-    text = re.sub(
-        r"</p\s*>",
-        "\n\n",
-        text,
-        flags=re.I
-    )
-
-    text = re.sub(
-        r"</div\s*>",
-        "\n",
-        text,
-        flags=re.I
-    )
-
-    text = re.sub(
-        r"<li\s*>",
-        "- ",
-        text,
-        flags=re.I
-    )
-
-    text = re.sub(
-        r"<[^>]+>",
-        "",
-        text
-    )
-
-    return (
-        text
-        .replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", '"')
-        .replace("&#39;", "'")
-    )
-
-
-def resolve_spintax_html(html):
-
-    class TextSpintaxParser(HTMLParser):
-
-        def __init__(self):
-
-            super().__init__(
-                convert_charrefs=True
-            )
-
-            self.output = []
-
-        def handle_starttag(
-            self,
-            tag,
-            attrs
-        ):
-
-            self.output.append(
-                "<" + tag
-            )
-
-            for name, value in attrs:
-
-                escaped = (
-                    str(value or "")
-                    .replace("&", "&amp;")
-                    .replace('"', "&quot;")
-                )
-
-                self.output.append(
-                    f' {name}="{escaped}"'
-                )
-
-            self.output.append(">")
-
-        def handle_startendtag(
-            self,
-            tag,
-            attrs
-        ):
-
-            self.handle_starttag(
-                tag,
-                attrs
-            )
-
-            self.output.append(
-                f"</{tag}>"
-            )
-
-        def handle_endtag(self, tag):
-
-            self.output.append(
-                f"</{tag}>"
-            )
-
-        def handle_data(self, data):
-
-            self.output.append(
-                escape_html(
-                    resolve_spintax(
-                        data
-                    )
-                )
-            )
-
-    parser = TextSpintaxParser()
-
-    parser.feed(
-        html
-    )
-
-    parser.close()
-
-    return "".join(
-        parser.output
-    )
-
-
-def escape_html(text):
-
-    return (
-        str(text)
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&#39;")
-    )
-
-
-@app.route(
-    "/login",
-    methods=["GET", "POST"]
-)
+@app.route("/login",methods=["GET","POST"])
 def login():
-
-    if request.method == "POST":
-
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-        if password == LOGIN:
-
-            session["login"] = True
-            session["last_send"] = 0
-
+    if request.method=="POST":
+        if secrets.compare_digest(
+            str(request.form.get("password","")),
+            str(LOGIN)
+        ):
+            session["login"]=True
             return redirect("/")
-
-        return render_template(
-            "login.html",
-            error="Wrong password."
-        )
-
-    return render_template(
-        "login.html"
-    )
-
+        return render_template("login.html",error="Invalid password.")
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
-
     session.clear()
-
     return redirect("/login")
 
-
 @app.route("/")
-@auth_required
+@auth
 def home():
-
     return render_template(
         "index.html",
-        turnstile_site_key=os.getenv(
-            "TURNSTILE_SITE_KEY",
-            ""
-        )
+        turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY","")
     )
 
-
-@app.route(
-    "/api/send-batch",
-    methods=["POST"]
-)
-@auth_required
+@app.post("/api/send-batch")
+@auth
 def send_batch():
+    d=request.get_json(silent=True) or {}
 
-    now = time.time()
+    if not verify_turnstile(d.get("turnstile_token","")):
+        return jsonify(error="Cloudflare verification failed."),403
 
-    last_send = session.get(
-        "last_send",
-        0
-    )
+    gmail=str(d.get("gmail","")).strip()
+    password="".join(str(d.get("app_password","")).split())
+    subject=spin(str(d.get("subject","")).strip())
+    message=clean_html(str(d.get("message_html","")))
 
-    if now - last_send < COOLDOWN:
+    raw=d.get("recipients",[])
+    if isinstance(raw,str):
+        raw=recipients(raw)
 
-        return jsonify(
-            error=(
-                f"Please wait "
-                f"{COOLDOWN} seconds."
-            )
-        ), 429
+    raw=[str(x).strip().lower() for x in raw]
+    raw=list(dict.fromkeys(raw))
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    if not gmail or not valid_email(gmail):
+        return jsonify(error="Enter a valid Gmail address."),400
 
-    sender = str(
-        data.get(
-            "sender_name",
-            ""
-        )
-    ).strip()
-
-    gmail = str(
-        data.get(
-            "gmail",
-            ""
-        )
-    ).strip().lower()
-
-    app_password = "".join(
-        str(
-            data.get(
-                "app_password",
-                ""
-            )
-        ).split()
-    )
-
-    subject = str(
-        data.get(
-            "subject",
-            ""
-        )
-    ).strip()
-
-    raw_html = str(
-        data.get(
-            "message_html",
-            ""
-        )
-    )
-
-    recipients = parse_recipients(
-        data.get(
-            "recipients",
-            []
-        )
-    )
-
-    if not sender:
-
-        return jsonify(
-            error="Sender name required."
-        ), 400
-
-    if not valid_email(gmail):
-
-        return jsonify(
-            error="Valid Gmail address required."
-        ), 400
-
-    if not app_password:
-
-        return jsonify(
-            error="Gmail App Password required."
-        ), 400
+    if not password:
+        return jsonify(error="Enter your Gmail App Password."),400
 
     if not subject:
+        return jsonify(error="Subject is required."),400
 
-        return jsonify(
-            error="Email subject required."
-        ), 400
+    if not message:
+        return jsonify(error="Message is required."),400
 
-    if not raw_html.strip():
+    if len(raw)>5:
+        return jsonify(error="Maximum 5 recipients per batch."),400
 
-        return jsonify(
-            error="Message required."
-        ), 400
+    good=[x for x in raw if valid_email(x)]
+    bad=[x for x in raw if not valid_email(x)]
 
-    if not recipients:
+    if not good:
+        return jsonify(error="No valid recipients."),400
 
-        return jsonify(
-            error="No recipients."
-        ), 400
-
-    if len(recipients) > 5:
-
-        return jsonify(
-            error="Only 5 recipients per batch."
-        ), 400
-
-    invalid = [
-        email
-        for email in recipients
-        if not valid_email(email)
-    ]
-
-    if invalid:
-
-        return jsonify(
-            error="Invalid recipient email.",
-            invalid=invalid
-        ), 400
-
-    clean_html = sanitize_html(
-        raw_html
-    )
-
-    clean_html = resolve_spintax_html(
-        clean_html
-    )
-
-    plain_text = html_to_plain(
-        clean_html
-    )
-
-    safe, reason = safe_message(
-        subject,
-        plain_text
-    )
-
-    if not safe:
-
-        return jsonify(
-            error=reason
-        ), 400
-
-    sent = []
-    failed = []
+    sent=[]
+    failed=bad[:]
 
     try:
-
-        context = (
-            ssl.create_default_context()
-        )
+        ctx=ssl.create_default_context()
 
         with smtplib.SMTP_SSL(
             "smtp.gmail.com",
             465,
-            context=context,
+            context=ctx,
             timeout=30
         ) as smtp:
 
-            smtp.login(
-                gmail,
-                app_password
-            )
+            smtp.login(gmail,password)
 
-            session["last_send"] = time.time()
-
-            for recipient in recipients:
-
+            for email in good:
                 try:
+                    local=email.split("@")[0]
+                    body=message.replace("{name}",local)
 
-                    personalized_plain = (
-                        plain_text.replace(
-                            "{name}",
-                            recipient.split("@")[0]
-                        )
-                    )
+                    plain=html_text(body)
 
-                    personalized_html = (
-                        clean_html.replace(
-                            "{name}",
-                            escape_html(
-                                recipient.split("@")[0]
-                            )
-                        )
-                    )
+                    msg=MIMEMultipart("alternative")
+                    msg["From"]=gmail
+                    msg["To"]=email
+                    msg["Subject"]=spin(subject)
 
-                    mail = MIMEMultipart(
-                        "alternative"
-                    )
+                    msg.attach(MIMEText(plain,"plain","utf-8"))
+                    msg.attach(MIMEText(body,"html","utf-8"))
 
-                    mail["Subject"] = resolve_spintax(
-                        subject
-                    )
-
-                    mail["From"] = (
-                        f"{sender} <{gmail}>"
-                    )
-
-                    mail["To"] = recipient
-
-                    mail.attach(
-                        MIMEText(
-                            personalized_plain,
-                            "plain",
-                            "utf-8"
-                        )
-                    )
-
-                    html_document = f"""
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-body {{
-    font-family: Arial, sans-serif;
-    color: #222;
-    line-height: 1.6;
-}}
-
-.small-caps {{
-    font-variant: small-caps;
-    font-feature-settings: "smcp";
-    letter-spacing: .02em;
-}}
-
-a {{
-    color: #2563eb;
-}}
-</style>
-</head>
-<body>
-{personalized_html}
-</body>
-</html>
-"""
-
-                    mail.attach(
-                        MIMEText(
-                            html_document,
-                            "html",
-                            "utf-8"
-                        )
-                    )
-
-                    refused = smtp.sendmail(
-                        gmail,
-                        [recipient],
-                        mail.as_string()
-                    )
-
-                    if refused:
-
-                        failed.append(
-                            recipient
-                        )
-
-                    else:
-
-                        sent.append(
-                            recipient
-                        )
+                    smtp.sendmail(gmail,[email],msg.as_string())
+                    sent.append(email)
 
                 except Exception:
+                    failed.append(email)
 
-                    failed.append(
-                        recipient
-                    )
-
+    except Exception as e:
         return jsonify(
-            success=True,
-            sent=sent,
-            failed=failed,
-            sender=gmail
-        )
+            error="Gmail SMTP connection/login failed.",
+            detail=str(e)
+        ),502
 
-    except smtplib.SMTPAuthenticationError:
+    return jsonify(sent=sent,failed=failed)
 
-        return jsonify(
-            error="Gmail authentication failed."
-        ), 401
-
-    except Exception as error:
-
-        return jsonify(
-            error=str(error)
-        ), 500
-
-
-if __name__ == "__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=int(
-            os.getenv(
-                "PORT",
-                5000
-            )
-        )
-    )
+if __name__=="__main__":
+    app.run()
