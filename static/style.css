@@ -2,552 +2,933 @@
     box-sizing:border-box;
 }
 
+
+html,
 body{
     margin:0;
+    min-height:100%;
+}
+
+
+body{
     background:
         linear-gradient(
             135deg,
-            #f7f9ff 0%,
-            #f0f4ff 100%
+            #f8faff 0%,
+            #eef3ff 100%
         );
-    color:#172033;
+
+    color:#111827;
+
     font-family:
-        Inter,
+        "Poppins",
+        "Segoe UI",
         Arial,
         sans-serif;
 }
 
 
-/* HEADER */
+/* ==========================================
+   HEADER
+========================================== */
 
-.topbar{
-    height:75px;
-    padding:0 35px;
+header{
+
+    width:1170px;
+
+    max-width:
+        calc(100% - 40px);
+
+    margin:0 auto;
+
+    height:92px;
+
     display:flex;
+
     align-items:center;
+
     justify-content:space-between;
 }
 
-.brand{
+
+.top-brand{
+
     display:flex;
+
     align-items:center;
-    gap:9px;
+
+    gap:10px;
 }
 
-.shield{
-    width:30px;
-    height:30px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#4083ef;
-    font-size:27px;
-}
 
-.brand-title{
-    font-size:27px;
-    font-weight:800;
-    letter-spacing:-1px;
+.top-brand strong{
+
+    font-size:36px;
+
+    font-weight:700;
+
+    letter-spacing:-1.5px;
+
     background:
         linear-gradient(
             90deg,
-            #3d84ed,
-            #6858e9
+            #377ff5,
+            #7667ee
         );
+
     -webkit-background-clip:text;
+
+    background-clip:text;
+
     color:transparent;
 }
 
+
+.shield{
+
+    width:34px;
+
+    height:38px;
+
+    color:#397ff5;
+
+    font-size:38px;
+
+    line-height:38px;
+}
+
+
 .logout{
-    border:1px solid #ffcaca;
-    background:#fff;
-    color:#f44343;
-    border-radius:7px;
-    padding:7px 13px;
+
     text-decoration:none;
-    font-size:12px;
+
+    color:#ff4141;
+
+    border:
+        1px solid #ffcaca;
+
+    background:#fff;
+
+    border-radius:8px;
+
+    padding:8px 15px;
+
+    font-size:13px;
+
     font-weight:600;
 }
 
 
-/* PAGE */
+/* ==========================================
+   MAIN
+========================================== */
 
-.page{
-    max-width:1068px;
-    margin:10px auto 30px;
-    padding:0 0;
+main{
+
+    width:1118px;
+
+    max-width:
+        calc(100% - 40px);
+
+    margin:10px auto 40px;
 }
+
 
 .page-title{
-    font-size:21px;
-    margin:10px 0 22px;
+
     display:flex;
+
     align-items:center;
+
     gap:8px;
+
+    font-size:24px;
+
+    margin-bottom:26px;
 }
 
-.plane{
-    color:#111a2d;
-    font-size:25px;
-}
-
-
-/* GRID */
 
 .dashboard{
+
     display:grid;
+
     grid-template-columns:
-        1.03fr
-        1fr;
-    gap:20px;
+        1fr 1fr;
+
+    gap:24px;
+
     align-items:start;
 }
 
-.left,
-.right{
-    min-width:0;
-}
 
-
-/* CARD */
+/* ==========================================
+   CARDS
+========================================== */
 
 .card{
+
     background:#fff;
-    border-radius:11px;
-    border:1px solid #edf0f5;
+
+    border-radius:12px;
+
     box-shadow:
-        0 5px 15px
-        rgba(32,45,75,.08);
-    padding:30px;
+        0 5px 14px
+        rgba(30,50,90,.09);
+
+    border:
+        1px solid #edf0f5;
 }
 
-.card h2{
-    margin:0;
-    font-size:17px;
-    font-weight:800;
-    letter-spacing:-.3px;
-}
-
-
-/* COMPOSE */
 
 .compose{
-    min-height:665px;
-}
 
-.form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:19px 14px;
-    margin-top:7px;
-}
+    padding:32px;
 
-label{
-    display:block;
-    font-size:12px;
-    font-weight:500;
-    margin-bottom:8px;
-}
-
-input{
-    width:100%;
-    height:41px;
-    border:1px solid #dce2eb;
-    border-radius:7px;
-    padding:0 14px;
-    outline:none;
-    color:#202533;
-    background:#fff;
-    font-size:13px;
-}
-
-input:focus{
-    border-color:#5290f2;
-    box-shadow:
-        0 0 0 2px
-        rgba(82,144,242,.10);
-}
-
-.password-box{
-    position:relative;
-}
-
-.password-box input{
-    padding-right:40px;
-}
-
-.password-box button{
-    position:absolute;
-    right:8px;
-    top:7px;
-    border:0;
-    background:none;
-    color:#748096;
-    cursor:pointer;
+    min-height:738px;
 }
 
 
-/* EDITOR */
+.right-column{
 
-.message-label{
-    margin-top:20px;
-}
-
-.editor-tools{
     display:flex;
-    gap:5px;
-    flex-wrap:wrap;
-    margin-bottom:0;
-}
 
-.editor-tools button{
-    border:1px solid #dce2eb;
-    background:#fff;
-    border-radius:5px;
-    padding:5px 8px;
-    font-size:11px;
-    cursor:pointer;
-}
-
-.editor-tools button:hover{
-    background:#f4f7fb;
-}
-
-.editor{
-    height:265px;
-    border:1px solid #d9e0eb;
-    border-radius:7px;
-    padding:13px;
-    font-size:13px;
-    line-height:1.45;
-    outline:none;
-    overflow:auto;
-}
-
-.editor:focus{
-    border-color:#4f8ff4;
-}
-
-.editor-hint{
-    font-size:10px;
-    color:#7d8799;
-    margin-top:6px;
-}
-
-.small-caps{
-    font-variant:small-caps;
-    font-feature-settings:"smcp";
-    letter-spacing:.02em;
-}
-
-
-/* SPAM */
-
-.spam-title{
-    font-size:12px;
-    font-weight:700;
-    margin-top:27px;
-    margin-bottom:9px;
-}
-
-.turnstile-wrap{
-    width:270px;
-    min-height:78px;
-}
-
-.turnstile-placeholder{
-    border:1px solid #dce2eb;
-    border-radius:4px;
-    padding:15px;
-    color:#6f7b8e;
-    font-size:11px;
-}
-
-
-/* RIGHT */
-
-.right{
-    display:flex;
     flex-direction:column;
-    gap:20px;
+
+    gap:24px;
 }
+
 
 .recipients-card{
-    min-height:238px;
+
+    padding:
+        28px 32px 32px;
+
+    min-height:265px;
 }
 
-.section-head{
+
+.progress-card{
+
+    padding:32px;
+
+    min-height:430px;
+}
+
+
+/* ==========================================
+   TITLES
+========================================== */
+
+.card-title{
+
     display:flex;
-    align-items:flex-start;
+
+    align-items:center;
+
+    gap:6px;
+
+    font-size:19px;
+
+    color:#141b2d;
+}
+
+
+.card-title > span{
+
+    font-size:20px;
+}
+
+
+.recipients-title{
+
     justify-content:space-between;
 }
 
-.sub{
-    color:#748096;
-    font-size:11px;
-    margin-top:-1px;
+
+.recipients-title > div{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
 }
+
 
 .found{
-    color:#4388ef;
-    background:#eef5ff;
-    padding:5px 8px;
-    border-radius:14px;
-    font-size:10px;
-    font-weight:700;
+
+    background:#edf5ff;
+
+    color:#397ff5;
+
+    padding:6px 10px;
+
+    border-radius:20px;
+
+    font-size:11px;
+
+    font-weight:600;
 }
 
-.recipient-box{
-    width:100%;
-    height:138px;
+
+/* ==========================================
+   PROGRESS HEADING
+========================================== */
+
+.progress-heading{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:18px;
+
+    margin-bottom:10px;
+}
+
+
+/* ==========================================
+   SENDING FROM
+========================================== */
+
+.sending-from{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:flex-end;
+
+    justify-content:center;
+
+    gap:3px;
+
+    min-width:0;
+
+    max-width:48%;
+}
+
+
+.sending-from span{
+
+    font-size:10px;
+
+    font-weight:700;
+
+    color:#7a879d;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+}
+
+
+.sending-from strong{
+
+    display:block;
+
+    max-width:260px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    color:#397ff5;
+}
+
+
+/* ==========================================
+   FORM
+========================================== */
+
+.form-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:0 16px;
+}
+
+
+label{
+
+    display:block;
+
     margin-top:10px;
-    resize:none;
-    border:1px solid #6aa0ff;
+
+    margin-bottom:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:#182033;
+}
+
+
+input,
+textarea{
+
+    width:100%;
+
+    border:
+        1px solid #dbe2ee;
+
     border-radius:7px;
-    padding:8px 14px;
+
+    background:#fff;
+
+    color:#172033;
+
+    outline:none;
+
+    font-family:inherit;
+
+    font-size:14px;
+}
+
+
+input{
+
+    height:47px;
+
+    padding:0 14px;
+}
+
+
+input:focus,
+textarea:focus{
+
+    border-color:#7aa7f8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(72,128,241,.10);
+}
+
+
+.message-label{
+
+    margin-top:22px;
+}
+
+
+.message{
+
+    height:293px;
+
+    min-height:293px;
+
+    padding:14px;
+
+    resize:vertical;
+}
+
+
+.password-box{
+
+    position:relative;
+}
+
+
+.password-box input{
+
+    padding-right:44px;
+}
+
+
+.password-box button{
+
+    position:absolute;
+
+    right:8px;
+
+    top:50%;
+
+    transform:
+        translateY(-50%);
+
+    width:30px;
+
+    height:30px;
+
+    margin:0;
+
+    padding:0;
+
+    border:0;
+
+    background:transparent;
+
+    color:#74829a;
+
+    cursor:pointer;
+}
+
+
+/* ==========================================
+   CLOUDFLARE
+========================================== */
+
+.turnstile-area{
+
+    margin-top:26px;
+
+    min-height:70px;
+
+    display:flex;
+
+    align-items:center;
+}
+
+
+/* ==========================================
+   RECIPIENTS
+========================================== */
+
+.recipient-help{
+
+    color:#65728a;
+
+    font-size:12px;
+
+    margin-top:0;
+
+    margin-bottom:11px;
+}
+
+
+.recipient-input{
+
+    height:150px;
+
+    min-height:150px;
+
+    padding:14px;
+
+    resize:vertical;
+
     font-family:
         Consolas,
+        "Courier New",
         monospace;
-    font-size:12px;
-    line-height:1.48;
-    outline:none;
-    box-shadow:
-        0 0 0 2px
-        rgba(80,140,250,.08);
+
+    line-height:1.8;
 }
 
 
-/* PROGRESS */
-
-.progress-card{
-    min-height:405px;
-}
+/* ==========================================
+   PROGRESS MONITOR
+========================================== */
 
 .stats{
+
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    margin-top:3px;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:16px;
+
+    margin-top:10px;
 }
+
 
 .stat{
-    height:91px;
-    border:1px solid #dce3ed;
-    border-radius:7px;
+
+    height:100px;
+
+    border:
+        1px solid #dce3ee;
+
+    border-radius:8px;
+
     display:flex;
-    align-items:center;
-    justify-content:center;
+
     flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
 }
+
 
 .stat span{
-    font-size:11px;
-    color:#718097;
-    font-weight:600;
-    margin-bottom:6px;
+
+    color:#66758e;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    margin-bottom:9px;
 }
+
 
 .stat strong{
-    font-size:25px;
+
+    font-size:28px;
+
+    color:#397ff5;
 }
 
-.total strong{
-    color:#4386ef;
+
+.sent-stat strong{
+
+    color:#09af7a;
 }
 
-.sent strong{
-    color:#06aa73;
+
+.failed-stat strong{
+
+    color:#f04444;
 }
 
-.failed strong{
-    color:#f03d42;
+
+.remaining-stat strong{
+
+    color:#f39a00;
 }
 
-.remaining strong{
-    color:#f29a00;
-}
 
+/* ==========================================
+   PROGRESS BAR
+========================================== */
 
 .progress-track{
-    height:7px;
+
     width:100%;
-    margin-top:21px;
-    background:#e3e8ef;
-    border-radius:10px;
+
+    height:8px;
+
+    margin-top:24px;
+
+    border-radius:20px;
+
+    background:#e2e8f2;
+
     overflow:hidden;
 }
 
+
 .progress-bar{
+
     width:0;
+
     height:100%;
+
     background:
         linear-gradient(
             90deg,
-            #3f82ed,
-            #08b77f
+            #3980f6,
+            #09b981
         );
-    transition:width .2s ease;
+
+    border-radius:20px;
+
+    transition:
+        width .2s ease;
 }
 
-.sender-status{
+
+/* ==========================================
+   STATUS
+========================================== */
+
+.send-status{
+
     text-align:center;
-    margin-top:15px;
-    font-size:12px;
-    color:#1c2637;
+
+    margin-top:18px;
+
+    font-size:14px;
+
+    color:#263149;
+
+    font-weight:600;
 }
 
-.sender-status strong{
-    font-weight:700;
-}
 
 .batch-status{
+
+    min-height:20px;
+
     text-align:center;
-    color:#778398;
-    font-size:11px;
-    margin-top:8px;
+
+    margin-top:7px;
+
+    color:#65728a;
+
+    font-size:12px;
 }
 
-.buttons{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
+
+/* ==========================================
+   SEND BUTTON
+========================================== */
+
+.send-button{
+
+    width:100%;
+
+    height:45px;
+
     margin-top:20px;
-}
 
-.send-btn,
-.stop-btn{
-    height:40px;
     border:0;
+
     border-radius:7px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #14b887,
+            #04a873
+        );
+
     color:#fff;
-    font-size:13px;
+
+    font-family:inherit;
+
+    font-size:15px;
+
     font-weight:700;
+
     cursor:pointer;
 }
 
-.send-btn{
-    background:#0ab77c;
-}
 
-.stop-btn{
-    background:#ef3d40;
-}
+.send-button:disabled{
 
-.send-btn:disabled,
-.stop-btn:disabled{
     opacity:.55;
+
     cursor:not-allowed;
 }
 
-.status{
-    min-height:18px;
-    text-align:center;
-    margin-top:10px;
-    color:#667389;
-    font-size:11px;
+
+/* ==========================================
+   LOGIN
+========================================== */
+
+.login-main{
+
+    width:430px;
+
+    max-width:
+        calc(100% - 30px);
+
+    margin:110px auto;
 }
 
-
-/* LOGIN */
-
-.login-page{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
 
 .login-card{
-    width:370px;
-    padding:35px;
+
     background:#fff;
-    border:1px solid #e4e9f0;
-    border-radius:13px;
+
+    border-radius:12px;
+
+    padding:32px;
+
     box-shadow:
-        0 15px 40px
+        0 5px 20px
         rgba(30,50,90,.10);
 }
 
+
 .login-logo{
-    font-size:30px;
-    color:#4d83ee;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:28px;
 }
 
-.login-card h1{
-    margin:8px 0 5px;
-    font-size:23px;
+
+.login-logo strong{
+
+    display:block;
+
+    font-size:24px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #377ff5,
+            #7667ee
+        );
+
+    -webkit-background-clip:text;
+
+    background-clip:text;
+
+    color:transparent;
 }
 
-.login-card p{
-    color:#7a8495;
-    font-size:13px;
-    margin:0 0 25px;
+
+.login-logo small{
+
+    display:block;
+
+    color:#7b8494;
+
+    margin-top:3px;
 }
 
-.login-card input{
-    margin-bottom:5px;
+
+.shield-big{
+
+    font-size:38px;
+
+    color:#397ff5;
 }
+
+
+.login-card h2{
+
+    margin:0 0 15px;
+
+    font-size:20px;
+}
+
 
 .login-card button{
+
     width:100%;
-    height:42px;
+
+    height:44px;
+
+    margin-top:18px;
+
     border:0;
+
     border-radius:7px;
-    background:#111a2b;
+
+    background:#397ff5;
+
     color:#fff;
-    margin-top:15px;
+
+    font-family:inherit;
+
+    font-weight:600;
+
     cursor:pointer;
 }
 
-.login-error{
-    color:#e53d43;
-    font-size:12px;
-    margin-top:8px;
+
+.error-text{
+
+    color:#e04444;
+
+    font-size:13px;
 }
 
 
-/* MOBILE */
+/* ==========================================
+   RESPONSIVE
+========================================== */
 
-@media(max-width:850px){
+@media(max-width:900px){
 
-    .page{
-        padding:0 15px;
+    header{
+
+        width:auto;
+
+        max-width:
+            calc(100% - 24px);
     }
 
+
+    .top-brand strong{
+
+        font-size:25px;
+    }
+
+
+    main{
+
+        max-width:
+            calc(100% - 24px);
+    }
+
+
     .dashboard{
+
         grid-template-columns:1fr;
     }
 
+
     .compose{
+
         min-height:auto;
     }
 
 }
 
+
 @media(max-width:600px){
 
-    .topbar{
-        padding:0 17px;
+    header{
+
+        height:76px;
     }
 
-    .brand-title{
+
+    .top-brand strong{
+
         font-size:20px;
     }
 
-    .page-title{
-        font-size:18px;
+
+    .form-grid{
+
+        grid-template-columns:1fr;
     }
 
-    .card{
+
+    .compose,
+    .recipients-card,
+    .progress-card{
+
         padding:20px;
     }
 
-    .form-grid{
-        grid-template-columns:1fr;
+
+    .message{
+
+        min-height:240px;
+
+        height:240px;
     }
 
-    .buttons{
-        grid-template-columns:1fr;
+
+    .progress-heading{
+
+        align-items:flex-start;
+    }
+
+
+    .sending-from{
+
+        max-width:45%;
+    }
+
+
+    .sending-from strong{
+
+        max-width:150px;
     }
 
 }
