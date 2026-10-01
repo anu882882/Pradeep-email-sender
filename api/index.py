@@ -10,13 +10,14 @@ app=Flask(__name__,template_folder="../templates",static_folder="../static")
 app.secret_key=os.getenv("SESSION_SECRET","change-this-secret")
 LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
 TURNSTILE=os.getenv("TURNSTILE_SECRET_KEY","")
-EMAIL=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+ER=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-def valid(x): return bool(EMAIL.fullmatch(x.strip()))
+def valid(x):return bool(ER.fullmatch(x.strip()))
 
 def parse(x):
-    a=re.split(r"[,;\s]+",x or "")
-    return list(dict.fromkeys(i.strip().lower() for i in a if i.strip()))[:25]
+    return list(dict.fromkeys(
+        i.strip().lower() for i in re.split(r"[,;\s]+",x or "") if i.strip()
+    ))[:25]
 
 def auth(f):
     @wraps(f)
@@ -25,16 +26,16 @@ def auth(f):
     return w
 
 def spin(x):
-    def r(m): return secrets.choice(m.group(1).split("|"))
+    def r(m):return secrets.choice(m.group(1).split("|"))
     for _ in range(20):
         y=re.sub(r"\{([^{}|]+(?:\|[^{}|]+)+)\}",r,x)
-        if y==x: break
+        if y==x:break
         x=y
     return x
 
 class Clean(HTMLParser):
     tags={"div","p","br","strong","b","em","i","u","span","a","ul","ol","li","style"}
-    def __init__(self): super().__init__();self.o=[]
+    def __init__(self):super().__init__();self.o=[]
     def handle_starttag(self,t,a):
         if t not in self.tags:return
         z="<"+t
@@ -46,7 +47,7 @@ class Clean(HTMLParser):
         self.o.append(z+">")
     def handle_endtag(self,t):
         if t in self.tags:self.o.append("</"+t+">")
-    def handle_data(self,d): self.o.append(d)
+    def handle_data(self,d):self.o.append(d)
 
 def clean(x):
     p=Clean();p.feed(x or "");return "".join(p.o)
@@ -61,9 +62,7 @@ def verify(token):
     if not TURNSTILE:return True
     if not token:return False
     try:
-        d=urllib.parse.urlencode({
-            "secret":TURNSTILE,"response":token
-        }).encode()
+        d=urllib.parse.urlencode({"secret":TURNSTILE,"response":token}).encode()
         q=urllib.request.Request(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             data=d,method="POST"
@@ -89,10 +88,7 @@ def logout():
 @app.route("/")
 @auth
 def index():
-    return render_template(
-        "index.html",
-        turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY","")
-    )
+    return render_template("index.html",turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY",""))
 
 @app.post("/api/send-batch")
 @auth
@@ -123,17 +119,12 @@ def send():
     sent=[]
 
     try:
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com",465,
-            context=ssl.create_default_context(),
-            timeout=30
-        ) as smtp:
+        with smtplib.SMTP_SSL("smtp.gmail.com",465,context=ssl.create_default_context(),timeout=30) as smtp:
             smtp.login(gmail,pwd)
 
             for email in good:
                 try:
-                    name=email.split("@")[0]
-                    html=spin(msg.replace("{name}",name))
+                    html=spin(msg.replace("{name}",email.split("@")[0]))
                     m=MIMEMultipart("alternative")
                     m["From"]=formataddr((sender,gmail)) if sender else gmail
                     m["To"]=email
@@ -146,12 +137,8 @@ def send():
                     failed.append(email)
 
     except Exception as e:
-        return jsonify(
-            error="Gmail SMTP connection/login failed.",
-            detail=str(e)
-        ),502
+        return jsonify(error="Gmail SMTP connection/login failed.",detail=str(e)),502
 
     return jsonify(sent=sent,failed=failed)
 
-if __name__=="__main__":
-    app.run()
+if __name__=="__main__":app.run()
