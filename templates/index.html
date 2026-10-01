@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Secure Mail Console</title>
 <link rel="stylesheet" href="/static/style.css">
-
 {% if turnstile_site_key %}
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endif %}
@@ -30,7 +29,6 @@
 <div class="dashboard">
 
 <div class="left">
-
 <section class="card compose">
 
 <h2>✐ Compose Message</h2>
@@ -64,34 +62,19 @@
 
 <label class="message-label">Message Body (Plain Text / HTML)</label>
 
-<div class="editor-tools">
-<button onclick="fmt('bold')"><b>B</b></button>
-<button onclick="fmt('italic')"><i>I</i></button>
-<button onclick="fmt('underline')"><u>U</u></button>
-<button onclick="caps()">Small Caps</button>
-<button onclick="fmt('insertUnorderedList')">• List</button>
-<button onclick="link()">Link</button>
-</div>
-
 <div id="editor" class="editor" contenteditable="true">
 Your site is well presented, but an error keeps it off the 1st PAGE.<br>
 Can I email the SCREENSHOT?
 </div>
 
-<div class="editor-hint">
-Supports {name} and {Hi|Hello|Hey}
-</div>
+<div class="editor-hint">Supports {name} and {Hi|Hello|Hey}</div>
 
 <div class="spam-title">🛡 Spam Protection</div>
 
 {% if turnstile_site_key %}
-<div class="cf-turnstile"
-data-sitekey="{{turnstile_site_key}}"
-data-theme="light"></div>
+<div class="cf-turnstile" data-sitekey="{{turnstile_site_key}}" data-theme="light"></div>
 {% else %}
-<div class="turnstile-placeholder">
-Spam protection is configured through Cloudflare.
-</div>
+<div class="turnstile-placeholder">Spam protection is configured through Cloudflare.</div>
 {% endif %}
 
 </section>
@@ -105,23 +88,18 @@ Spam protection is configured through Cloudflare.
 
 <div>
 <h2>♣ Recipients</h2>
-<div class="sub">
-Paste emails (comma separated, new lines, or Excel copy)
-</div>
+<div class="sub">Paste emails (comma separated, new lines, or Excel copy)</div>
 </div>
 
 <div id="found" class="found">0 found</div>
 
 </div>
 
-<textarea
-id="recipients"
-class="recipient-box"
+<textarea id="recipients" class="recipient-box"
 placeholder="email@example.com&#10;another@example.com"
 oninput="updateRecipients()"></textarea>
 
 </section>
-
 
 <section class="card progress-card">
 
@@ -130,23 +108,19 @@ oninput="updateRecipients()"></textarea>
 <div class="stats">
 
 <div class="stat total">
-<span>TOTAL</span>
-<strong id="total">0</strong>
+<span>TOTAL</span><strong id="total">0</strong>
 </div>
 
 <div class="stat sent">
-<span>SENT</span>
-<strong id="sent">0</strong>
+<span>SENT</span><strong id="sent">0</strong>
 </div>
 
 <div class="stat failed">
-<span>FAILED</span>
-<strong id="failed">0</strong>
+<span>FAILED</span><strong id="failed">0</strong>
 </div>
 
 <div class="stat remaining">
-<span>REMAINING</span>
-<strong id="remaining">0</strong>
+<span>REMAINING</span><strong id="remaining">0</strong>
 </div>
 
 </div>
@@ -156,16 +130,15 @@ oninput="updateRecipients()"></textarea>
 </div>
 
 <div id="senderStatus" class="sender-status">◯ Sent: —</div>
-
 <div id="batchStatus" class="batch-status">Ready</div>
 
 <div class="buttons">
 
-<button id="sendButton" class="send-btn" onclick="startSending()">
+<button id="sendButton" class="send-btn" onclick="startSending">
 ✣ &nbsp; Sending...
 </button>
 
-<button id="stopButton" class="stop-btn" onclick="stopSending()">
+<button class="stop-btn" onclick="stopSending">
 ■ &nbsp; Stop Sending
 </button>
 
@@ -180,178 +153,116 @@ oninput="updateRecipients()"></textarea>
 </div>
 
 <script>
+let stop=false,busy=false,$=x=>document.getElementById(x);
 
-let stopRequested=false,sending=false;
-const $=x=>document.getElementById(x);
-
-function parseRecipients(){
-    return [...new Set(
-        $("recipients").value
-        .split(/[\s,;]+/)
-        .map(x=>x.trim().toLowerCase())
-        .filter(Boolean)
-    )].slice(0,25);
+function list(){
+return [...new Set($("recipients").value.split(/[\s,;]+/)
+.map(x=>x.trim().toLowerCase()).filter(Boolean))].slice(0,25)
 }
 
 function updateRecipients(){
-    const a=parseRecipients();
-    $("found").textContent=a.length+" found";
-    $("total").textContent=a.length;
-    $("remaining").textContent=a.length;
+let x=list();
+$("found").textContent=x.length+" found";
+$("total").textContent=x.length;
+$("remaining").textContent=x.length
 }
 
 function togglePassword(){
-    const x=$("appPassword");
-    x.type=x.type==="password"?"text":"password";
-}
-
-function fmt(x){
-    document.execCommand(x,false,null);
-    $("editor").focus();
-}
-
-function caps(){
-    const s=window.getSelection(),t=s.toString();
-    document.execCommand(
-        "insertHTML",false,
-        '<span class="small-caps">'+(t||"Small Caps")+"</span>"
-    );
-}
-
-function link(){
-    const x=prompt("Enter URL:");
-    if(x)document.execCommand("createLink",false,x);
+let x=$("appPassword");
+x.type=x.type=="password"?"text":"password"
 }
 
 function token(){
-    const x=document.querySelector(
-        'input[name="cf-turnstile-response"]'
-    );
-    return x?x.value:"";
+let x=document.querySelector('input[name="cf-turnstile-response"]');
+return x?x.value:""
 }
 
 function stopSending(){
-    stopRequested=true;
-    $("status").textContent=
-        "Stop requested. Current batch will finish.";
+stop=true;
+$("status").textContent="Stop requested. Current batch will finish."
 }
 
 async function startSending(){
 
-    if(sending)return;
+if(busy)return;
 
-    const list=parseRecipients();
+let a=list();
 
-    if(!list.length){
-        $("status").textContent="Add at least one recipient.";
-        return;
-    }
+if(!a.length)return $("status").textContent="Add at least one recipient.";
+if(!$("gmail").value.trim())return $("status").textContent="Enter Gmail address.";
+if(!$("appPassword").value.trim())return $("status").textContent="Enter Gmail App Password.";
+if(!$("subject").value.trim())return $("status").textContent="Enter email subject.";
 
-    if(!$("gmail").value.trim()){
-        $("status").textContent="Enter Gmail address.";
-        return;
-    }
+{% if turnstile_site_key %}
+if(!token())return $("status").textContent="Complete Cloudflare verification.";
+{% endif %}
 
-    if(!$("appPassword").value.trim()){
-        $("status").textContent="Enter Gmail App Password.";
-        return;
-    }
+let s={
+sender_name:$("senderName").value.trim(),
+gmail:$("gmail").value.trim(),
+app_password:$("appPassword").value,
+subject:$("subject").value,
+message_html:$("editor").innerHTML,
+turnstile_token:token()
+};
 
-    if(!$("subject").value.trim()){
-        $("status").textContent="Enter email subject.";
-        return;
-    }
+busy=true;stop=false;
+let sent=0,failed=0;
 
-    {% if turnstile_site_key %}
-    if(!token()){
-        $("status").textContent="Complete Cloudflare verification.";
-        return;
-    }
-    {% endif %}
+$("sendButton").disabled=true;
+$("senderStatus").innerHTML="◯ Sent: <strong>"+s.gmail+"</strong>";
 
-    const snap={
-        sender_name:$("senderName").value.trim(),
-        gmail:$("gmail").value.trim(),
-        app_password:$("appPassword").value,
-        subject:$("subject").value,
-        message_html:$("editor").innerHTML,
-        turnstile_token:token()
-    };
+for(let i=0;i<a.length;i+=5){
 
-    sending=true;
-    stopRequested=false;
+if(stop)break;
 
-    let sent=0,failed=0;
+let b=a.slice(i,i+5);
 
-    $("sendButton").disabled=true;
-    $("senderStatus").innerHTML=
-        "◯ Sent: <strong>"+snap.gmail+"</strong>";
+$("batchStatus").textContent=
+"Sending "+(i+1)+"-"+Math.min(i+5,a.length)+" of "+a.length;
 
-    $("total").textContent=list.length;
-    $("sent").textContent=0;
-    $("failed").textContent=0;
-    $("remaining").textContent=list.length;
-    $("progress").style.width="0%";
+try{
 
-    for(let i=0;i<list.length;i+=5){
+let r=await fetch("/api/send-batch",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({...s,recipients:b})
+});
 
-        if(stopRequested){
-            $("batchStatus").textContent="Sending stopped.";
-            break;
-        }
+let d=await r.json();
 
-        const batch=list.slice(i,i+5);
+if(!r.ok){
+$("status").textContent=d.error||"Sending stopped.";
+break
+}
 
-        $("batchStatus").textContent=
-            "Sending "+(i+1)+"-"+Math.min(i+5,list.length)+
-            " of "+list.length;
+sent+=d.sent.length;
+failed+=d.failed.length;
 
-        try{
+let done=sent+failed;
 
-            const r=await fetch("/api/send-batch",{
-                method:"POST",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({...snap,recipients:batch})
-            });
+$("sent").textContent=sent;
+$("failed").textContent=failed;
+$("remaining").textContent=a.length-done;
+$("progress").style.width=done/a.length*100+"%";
+$("status").textContent="● "+done+"/"+a.length+" processed";
 
-            const d=await r.json();
+}catch(e){
+$("status").textContent="Connection error.";
+break
+}
+}
 
-            if(!r.ok){
-                $("status").textContent=d.error||"Sending stopped.";
-                break;
-            }
+busy=false;
+$("sendButton").disabled=false;
 
-            sent+=d.sent.length;
-            failed+=d.failed.length;
-
-            const done=sent+failed;
-
-            $("sent").textContent=sent;
-            $("failed").textContent=failed;
-            $("remaining").textContent=list.length-done;
-            $("progress").style.width=
-                done/list.length*100+"%";
-
-            $("status").textContent=
-                "● "+done+"/"+list.length+" processed";
-
-        }catch(e){
-            $("status").textContent="Connection error.";
-            break;
-        }
-    }
-
-    sending=false;
-    $("sendButton").disabled=false;
-
-    if(!stopRequested){
-        $("batchStatus").textContent="All batches completed.";
-        $("status").textContent="● Sending completed.";
-    }
+if(!stop){
+$("batchStatus").textContent="All batches completed.";
+$("status").textContent="● Sending completed."
+}
 }
 
 updateRecipients();
-
 </script>
 
 </body>
