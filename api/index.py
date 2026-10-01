@@ -6,7 +6,6 @@ import urllib.request
 import urllib.parse
 import json
 import secrets
-import time
 
 from flask import (
     Flask,
@@ -91,9 +90,11 @@ def parse_recipients(value):
     )
 
 
-# ==========================================
+# ==================================================
 # SPINTAX
-# ==========================================
+# Example:
+# {Hi|Hello|Hey} {name}
+# ==================================================
 
 SPINTAX_PATTERN = re.compile(
     r"\{([^{}]+)\}"
@@ -117,6 +118,7 @@ def spintax(text):
 
     result = str(text)
 
+    # Prevent endless nested processing
     for _ in range(20):
 
         if not SPINTAX_PATTERN.search(result):
@@ -130,9 +132,9 @@ def spintax(text):
     return result
 
 
-# ==========================================
-# MESSAGE CHECK
-# ==========================================
+# ==================================================
+# BASIC MESSAGE SAFETY
+# ==================================================
 
 def safe_message(subject, message):
 
@@ -170,17 +172,25 @@ def safe_message(subject, message):
     return True, "OK"
 
 
-# ==========================================
-# CLOUDFLARE
-# ==========================================
+# ==================================================
+# CLOUDFLARE TURNSTILE
+# ==================================================
 
 def verify_turnstile(token, remote_ip):
 
     if not TURNSTILE_SECRET_KEY:
-        return False, "Turnstile secret key is not configured."
+
+        return (
+            False,
+            "Cloudflare secret key is not configured."
+        )
 
     if not token:
-        return False, "Please complete Cloudflare verification."
+
+        return (
+            False,
+            "Please complete Cloudflare verification."
+        )
 
     payload = urllib.parse.urlencode({
         "secret": TURNSTILE_SECRET_KEY,
@@ -206,21 +216,34 @@ def verify_turnstile(token, remote_ip):
         ) as response:
 
             result = json.loads(
-                response.read().decode("utf-8")
+                response.read().decode(
+                    "utf-8"
+                )
             )
 
         if result.get("success"):
-            return True, "OK"
 
-        return False, "Cloudflare verification failed."
+            return (
+                True,
+                "OK"
+            )
+
+        return (
+            False,
+            "Cloudflare verification failed."
+        )
 
     except Exception:
-        return False, "Cloudflare verification could not be completed."
+
+        return (
+            False,
+            "Cloudflare verification could not be completed."
+        )
 
 
-# ==========================================
+# ==================================================
 # LOGIN
-# ==========================================
+# ==================================================
 
 @app.route(
     "/login",
@@ -241,6 +264,7 @@ def login():
         ):
 
             session.clear()
+
             session["login"] = 1
 
             return redirect("/")
@@ -264,9 +288,9 @@ def logout():
     return redirect("/login")
 
 
-# ==========================================
+# ==================================================
 # HOME
-# ==========================================
+# ==================================================
 
 @app.route("/")
 @auth_required
@@ -278,9 +302,15 @@ def home():
     )
 
 
-# ==========================================
+# ==================================================
 # SEND BATCH
-# ==========================================
+#
+# Maximum 5 recipients in one request.
+# Frontend sends:
+# 5 -> 5 -> 5 -> 5 -> 5
+#
+# No artificial delay between batches.
+# ==================================================
 
 @app.route(
     "/api/send-batch",
@@ -296,20 +326,27 @@ def send_batch():
         []
     )
 
+
     if not isinstance(batch, list):
+
         return jsonify(
             error="Invalid recipient batch."
         ), 400
 
+
     if not batch:
+
         return jsonify(
             error="No recipients in batch."
         ), 400
 
+
     if len(batch) > BATCH_SIZE:
+
         return jsonify(
             error="Maximum 5 emails per batch."
         ), 400
+
 
     batch = parse_recipients(
         "\n".join(
@@ -318,16 +355,20 @@ def send_batch():
         )
     )
 
+
     if len(batch) > BATCH_SIZE:
+
         return jsonify(
             error="Maximum 5 emails per batch."
         ), 400
+
 
     invalid = [
         email
         for email in batch
         if not valid_email(email)
     ]
+
 
     if invalid:
 
@@ -337,9 +378,11 @@ def send_batch():
         ), 400
 
 
-    # ======================================
+    # ==============================================
     # CLOUDFLARE
-    # ======================================
+    #
+    # Turnstile is checked on the first batch.
+    # ==============================================
 
     token = str(
         data.get(
@@ -347,6 +390,7 @@ def send_batch():
             ""
         )
     ).strip()
+
 
     if token:
 
@@ -365,9 +409,13 @@ def send_batch():
             ), 403
 
 
-    # ======================================
-    # SNAPSHOT VALUES
-    # ======================================
+    # ==============================================
+    # SNAPSHOT DATA
+    #
+    # These values belong to this send operation.
+    # Changing browser fields later will NOT change
+    # the values already sent to this request.
+    # ==============================================
 
     sender = str(
         data.get(
@@ -376,12 +424,14 @@ def send_batch():
         )
     ).strip()
 
+
     gmail = str(
         data.get(
             "gmail",
             ""
         )
     ).strip().lower()
+
 
     password = "".join(
         str(
@@ -392,12 +442,14 @@ def send_batch():
         ).split()
     )
 
+
     subject = str(
         data.get(
             "subject",
             ""
         )
     ).strip()
+
 
     message = str(
         data.get(
@@ -407,31 +459,40 @@ def send_batch():
     )
 
 
-    # ======================================
+    # ==============================================
     # VALIDATION
-    # ======================================
+    # ==============================================
 
     if not sender:
+
         return jsonify(
             error="Sender name required."
         ), 400
 
+
     if not valid_email(gmail):
+
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
+
     if not password:
+
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
+
     if not subject:
+
         return jsonify(
-            error="Subject required."
+            error="Email subject required."
         ), 400
 
+
     if not message.strip():
+
         return jsonify(
             error="Message required."
         ), 400
@@ -441,6 +502,7 @@ def send_batch():
         subject,
         message
     )
+
 
     if not safe:
 
@@ -453,9 +515,9 @@ def send_batch():
     failed = []
 
 
-    # ======================================
-    # SMTP
-    # ======================================
+    # ==============================================
+    # ONE SMTP CONNECTION FOR THIS BATCH
+    # ==============================================
 
     try:
 
@@ -469,29 +531,36 @@ def send_batch():
             timeout=30
         ) as smtp:
 
-
+            # Login once
             smtp.login(
                 gmail,
                 password
             )
 
 
+            # ======================================
+            # SEND EMAILS CONTINUOUSLY
+            # ======================================
+
             for email in batch:
 
                 try:
 
+                    # Fresh Spintax selection
+                    # for every recipient.
                     final_subject = spintax(
                         subject
                     )
+
 
                     final_message = spintax(
                         message
                     )
 
 
+                    # {name} support
                     final_message = (
-                        final_message
-                        .replace(
+                        final_message.replace(
                             "{name}",
                             email.split("@")[0]
                         )
@@ -509,9 +578,11 @@ def send_batch():
                         final_subject
                     )
 
+
                     mail["From"] = (
                         f"{sender} <{gmail}>"
                     )
+
 
                     mail["To"] = email
 
@@ -563,7 +634,7 @@ def send_batch():
 
             error=
             "Gmail authentication failed. "
-            "Check the Gmail address and App Password."
+            "Check Gmail address and App Password."
 
         ), 401
 
@@ -575,9 +646,9 @@ def send_batch():
         ), 500
 
 
-# ==========================================
-# LOCAL
-# ==========================================
+# ==================================================
+# LOCAL DEVELOPMENT
+# ==================================================
 
 if __name__ == "__main__":
 
