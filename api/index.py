@@ -5,6 +5,7 @@ import smtplib
 import secrets
 import time
 from functools import wraps
+from html.parser import HTMLParser
 
 from flask import (
     Flask,
@@ -70,18 +71,20 @@ def auth_required(function):
 
 def parse_recipients(value):
 
-    items = re.split(
-        r"[\s,;]+",
-        str(value or "")
-    )
+    if isinstance(value, list):
+        items = value
+    else:
+        items = re.split(
+            r"[\s,;]+",
+            str(value or "")
+        )
 
     result = []
-
     seen = set()
 
     for item in items:
 
-        email = item.strip().lower()
+        email = str(item).strip().lower()
 
         if not email:
             continue
@@ -90,7 +93,6 @@ def parse_recipients(value):
             continue
 
         seen.add(email)
-
         result.append(email)
 
     return result
@@ -105,7 +107,7 @@ def safe_message(subject, message):
     )
 
     if re.search(
-        r"<\s*(script|iframe|object|embed)\b",
+        r"<\s*(script|iframe|object|embed|form)\b",
         combined,
         re.I
     ):
@@ -173,6 +175,283 @@ def resolve_spintax(text):
     return text
 
 
+# -------------------------------------------------
+# HTML SANITIZER
+# -------------------------------------------------
+
+ALLOWED_TAGS = {
+    "div",
+    "p",
+    "br",
+    "strong",
+    "b",
+    "em",
+    "i",
+    "u",
+    "span",
+    "a",
+    "ul",
+    "ol",
+    "li"
+}
+
+ALLOWED_ATTRS = {
+    "span": {"class"},
+    "a": {"href", "target", "rel"}
+}
+
+
+class EmailHTMLSanitizer(HTMLParser):
+
+    def __init__(self):
+
+        super().__init__(
+            convert_charrefs=True
+        )
+
+        self.output = []
+
+    def handle_starttag(
+        self,
+        tag,
+        attrs
+    ):
+
+        tag = tag.lower()
+
+        if tag not in ALLOWED_TAGS:
+            return
+
+        allowed = ALLOWED_ATTRS.get(
+            tag,
+            set()
+        )
+
+        clean_attrs = []
+
+        for name, value in attrs:
+
+            name = name.lower()
+
+            if name not in allowed:
+                continue
+
+            value = str(value or "")
+
+            if tag == "span":
+
+                if name == "class" and value != "small-caps":
+                    continue
+
+            if tag == "a":
+
+                if name == "href":
+
+                    if not re.match(
+                        r"^https?://",
+                        value,
+                        re.I
+                    ):
+                        continue
+
+            clean_attrs.append(
+                (name, value)
+            )
+
+        self.output.append(
+            "<" + tag
+        )
+
+        for name, value in clean_attrs:
+
+            escaped = (
+                value
+                .replace("&", "&amp;")
+                .replace('"', "&quot;")
+            )
+
+            self.output.append(
+                f' {name}="{escaped}"'
+            )
+
+        self.output.append(">")
+
+    def handle_startendtag(
+        self,
+        tag,
+        attrs
+    ):
+
+        self.handle_starttag(
+            tag,
+            attrs
+        )
+
+    def handle_endtag(self, tag):
+
+        tag = tag.lower()
+
+        if tag in ALLOWED_TAGS:
+
+            self.output.append(
+                f"</{tag}>"
+            )
+
+    def handle_data(self, data):
+
+        self.output.append(
+            escape_html(data)
+        )
+
+    def get_html(self):
+
+        return "".join(
+            self.output
+        )
+
+
+def sanitize_html(html):
+
+    parser = EmailHTMLSanitizer()
+
+    parser.feed(
+        str(html or "")
+    )
+
+    parser.close()
+
+    return parser.get_html()
+
+
+def html_to_plain(html):
+
+    text = str(html or "")
+
+    text = re.sub(
+        r"<br\s*/?>",
+        "\n",
+        text,
+        flags=re.I
+    )
+
+    text = re.sub(
+        r"</p\s*>",
+        "\n\n",
+        text,
+        flags=re.I
+    )
+
+    text = re.sub(
+        r"</div\s*>",
+        "\n",
+        text,
+        flags=re.I
+    )
+
+    text = re.sub(
+        r"<li\s*>",
+        "- ",
+        text,
+        flags=re.I
+    )
+
+    text = re.sub(
+        r"<[^>]+>",
+        "",
+        text
+    )
+
+    return (
+        text
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", '"')
+        .replace("&#39;", "'")
+    )
+
+
+def resolve_spintax_html(html):
+
+    class TextSpintaxParser(HTMLParser):
+
+        def __init__(self):
+
+            super().__init__(
+                convert_charrefs=True
+            )
+
+            self.output = []
+
+        def handle_starttag(
+            self,
+            tag,
+            attrs
+        ):
+
+            self.output.append(
+                "<" + tag
+            )
+
+            for name, value in attrs:
+
+                escaped = (
+                    str(value or "")
+                    .replace("&", "&amp;")
+                    .replace('"', "&quot;")
+                )
+
+                self.output.append(
+                    f' {name}="{escaped}"'
+                )
+
+            self.output.append(">")
+
+        def handle_startendtag(
+            self,
+            tag,
+            attrs
+        ):
+
+            self.handle_starttag(
+                tag,
+                attrs
+            )
+
+            self.output.append(
+                f"</{tag}>"
+            )
+
+        def handle_endtag(self, tag):
+
+            self.output.append(
+                f"</{tag}>"
+            )
+
+        def handle_data(self, data):
+
+            self.output.append(
+                escape_html(
+                    resolve_spintax(
+                        data
+                    )
+                )
+            )
+
+    parser = TextSpintaxParser()
+
+    parser.feed(
+        html
+    )
+
+    parser.close()
+
+    return "".join(
+        parser.output
+    )
+
+
 def escape_html(text):
 
     return (
@@ -183,25 +462,6 @@ def escape_html(text):
         .replace('"', "&quot;")
         .replace("'", "&#39;")
     )
-
-
-def make_html_message(text):
-
-    text = escape_html(text)
-
-    text = text.replace(
-        "\r\n",
-        "\n"
-    )
-
-    text = text.replace(
-        "\r",
-        "\n"
-    )
-
-    lines = text.split("\n")
-
-    return "<br>".join(lines)
 
 
 @app.route(
@@ -220,7 +480,6 @@ def login():
         if password == LOGIN:
 
             session["login"] = True
-
             session["last_send"] = 0
 
             return redirect("/")
@@ -313,9 +572,9 @@ def send_batch():
         )
     ).strip()
 
-    message = str(
+    raw_html = str(
         data.get(
-            "message",
+            "message_html",
             ""
         )
     )
@@ -328,36 +587,43 @@ def send_batch():
     )
 
     if not sender:
+
         return jsonify(
             error="Sender name required."
         ), 400
 
     if not valid_email(gmail):
+
         return jsonify(
             error="Valid Gmail address required."
         ), 400
 
     if not app_password:
+
         return jsonify(
             error="Gmail App Password required."
         ), 400
 
     if not subject:
+
         return jsonify(
-            error="Subject required."
+            error="Email subject required."
         ), 400
 
-    if not message.strip():
+    if not raw_html.strip():
+
         return jsonify(
             error="Message required."
         ), 400
 
     if not recipients:
+
         return jsonify(
             error="No recipients."
         ), 400
 
     if len(recipients) > 5:
+
         return jsonify(
             error="Only 5 recipients per batch."
         ), 400
@@ -375,9 +641,21 @@ def send_batch():
             invalid=invalid
         ), 400
 
+    clean_html = sanitize_html(
+        raw_html
+    )
+
+    clean_html = resolve_spintax_html(
+        clean_html
+    )
+
+    plain_text = html_to_plain(
+        clean_html
+    )
+
     safe, reason = safe_message(
         subject,
-        message
+        plain_text
     )
 
     if not safe:
@@ -387,7 +665,6 @@ def send_batch():
         ), 400
 
     sent = []
-
     failed = []
 
     try:
@@ -414,24 +691,19 @@ def send_batch():
 
                 try:
 
-                    personalized = (
-                        resolve_spintax(
-                            message
-                        )
-                    )
-
-                    personalized = (
-                        personalized.replace(
+                    personalized_plain = (
+                        plain_text.replace(
                             "{name}",
                             recipient.split("@")[0]
                         )
                     )
 
-                    plain_text = personalized
-
-                    html_text = (
-                        make_html_message(
-                            personalized
+                    personalized_html = (
+                        clean_html.replace(
+                            "{name}",
+                            escape_html(
+                                recipient.split("@")[0]
+                            )
                         )
                     )
 
@@ -439,10 +711,8 @@ def send_batch():
                         "alternative"
                     )
 
-                    mail["Subject"] = (
-                        resolve_spintax(
-                            subject
-                        )
+                    mail["Subject"] = resolve_spintax(
+                        subject
                     )
 
                     mail["From"] = (
@@ -453,15 +723,44 @@ def send_batch():
 
                     mail.attach(
                         MIMEText(
-                            plain_text,
+                            personalized_plain,
                             "plain",
                             "utf-8"
                         )
                     )
 
+                    html_document = f"""
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {{
+    font-family: Arial, sans-serif;
+    color: #222;
+    line-height: 1.6;
+}}
+
+.small-caps {{
+    font-variant: small-caps;
+    font-feature-settings: "smcp";
+    letter-spacing: .02em;
+}}
+
+a {{
+    color: #2563eb;
+}}
+</style>
+</head>
+<body>
+{personalized_html}
+</body>
+</html>
+"""
+
                     mail.attach(
                         MIMEText(
-                            html_text,
+                            html_document,
                             "html",
                             "utf-8"
                         )
@@ -485,7 +784,7 @@ def send_batch():
                             recipient
                         )
 
-                except Exception as error:
+                except Exception:
 
                     failed.append(
                         recipient
