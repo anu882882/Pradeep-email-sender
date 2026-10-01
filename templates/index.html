@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html>
 
 <head>
@@ -172,7 +171,9 @@ class="message"
 placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
 
 
-<!-- CLOUDFLARE -->
+<!-- =========================================
+     CLOUDFLARE TURNSTILE
+========================================= -->
 
 <div class="turnstile-area">
 
@@ -195,7 +196,9 @@ data-theme="light">
 <div class="right-column">
 
 
-<!-- RECIPIENTS -->
+<!-- =========================================
+     RECIPIENTS
+========================================= -->
 
 <section class="card recipients-card">
 
@@ -242,9 +245,14 @@ recipient3@example.com"></textarea>
 </section>
 
 
-<!-- PROGRESS -->
+<!-- =========================================
+     PROGRESS MONITOR
+========================================= -->
 
 <section class="card progress-card">
+
+
+<div class="progress-heading">
 
 
 <div class="card-title">
@@ -258,12 +266,39 @@ Progress Monitor
 </div>
 
 
+<!-- CURRENT SENDING GMAIL -->
+
+<div class="sending-from">
+
+<span>
+SENDING FROM
+</span>
+
+<strong
+id="sendingFrom">
+
+—
+
+</strong>
+
+</div>
+
+
+</div>
+
+
+<!-- =========================================
+     STATS
+========================================= -->
+
 <div class="stats">
 
 
 <div class="stat">
 
-<span>TOTAL</span>
+<span>
+TOTAL
+</span>
 
 <strong id="total">
 0
@@ -274,7 +309,9 @@ Progress Monitor
 
 <div class="stat sent-stat">
 
-<span>SENT</span>
+<span>
+SENT
+</span>
 
 <strong id="sent">
 0
@@ -285,7 +322,9 @@ Progress Monitor
 
 <div class="stat failed-stat">
 
-<span>FAILED</span>
+<span>
+FAILED
+</span>
 
 <strong id="failed">
 0
@@ -296,7 +335,9 @@ Progress Monitor
 
 <div class="stat remaining-stat">
 
-<span>REMAINING</span>
+<span>
+REMAINING
+</span>
 
 <strong id="remaining">
 0
@@ -308,6 +349,10 @@ Progress Monitor
 </div>
 
 
+<!-- =========================================
+     PROGRESS BAR
+========================================= -->
+
 <div class="progress-track">
 
 <div
@@ -317,6 +362,10 @@ class="progress-bar">
 
 </div>
 
+
+<!-- =========================================
+     STATUS
+========================================= -->
 
 <div
 class="send-status"
@@ -333,6 +382,10 @@ id="batchStatus">
 
 </div>
 
+
+<!-- =========================================
+     SEND BUTTON
+========================================= -->
 
 <button
 id="send"
@@ -358,6 +411,10 @@ class="send-button">
 <script>
 
 
+/* ==========================================
+   HELPER
+========================================== */
+
 const $ =
 id => document.getElementById(id);
 
@@ -376,10 +433,17 @@ function(){
         $("pass");
 
 
-    input.type =
+    if(
         input.type === "password"
-        ? "text"
-        : "password";
+    ){
+
+        input.type = "text";
+
+    }else{
+
+        input.type = "password";
+
+    }
 
 };
 
@@ -411,7 +475,7 @@ function getRecipients(){
 
 
 /* ==========================================
-   COUNT RECIPIENTS
+   RECIPIENT COUNT
 ========================================== */
 
 function updateCount(){
@@ -441,7 +505,7 @@ $("recipients").addEventListener(
 
 
 /* ==========================================
-   MESSAGE SAFETY
+   MESSAGE CHECK
 ========================================== */
 
 function messageCheck(){
@@ -479,8 +543,11 @@ function messageCheck(){
 
 
     if(
-        (text.match(/https?:\/\//gi) || [])
-        .length > 5
+        (
+            text.match(
+                /https?:\/\//gi
+            ) || []
+        ).length > 5
     ){
 
         $("status").textContent =
@@ -509,7 +576,7 @@ $("msg").addEventListener(
 
 
 /* ==========================================
-   TURNSTILE TOKEN
+   CLOUDFLARE TOKEN
 ========================================== */
 
 function getTurnstileToken(){
@@ -535,13 +602,20 @@ $("send").onclick =
 async function(){
 
 
-    if(sending)
+    if(sending){
+
         return;
+
+    }
 
 
     const all =
         getRecipients();
 
+
+    /* ======================================
+       RECIPIENT VALIDATION
+    ====================================== */
 
     if(!all.length){
 
@@ -563,7 +637,9 @@ async function(){
     }
 
 
-    /* Required fields */
+    /* ======================================
+       REQUIRED FIELDS
+    ====================================== */
 
     const required = [
 
@@ -613,8 +689,17 @@ async function(){
     }
 
 
-    if(!messageCheck())
+    /* ======================================
+       MESSAGE SAFETY
+    ====================================== */
+
+    if(
+        !messageCheck()
+    ){
+
         return;
+
+    }
 
 
     /* ======================================
@@ -636,13 +721,14 @@ async function(){
 
 
     /* ======================================
-       IMPORTANT SNAPSHOT
+       SEND SNAPSHOT
        
-       Everything needed for this sending
-       operation is copied BEFORE sending.
+       IMPORTANT:
+       Current Gmail is copied here.
        
-       Editing the UI afterwards will not
-       change the active send operation.
+       If user changes Gmail field later,
+       current sending operation remains
+       connected to this original Gmail.
     ====================================== */
 
     const sendSnapshot = {
@@ -670,7 +756,15 @@ async function(){
 
 
     /* ======================================
-       START
+       SHOW SENDING GMAIL
+    ====================================== */
+
+    $("sendingFrom").textContent =
+        sendSnapshot.gmail.trim();
+
+
+    /* ======================================
+       START SENDING
     ====================================== */
 
     sending = true;
@@ -714,12 +808,24 @@ async function(){
 
 
     /* ======================================
-       5 AT A TIME
+       5 EMAILS PER BATCH
        
-       NO ARTIFICIAL DELAY.
+       No artificial delay.
        
-       As soon as batch finishes,
-       next batch starts.
+       Batch 1:
+       1-5
+       
+       Batch 2:
+       6-10
+       
+       Batch 3:
+       11-15
+       
+       Batch 4:
+       16-20
+       
+       Batch 5:
+       21-25
     ====================================== */
 
     for(
@@ -739,7 +845,9 @@ async function(){
 
 
         const batchNumber =
-            Math.floor(start / 5) + 1;
+            Math.floor(
+                start / 5
+            ) + 1;
 
 
         $("status").textContent =
@@ -753,6 +861,10 @@ async function(){
         let responseData =
             null;
 
+
+        /* ==================================
+           SEND REQUEST
+        ================================== */
 
         try{
 
@@ -773,21 +885,22 @@ async function(){
                             JSON.stringify({
 
                                 /*
-                                 * SNAPSHOT DATA
+                                 * Snapshot data
                                  */
                                 ...sendSnapshot,
 
 
                                 /*
-                                 * Only this batch
+                                 * Current 5
                                  */
                                 recipients:
                                     batch,
 
 
                                 /*
-                                 * Cloudflare token
-                                 * only on first batch
+                                 * Cloudflare is
+                                 * verified for
+                                 * first batch.
                                  */
                                 turnstile_token:
                                     start === 0
@@ -804,9 +917,9 @@ async function(){
                 await response.json();
 
 
-            /* =================================
-               AUTH ERROR
-            ================================= */
+            /* ==============================
+               GMAIL AUTH ERROR
+            ============================== */
 
             if(
                 response.status === 401
@@ -828,9 +941,9 @@ async function(){
             }
 
 
-            /* =================================
+            /* ==============================
                CLOUDFLARE ERROR
-            ================================= */
+            ============================== */
 
             if(
                 response.status === 403
@@ -850,9 +963,9 @@ async function(){
             }
 
 
-            /* =================================
+            /* ==============================
                OTHER ERROR
-            ================================= */
+            ============================== */
 
             if(!response.ok){
 
@@ -898,11 +1011,9 @@ async function(){
         }
 
 
-        /* ======================================
+        /* ==================================
            UPDATE PROGRESS
-           
-           No individual email list.
-           ====================================== */
+        ================================== */
 
         sentCount +=
             responseData.sent.length;
@@ -945,23 +1056,28 @@ async function(){
             `● ${processed} of ${recipientsSnapshot.length} processed`;
 
 
-        $("batchStatus").textContent =
-            `Batch ${batchNumber} completed — next batch starting...`;
+        if(
+            processed <
+            recipientsSnapshot.length
+        ){
+
+            $("batchStatus").textContent =
+                `Batch ${batchNumber} completed — next batch starting...`;
+
+        }
 
 
         /*
-         * IMPORTANT:
+         * NO DELAY HERE.
          *
-         * NO sleep here.
-         *
-         * The next 5 starts immediately.
+         * Next 5 starts immediately.
          */
 
     }
 
 
     /* ======================================
-       COMPLETE
+       COMPLETED
     ====================================== */
 
     if(
@@ -987,6 +1103,10 @@ async function(){
     }
 
 
+    /* ======================================
+       ENABLE BUTTON
+    ====================================== */
+
     sending = false;
 
 
@@ -994,9 +1114,13 @@ async function(){
         false;
 
 
-    /* Reset Cloudflare for next send */
+    /* ======================================
+       RESET CLOUDFLARE
+    ====================================== */
 
-    if(window.turnstile){
+    if(
+        window.turnstile
+    ){
 
         try{
 
@@ -1004,7 +1128,7 @@ async function(){
 
         }catch(error){
 
-            /* Ignore reset errors */
+            /* Ignore */
 
         }
 
@@ -1012,6 +1136,10 @@ async function(){
 
 };
 
+
+/* ==========================================
+   INITIAL COUNT
+========================================== */
 
 updateCount();
 
