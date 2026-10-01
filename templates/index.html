@@ -1,809 +1,1152 @@
 <!doctype html>
-<html lang="en">
+<html>
 
 <head>
 
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
 
 <title>Secure Mail Console</title>
 
-<link rel="stylesheet" href="/static/style.css">
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
 
-{% if turnstile_site_key %}
 <script
 src="https://challenges.cloudflare.com/turnstile/v0/api.js"
 async
 defer>
 </script>
-{% endif %}
 
 </head>
 
+
 <body>
 
-<header class="topbar">
 
-    <div class="brand">
+<header>
 
-        <div class="shield">◆</div>
+<div class="top-brand">
 
-        <div>
-            <div class="brand-title">
-                Secure Mail Console
-            </div>
-        </div>
+<div class="shield">
+♢
+</div>
 
-    </div>
-
-    <a
-        href="/logout"
-        class="logout"
-        ondblclick="return true;"
-        onclick="return logoutClick(event,this);">
-
-        ⇥ Logout (Double Click)
-
-    </a>
-
-</header>
-
-
-<div class="page">
-
-    <div class="page-title">
-
-        <span class="plane">➤</span>
-
-        <strong>Bulk Email Sender</strong>
-
-    </div>
-
-
-    <div class="dashboard">
-
-
-        <!-- LEFT -->
-
-        <div class="left">
-
-
-            <section class="card compose">
-
-                <h2>
-                    ✐ Compose Message
-                </h2>
-
-
-                <div class="form-grid">
-
-
-                    <div>
-
-                        <label>Sender Name</label>
-
-                        <input
-                            id="senderName"
-                            value=""
-                            placeholder="Your name">
-
-                    </div>
-
-
-                    <div>
-
-                        <label>Your Gmail</label>
-
-                        <input
-                            id="gmail"
-                            type="email"
-                            placeholder="your@gmail.com">
-
-                    </div>
-
-
-                    <div>
-
-                        <label>App Password</label>
-
-                        <div class="password-box">
-
-                            <input
-                                id="appPassword"
-                                type="password"
-                                placeholder="Gmail App Password">
-
-                            <button
-                                type="button"
-                                onclick="togglePassword()">
-                                ◉
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <div>
-
-                        <label>Email Subject</label>
-
-                        <input
-                            id="subject"
-                            placeholder="Email">
-
-                    </div>
-
-
-                </div>
-
-
-                <label class="message-label">
-                    Message Body (Plain Text / HTML)
-                </label>
-
-
-                <div class="editor-tools">
-
-                    <button onclick="formatText('bold')">
-                        <b>B</b>
-                    </button>
-
-                    <button onclick="formatText('italic')">
-                        <i>I</i>
-                    </button>
-
-                    <button onclick="formatText('underline')">
-                        <u>U</u>
-                    </button>
-
-                    <button onclick="smallCaps()">
-                        Small Caps
-                    </button>
-
-                    <button onclick="makeList()">
-                        • List
-                    </button>
-
-                    <button onclick="addLink()">
-                        Link
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="editor"
-                    class="editor"
-                    contenteditable="true"
-                    spellcheck="true">
-
-                    Your site is well presented, but an error keeps it off the 1st PAGE.<br>
-                    Can I email the SCREENSHOT?
-
-                </div>
-
-
-                <div class="editor-hint">
-                    Supports {name} and {Hi|Hello|Hey}
-                </div>
-
-
-                <div class="spam-title">
-                    🛡 Spam Protection
-                </div>
-
-
-                <div class="turnstile-wrap">
-
-                    {% if turnstile_site_key %}
-
-                    <div
-                        class="cf-turnstile"
-                        data-sitekey="{{turnstile_site_key}}"
-                        data-theme="light">
-                    </div>
-
-                    {% else %}
-
-                    <div class="turnstile-placeholder">
-                        Spam protection is configured through Cloudflare.
-                    </div>
-
-                    {% endif %}
-
-                </div>
-
-            </section>
-
-
-        </div>
-
-
-        <!-- RIGHT -->
-
-        <div class="right">
-
-
-            <!-- RECIPIENTS -->
-
-            <section class="card recipients-card">
-
-                <div class="section-head">
-
-                    <div>
-
-                        <h2>
-                            ♣ Recipients
-                        </h2>
-
-                        <div class="sub">
-                            Paste emails (comma separated, new lines, or Excel copy)
-                        </div>
-
-                    </div>
-
-                    <div
-                        id="found"
-                        class="found">
-                        0 found
-                    </div>
-
-                </div>
-
-
-                <textarea
-                    id="recipients"
-                    class="recipient-box"
-                    placeholder="email@example.com&#10;another@example.com"
-                    oninput="updateRecipients()"></textarea>
-
-            </section>
-
-
-            <!-- PROGRESS -->
-
-            <section class="card progress-card">
-
-                <h2>
-                    ◔ Progress Monitor
-                </h2>
-
-
-                <div class="stats">
-
-
-                    <div class="stat total">
-
-                        <span>TOTAL</span>
-
-                        <strong id="total">
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat sent">
-
-                        <span>SENT</span>
-
-                        <strong id="sent">
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat failed">
-
-                        <span>FAILED</span>
-
-                        <strong id="failed">
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat remaining">
-
-                        <span>REMAINING</span>
-
-                        <strong id="remaining">
-                            0
-                        </strong>
-
-                    </div>
-
-
-                </div>
-
-
-                <div class="progress-track">
-
-                    <div
-                        id="progress"
-                        class="progress-bar">
-                    </div>
-
-                </div>
-
-
-                <div
-                    id="senderStatus"
-                    class="sender-status">
-
-                    ◯ Sent: —
-
-                </div>
-
-
-                <div
-                    id="batchStatus"
-                    class="batch-status">
-
-                    Ready
-
-                </div>
-
-
-                <div class="buttons">
-
-                    <button
-                        id="sendButton"
-                        class="send-btn"
-                        onclick="startSending()">
-
-                        ✣ &nbsp; Sending...
-
-                    </button>
-
-
-                    <button
-                        id="stopButton"
-                        class="stop-btn"
-                        onclick="stopSending()">
-
-                        ■ &nbsp; Stop Sending
-
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="status"
-                    class="status">
-                </div>
-
-            </section>
-
-
-        </div>
-
-    </div>
+<strong>
+Secure Mail Console
+</strong>
 
 </div>
 
 
+<a
+class="logout"
+href="/logout">
+
+↪ Logout
+
+</a>
+
+</header>
+
+
+<main>
+
+
+<div class="page-title">
+
+<span>➤</span>
+
+<strong>
+Bulk Email Sender
+</strong>
+
+</div>
+
+
+<div class="dashboard">
+
+
+<!-- =========================================
+     COMPOSE MESSAGE
+========================================= -->
+
+<section class="compose card">
+
+
+<div class="card-title">
+
+<span>✎</span>
+
+<strong>
+Compose Message
+</strong>
+
+</div>
+
+
+<div class="form-grid">
+
+
+<div>
+
+<label>
+Sender Name
+</label>
+
+<input
+id="name"
+placeholder="E.g., John Doe">
+
+</div>
+
+
+<div>
+
+<label>
+Your Gmail
+</label>
+
+<input
+id="gmail"
+type="email"
+placeholder="you@gmail.com">
+
+</div>
+
+
+<div>
+
+<label>
+App Password
+</label>
+
+<div class="password-box">
+
+<input
+id="pass"
+type="password"
+placeholder="16-char app password">
+
+<button
+type="button"
+id="togglePassword">
+◉
+</button>
+
+</div>
+
+</div>
+
+
+<div>
+
+<label>
+Email Subject
+</label>
+
+<input
+id="sub"
+placeholder="Enter subject line...">
+
+</div>
+
+
+</div>
+
+
+<label class="message-label">
+
+Message Body (Plain Text / HTML)
+
+</label>
+
+
+<textarea
+id="msg"
+class="message"
+placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
+
+
+<!-- =========================================
+     CLOUDFLARE TURNSTILE
+========================================= -->
+
+<div class="turnstile-area">
+
+<div
+class="cf-turnstile"
+data-sitekey="{{ turnstile_site_key }}"
+data-theme="light">
+</div>
+
+</div>
+
+
+</section>
+
+
+<!-- =========================================
+     RIGHT COLUMN
+========================================= -->
+
+<div class="right-column">
+
+
+<!-- =========================================
+     RECIPIENTS
+========================================= -->
+
+<section class="card recipients-card">
+
+
+<div class="card-title recipients-title">
+
+<div>
+
+<span>♣</span>
+
+<strong>
+Recipients
+</strong>
+
+</div>
+
+
+<span
+class="found"
+id="found">
+
+0 found
+
+</span>
+
+</div>
+
+
+<div class="recipient-help">
+
+Paste emails (comma separated, new lines, or Excel copy)
+
+</div>
+
+
+<textarea
+id="recipients"
+class="recipient-input"
+placeholder="recipient1@example.com
+recipient2@example.com
+recipient3@example.com"></textarea>
+
+
+</section>
+
+
+<!-- =========================================
+     PROGRESS MONITOR
+========================================= -->
+
+<section class="card progress-card">
+
+
+<div class="progress-heading">
+
+
+<div class="card-title">
+
+<span>◕</span>
+
+<strong>
+Progress Monitor
+</strong>
+
+</div>
+
+
+<!-- CURRENT SENDING GMAIL -->
+
+<div class="sending-from">
+
+<span>
+SENDING FROM
+</span>
+
+<strong
+id="sendingFrom">
+
+—
+
+</strong>
+
+</div>
+
+
+</div>
+
+
+<!-- =========================================
+     STATS
+========================================= -->
+
+<div class="stats">
+
+
+<div class="stat">
+
+<span>
+TOTAL
+</span>
+
+<strong id="total">
+0
+</strong>
+
+</div>
+
+
+<div class="stat sent-stat">
+
+<span>
+SENT
+</span>
+
+<strong id="sent">
+0
+</strong>
+
+</div>
+
+
+<div class="stat failed-stat">
+
+<span>
+FAILED
+</span>
+
+<strong id="failed">
+0
+</strong>
+
+</div>
+
+
+<div class="stat remaining-stat">
+
+<span>
+REMAINING
+</span>
+
+<strong id="remaining">
+0
+</strong>
+
+</div>
+
+
+</div>
+
+
+<!-- =========================================
+     PROGRESS BAR
+========================================= -->
+
+<div class="progress-track">
+
+<div
+id="progress"
+class="progress-bar">
+</div>
+
+</div>
+
+
+<!-- =========================================
+     STATUS
+========================================= -->
+
+<div
+class="send-status"
+id="status">
+
+● Ready to send
+
+</div>
+
+
+<div
+class="batch-status"
+id="batchStatus">
+
+</div>
+
+
+<!-- =========================================
+     SEND BUTTON
+========================================= -->
+
+<button
+id="send"
+class="send-button">
+
+➤ Send All
+
+</button>
+
+
+</section>
+
+
+</div>
+
+
+</div>
+
+
+</main>
+
+
 <script>
 
-let stopRequested=false;
-let sending=false;
+
+/* ==========================================
+   HELPER
+========================================== */
+
+const $ =
+id => document.getElementById(id);
 
 
-function $(id){
-    return document.getElementById(id);
-}
+let sending = false;
 
 
-function updateRecipients(){
+/* ==========================================
+   PASSWORD SHOW / HIDE
+========================================== */
 
-    const list=parseRecipients();
+$("togglePassword").onclick =
+function(){
 
-    $("found").textContent=
-        list.length+" found";
-
-    $("total").textContent=
-        list.length;
-
-    $("remaining").textContent=
-        list.length;
-
-}
+    const input =
+        $("pass");
 
 
-function parseRecipients(){
+    if(
+        input.type === "password"
+    ){
 
-    const raw=$("recipients").value;
+        input.type = "text";
 
-    const list=raw
-        .split(/[\s,;]+/)
-        .map(x=>x.trim().toLowerCase())
-        .filter(Boolean);
+    }else{
 
-    return [...new Set(list)].slice(0,25);
-}
-
-
-function togglePassword(){
-
-    const input=$("appPassword");
-
-    input.type=
-        input.type==="password"
-        ?"text"
-        :"password";
-
-}
-
-
-function formatText(command){
-
-    document.execCommand(
-        command,
-        false,
-        null
-    );
-
-    $("editor").focus();
-
-}
-
-
-function smallCaps(){
-
-    const selection=
-        window.getSelection();
-
-    const text=
-        selection.toString();
-
-    if(!text){
-
-        document.execCommand(
-            "insertHTML",
-            false,
-            '<span class="small-caps">Small Caps</span>'
-        );
-
-        return;
-    }
-
-    document.execCommand(
-        "insertHTML",
-        false,
-        '<span class="small-caps">'+
-        text+
-        '</span>'
-    );
-
-}
-
-
-function makeList(){
-
-    document.execCommand(
-        "insertUnorderedList",
-        false,
-        null
-    );
-
-}
-
-
-function addLink(){
-
-    const url=
-        prompt("Enter URL:");
-
-    if(url){
-
-        document.execCommand(
-            "createLink",
-            false,
-            url
-        );
+        input.type = "password";
 
     }
 
+};
+
+
+/* ==========================================
+   RECIPIENT PARSER
+========================================== */
+
+function getRecipients(){
+
+    return [
+
+        ...new Set(
+
+            $("recipients")
+            .value
+            .split(/[\s,;]+/)
+            .map(
+                x =>
+                x.trim().toLowerCase()
+            )
+            .filter(Boolean)
+
+        )
+
+    ];
+
 }
 
 
-function getTurnstile(){
+/* ==========================================
+   RECIPIENT COUNT
+========================================== */
 
-    const el=
+function updateCount(){
+
+    const list =
+        getRecipients();
+
+
+    $("found").textContent =
+        `${list.length} found`;
+
+
+    $("total").textContent =
+        list.length;
+
+
+    $("remaining").textContent =
+        list.length;
+
+}
+
+
+$("recipients").addEventListener(
+    "input",
+    updateCount
+);
+
+
+/* ==========================================
+   MESSAGE CHECK
+========================================== */
+
+function messageCheck(){
+
+    const text =
+        $("sub").value +
+        " " +
+        $("msg").value;
+
+
+    if(
+        /<\s*(script|iframe|object|embed)\b/i
+        .test(text)
+    ){
+
+        $("status").textContent =
+            "⚠ Unsafe HTML detected.";
+
+        return false;
+
+    }
+
+
+    if(
+        /javascript\s*:/i
+        .test(text)
+    ){
+
+        $("status").textContent =
+            "⚠ Unsafe content detected.";
+
+        return false;
+
+    }
+
+
+    if(
+        (
+            text.match(
+                /https?:\/\//gi
+            ) || []
+        ).length > 5
+    ){
+
+        $("status").textContent =
+            "⚠ Too many links.";
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+$("sub").addEventListener(
+    "input",
+    messageCheck
+);
+
+
+$("msg").addEventListener(
+    "input",
+    messageCheck
+);
+
+
+/* ==========================================
+   CLOUDFLARE TOKEN
+========================================== */
+
+function getTurnstileToken(){
+
+    const input =
         document.querySelector(
-            'input[name="cf-turnstile-response"]'
+            '[name="cf-turnstile-response"]'
         );
 
-    return el ? el.value : "";
+
+    return input
+        ? input.value
+        : "";
 
 }
 
 
-function stopSending(){
+/* ==========================================
+   SEND ALL
+========================================== */
 
-    stopRequested=true;
-
-    $("status").textContent=
-        "Stop requested. Current batch will finish.";
-
-}
+$("send").onclick =
+async function(){
 
 
-function setProgress(done,total){
-
-    $("sent").textContent=
-        window.currentSent;
-
-    $("failed").textContent=
-        window.currentFailed;
-
-    $("remaining").textContent=
-        Math.max(total-done,0);
-
-    $("progress").style.width=
-        total
-        ? ((done/total)*100)+"%"
-        :"0%";
-
-}
-
-
-async function startSending(){
-
-    if(sending) return;
-
-    const list=parseRecipients();
-
-    if(!list.length){
-
-        $("status").textContent=
-            "Add at least one recipient.";
+    if(sending){
 
         return;
+
     }
 
 
-    if(!$("gmail").value.trim()){
+    const all =
+        getRecipients();
 
-        $("status").textContent=
-            "Enter Gmail address.";
+
+    /* ======================================
+       RECIPIENT VALIDATION
+    ====================================== */
+
+    if(!all.length){
+
+        $("status").textContent =
+            "Add recipients first.";
 
         return;
+
     }
 
 
-    if(!$("appPassword").value.trim()){
+    if(all.length > 25){
 
-        $("status").textContent=
-            "Enter Gmail App Password.";
+        $("status").textContent =
+            "Maximum 25 recipients.";
 
         return;
+
     }
 
 
-    if(!$("subject").value.trim()){
+    /* ======================================
+       REQUIRED FIELDS
+    ====================================== */
 
-        $("status").textContent=
-            "Enter email subject.";
+    const required = [
 
-        return;
+        [
+            "name",
+            "Enter sender name."
+        ],
+
+        [
+            "gmail",
+            "Enter Gmail address."
+        ],
+
+        [
+            "pass",
+            "Enter Gmail App Password."
+        ],
+
+        [
+            "sub",
+            "Enter email subject."
+        ],
+
+        [
+            "msg",
+            "Enter message."
+        ]
+
+    ];
+
+
+    for(
+        const [id, error] of required
+    ){
+
+        if(
+            !$(id).value.trim()
+        ){
+
+            $("status").textContent =
+                error;
+
+            return;
+
+        }
+
     }
 
 
-    const token=getTurnstile();
+    /* ======================================
+       MESSAGE SAFETY
+    ====================================== */
+
+    if(
+        !messageCheck()
+    ){
+
+        return;
+
+    }
 
 
-    {% if turnstile_site_key %}
+    /* ======================================
+       CLOUDFLARE
+    ====================================== */
+
+    const token =
+        getTurnstileToken();
+
 
     if(!token){
 
-        $("status").textContent=
-            "Complete Cloudflare verification.";
+        $("status").textContent =
+            "Please complete Cloudflare verification.";
 
         return;
+
     }
 
-    {% endif %}
 
+    /* ======================================
+       SEND SNAPSHOT
+       
+       IMPORTANT:
+       Current Gmail is copied here.
+       
+       If user changes Gmail field later,
+       current sending operation remains
+       connected to this original Gmail.
+    ====================================== */
 
-    /* Snapshot prevents later edits from changing an active send. */
-
-    const snapshot={
+    const sendSnapshot = {
 
         sender_name:
-            $("senderName").value.trim(),
+            $("name").value,
 
         gmail:
-            $("gmail").value.trim(),
+            $("gmail").value,
 
         app_password:
-            $("appPassword").value,
+            $("pass").value,
 
         subject:
-            $("subject").value,
+            $("sub").value,
 
-        message_html:
-            $("editor").innerHTML,
-
-        turnstile_token:
-            token
+        message:
+            $("msg").value
 
     };
 
 
-    sending=true;
-    stopRequested=false;
-
-    window.currentSent=0;
-    window.currentFailed=0;
+    const recipientsSnapshot =
+        [...all];
 
 
-    $("sendButton").disabled=true;
-    $("stopButton").disabled=false;
+    /* ======================================
+       SHOW SENDING GMAIL
+    ====================================== */
 
-    $("senderStatus").innerHTML=
-        "◯ Sent: <strong>"+
-        snapshot.gmail+
-        "</strong>";
-
-
-    $("total").textContent=
-        list.length;
-
-    $("sent").textContent="0";
-    $("failed").textContent="0";
-    $("remaining").textContent=list.length;
-    $("progress").style.width="0%";
+    $("sendingFrom").textContent =
+        sendSnapshot.gmail.trim();
 
 
-    for(let i=0;i<list.length;i+=5){
+    /* ======================================
+       START SENDING
+    ====================================== */
 
-        if(stopRequested){
-
-            $("batchStatus").textContent=
-                "Sending stopped.";
-
-            break;
-        }
+    sending = true;
 
 
-        const batch=
-            list.slice(i,i+5);
+    $("send").disabled =
+        true;
 
 
-        $("batchStatus").textContent=
-            "Sending "+
-            (i+1)+
-            "-"+
-            Math.min(i+5,list.length)+
-            " of "+
-            list.length;
+    $("sent").textContent =
+        "0";
 
+
+    $("failed").textContent =
+        "0";
+
+
+    $("remaining").textContent =
+        recipientsSnapshot.length;
+
+
+    $("progress").style.width =
+        "0%";
+
+
+    $("batchStatus").textContent =
+        "";
+
+
+    let sentCount = 0;
+
+    let failedCount = 0;
+
+    let processed = 0;
+
+
+    const totalBatches =
+        Math.ceil(
+            recipientsSnapshot.length / 5
+        );
+
+
+    /* ======================================
+       5 EMAILS PER BATCH
+       
+       No artificial delay.
+       
+       Batch 1:
+       1-5
+       
+       Batch 2:
+       6-10
+       
+       Batch 3:
+       11-15
+       
+       Batch 4:
+       16-20
+       
+       Batch 5:
+       21-25
+    ====================================== */
+
+    for(
+        let start = 0;
+
+        start < recipientsSnapshot.length;
+
+        start += 5
+    ){
+
+
+        const batch =
+            recipientsSnapshot.slice(
+                start,
+                start + 5
+            );
+
+
+        const batchNumber =
+            Math.floor(
+                start / 5
+            ) + 1;
+
+
+        $("status").textContent =
+            "● Sending...";
+
+
+        $("batchStatus").textContent =
+            `Batch ${batchNumber} of ${totalBatches} — sending ${batch.length} emails`;
+
+
+        let responseData =
+            null;
+
+
+        /* ==================================
+           SEND REQUEST
+        ================================== */
 
         try{
 
-            const response=
+            const response =
                 await fetch(
                     "/api/send-batch",
                     {
-                        method:"POST",
+
+                        method:
+                            "POST",
 
                         headers:{
                             "Content-Type":
-                            "application/json"
+                                "application/json"
                         },
 
-                        body:JSON.stringify({
+                        body:
+                            JSON.stringify({
 
-                            ...snapshot,
+                                /*
+                                 * Snapshot data
+                                 */
+                                ...sendSnapshot,
 
-                            recipients:batch
 
-                        })
+                                /*
+                                 * Current 5
+                                 */
+                                recipients:
+                                    batch,
+
+
+                                /*
+                                 * Cloudflare is
+                                 * verified for
+                                 * first batch.
+                                 */
+                                turnstile_token:
+                                    start === 0
+                                    ? token
+                                    : ""
+
+                            })
 
                     }
                 );
 
 
-            const data=
+            responseData =
                 await response.json();
 
 
-            if(!response.ok){
+            /* ==============================
+               GMAIL AUTH ERROR
+            ============================== */
 
-                $("status").textContent=
-                    data.error ||
-                    "Sending stopped.";
+            if(
+                response.status === 401
+            ){
 
-                break;
+                $("status").textContent =
+                    "✕ Gmail authentication failed.";
+
+                $("batchStatus").textContent =
+                    "Check the Gmail address and App Password.";
+
+                sending = false;
+
+                $("send").disabled =
+                    false;
+
+                return;
+
             }
 
 
-            window.currentSent+=
-                data.sent.length;
+            /* ==============================
+               CLOUDFLARE ERROR
+            ============================== */
 
-            window.currentFailed+=
-                data.failed.length;
+            if(
+                response.status === 403
+            ){
+
+                $("status").textContent =
+                    responseData.error ||
+                    "Cloudflare verification failed.";
+
+                sending = false;
+
+                $("send").disabled =
+                    false;
+
+                return;
+
+            }
 
 
-            const done=
-                window.currentSent+
-                window.currentFailed;
+            /* ==============================
+               OTHER ERROR
+            ============================== */
 
+            if(!response.ok){
 
-            setProgress(
-                done,
-                list.length
-            );
+                $("status").textContent =
+                    responseData.error ||
+                    "Sending failed.";
 
+                break;
 
-            $("status").textContent=
-                "● "+
-                done+
-                "/"+
-                list.length+
-                " processed";
+            }
 
 
         }catch(error){
 
-            $("status").textContent=
-                "Connection error.";
+            $("status").textContent =
+                "Server connection failed.";
+
+            $("batchStatus").textContent =
+                "Sending stopped.";
 
             break;
 
         }
 
+
+        if(!responseData){
+
+            $("status").textContent =
+                "No server response.";
+
+            break;
+
+        }
+
+
+        if(responseData.error){
+
+            $("status").textContent =
+                responseData.error;
+
+            break;
+
+        }
+
+
+        /* ==================================
+           UPDATE PROGRESS
+        ================================== */
+
+        sentCount +=
+            responseData.sent.length;
+
+
+        failedCount +=
+            responseData.failed.length;
+
+
+        processed =
+            sentCount +
+            failedCount;
+
+
+        $("sent").textContent =
+            sentCount;
+
+
+        $("failed").textContent =
+            failedCount;
+
+
+        $("remaining").textContent =
+            recipientsSnapshot.length -
+            processed;
+
+
+        $("progress").style.width =
+            Math.round(
+
+                (
+                    processed /
+                    recipientsSnapshot.length
+                ) * 100
+
+            ) + "%";
+
+
+        $("status").textContent =
+            `● ${processed} of ${recipientsSnapshot.length} processed`;
+
+
+        if(
+            processed <
+            recipientsSnapshot.length
+        ){
+
+            $("batchStatus").textContent =
+                `Batch ${batchNumber} completed — next batch starting...`;
+
+        }
+
+
+        /*
+         * NO DELAY HERE.
+         *
+         * Next 5 starts immediately.
+         */
+
     }
 
 
-    sending=false;
+    /* ======================================
+       COMPLETED
+    ====================================== */
 
-    $("sendButton").disabled=false;
-    $("stopButton").disabled=false;
+    if(
+        processed ===
+        recipientsSnapshot.length
+    ){
 
-    if(!stopRequested){
+        $("status").textContent =
+            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
 
-        $("batchStatus").textContent=
+
+        $("batchStatus").textContent =
             "All batches completed.";
 
-        $("status").textContent=
-            "● Sending completed.";
+
+        $("remaining").textContent =
+            "0";
+
+
+        $("progress").style.width =
+            "100%";
 
     }
 
-}
+
+    /* ======================================
+       ENABLE BUTTON
+    ====================================== */
+
+    sending = false;
 
 
-function logoutClick(event,link){
+    $("send").disabled =
+        false;
 
-    if(!link.dataset.firstClick){
 
-        event.preventDefault();
+    /* ======================================
+       RESET CLOUDFLARE
+    ====================================== */
 
-        link.dataset.firstClick="1";
+    if(
+        window.turnstile
+    ){
 
-        setTimeout(
-            ()=>{
-                delete link.dataset.firstClick;
-            },
-            1200
-        );
+        try{
 
-        return false;
+            window.turnstile.reset();
+
+        }catch(error){
+
+            /* Ignore */
+
+        }
+
     }
 
-    return true;
-}
+};
 
 
-updateRecipients();
+/* ==========================================
+   INITIAL COUNT
+========================================== */
+
+updateCount();
+
 
 </script>
 
+
 </body>
+
 </html>
