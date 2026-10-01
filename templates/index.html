@@ -62,19 +62,22 @@
 
 <label class="message-label">Message Body (Plain Text / HTML)</label>
 
-<div id="editor" class="editor" contenteditable="true">
-Your site is well presented, but an error keeps it off the 1st PAGE.<br>
-Can I email the SCREENSHOT?
-</div>
+<div id="editor" class="editor" contenteditable="true"></div>
 
-<div class="editor-hint">Supports {name} and {Hi|Hello|Hey}</div>
+<div class="editor-hint">
+Supports {name} and {Hi|Hello|Hey}
+</div>
 
 <div class="spam-title">🛡 Spam Protection</div>
 
 {% if turnstile_site_key %}
-<div class="cf-turnstile" data-sitekey="{{turnstile_site_key}}" data-theme="light"></div>
+<div class="cf-turnstile"
+data-sitekey="{{turnstile_site_key}}"
+data-theme="light"></div>
 {% else %}
-<div class="turnstile-placeholder">Spam protection is configured through Cloudflare.</div>
+<div class="turnstile-placeholder">
+Spam protection is configured through Cloudflare.
+</div>
 {% endif %}
 
 </section>
@@ -88,14 +91,18 @@ Can I email the SCREENSHOT?
 
 <div>
 <h2>♣ Recipients</h2>
-<div class="sub">Paste emails (comma separated, new lines, or Excel copy)</div>
+<div class="sub">
+Paste emails (comma separated, new lines, or Excel copy)
+</div>
 </div>
 
 <div id="found" class="found">0 found</div>
 
 </div>
 
-<textarea id="recipients" class="recipient-box"
+<textarea
+id="recipients"
+class="recipient-box"
 placeholder="email@example.com&#10;another@example.com"
 oninput="updateRecipients()"></textarea>
 
@@ -108,19 +115,23 @@ oninput="updateRecipients()"></textarea>
 <div class="stats">
 
 <div class="stat total">
-<span>TOTAL</span><strong id="total">0</strong>
+<span>TOTAL</span>
+<strong id="total">0</strong>
 </div>
 
 <div class="stat sent">
-<span>SENT</span><strong id="sent">0</strong>
+<span>SENT</span>
+<strong id="sent">0</strong>
 </div>
 
 <div class="stat failed">
-<span>FAILED</span><strong id="failed">0</strong>
+<span>FAILED</span>
+<strong id="failed">0</strong>
 </div>
 
 <div class="stat remaining">
-<span>REMAINING</span><strong id="remaining">0</strong>
+<span>REMAINING</span>
+<strong id="remaining">0</strong>
 </div>
 
 </div>
@@ -134,12 +145,15 @@ oninput="updateRecipients()"></textarea>
 
 <div class="buttons">
 
-<button id="sendButton" class="send-btn" onclick="startSending">
-✣ &nbsp; Sending...
+<button id="sendButton"
+class="send-btn"
+onclick="startSending()">
+✣ Send
 </button>
 
-<button class="stop-btn" onclick="stopSending">
-■ &nbsp; Stop Sending
+<button class="stop-btn"
+onclick="stopSending()">
+■ Stop Sending
 </button>
 
 </div>
@@ -156,8 +170,10 @@ oninput="updateRecipients()"></textarea>
 let stop=false,busy=false,$=x=>document.getElementById(x);
 
 function list(){
-return [...new Set($("recipients").value.split(/[\s,;]+/)
-.map(x=>x.trim().toLowerCase()).filter(Boolean))].slice(0,25)
+return [...new Set(
+$("recipients").value.split(/[\s,;]+/)
+.map(x=>x.trim().toLowerCase()).filter(Boolean)
+)].slice(0,25)
 }
 
 function updateRecipients(){
@@ -173,13 +189,16 @@ x.type=x.type=="password"?"text":"password"
 }
 
 function token(){
-let x=document.querySelector('input[name="cf-turnstile-response"]');
+let x=document.querySelector(
+'input[name="cf-turnstile-response"]'
+);
 return x?x.value:""
 }
 
 function stopSending(){
 stop=true;
-$("status").textContent="Stop requested. Current batch will finish."
+$("status").textContent=
+"Stop requested. Current email will finish."
 }
 
 async function startSending(){
@@ -188,13 +207,24 @@ if(busy)return;
 
 let a=list();
 
-if(!a.length)return $("status").textContent="Add at least one recipient.";
-if(!$("gmail").value.trim())return $("status").textContent="Enter Gmail address.";
-if(!$("appPassword").value.trim())return $("status").textContent="Enter Gmail App Password.";
-if(!$("subject").value.trim())return $("status").textContent="Enter email subject.";
+if(!a.length)
+return $("status").textContent="Add at least one recipient.";
+
+if(!$("gmail").value.trim())
+return $("status").textContent="Enter Gmail address.";
+
+if(!$("appPassword").value.trim())
+return $("status").textContent="Enter Gmail App Password.";
+
+if(!$("subject").value.trim())
+return $("status").textContent="Enter email subject.";
+
+if(!$("editor").innerHTML.trim())
+return $("status").textContent="Enter message.";
 
 {% if turnstile_site_key %}
-if(!token())return $("status").textContent="Complete Cloudflare verification.";
+if(!token())
+return $("status").textContent="Complete Cloudflare verification.";
 {% endif %}
 
 let s={
@@ -206,50 +236,60 @@ message_html:$("editor").innerHTML,
 turnstile_token:token()
 };
 
-busy=true;stop=false;
+busy=true;
+stop=false;
+
 let sent=0,failed=0;
 
 $("sendButton").disabled=true;
-$("senderStatus").innerHTML="◯ Sent: <strong>"+s.gmail+"</strong>";
+$("senderStatus").innerHTML=
+"◯ Sent: <strong>"+s.gmail+"</strong>";
 
-for(let i=0;i<a.length;i+=5){
+for(let i=0;i<a.length;i++){
 
 if(stop)break;
 
-let b=a.slice(i,i+5);
-
 $("batchStatus").textContent=
-"Sending "+(i+1)+"-"+Math.min(i+5,a.length)+" of "+a.length;
+"Sending "+(i+1)+" of "+a.length;
 
 try{
 
-let r=await fetch("/api/send-batch",{
+let r=await fetch("/api/send-one",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({...s,recipients:b})
+body:JSON.stringify({...s,recipient:a[i]})
 });
 
 let d=await r.json();
 
-if(!r.ok){
-$("status").textContent=d.error||"Sending stopped.";
-break
-}
-
-sent+=d.sent.length;
-failed+=d.failed.length;
+if(r.ok)sent++;
+else failed++;
 
 let done=sent+failed;
 
 $("sent").textContent=sent;
 $("failed").textContent=failed;
 $("remaining").textContent=a.length-done;
-$("progress").style.width=done/a.length*100+"%";
-$("status").textContent="● "+done+"/"+a.length+" processed";
+
+$("progress").style.width=
+done/a.length*100+"%";
+
+$("status").textContent=
+"● "+done+"/"+a.length+" processed";
 
 }catch(e){
+
+failed++;
+
+let done=sent+failed;
+
+$("failed").textContent=failed;
+$("remaining").textContent=a.length-done;
+
+$("progress").style.width=
+done/a.length*100+"%";
+
 $("status").textContent="Connection error.";
-break
 }
 }
 
@@ -257,8 +297,8 @@ busy=false;
 $("sendButton").disabled=false;
 
 if(!stop){
-$("batchStatus").textContent="All batches completed.";
-$("status").textContent="● Sending completed."
+$("batchStatus").textContent="All emails processed.";
+$("status").textContent="● Sending completed.";
 }
 }
 
