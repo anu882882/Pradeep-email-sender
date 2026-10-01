@@ -89,7 +89,9 @@ Compose Message
 
 <div>
 
-<label>Sender Name</label>
+<label>
+Sender Name
+</label>
 
 <input
 id="name"
@@ -100,7 +102,9 @@ placeholder="E.g., John Doe">
 
 <div>
 
-<label>Your Gmail</label>
+<label>
+Your Gmail
+</label>
 
 <input
 id="gmail"
@@ -112,7 +116,9 @@ placeholder="you@gmail.com">
 
 <div>
 
-<label>App Password</label>
+<label>
+App Password
+</label>
 
 <div class="password-box">
 
@@ -134,7 +140,9 @@ id="togglePassword">
 
 <div>
 
-<label>Email Subject</label>
+<label>
+Email Subject
+</label>
 
 <input
 id="sub"
@@ -147,36 +155,106 @@ placeholder="Enter subject line...">
 
 
 <label class="message-label">
-Message Body (Plain Text / HTML)
+Message Body (HTML Editor)
 </label>
 
 
-<textarea
-id="msg"
-class="message"
-placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
+<!-- =====================================
+     REAL HTML EDITOR
+====================================== -->
+
+<div class="editor">
 
 
-<div class="format-toolbar">
+<div class="toolbar">
 
-<span>Visual formatting:</span>
 
 <button
 type="button"
-onclick="applySmallCaps()">
+data-command="bold"
+title="Bold">
+
+<strong>B</strong>
+
+</button>
+
+
+<button
+type="button"
+data-command="italic"
+title="Italic">
+
+<em>I</em>
+
+</button>
+
+
+<button
+type="button"
+data-command="underline"
+title="Underline">
+
+<u>U</u>
+
+</button>
+
+
+<button
+type="button"
+id="smallCapsButton"
+title="Small Caps">
 
 Small Caps
 
 </button>
 
+
+<button
+type="button"
+data-command="insertUnorderedList"
+title="Bullet List">
+
+☷
+
+</button>
+
+
+<button
+type="button"
+id="linkButton"
+title="Insert Link">
+
+🔗
+
+</button>
+
+
 </div>
 
 
-<div class="format-help">
+<div
+id="editor"
+class="html-editor"
+contenteditable="true"
+spellcheck="true">
 
-Select a word in the message and click
-<strong>Small Caps</strong>.
-The email keeps normal text underneath.
+Write your email here...
+
+</div>
+
+
+</div>
+
+
+<div class="editor-help">
+
+Spintax supported:
+<strong>{Hi|Hello|Hey}</strong>
+and
+<strong>{name}</strong>.
+Select text and click
+<strong>Small Caps</strong>
+to format it.
 
 </div>
 
@@ -216,7 +294,9 @@ Recipients
 <span
 class="found"
 id="found">
+
 0 found
+
 </span>
 
 </div>
@@ -263,8 +343,11 @@ Progress Monitor
 SENDING FROM
 </span>
 
-<strong id="sendingFrom">
+<strong
+id="sendingFrom">
+
 —
+
 </strong>
 
 </div>
@@ -278,36 +361,52 @@ SENDING FROM
 
 <div class="stat">
 
-<span>TOTAL</span>
+<span>
+TOTAL
+</span>
 
-<strong id="total">0</strong>
+<strong id="total">
+0
+</strong>
 
 </div>
 
 
 <div class="stat sent-stat">
 
-<span>SENT</span>
+<span>
+SENT
+</span>
 
-<strong id="sent">0</strong>
+<strong id="sent">
+0
+</strong>
 
 </div>
 
 
 <div class="stat failed-stat">
 
-<span>FAILED</span>
+<span>
+FAILED
+</span>
 
-<strong id="failed">0</strong>
+<strong id="failed">
+0
+</strong>
 
 </div>
 
 
 <div class="stat remaining-stat">
 
-<span>REMAINING</span>
+<span>
+REMAINING
+</span>
 
-<strong id="remaining">0</strong>
+<strong id="remaining">
+0
+</strong>
 
 </div>
 
@@ -390,72 +489,201 @@ function(){
 
 
 /* ==========================================
-   SMALL CAPS VISUAL FORMAT
+   REAL HTML EDITOR
 ========================================== */
 
-function applySmallCaps(){
+const editor =
+    $("editor");
 
-    const textarea =
-        $("msg");
 
-    const start =
-        textarea.selectionStart;
+/*
+ * Remove placeholder when user clicks.
+ */
 
-    const end =
-        textarea.selectionEnd;
+editor.addEventListener(
+    "focus",
+    function(){
 
-    if(start === end){
+        if(
+            editor.textContent.trim() ===
+            "Write your email here..."
+        ){
+
+            editor.innerHTML = "";
+
+        }
+
+    }
+);
+
+
+/*
+ * Small Caps
+ *
+ * Select any text in the editor,
+ * then press Small Caps.
+ */
+
+$("smallCapsButton").onclick =
+function(){
+
+    editor.focus();
+
+    const selection =
+        window.getSelection();
+
+    if(
+        !selection ||
+        selection.rangeCount === 0 ||
+        selection.isCollapsed
+    ){
 
         $("status").textContent =
-            "Select some text first.";
+            "Select text first.";
 
         return;
 
     }
 
-    const selected =
-        textarea.value.substring(
-            start,
-            end
-        );
+
+    const range =
+        selection.getRangeAt(0);
+
 
     /*
-     * We do not replace the selected text
-     * with Unicode look-alike characters.
-     *
-     * The editor remains plain text.
-     *
-     * This button simply marks the selection
-     * for visual HTML formatting.
+     * Do not allow formatting outside
+     * the editor.
      */
 
-    const before =
-        textarea.value.substring(
-            0,
-            start
+    if(
+        !editor.contains(
+            range.commonAncestorContainer
+        )
+    ){
+
+        return;
+
+    }
+
+
+    const span =
+        document.createElement(
+            "span"
         );
 
-    const after =
-        textarea.value.substring(
-            end
+    span.className =
+        "small-caps";
+
+
+    try{
+
+        range.surroundContents(
+            span
         );
 
-    textarea.value =
-        before +
-        selected +
-        after;
+    }catch(error){
 
-    textarea.focus();
+        /*
+         * Works when selection crosses
+         * existing HTML elements.
+         */
 
-    textarea.setSelectionRange(
-        start,
-        end
+        const fragment =
+            range.extractContents();
+
+        span.appendChild(
+            fragment
+        );
+
+        range.insertNode(
+            span
+        );
+
+    }
+
+
+    selection.removeAllRanges();
+
+    const newRange =
+        document.createRange();
+
+    newRange.selectNodeContents(
+        span
     );
 
-    $("status").textContent =
-        "Visual Small Caps can be applied in the HTML email editor.";
+    selection.addRange(
+        newRange
+    );
 
-}
+};
+
+
+/* ==========================================
+   BOLD / ITALIC / UNDERLINE
+========================================== */
+
+document
+.querySelectorAll(
+    "[data-command]"
+)
+.forEach(
+    button => {
+
+        button.onclick =
+        function(){
+
+            editor.focus();
+
+            document.execCommand(
+                button.dataset.command,
+                false,
+                null
+            );
+
+        };
+
+    }
+);
+
+
+/* ==========================================
+   LINK
+========================================== */
+
+$("linkButton").onclick =
+function(){
+
+    editor.focus();
+
+    const url =
+        prompt(
+            "Enter HTTPS link:"
+        );
+
+    if(!url){
+        return;
+    }
+
+
+    if(
+        !/^https:\/\//i.test(url)
+    ){
+
+        $("status").textContent =
+            "Only HTTPS links are allowed.";
+
+        return;
+
+    }
+
+
+    document.execCommand(
+        "createLink",
+        false,
+        url
+    );
+
+};
 
 
 /* ==========================================
@@ -465,7 +693,9 @@ function applySmallCaps(){
 function getRecipients(){
 
     return [
+
         ...new Set(
+
             $("recipients")
             .value
             .split(/[\s,;]+/)
@@ -474,7 +704,9 @@ function getRecipients(){
                 x.trim().toLowerCase()
             )
             .filter(Boolean)
+
         )
+
     ];
 
 }
@@ -485,11 +717,14 @@ function updateCount(){
     const list =
         getRecipients();
 
+
     $("found").textContent =
         `${list.length} found`;
 
+
     $("total").textContent =
         list.length;
+
 
     $("remaining").textContent =
         list.length;
@@ -504,89 +739,18 @@ $("recipients").addEventListener(
 
 
 /* ==========================================
-   MESSAGE CHECK
-========================================== */
-
-function messageCheck(){
-
-    const text =
-        $("sub").value +
-        " " +
-        $("msg").value;
-
-
-    if(
-        /<\s*(script|iframe|object|embed)\b/i
-        .test(text)
-    ){
-
-        $("status").textContent =
-            "⚠ Unsafe HTML detected.";
-
-        return false;
-
-    }
-
-
-    if(
-        /javascript\s*:/i
-        .test(text)
-    ){
-
-        $("status").textContent =
-            "⚠ Unsafe content detected.";
-
-        return false;
-
-    }
-
-
-    if(
-        (
-            text.match(
-                /https?:\/\//gi
-            ) || []
-        ).length > 5
-    ){
-
-        $("status").textContent =
-            "⚠ Too many links.";
-
-        return false;
-
-    }
-
-
-    return true;
-
-}
-
-
-$("sub").addEventListener(
-    "input",
-    messageCheck
-);
-
-
-$("msg").addEventListener(
-    "input",
-    messageCheck
-);
-
-
-/* ==========================================
-   CLOUDFLARE TOKEN
+   CLOUDFLARE
 ========================================== */
 
 function getTurnstileToken(){
 
-    const element =
+    const input =
         document.querySelector(
             '[name="cf-turnstile-response"]'
         );
 
-    return element
-        ? element.value
+    return input
+        ? input.value
         : "";
 
 }
@@ -648,11 +812,6 @@ async function(){
         [
             "sub",
             "Enter email subject."
-        ],
-
-        [
-            "msg",
-            "Enter message."
         ]
 
     ];
@@ -676,9 +835,22 @@ async function(){
     }
 
 
+    const editorHTML =
+        editor.innerHTML;
+
+
+    const editorText =
+        editor.innerText.trim();
+
+
     if(
-        !messageCheck()
+        !editorText ||
+        editorText ===
+        "Write your email here..."
     ){
+
+        $("status").textContent =
+            "Enter message.";
 
         return;
 
@@ -700,11 +872,11 @@ async function(){
 
 
     /*
-     * SNAPSHOT
+     * Snapshot the complete sending
+     * configuration.
      *
-     * Changing the form fields after
-     * sending begins does not change
-     * this operation.
+     * Later changes in the form do not
+     * modify this sending operation.
      */
 
     const snapshot = {
@@ -721,8 +893,8 @@ async function(){
         subject:
             $("sub").value,
 
-        message:
-            $("msg").value
+        message_html:
+            editorHTML
 
     };
 
@@ -755,7 +927,7 @@ async function(){
 
 
     /*
-     * Send 5 at a time.
+     * 5 recipients per request.
      */
 
     for(
@@ -832,6 +1004,19 @@ async function(){
             }
 
 
+            if(
+                response.status === 429
+            ){
+
+                $("status").textContent =
+                    data.error ||
+                    "Please wait before sending again.";
+
+                break;
+
+            }
+
+
             if(!response.ok){
 
                 $("status").textContent =
@@ -871,9 +1056,10 @@ async function(){
 
             $("progress").style.width =
                 Math.round(
-                    processed /
-                    total *
-                    100
+                    (
+                        processed /
+                        total
+                    ) * 100
                 ) + "%";
 
 
@@ -900,11 +1086,14 @@ async function(){
         $("remaining").textContent =
             "0";
 
+
         $("progress").style.width =
             "100%";
 
+
         $("status").textContent =
             `● Completed — ${sentCount} sent, ${failedCount} failed.`;
+
 
         $("batchStatus").textContent =
             "All batches completed.";
