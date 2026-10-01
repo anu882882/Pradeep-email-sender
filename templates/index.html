@@ -71,9 +71,9 @@ Bulk Email Sender
 <div class="dashboard">
 
 
-<!-- ================================
-     COMPOSE
-================================ -->
+<!-- =========================================
+     COMPOSE MESSAGE
+========================================= -->
 
 <section class="compose card">
 
@@ -169,8 +169,10 @@ Message Body (Plain Text / HTML)
 <textarea
 id="msg"
 class="message"
-placeholder="Write your email here... Spintax supported: {Hi|Hello} {name}"></textarea>
+placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
 
+
+<!-- CLOUDFLARE -->
 
 <div class="turnstile-area">
 
@@ -186,12 +188,14 @@ data-theme="light">
 </section>
 
 
-<!-- ================================
-     RIGHT
-================================ -->
+<!-- =========================================
+     RIGHT COLUMN
+========================================= -->
 
 <div class="right-column">
 
+
+<!-- RECIPIENTS -->
 
 <section class="card recipients-card">
 
@@ -238,9 +242,7 @@ recipient3@example.com"></textarea>
 </section>
 
 
-<!-- ================================
-     PROGRESS
-================================ -->
+<!-- PROGRESS -->
 
 <section class="card progress-card">
 
@@ -363,15 +365,16 @@ id => document.getElementById(id);
 let sending = false;
 
 
-/* =====================================
-   PASSWORD
-===================================== */
+/* ==========================================
+   PASSWORD SHOW / HIDE
+========================================== */
 
 $("togglePassword").onclick =
 function(){
 
     const input =
         $("pass");
+
 
     input.type =
         input.type === "password"
@@ -381,9 +384,9 @@ function(){
 };
 
 
-/* =====================================
-   RECIPIENTS
-===================================== */
+/* ==========================================
+   RECIPIENT PARSER
+========================================== */
 
 function getRecipients(){
 
@@ -407,20 +410,23 @@ function getRecipients(){
 }
 
 
-/* =====================================
-   COUNT
-===================================== */
+/* ==========================================
+   COUNT RECIPIENTS
+========================================== */
 
 function updateCount(){
 
     const list =
         getRecipients();
 
+
     $("found").textContent =
         `${list.length} found`;
 
+
     $("total").textContent =
         list.length;
+
 
     $("remaining").textContent =
         list.length;
@@ -434,9 +440,9 @@ $("recipients").addEventListener(
 );
 
 
-/* =====================================
-   MESSAGE CHECK
-===================================== */
+/* ==========================================
+   MESSAGE SAFETY
+========================================== */
 
 function messageCheck(){
 
@@ -495,15 +501,16 @@ $("sub").addEventListener(
     messageCheck
 );
 
+
 $("msg").addEventListener(
     "input",
     messageCheck
 );
 
 
-/* =====================================
-   TURNSTILE
-===================================== */
+/* ==========================================
+   TURNSTILE TOKEN
+========================================== */
 
 function getTurnstileToken(){
 
@@ -512,6 +519,7 @@ function getTurnstileToken(){
             '[name="cf-turnstile-response"]'
         );
 
+
     return input
         ? input.value
         : "";
@@ -519,26 +527,9 @@ function getTurnstileToken(){
 }
 
 
-/* =====================================
-   SLEEP
-===================================== */
-
-function sleep(ms){
-
-    return new Promise(
-        resolve =>
-        setTimeout(
-            resolve,
-            ms
-        )
-    );
-
-}
-
-
-/* =====================================
+/* ==========================================
    SEND ALL
-===================================== */
+========================================== */
 
 $("send").onclick =
 async function(){
@@ -571,6 +562,8 @@ async function(){
 
     }
 
+
+    /* Required fields */
 
     const required = [
 
@@ -624,6 +617,10 @@ async function(){
         return;
 
 
+    /* ======================================
+       CLOUDFLARE
+    ====================================== */
+
     const token =
         getTurnstileToken();
 
@@ -638,15 +635,15 @@ async function(){
     }
 
 
-    /*
-     * IMPORTANT
-     *
-     * Take a complete snapshot BEFORE
-     * sending starts.
-     *
-     * Changing the UI afterwards will NOT
-     * change the active sending operation.
-     */
+    /* ======================================
+       IMPORTANT SNAPSHOT
+       
+       Everything needed for this sending
+       operation is copied BEFORE sending.
+       
+       Editing the UI afterwards will not
+       change the active send operation.
+    ====================================== */
 
     const sendSnapshot = {
 
@@ -672,7 +669,12 @@ async function(){
         [...all];
 
 
+    /* ======================================
+       START
+    ====================================== */
+
     sending = true;
+
 
     $("send").disabled =
         true;
@@ -681,14 +683,18 @@ async function(){
     $("sent").textContent =
         "0";
 
+
     $("failed").textContent =
         "0";
+
 
     $("remaining").textContent =
         recipientsSnapshot.length;
 
+
     $("progress").style.width =
         "0%";
+
 
     $("batchStatus").textContent =
         "";
@@ -701,15 +707,26 @@ async function(){
     let processed = 0;
 
 
-    /*
-     * ==================================
-     * 5 EMAILS PER BATCH
-     * ==================================
-     */
+    const totalBatches =
+        Math.ceil(
+            recipientsSnapshot.length / 5
+        );
+
+
+    /* ======================================
+       5 AT A TIME
+       
+       NO ARTIFICIAL DELAY.
+       
+       As soon as batch finishes,
+       next batch starts.
+    ====================================== */
 
     for(
         let start = 0;
+
         start < recipientsSnapshot.length;
+
         start += 5
     ){
 
@@ -725,134 +742,153 @@ async function(){
             Math.floor(start / 5) + 1;
 
 
-        const totalBatches =
-            Math.ceil(
-                recipientsSnapshot.length / 5
-            );
-
-
         $("status").textContent =
             "● Sending...";
 
 
         $("batchStatus").textContent =
-            `Batch ${batchNumber} of ${totalBatches} — ${batch.length} emails`;
+            `Batch ${batchNumber} of ${totalBatches} — sending ${batch.length} emails`;
 
 
-        let responseData = null;
+        let responseData =
+            null;
 
 
-        /*
-         * Retry a temporary server failure.
-         *
-         * Credentials remain the SAME
-         * snapshot throughout the operation.
-         */
+        try{
 
-        for(
-            let attempt = 1;
-            attempt <= 2;
-            attempt++
-        ){
+            const response =
+                await fetch(
+                    "/api/send-batch",
+                    {
 
-            try{
+                        method:
+                            "POST",
 
-                const response =
-                    await fetch(
-                        "/api/send-batch",
-                        {
-                            method:
-                                "POST",
-
-                            headers:{
-                                "Content-Type":
+                        headers:{
+                            "Content-Type":
                                 "application/json"
-                            },
+                        },
 
-                            body:
-                                JSON.stringify({
+                        body:
+                            JSON.stringify({
 
-                                    ...sendSnapshot,
-
-                                    recipients:
-                                        batch,
-
-                                    turnstile_token:
-                                        start === 0
-                                        ? token
-                                        : ""
-
-                                })
-                        }
-                    );
+                                /*
+                                 * SNAPSHOT DATA
+                                 */
+                                ...sendSnapshot,
 
 
-                responseData =
-                    await response.json();
+                                /*
+                                 * Only this batch
+                                 */
+                                recipients:
+                                    batch,
 
 
-                if(response.ok){
-                    break;
-                }
+                                /*
+                                 * Cloudflare token
+                                 * only on first batch
+                                 */
+                                turnstile_token:
+                                    start === 0
+                                    ? token
+                                    : ""
+
+                            })
+
+                    }
+                );
 
 
-                /*
-                 * Authentication errors should not
-                 * be retried repeatedly.
-                 */
-
-                if(response.status === 401){
-
-                    $("status").textContent =
-                        "✕ Gmail authentication failed.";
-
-                    $("batchStatus").textContent =
-                        "Sending stopped. Check the Gmail App Password.";
-
-                    sending = false;
-
-                    $("send").disabled =
-                        false;
-
-                    return;
-
-                }
+            responseData =
+                await response.json();
 
 
-                if(attempt < 2){
+            /* =================================
+               AUTH ERROR
+            ================================= */
 
-                    await sleep(1500);
+            if(
+                response.status === 401
+            ){
 
-                }
+                $("status").textContent =
+                    "✕ Gmail authentication failed.";
 
-            }catch(error){
+                $("batchStatus").textContent =
+                    "Check the Gmail address and App Password.";
 
-                if(attempt < 2){
+                sending = false;
 
-                    await sleep(1500);
+                $("send").disabled =
+                    false;
 
-                }
+                return;
 
             }
 
-        }
+
+            /* =================================
+               CLOUDFLARE ERROR
+            ================================= */
+
+            if(
+                response.status === 403
+            ){
+
+                $("status").textContent =
+                    responseData.error ||
+                    "Cloudflare verification failed.";
+
+                sending = false;
+
+                $("send").disabled =
+                    false;
+
+                return;
+
+            }
 
 
-        if(
-            !responseData
-        ){
+            /* =================================
+               OTHER ERROR
+            ================================= */
+
+            if(!response.ok){
+
+                $("status").textContent =
+                    responseData.error ||
+                    "Sending failed.";
+
+                break;
+
+            }
+
+
+        }catch(error){
 
             $("status").textContent =
-                "✕ Server connection failed.";
+                "Server connection failed.";
+
+            $("batchStatus").textContent =
+                "Sending stopped.";
 
             break;
 
         }
 
 
-        if(
-            responseData.error
-        ){
+        if(!responseData){
+
+            $("status").textContent =
+                "No server response.";
+
+            break;
+
+        }
+
+
+        if(responseData.error){
 
             $("status").textContent =
                 responseData.error;
@@ -862,11 +898,11 @@ async function(){
         }
 
 
-        /*
-         * ==================================
-         * UPDATE PROGRESS IMMEDIATELY
-         * ==================================
-         */
+        /* ======================================
+           UPDATE PROGRESS
+           
+           No individual email list.
+           ====================================== */
 
         sentCount +=
             responseData.sent.length;
@@ -895,7 +931,6 @@ async function(){
 
 
         $("progress").style.width =
-
             Math.round(
 
                 (
@@ -907,30 +942,27 @@ async function(){
 
 
         $("status").textContent =
-            `✓ ${processed} of ${recipientsSnapshot.length} processed`;
+            `● ${processed} of ${recipientsSnapshot.length} processed`;
+
+
+        $("batchStatus").textContent =
+            `Batch ${batchNumber} completed — next batch starting...`;
 
 
         /*
-         * Wait before next 5.
+         * IMPORTANT:
+         *
+         * NO sleep here.
+         *
+         * The next 5 starts immediately.
          */
-
-        if(
-            start + 5 <
-            recipientsSnapshot.length
-        ){
-
-            await sleep(2500);
-
-        }
 
     }
 
 
-    /*
-     * ==================================
-     * COMPLETE
-     * ==================================
-     */
+    /* ======================================
+       COMPLETE
+    ====================================== */
 
     if(
         processed ===
@@ -940,11 +972,14 @@ async function(){
         $("status").textContent =
             `● Completed — ${sentCount} sent, ${failedCount} failed.`;
 
+
         $("batchStatus").textContent =
             "All batches completed.";
 
+
         $("remaining").textContent =
             "0";
+
 
         $("progress").style.width =
             "100%";
@@ -954,13 +989,24 @@ async function(){
 
     sending = false;
 
+
     $("send").disabled =
         false;
 
 
+    /* Reset Cloudflare for next send */
+
     if(window.turnstile){
 
-        window.turnstile.reset();
+        try{
+
+            window.turnstile.reset();
+
+        }catch(error){
+
+            /* Ignore reset errors */
+
+        }
 
     }
 
