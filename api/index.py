@@ -12,11 +12,12 @@ LOGIN=os.getenv("APP_LOGIN_PASSWORD","Baby882@#")
 TURNSTILE=os.getenv("TURNSTILE_SECRET_KEY","")
 ER=re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-def valid(x):return bool(ER.fullmatch(x.strip()))
+def valid(x): return bool(ER.fullmatch(x.strip()))
 
 def parse(x):
     return list(dict.fromkeys(
-        i.strip().lower() for i in re.split(r"[,;\s]+",x or "") if i.strip()
+        i.strip().lower() for i in re.split(r"[,;\s]+",x or "")
+        if i.strip()
     ))[:25]
 
 def auth(f):
@@ -26,31 +27,40 @@ def auth(f):
     return w
 
 def spin(x):
-    def r(m):return secrets.choice(m.group(1).split("|"))
+    def r(m): return secrets.choice(m.group(1).split("|"))
     for _ in range(20):
         y=re.sub(r"\{([^{}|]+(?:\|[^{}|]+)+)\}",r,x)
-        if y==x:break
+        if y==x: break
         x=y
     return x
 
 class Clean(HTMLParser):
     tags={"div","p","br","strong","b","em","i","u","span","a","ul","ol","li","style"}
-    def __init__(self):super().__init__();self.o=[]
+
+    def __init__(self):
+        super().__init__();self.o=[]
+
     def handle_starttag(self,t,a):
         if t not in self.tags:return
         z="<"+t
         allow={"a":{"href","target","rel"},"span":{"class"}}.get(t,set())
         for k,v in a:
             if k in allow:
-                if k=="href" and not str(v).lower().startswith(("http://","https://","mailto:")):continue
+                if k=="href" and not str(v).lower().startswith(
+                    ("http://","https://","mailto:")
+                ): continue
                 z+=f' {k}="{str(v).replace(chr(34),"&quot;")}"'
         self.o.append(z+">")
+
     def handle_endtag(self,t):
         if t in self.tags:self.o.append("</"+t+">")
-    def handle_data(self,d):self.o.append(d)
+
+    def handle_data(self,d):
+        self.o.append(d)
 
 def clean(x):
-    p=Clean();p.feed(x or "");return "".join(p.o)
+    p=Clean();p.feed(x or "")
+    return "".join(p.o)
 
 def plain(x):
     x=re.sub(r"<style.*?</style>","",x or "",flags=re.I|re.S)
@@ -62,19 +72,28 @@ def verify(token):
     if not TURNSTILE:return True
     if not token:return False
     try:
-        d=urllib.parse.urlencode({"secret":TURNSTILE,"response":token}).encode()
-        q=urllib.request.Request(
+        data=urllib.parse.urlencode({
+            "secret":TURNSTILE,
+            "response":token
+        }).encode()
+
+        req=urllib.request.Request(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=d,method="POST"
+            data=data,method="POST"
         )
-        with urllib.request.urlopen(q,timeout=8) as r:
+
+        with urllib.request.urlopen(req,timeout=8) as r:
             return bool(json.loads(r.read()).get("success"))
-    except:return False
+    except:
+        return False
 
 @app.route("/login",methods=["GET","POST"])
 def login():
     if request.method=="POST":
-        if secrets.compare_digest(str(request.form.get("password","")),str(LOGIN)):
+        if secrets.compare_digest(
+            str(request.form.get("password","")),
+            str(LOGIN)
+        ):
             session["login"]=True
             return redirect("/")
         return render_template("login.html",error="Invalid password.")
@@ -88,11 +107,14 @@ def logout():
 @app.route("/")
 @auth
 def index():
-    return render_template("index.html",turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY",""))
+    return render_template(
+        "index.html",
+        turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY","")
+    )
 
-@app.post("/api/send-batch")
+@app.post("/api/send-one")
 @auth
-def send():
+def send_one():
     d=request.get_json(silent=True) or {}
 
     if not verify(d.get("turnstile_token","")):
@@ -103,42 +125,42 @@ def send():
     sender=str(d.get("sender_name","")).strip()
     subject=str(d.get("subject","")).strip()
     msg=clean(str(d.get("message_html","")))
-    batch=d.get("recipients",[])
+    email=str(d.get("recipient","")).strip().lower()
 
-    if isinstance(batch,str):batch=parse(batch)
-    batch=list(dict.fromkeys(str(x).strip().lower() for x in batch))
-
-    if len(batch)>5:return jsonify(error="Maximum 5 recipients per batch."),400
-    if not valid(gmail):return jsonify(error="Enter a valid Gmail address."),400
-    if not pwd:return jsonify(error="Enter your Gmail App Password."),400
-    if not subject:return jsonify(error="Email subject is required."),400
-    if not msg:return jsonify(error="Message body is required."),400
-
-    good=[x for x in batch if valid(x)]
-    failed=[x for x in batch if not valid(x)]
-    sent=[]
+    if not valid(gmail):
+        return jsonify(error="Enter a valid Gmail address."),400
+    if not pwd:
+        return jsonify(error="Enter your Gmail App Password."),400
+    if not subject:
+        return jsonify(error="Email subject is required."),400
+    if not msg:
+        return jsonify(error="Message body is required."),400
+    if not valid(email):
+        return jsonify(error="Invalid recipient: "+email),400
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com",465,context=ssl.create_default_context(),timeout=30) as smtp:
-            smtp.login(gmail,pwd)
+        html=spin(msg.replace("{name}",email.split("@")[0]))
 
-            for email in good:
-                try:
-                    html=spin(msg.replace("{name}",email.split("@")[0]))
-                    m=MIMEMultipart("alternative")
-                    m["From"]=formataddr((sender,gmail)) if sender else gmail
-                    m["To"]=email
-                    m["Subject"]=spin(subject)
-                    m.attach(MIMEText(plain(html),"plain","utf-8"))
-                    m.attach(MIMEText(html,"html","utf-8"))
-                    smtp.sendmail(gmail,[email],m.as_string())
-                    sent.append(email)
-                except:
-                    failed.append(email)
+        m=MIMEMultipart("alternative")
+        m["From"]=formataddr((sender,gmail)) if sender else gmail
+        m["To"]=email
+        m["Subject"]=spin(subject)
+
+        m.attach(MIMEText(plain(html),"plain","utf-8"))
+        m.attach(MIMEText(html,"html","utf-8"))
+
+        with smtplib.SMTP_SSL(
+            "smtp.gmail.com",465,
+            context=ssl.create_default_context(),
+            timeout=30
+        ) as smtp:
+            smtp.login(gmail,pwd)
+            smtp.sendmail(gmail,[email],m.as_string())
+
+        return jsonify(ok=True,email=email)
 
     except Exception as e:
-        return jsonify(error="Gmail SMTP connection/login failed.",detail=str(e)),502
+        return jsonify(error=str(e),email=email),502
 
-    return jsonify(sent=sent,failed=failed)
-
-if __name__=="__main__":app.run()
+if __name__=="__main__":
+    app.run()
