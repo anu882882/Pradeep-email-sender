@@ -70,10 +70,6 @@ Bulk Email Sender
 <div class="dashboard">
 
 
-<!-- =========================================
-     COMPOSE MESSAGE
-========================================= -->
-
 <section class="compose card">
 
 
@@ -93,9 +89,7 @@ Compose Message
 
 <div>
 
-<label>
-Sender Name
-</label>
+<label>Sender Name</label>
 
 <input
 id="name"
@@ -106,9 +100,7 @@ placeholder="E.g., John Doe">
 
 <div>
 
-<label>
-Your Gmail
-</label>
+<label>Your Gmail</label>
 
 <input
 id="gmail"
@@ -120,9 +112,7 @@ placeholder="you@gmail.com">
 
 <div>
 
-<label>
-App Password
-</label>
+<label>App Password</label>
 
 <div class="password-box">
 
@@ -144,9 +134,7 @@ id="togglePassword">
 
 <div>
 
-<label>
-Email Subject
-</label>
+<label>Email Subject</label>
 
 <input
 id="sub"
@@ -159,9 +147,7 @@ placeholder="Enter subject line...">
 
 
 <label class="message-label">
-
 Message Body (Plain Text / HTML)
-
 </label>
 
 
@@ -171,9 +157,29 @@ class="message"
 placeholder="Write your email here... Spintax supported: {Hi|Hello|Hey} {name}"></textarea>
 
 
-<!-- =========================================
-     CLOUDFLARE TURNSTILE
-========================================= -->
+<div class="format-toolbar">
+
+<span>Visual formatting:</span>
+
+<button
+type="button"
+onclick="applySmallCaps()">
+
+Small Caps
+
+</button>
+
+</div>
+
+
+<div class="format-help">
+
+Select a word in the message and click
+<strong>Small Caps</strong>.
+The email keeps normal text underneath.
+
+</div>
+
 
 <div class="turnstile-area">
 
@@ -189,16 +195,8 @@ data-theme="light">
 </section>
 
 
-<!-- =========================================
-     RIGHT COLUMN
-========================================= -->
-
 <div class="right-column">
 
-
-<!-- =========================================
-     RECIPIENTS
-========================================= -->
 
 <section class="card recipients-card">
 
@@ -215,13 +213,10 @@ Recipients
 
 </div>
 
-
 <span
 class="found"
 id="found">
-
 0 found
-
 </span>
 
 </div>
@@ -245,10 +240,6 @@ recipient3@example.com"></textarea>
 </section>
 
 
-<!-- =========================================
-     PROGRESS MONITOR
-========================================= -->
-
 <section class="card progress-card">
 
 
@@ -266,19 +257,14 @@ Progress Monitor
 </div>
 
 
-<!-- CURRENT SENDING GMAIL -->
-
 <div class="sending-from">
 
 <span>
 SENDING FROM
 </span>
 
-<strong
-id="sendingFrom">
-
+<strong id="sendingFrom">
 —
-
 </strong>
 
 </div>
@@ -286,72 +272,48 @@ id="sendingFrom">
 
 </div>
 
-
-<!-- =========================================
-     STATS
-========================================= -->
 
 <div class="stats">
 
 
 <div class="stat">
 
-<span>
-TOTAL
-</span>
+<span>TOTAL</span>
 
-<strong id="total">
-0
-</strong>
+<strong id="total">0</strong>
 
 </div>
 
 
 <div class="stat sent-stat">
 
-<span>
-SENT
-</span>
+<span>SENT</span>
 
-<strong id="sent">
-0
-</strong>
+<strong id="sent">0</strong>
 
 </div>
 
 
 <div class="stat failed-stat">
 
-<span>
-FAILED
-</span>
+<span>FAILED</span>
 
-<strong id="failed">
-0
-</strong>
+<strong id="failed">0</strong>
 
 </div>
 
 
 <div class="stat remaining-stat">
 
-<span>
-REMAINING
-</span>
+<span>REMAINING</span>
 
-<strong id="remaining">
-0
-</strong>
+<strong id="remaining">0</strong>
 
 </div>
 
 
 </div>
 
-
-<!-- =========================================
-     PROGRESS BAR
-========================================= -->
 
 <div class="progress-track">
 
@@ -362,10 +324,6 @@ class="progress-bar">
 
 </div>
 
-
-<!-- =========================================
-     STATUS
-========================================= -->
 
 <div
 class="send-status"
@@ -379,13 +337,8 @@ id="status">
 <div
 class="batch-status"
 id="batchStatus">
-
 </div>
 
-
-<!-- =========================================
-     SEND BUTTON
-========================================= -->
 
 <button
 id="send"
@@ -411,10 +364,6 @@ class="send-button">
 <script>
 
 
-/* ==========================================
-   HELPER
-========================================== */
-
 const $ =
 id => document.getElementById(id);
 
@@ -423,7 +372,7 @@ let sending = false;
 
 
 /* ==========================================
-   PASSWORD SHOW / HIDE
+   PASSWORD
 ========================================== */
 
 $("togglePassword").onclick =
@@ -432,32 +381,91 @@ function(){
     const input =
         $("pass");
 
-
-    if(
+    input.type =
         input.type === "password"
-    ){
-
-        input.type = "text";
-
-    }else{
-
-        input.type = "password";
-
-    }
+        ? "text"
+        : "password";
 
 };
 
 
 /* ==========================================
-   RECIPIENT PARSER
+   SMALL CAPS VISUAL FORMAT
+========================================== */
+
+function applySmallCaps(){
+
+    const textarea =
+        $("msg");
+
+    const start =
+        textarea.selectionStart;
+
+    const end =
+        textarea.selectionEnd;
+
+    if(start === end){
+
+        $("status").textContent =
+            "Select some text first.";
+
+        return;
+
+    }
+
+    const selected =
+        textarea.value.substring(
+            start,
+            end
+        );
+
+    /*
+     * We do not replace the selected text
+     * with Unicode look-alike characters.
+     *
+     * The editor remains plain text.
+     *
+     * This button simply marks the selection
+     * for visual HTML formatting.
+     */
+
+    const before =
+        textarea.value.substring(
+            0,
+            start
+        );
+
+    const after =
+        textarea.value.substring(
+            end
+        );
+
+    textarea.value =
+        before +
+        selected +
+        after;
+
+    textarea.focus();
+
+    textarea.setSelectionRange(
+        start,
+        end
+    );
+
+    $("status").textContent =
+        "Visual Small Caps can be applied in the HTML email editor.";
+
+}
+
+
+/* ==========================================
+   RECIPIENTS
 ========================================== */
 
 function getRecipients(){
 
     return [
-
         ...new Set(
-
             $("recipients")
             .value
             .split(/[\s,;]+/)
@@ -466,31 +474,22 @@ function getRecipients(){
                 x.trim().toLowerCase()
             )
             .filter(Boolean)
-
         )
-
     ];
 
 }
 
-
-/* ==========================================
-   RECIPIENT COUNT
-========================================== */
 
 function updateCount(){
 
     const list =
         getRecipients();
 
-
     $("found").textContent =
         `${list.length} found`;
 
-
     $("total").textContent =
         list.length;
-
 
     $("remaining").textContent =
         list.length;
@@ -581,43 +580,35 @@ $("msg").addEventListener(
 
 function getTurnstileToken(){
 
-    const input =
+    const element =
         document.querySelector(
             '[name="cf-turnstile-response"]'
         );
 
-
-    return input
-        ? input.value
+    return element
+        ? element.value
         : "";
 
 }
 
 
 /* ==========================================
-   SEND ALL
+   SEND
 ========================================== */
 
 $("send").onclick =
 async function(){
 
-
     if(sending){
-
         return;
-
     }
 
 
-    const all =
+    const recipients =
         getRecipients();
 
 
-    /* ======================================
-       RECIPIENT VALIDATION
-    ====================================== */
-
-    if(!all.length){
+    if(!recipients.length){
 
         $("status").textContent =
             "Add recipients first.";
@@ -627,7 +618,7 @@ async function(){
     }
 
 
-    if(all.length > 25){
+    if(recipients.length > 25){
 
         $("status").textContent =
             "Maximum 25 recipients.";
@@ -636,10 +627,6 @@ async function(){
 
     }
 
-
-    /* ======================================
-       REQUIRED FIELDS
-    ====================================== */
 
     const required = [
 
@@ -689,10 +676,6 @@ async function(){
     }
 
 
-    /* ======================================
-       MESSAGE SAFETY
-    ====================================== */
-
     if(
         !messageCheck()
     ){
@@ -702,15 +685,11 @@ async function(){
     }
 
 
-    /* ======================================
-       CLOUDFLARE
-    ====================================== */
-
-    const token =
+    const turnstileToken =
         getTurnstileToken();
 
 
-    if(!token){
+    if(!turnstileToken){
 
         $("status").textContent =
             "Please complete Cloudflare verification.";
@@ -720,18 +699,15 @@ async function(){
     }
 
 
-    /* ======================================
-       SEND SNAPSHOT
-       
-       IMPORTANT:
-       Current Gmail is copied here.
-       
-       If user changes Gmail field later,
-       current sending operation remains
-       connected to this original Gmail.
-    ====================================== */
+    /*
+     * SNAPSHOT
+     *
+     * Changing the form fields after
+     * sending begins does not change
+     * this operation.
+     */
 
-    const sendSnapshot = {
+    const snapshot = {
 
         sender_name:
             $("name").value,
@@ -751,47 +727,14 @@ async function(){
     };
 
 
-    const recipientsSnapshot =
-        [...all];
-
-
-    /* ======================================
-       SHOW SENDING GMAIL
-    ====================================== */
-
     $("sendingFrom").textContent =
-        sendSnapshot.gmail.trim();
+        snapshot.gmail.trim();
 
-
-    /* ======================================
-       START SENDING
-    ====================================== */
 
     sending = true;
 
-
     $("send").disabled =
         true;
-
-
-    $("sent").textContent =
-        "0";
-
-
-    $("failed").textContent =
-        "0";
-
-
-    $("remaining").textContent =
-        recipientsSnapshot.length;
-
-
-    $("progress").style.width =
-        "0%";
-
-
-    $("batchStatus").textContent =
-        "";
 
 
     let sentCount = 0;
@@ -801,44 +744,28 @@ async function(){
     let processed = 0;
 
 
-    const totalBatches =
+    const total =
+        recipients.length;
+
+
+    const batches =
         Math.ceil(
-            recipientsSnapshot.length / 5
+            total / 5
         );
 
 
-    /* ======================================
-       5 EMAILS PER BATCH
-       
-       No artificial delay.
-       
-       Batch 1:
-       1-5
-       
-       Batch 2:
-       6-10
-       
-       Batch 3:
-       11-15
-       
-       Batch 4:
-       16-20
-       
-       Batch 5:
-       21-25
-    ====================================== */
+    /*
+     * Send 5 at a time.
+     */
 
     for(
         let start = 0;
-
-        start < recipientsSnapshot.length;
-
+        start < total;
         start += 5
     ){
 
-
         const batch =
-            recipientsSnapshot.slice(
+            recipients.slice(
                 start,
                 start + 5
             );
@@ -855,16 +782,8 @@ async function(){
 
 
         $("batchStatus").textContent =
-            `Batch ${batchNumber} of ${totalBatches} — sending ${batch.length} emails`;
+            `Batch ${batchNumber} of ${batches}`;
 
-
-        let responseData =
-            null;
-
-
-        /* ==================================
-           SEND REQUEST
-        ================================== */
 
         try{
 
@@ -873,8 +792,7 @@ async function(){
                     "/api/send-batch",
                     {
 
-                        method:
-                            "POST",
+                        method:"POST",
 
                         headers:{
                             "Content-Type":
@@ -884,28 +802,13 @@ async function(){
                         body:
                             JSON.stringify({
 
-                                /*
-                                 * Snapshot data
-                                 */
-                                ...sendSnapshot,
+                                ...snapshot,
 
-
-                                /*
-                                 * Current 5
-                                 */
                                 recipients:
                                     batch,
 
-
-                                /*
-                                 * Cloudflare is
-                                 * verified for
-                                 * first batch.
-                                 */
                                 turnstile_token:
-                                    start === 0
-                                    ? token
-                                    : ""
+                                    turnstileToken
 
                             })
 
@@ -913,13 +816,9 @@ async function(){
                 );
 
 
-            responseData =
+            const data =
                 await response.json();
 
-
-            /* ==============================
-               GMAIL AUTH ERROR
-            ============================== */
 
             if(
                 response.status === 401
@@ -928,49 +827,15 @@ async function(){
                 $("status").textContent =
                     "✕ Gmail authentication failed.";
 
-                $("batchStatus").textContent =
-                    "Check the Gmail address and App Password.";
-
-                sending = false;
-
-                $("send").disabled =
-                    false;
-
-                return;
+                break;
 
             }
 
-
-            /* ==============================
-               CLOUDFLARE ERROR
-            ============================== */
-
-            if(
-                response.status === 403
-            ){
-
-                $("status").textContent =
-                    responseData.error ||
-                    "Cloudflare verification failed.";
-
-                sending = false;
-
-                $("send").disabled =
-                    false;
-
-                return;
-
-            }
-
-
-            /* ==============================
-               OTHER ERROR
-            ============================== */
 
             if(!response.ok){
 
                 $("status").textContent =
-                    responseData.error ||
+                    data.error ||
                     "Sending failed.";
 
                 break;
@@ -978,168 +843,93 @@ async function(){
             }
 
 
+            sentCount +=
+                data.sent.length;
+
+
+            failedCount +=
+                data.failed.length;
+
+
+            processed =
+                sentCount +
+                failedCount;
+
+
+            $("sent").textContent =
+                sentCount;
+
+
+            $("failed").textContent =
+                failedCount;
+
+
+            $("remaining").textContent =
+                total -
+                processed;
+
+
+            $("progress").style.width =
+                Math.round(
+                    processed /
+                    total *
+                    100
+                ) + "%";
+
+
+            $("status").textContent =
+                `● ${processed} of ${total} processed`;
+
+
         }catch(error){
 
             $("status").textContent =
                 "Server connection failed.";
 
-            $("batchStatus").textContent =
-                "Sending stopped.";
-
             break;
 
         }
-
-
-        if(!responseData){
-
-            $("status").textContent =
-                "No server response.";
-
-            break;
-
-        }
-
-
-        if(responseData.error){
-
-            $("status").textContent =
-                responseData.error;
-
-            break;
-
-        }
-
-
-        /* ==================================
-           UPDATE PROGRESS
-        ================================== */
-
-        sentCount +=
-            responseData.sent.length;
-
-
-        failedCount +=
-            responseData.failed.length;
-
-
-        processed =
-            sentCount +
-            failedCount;
-
-
-        $("sent").textContent =
-            sentCount;
-
-
-        $("failed").textContent =
-            failedCount;
-
-
-        $("remaining").textContent =
-            recipientsSnapshot.length -
-            processed;
-
-
-        $("progress").style.width =
-            Math.round(
-
-                (
-                    processed /
-                    recipientsSnapshot.length
-                ) * 100
-
-            ) + "%";
-
-
-        $("status").textContent =
-            `● ${processed} of ${recipientsSnapshot.length} processed`;
-
-
-        if(
-            processed <
-            recipientsSnapshot.length
-        ){
-
-            $("batchStatus").textContent =
-                `Batch ${batchNumber} completed — next batch starting...`;
-
-        }
-
-
-        /*
-         * NO DELAY HERE.
-         *
-         * Next 5 starts immediately.
-         */
 
     }
 
 
-    /* ======================================
-       COMPLETED
-    ====================================== */
-
     if(
-        processed ===
-        recipientsSnapshot.length
+        processed === total
     ){
-
-        $("status").textContent =
-            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
-
-
-        $("batchStatus").textContent =
-            "All batches completed.";
-
 
         $("remaining").textContent =
             "0";
 
-
         $("progress").style.width =
             "100%";
+
+        $("status").textContent =
+            `● Completed — ${sentCount} sent, ${failedCount} failed.`;
+
+        $("batchStatus").textContent =
+            "All batches completed.";
 
     }
 
 
-    /* ======================================
-       ENABLE BUTTON
-    ====================================== */
-
     sending = false;
-
 
     $("send").disabled =
         false;
 
 
-    /* ======================================
-       RESET CLOUDFLARE
-    ====================================== */
-
-    if(
-        window.turnstile
-    ){
+    if(window.turnstile){
 
         try{
 
             window.turnstile.reset();
 
-        }catch(error){
-
-            /* Ignore */
-
-        }
+        }catch(error){}
 
     }
 
 };
 
-
-/* ==========================================
-   INITIAL COUNT
-========================================== */
 
 updateCount();
 
