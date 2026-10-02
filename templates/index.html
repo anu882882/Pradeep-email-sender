@@ -1,771 +1,539 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="utf-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Secure Mail Console</title>
 
-    <link
-        rel="stylesheet"
-        href="/static/style.css"
-    >
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<div class="container">
+<div class="page">
 
-    <h1>Secure Mail Console</h1>
+    <!-- Header -->
+    <header class="topbar">
 
-    <div class="card">
+        <div class="brand">
+            <div class="brand-shield">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
 
-        <label>Sender Name</label>
-
-        <input
-            id="senderName"
-            type="text"
-            placeholder="Sender name"
-        >
-
-        <label>Recipients</label>
-
-        <textarea
-            id="recipients"
-            placeholder="Enter recipients..."
-        ></textarea>
-
-        <div class="recipient-count">
-            Maximum 25 recipients
+            <div class="brand-name">
+                Secure Mail Console
+            </div>
         </div>
 
-        <label>Subject</label>
+        <button class="logout-btn" id="logoutBtn">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Logout (Double Click)
+        </button>
 
-        <input
-            id="subject"
-            type="text"
-            placeholder="Email subject"
-        >
+    </header>
 
-        <label>Message</label>
 
-        <div
-            id="messageEditor"
-            class="editor"
-            contenteditable="true"
-        ></div>
-
+    <!-- Page title -->
+    <div class="page-title">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>Bulk Email Sender</span>
     </div>
 
 
-    <!-- PROGRESS -->
+    <!-- Main layout -->
+    <main class="dashboard">
 
-    <div class="card">
+        <!-- LEFT -->
+        <section class="left-column">
 
-        <h2>◷ Progress Monitor</h2>
+            <div class="card compose-card">
 
-        <div class="stats">
+                <div class="card-heading">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Compose Message</span>
+                </div>
 
-            <div class="stat">
-                <span>TOTAL</span>
-                <strong id="totalCount">
-                    0
-                </strong>
+
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label>Sender Name</label>
+                        <input
+                            type="text"
+                            id="senderName"
+                            placeholder="Sender Name"
+                            value="">
+                    </div>
+
+                    <div class="field">
+                        <label>Your Gmail</label>
+                        <input
+                            type="email"
+                            id="gmail"
+                            placeholder="yourname@gmail.com">
+                    </div>
+
+                    <div class="field password-field">
+                        <label>App Password</label>
+
+                        <div class="password-wrapper">
+                            <input
+                                type="password"
+                                id="appPassword"
+                                placeholder="App Password">
+
+                            <button
+                                type="button"
+                                class="eye-btn"
+                                id="togglePassword">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Email Subject</label>
+                        <input
+                            type="text"
+                            id="subject"
+                            placeholder="Email subject">
+                    </div>
+
+                </div>
+
+
+                <div class="field body-field">
+
+                    <label>
+                        Message Body
+                        (Plain Text / HTML)
+                    </label>
+
+                    <textarea
+                        id="messageBody"
+                        placeholder="Write your message here..."></textarea>
+
+                </div>
+
+
+                <!-- Spam Protection -->
+                <div class="protection">
+
+                    <div class="protection-title">
+                        <i class="fa-solid fa-shield"></i>
+                        Spam Protection
+                    </div>
+
+                    <div class="protection-box">
+
+                        <div class="success-icon">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+
+                        <div class="protection-text">
+                            <strong>Ready</strong>
+                            <span>Email security checks are enabled.</span>
+                        </div>
+
+                        <div class="cloud-mark">
+                            <i class="fa-solid fa-cloud"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Send button -->
+                <button class="send-btn" id="sendBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Send Email
+                </button>
+
             </div>
 
-            <div class="stat sent">
-                <span>SENT</span>
-                <strong id="sentCount">
-                    0
-                </strong>
+        </section>
+
+
+        <!-- RIGHT -->
+        <section class="right-column">
+
+            <!-- Recipients -->
+            <div class="card recipients-card">
+
+                <div class="recipients-header">
+
+                    <div>
+                        <div class="card-heading">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Recipients</span>
+                        </div>
+
+                        <div class="helper">
+                            Enter one email address
+                        </div>
+                    </div>
+
+                    <div class="count-badge" id="recipientCount">
+                        0 found
+                    </div>
+
+                </div>
+
+
+                <textarea
+                    id="recipients"
+                    class="recipient-input"
+                    placeholder="Enter recipient email address..."></textarea>
+
             </div>
 
-            <div class="stat failed">
-                <span>FAILED</span>
-                <strong id="failedCount">
-                    0
-                </strong>
+
+            <!-- Progress -->
+            <div class="card progress-card">
+
+                <div class="card-heading">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Progress Monitor</span>
+                </div>
+
+
+                <div class="stats-grid">
+
+                    <div class="stat-box">
+                        <span class="stat-label">TOTAL</span>
+                        <strong id="totalValue">0</strong>
+                    </div>
+
+                    <div class="stat-box">
+                        <span class="stat-label">SENT</span>
+                        <strong class="sent-value" id="sentValue">0</strong>
+                    </div>
+
+                    <div class="stat-box">
+                        <span class="stat-label">FAILED</span>
+                        <strong class="failed-value" id="failedValue">0</strong>
+                    </div>
+
+                    <div class="stat-box">
+                        <span class="stat-label">REMAINING</span>
+                        <strong class="remaining-value" id="remainingValue">0</strong>
+                    </div>
+
+                </div>
+
+
+                <div class="progress-track">
+                    <div
+                        class="progress-fill"
+                        id="progressFill">
+                    </div>
+                </div>
+
+
+                <div class="sending-status" id="statusText">
+                    <i class="fa-regular fa-circle"></i>
+                    Ready to send
+                </div>
+
+
+                <div class="action-row">
+
+                    <button
+                        class="sending-btn"
+                        id="sendingBtn"
+                        disabled>
+                        <i class="fa-solid fa-spinner"></i>
+                        Sending...
+                    </button>
+
+                    <button
+                        class="stop-btn"
+                        id="stopBtn"
+                        disabled>
+                        <i class="fa-solid fa-stop"></i>
+                        Stop Sending
+                    </button>
+
+                </div>
+
             </div>
 
-            <div class="stat remaining">
-                <span>REMAINING</span>
-                <strong id="remainingCount">
-                    0
-                </strong>
-            </div>
+        </section>
 
-        </div>
-
-
-        <div class="progress-track">
-
-            <div
-                id="progressBar"
-                class="progress-bar"
-            ></div>
-
-        </div>
-
-
-        <div
-            id="batchStatus"
-            class="batch-status"
-        >
-            Ready
-        </div>
-
-
-        <div
-            id="sendingStatus"
-            class="sending-status"
-        >
-            Ready to send
-        </div>
-
-
-        <div
-            id="errorBox"
-            class="error-box"
-        ></div>
-
-
-        <div class="buttons">
-
-            <button
-                id="sendButton"
-                class="send-button"
-            >
-                ✣ Send
-            </button>
-
-            <button
-                id="stopButton"
-                class="stop-button"
-                disabled
-            >
-                ■ Stop Sending
-            </button>
-
-        </div>
-
-    </div>
+    </main>
 
 </div>
 
 
+<div class="toast" id="toast"></div>
+
+
 <script>
 
-let sending = false;
-let stopRequested = false;
+const recipients = document.getElementById("recipients");
+const recipientCount = document.getElementById("recipientCount");
 
-const sendButton =
-    document.getElementById(
-        "sendButton"
-    );
+const totalValue = document.getElementById("totalValue");
+const sentValue = document.getElementById("sentValue");
+const failedValue = document.getElementById("failedValue");
+const remainingValue = document.getElementById("remainingValue");
 
-const stopButton =
-    document.getElementById(
-        "stopButton"
-    );
+const progressFill = document.getElementById("progressFill");
+const statusText = document.getElementById("statusText");
 
-const totalEl =
-    document.getElementById(
-        "totalCount"
-    );
+const sendBtn = document.getElementById("sendBtn");
+const sendingBtn = document.getElementById("sendingBtn");
+const stopBtn = document.getElementById("stopBtn");
 
-const sentEl =
-    document.getElementById(
-        "sentCount"
-    );
+const toast = document.getElementById("toast");
 
-const failedEl =
-    document.getElementById(
-        "failedCount"
-    );
-
-const remainingEl =
-    document.getElementById(
-        "remainingCount"
-    );
-
-const progressBar =
-    document.getElementById(
-        "progressBar"
-    );
-
-const sendingStatus =
-    document.getElementById(
-        "sendingStatus"
-    );
-
-const batchStatus =
-    document.getElementById(
-        "batchStatus"
-    );
-
-const errorBox =
-    document.getElementById(
-        "errorBox"
-    );
+let stopped = false;
 
 
-function updateProgress(data) {
+function showToast(message, success = true) {
 
-    const total =
-        Number(data.total || 0);
+    toast.textContent = message;
+    toast.className = "toast show " + (success ? "success" : "error");
 
-    const sent =
-        Number(data.sent || 0);
-
-    const failed =
-        Number(data.failed || 0);
-
-    const remaining =
-        Math.max(
-            0,
-            total - sent - failed
-        );
-
-    totalEl.textContent =
-        total;
-
-    sentEl.textContent =
-        sent;
-
-    failedEl.textContent =
-        failed;
-
-    remainingEl.textContent =
-        remaining;
-
-    const processed =
-        sent + failed;
-
-    const percentage =
-        total > 0
-            ? Math.round(
-                (processed / total) * 100
-            )
-            : 0;
-
-    progressBar.style.width =
-        percentage + "%";
+    setTimeout(() => {
+        toast.className = "toast";
+    }, 3500);
 }
 
 
-function showError(message) {
-
-    errorBox.textContent =
-        message;
-
-    errorBox.style.display =
-        "block";
+function getRecipient() {
+    return recipients.value.trim();
 }
 
 
-function hideError() {
+function updateRecipientCount() {
 
-    errorBox.textContent =
-        "";
+    const value = getRecipient();
 
-    errorBox.style.display =
-        "none";
-}
+    const found = value ? 1 : 0;
 
+    recipientCount.textContent = `${found} found`;
 
-function setSending(active) {
+    totalValue.textContent = found;
 
-    sending = active;
-
-    sendButton.disabled =
-        active;
-
-    stopButton.disabled =
-        !active;
-}
-
-
-async function startSending() {
-
-    if (sending) {
-        return;
+    if (!found) {
+        sentValue.textContent = "0";
+        failedValue.textContent = "0";
+        remainingValue.textContent = "0";
+        progressFill.style.width = "0%";
     }
+}
 
-    hideError();
 
-    stopRequested = false;
+recipients.addEventListener("input", updateRecipientCount);
+
+
+document.getElementById("togglePassword").addEventListener(
+    "click",
+    function () {
+
+        const input = document.getElementById("appPassword");
+
+        if (input.type === "password") {
+            input.type = "text";
+            this.innerHTML =
+                '<i class="fa-regular fa-eye-slash"></i>';
+        } else {
+            input.type = "password";
+            this.innerHTML =
+                '<i class="fa-regular fa-eye"></i>';
+        }
+
+    }
+);
+
+
+async function sendEmail() {
+
+    const recipient = getRecipient();
 
     const senderName =
-        document.getElementById(
-            "senderName"
-        ).value.trim();
+        document.getElementById("senderName").value.trim();
+
+    const gmail =
+        document.getElementById("gmail").value.trim();
+
+    const appPassword =
+        document.getElementById("appPassword").value.trim();
 
     const subject =
-        document.getElementById(
-            "subject"
-        ).value.trim();
+        document.getElementById("subject").value.trim();
 
-    const message =
-        document.getElementById(
-            "messageEditor"
-        ).innerHTML.trim();
-
-    const recipientText =
-        document.getElementById(
-            "recipients"
-        ).value.trim();
+    const body =
+        document.getElementById("messageBody").value;
 
 
-    if (!recipientText) {
+    if (!senderName ||
+        !gmail ||
+        !appPassword ||
+        !recipient ||
+        !subject ||
+        !body.trim()) {
 
-        showError(
-            "Please enter recipients."
+        showToast(
+            "Please complete all required fields.",
+            false
         );
 
         return;
     }
 
 
-    const recipients =
-        recipientText
-            .split(/[\s,;]+/)
-            .filter(Boolean);
+    stopped = false;
 
+    sendBtn.disabled = true;
+    sendingBtn.disabled = false;
+    stopBtn.disabled = false;
 
-    if (recipients.length > 25) {
+    statusText.innerHTML =
+        '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending email...';
 
-        showError(
-            "Maximum 25 recipients are allowed."
-        );
-
-        return;
-    }
-
-
-    if (!subject) {
-
-        showError(
-            "Subject is required."
-        );
-
-        return;
-    }
-
-
-    if (!message) {
-
-        showError(
-            "Message body is required."
-        );
-
-        return;
-    }
-
-
-    updateProgress({
-
-        total:
-            recipients.length,
-
-        sent: 0,
-
-        failed: 0,
-
-        remaining:
-            recipients.length
-
-    });
-
-
-    progressBar.style.width =
-        "0%";
-
-
-    setSending(true);
-
-    sendingStatus.textContent =
-        "Starting...";
+    sentValue.textContent = "0";
+    failedValue.textContent = "0";
+    remainingValue.textContent = "1";
+    progressFill.style.width = "0%";
 
 
     try {
 
-        const response =
-            await fetch(
-                "/api/send-stream",
-                {
-                    method: "POST",
+        const response = await fetch("/send", {
 
-                    headers: {
-                        "Content-Type":
-                            "application/json",
+            method: "POST",
 
-                        "Accept":
-                            "text/event-stream"
-                    },
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-                    body:
-                        JSON.stringify({
+            body: JSON.stringify({
 
-                            sender_name:
-                                senderName,
+                sender_name: senderName,
+                gmail: gmail,
+                app_password: appPassword,
+                recipient: recipient,
+                subject: subject,
+                body: body
 
-                            subject:
-                                subject,
+            })
 
-                            message_html:
-                                message,
+        });
 
-                            recipients:
-                                recipients
-                        })
-                }
+
+        const result = await response.json();
+
+
+        if (result.success) {
+
+            sentValue.textContent = "1";
+            failedValue.textContent = "0";
+            remainingValue.textContent = "0";
+
+            progressFill.style.width = "100%";
+
+            statusText.innerHTML =
+                '<i class="fa-solid fa-circle-check"></i> Email sent successfully';
+
+            showToast(
+                "Email sent successfully.",
+                true
             );
 
+        } else {
 
-        if (!response.ok) {
+            sentValue.textContent = "0";
+            failedValue.textContent = "1";
+            remainingValue.textContent = "0";
 
-            let message =
-                "Server error.";
+            progressFill.style.width = "0%";
 
-            try {
+            statusText.innerHTML =
+                '<i class="fa-solid fa-circle-xmark"></i> Sending failed';
 
-                const data =
-                    await response.json();
-
-                if (data.error) {
-                    message =
-                        data.error;
-                }
-
-            } catch (e) {}
-
-            throw new Error(
-                message
-            );
-        }
-
-
-        if (!response.body) {
-
-            throw new Error(
-                "Streaming is not available."
-            );
-        }
-
-
-        const reader =
-            response.body.getReader();
-
-        const decoder =
-            new TextDecoder();
-
-        let buffer = "";
-
-        let completed =
-            false;
-
-
-        while (true) {
-
-            const result =
-                await reader.read();
-
-            if (result.done) {
-                break;
-            }
-
-
-            buffer +=
-                decoder.decode(
-                    result.value,
-                    {
-                        stream: true
-                    }
-                );
-
-
-            const blocks =
-                buffer.split(
-                    "\n\n"
-                );
-
-
-            buffer =
-                blocks.pop() || "";
-
-
-            for (
-                const block
-                of blocks
-            ) {
-
-                if (!block.trim()) {
-                    continue;
-                }
-
-
-                let eventName =
-                    "";
-
-                let dataText =
-                    "";
-
-
-                const lines =
-                    block.split("\n");
-
-
-                for (
-                    const line
-                    of lines
-                ) {
-
-                    if (
-                        line.startsWith(
-                            "event:"
-                        )
-                    ) {
-
-                        eventName =
-                            line
-                                .substring(6)
-                                .trim();
-                    }
-
-
-                    if (
-                        line.startsWith(
-                            "data:"
-                        )
-                    ) {
-
-                        dataText +=
-                            line
-                                .substring(5)
-                                .trim();
-                    }
-
-                }
-
-
-                if (!dataText) {
-                    continue;
-                }
-
-
-                let data;
-
-                try {
-
-                    data =
-                        JSON.parse(
-                            dataText
-                        );
-
-                } catch (e) {
-
-                    continue;
-                }
-
-
-                if (
-                    eventName ===
-                    "start"
-                ) {
-
-                    updateProgress(
-                        data
-                    );
-
-                    sendingStatus.textContent =
-                        "Preparing batches...";
-
-                    continue;
-                }
-
-
-                if (
-                    eventName ===
-                    "batch_start"
-                ) {
-
-                    batchStatus.textContent =
-                        `Batch ${data.batch} started — ${data.batch_size} recipients`;
-
-                    continue;
-                }
-
-
-                if (
-                    eventName ===
-                    "progress"
-                ) {
-
-                    updateProgress(
-                        data
-                    );
-
-                    sendingStatus.textContent =
-                        `Processing batch ${data.batch || 0}`;
-
-                    continue;
-                }
-
-
-                if (
-                    eventName ===
-                    "batch_complete"
-                ) {
-
-                    updateProgress(
-                        data
-                    );
-
-                    batchStatus.textContent =
-                        `Batch ${data.batch} complete`;
-
-                    continue;
-                }
-
-
-                if (
-                    eventName ===
-                    "complete"
-                ) {
-
-                    completed =
-                        true;
-
-                    updateProgress(
-                        data
-                    );
-
-                    progressBar.style.width =
-                        "100%";
-
-                    batchStatus.textContent =
-                        `${data.batches} batches completed`;
-
-                    sendingStatus.textContent =
-                        `Completed: ${data.sent} sent, ${data.failed} failed.`;
-
-                    setSending(false);
-
-                    try {
-                        await reader.cancel();
-                    } catch (e) {}
-
-                    break;
-                }
-
-
-                if (
-                    eventName ===
-                    "error"
-                ) {
-
-                    showError(
-                        data.message ||
-                        "Sending failed."
-                    );
-
-                    sendingStatus.textContent =
-                        "Sending failed.";
-
-                    setSending(false);
-
-                    break;
-                }
-
-            }
-
-
-            if (completed) {
-                break;
-            }
-
-
-            if (stopRequested) {
-
-                try {
-                    await reader.cancel();
-                } catch (e) {}
-
-                break;
-            }
-
-        }
-
-
-        if (stopRequested) {
-
-            sendingStatus.textContent =
-                "Sending stopped.";
-
-            setSending(false);
-
-        }
-
-        else if (!completed) {
-
-            showError(
-                "Connection ended before completion."
+            showToast(
+                result.message || "Sending failed.",
+                false
             );
 
-            sendingStatus.textContent =
-                "Sending stopped unexpectedly.";
-
-            setSending(false);
         }
-
 
     } catch (error) {
 
-        console.error(
-            error
+        failedValue.textContent = "1";
+        remainingValue.textContent = "0";
+
+        statusText.innerHTML =
+            '<i class="fa-solid fa-circle-xmark"></i> Connection error';
+
+        showToast(
+            "Unable to connect to the server.",
+            false
         );
 
-        showError(
-            error.message ||
-            "Network error."
-        );
+    } finally {
 
-        sendingStatus.textContent =
-            "Sending failed.";
+        sendBtn.disabled = false;
+        sendingBtn.disabled = true;
+        stopBtn.disabled = true;
 
-        setSending(false);
     }
-
 }
 
 
-function stopSending() {
-
-    stopRequested =
-        true;
-
-    sendingStatus.textContent =
-        "Stopping...";
-}
+sendBtn.addEventListener("click", sendEmail);
 
 
-sendButton.addEventListener(
+stopBtn.addEventListener("click", () => {
+
+    stopped = true;
+
+    statusText.innerHTML =
+        '<i class="fa-solid fa-stop"></i> Sending stopped';
+
+    sendBtn.disabled = false;
+    sendingBtn.disabled = true;
+    stopBtn.disabled = true;
+
+});
+
+
+let logoutClicks = 0;
+let logoutTimer;
+
+
+document.getElementById("logoutBtn").addEventListener(
     "click",
-    startSending
+    function () {
+
+        logoutClicks++;
+
+        clearTimeout(logoutTimer);
+
+        logoutTimer = setTimeout(() => {
+            logoutClicks = 0;
+        }, 600);
+
+        if (logoutClicks >= 2) {
+
+            showToast("Logout action triggered.");
+
+            logoutClicks = 0;
+        }
+
+    }
 );
 
 
-stopButton.addEventListener(
-    "click",
-    stopSending
-);
+updateRecipientCount();
 
 </script>
 
