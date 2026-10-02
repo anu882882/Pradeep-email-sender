@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 
 <head>
@@ -48,8 +49,11 @@
     <div class="brand">
 
         <div class="brand-icon">
+
             <i class="fa-solid fa-shield-halved"></i>
+
         </div>
+
 
         <div>
 
@@ -70,8 +74,11 @@
         href="{{ url_for('logout') }}"
         class="logout-button"
     >
+
         <i class="fa-solid fa-right-from-bracket"></i>
+
         Logout
+
     </a>
 
 </header>
@@ -98,7 +105,9 @@
     <div class="dashboard-grid">
 
 
+        <!-- ================================================= -->
         <!-- LEFT -->
+        <!-- ================================================= -->
 
         <section class="card compose-card">
 
@@ -106,8 +115,11 @@
             <div class="card-heading">
 
                 <div class="heading-icon">
+
                     <i class="fa-solid fa-pen-to-square"></i>
+
                 </div>
+
 
                 <div>
 
@@ -172,6 +184,7 @@
                         placeholder="Google App Password"
                     >
 
+
                     <button
                         type="button"
                         onclick="togglePassword()"
@@ -214,6 +227,7 @@
                         Message Body
                     </label>
 
+
                     <div class="mode-buttons">
 
                         <button
@@ -224,6 +238,7 @@
                         >
                             Plain Text
                         </button>
+
 
                         <button
                             id="htmlButton"
@@ -249,7 +264,9 @@
 
 
 
+            <!-- ================================================= -->
             <!-- TURNSTILE -->
+            <!-- ================================================= -->
 
             <div class="security-box">
 
@@ -295,10 +312,14 @@
 
 
 
+        <!-- ================================================= -->
         <!-- RIGHT -->
+        <!-- ================================================= -->
 
         <section class="right-column">
 
+
+            <!-- RECIPIENTS -->
 
             <div class="card">
 
@@ -306,8 +327,11 @@
                 <div class="card-heading">
 
                     <div class="heading-icon">
+
                         <i class="fa-solid fa-users"></i>
+
                     </div>
+
 
                     <div class="heading-flex">
 
@@ -356,14 +380,21 @@
 
 
 
+            <!-- ================================================= -->
+            <!-- PROGRESS -->
+            <!-- ================================================= -->
+
             <div class="card progress-card">
 
 
                 <div class="card-heading">
 
                     <div class="heading-icon">
+
                         <i class="fa-solid fa-chart-line"></i>
+
                     </div>
+
 
                     <div>
 
@@ -513,6 +544,11 @@
 
 <script>
 
+
+// =========================================================
+// STATE
+// =========================================================
+
 let isHTML = false;
 
 let sending = false;
@@ -520,17 +556,21 @@ let sending = false;
 let turnstileToken = "";
 
 
-/* TURNSTILE */
+// =========================================================
+// TURNSTILE
+// =========================================================
 
 function turnstileCompleted(token) {
 
     turnstileToken =
         token || "";
 
+
     setStatus(
         "Cloudflare verification completed.",
         "success"
     );
+
 }
 
 
@@ -538,10 +578,12 @@ function turnstileExpired() {
 
     turnstileToken = "";
 
+
     setStatus(
         "Cloudflare verification expired.",
         "error"
     );
+
 }
 
 
@@ -549,14 +591,18 @@ function turnstileError() {
 
     turnstileToken = "";
 
+
     setStatus(
         "Cloudflare verification failed.",
         "error"
     );
+
 }
 
 
-/* PASSWORD */
+// =========================================================
+// PASSWORD
+// =========================================================
 
 function togglePassword() {
 
@@ -564,6 +610,7 @@ function togglePassword() {
         document.getElementById(
             "appPassword"
         );
+
 
     const icon =
         document.getElementById(
@@ -577,12 +624,14 @@ function togglePassword() {
 
         input.type = "text";
 
+
         icon.className =
             "fa-regular fa-eye-slash";
 
     } else {
 
         input.type = "password";
+
 
         icon.className =
             "fa-regular fa-eye";
@@ -592,7 +641,9 @@ function togglePassword() {
 }
 
 
-/* MODE */
+// =========================================================
+// MODE
+// =========================================================
 
 function setMode(htmlMode) {
 
@@ -617,7 +668,9 @@ function setMode(htmlMode) {
 }
 
 
-/* EMAIL */
+// =========================================================
+// EMAIL VALIDATION
+// =========================================================
 
 function isValidEmail(email) {
 
@@ -627,7 +680,9 @@ function isValidEmail(email) {
 }
 
 
-/* RECIPIENTS */
+// =========================================================
+// RECIPIENTS
+// =========================================================
 
 function getRecipients() {
 
@@ -659,16 +714,22 @@ function getRecipients() {
 
 
         if (!email) {
+
             continue;
+
         }
 
 
         if (!isValidEmail(email)) {
+
             continue;
+
         }
 
 
-        if (!unique.includes(email)) {
+        if (
+            !unique.includes(email)
+        ) {
 
             unique.push(email);
 
@@ -685,7 +746,9 @@ function getRecipients() {
 }
 
 
-/* COUNT */
+// =========================================================
+// RECIPIENT COUNT
+// =========================================================
 
 function updateRecipientCount() {
 
@@ -734,7 +797,9 @@ document
     );
 
 
-/* STATUS */
+// =========================================================
+// STATUS
+// =========================================================
 
 function setStatus(
     message,
@@ -757,7 +822,9 @@ function setStatus(
 }
 
 
-/* PROGRESS */
+// =========================================================
+// LIVE PROGRESS
+// =========================================================
 
 function updateProgress(
     total,
@@ -830,12 +897,16 @@ function updateProgress(
 }
 
 
-/* SEND */
+// =========================================================
+// SEND BATCH WITH LIVE STREAM
+// =========================================================
 
 async function sendBatch() {
 
     if (sending) {
+
         return;
+
     }
 
 
@@ -887,6 +958,10 @@ async function sendBatch() {
         getRecipients();
 
 
+    // ---------------------------------------------------------
+    // VALIDATION
+    // ---------------------------------------------------------
+
     if (!senderName) {
 
         showToast(
@@ -894,6 +969,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -904,6 +980,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -914,6 +991,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -924,6 +1002,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -934,6 +1013,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -944,6 +1024,7 @@ async function sendBatch() {
         );
 
         return;
+
     }
 
 
@@ -954,13 +1035,20 @@ async function sendBatch() {
             "error"
         );
 
+
         showToast(
             "Cloudflare verification is required."
         );
 
+
         return;
+
     }
 
+
+    // ---------------------------------------------------------
+    // CONFIRM
+    // ---------------------------------------------------------
 
     const confirmed =
         confirm(
@@ -969,9 +1057,15 @@ async function sendBatch() {
 
 
     if (!confirmed) {
+
         return;
+
     }
 
+
+    // ---------------------------------------------------------
+    // START
+    // ---------------------------------------------------------
 
     sending = true;
 
@@ -1008,6 +1102,10 @@ async function sendBatch() {
 
 
     try {
+
+        // -----------------------------------------------------
+        // REQUEST
+        // -----------------------------------------------------
 
         const response =
             await fetch(
@@ -1053,67 +1151,272 @@ async function sendBatch() {
             );
 
 
-        const result =
-            await response.json();
+        // -----------------------------------------------------
+        // NON-STREAM ERROR
+        // -----------------------------------------------------
+
+        if (!response.ok) {
+
+            let errorText =
+                "Sending request failed.";
 
 
-        updateProgress(
-            result.total ||
-            recipients.length,
+            try {
 
-            result.sent_count ||
-            0,
-
-            result.failed_count ||
-            0,
-
-            result.remaining !== undefined
-                ? result.remaining
-                : recipients.length
-        );
+                const errorData =
+                    await response.json();
 
 
-        if (result.success) {
+                errorText =
+                    errorData.message ||
+                    errorText;
 
-            setStatus(
-                result.message,
-                "success"
+            } catch (e) {}
+
+
+            throw new Error(
+                errorText
+            );
+
+        }
+
+
+        // -----------------------------------------------------
+        // STREAM READER
+        // -----------------------------------------------------
+
+        if (!response.body) {
+
+            throw new Error(
+                "Streaming is not supported by this browser."
+            );
+
+        }
+
+
+        const reader =
+            response.body.getReader();
+
+
+        const decoder =
+            new TextDecoder(
+                "utf-8"
             );
 
 
-            showToast(
-                result.message
-            );
+        let buffer = "";
 
 
-            turnstileToken = "";
+        // -----------------------------------------------------
+        // READ STREAM
+        // -----------------------------------------------------
+
+        while (true) {
+
+            const {
+                value,
+                done
+            } = await reader.read();
 
 
-            if (
-                window.turnstile
-            ) {
+            if (done) {
 
-                try {
-
-                    window.turnstile.reset();
-
-                } catch (e) {}
+                break;
 
             }
 
-        } else {
 
-            setStatus(
-                result.message ||
-                "Sending failed.",
-                "error"
+            buffer += decoder.decode(
+                value,
+                {
+                    stream: true
+                }
             );
 
 
-            showToast(
-                result.message ||
-                "Sending failed."
-            );
+            const lines =
+                buffer.split("\n");
+
+
+            buffer =
+                lines.pop() || "";
+
+
+            for (
+                const line of lines
+            ) {
+
+                if (!line.trim()) {
+
+                    continue;
+
+                }
+
+
+                let event;
+
+
+                try {
+
+                    event =
+                        JSON.parse(
+                            line
+                        );
+
+                } catch (e) {
+
+                    continue;
+
+                }
+
+
+                // =============================================
+                // START
+                // =============================================
+
+                if (
+                    event.type ===
+                    "start"
+                ) {
+
+                    updateProgress(
+                        event.total,
+                        event.sent,
+                        event.failed,
+                        event.remaining
+                    );
+
+
+                    setStatus(
+                        "Sending...",
+                        "sending"
+                    );
+
+                }
+
+
+                // =============================================
+                // EACH EMAIL
+                // =============================================
+
+                else if (
+                    event.type ===
+                    "progress"
+                ) {
+
+                    // THIS IS THE IMPORTANT PART:
+                    // Counter changes after every email.
+
+                    updateProgress(
+                        event.total,
+                        event.sent,
+                        event.failed,
+                        event.remaining
+                    );
+
+
+                    if (
+                        event.result ===
+                        "sent"
+                    ) {
+
+                        setStatus(
+                            `Sent ${event.sent} of ${event.total}`,
+                            "sending"
+                        );
+
+                    } else {
+
+                        setStatus(
+                            `Failed: ${event.email} — ${event.remaining} remaining`,
+                            "error"
+                        );
+
+                    }
+
+                }
+
+
+                // =============================================
+                // COMPLETE
+                // =============================================
+
+                else if (
+                    event.type ===
+                    "complete"
+                ) {
+
+                    updateProgress(
+                        event.total,
+                        event.sent,
+                        event.failed,
+                        event.remaining
+                    );
+
+
+                    setStatus(
+                        event.message,
+                        "success"
+                    );
+
+
+                    showToast(
+                        event.message
+                    );
+
+
+                    turnstileToken = "";
+
+
+                    if (
+                        window.turnstile
+                    ) {
+
+                        try {
+
+                            window.turnstile.reset();
+
+                        } catch (e) {}
+
+                    }
+
+                }
+
+
+                // =============================================
+                // SERVER ERROR
+                // =============================================
+
+                else if (
+                    event.type ===
+                    "error"
+                ) {
+
+                    updateProgress(
+                        event.total || recipients.length,
+                        event.sent || 0,
+                        event.failed || 0,
+                        event.remaining !== undefined
+                            ? event.remaining
+                            : 0
+                    );
+
+
+                    setStatus(
+                        event.message ||
+                        "Sending failed.",
+                        "error"
+                    );
+
+
+                    showToast(
+                        event.message ||
+                        "Sending failed."
+                    );
+
+                }
+
+            }
 
         }
 
@@ -1121,19 +1424,26 @@ async function sendBatch() {
     } catch (error) {
 
         setStatus(
+            error.message ||
             "Network/server error.",
             "error"
         );
 
 
         showToast(
+            error.message ||
             "Unable to contact the server."
         );
 
     }
 
 
+    // ---------------------------------------------------------
+    // FINISH
+    // ---------------------------------------------------------
+
     sending = false;
+
 
     sendButton.disabled = false;
 
@@ -1142,7 +1452,9 @@ async function sendBatch() {
 }
 
 
-/* TOAST */
+// =========================================================
+// TOAST
+// =========================================================
 
 function showToast(message) {
 
@@ -1175,7 +1487,9 @@ function showToast(message) {
 }
 
 
-/* INIT */
+// =========================================================
+// INITIALIZE
+// =========================================================
 
 updateRecipientCount();
 
