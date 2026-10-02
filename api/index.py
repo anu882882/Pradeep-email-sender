@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import smtplib
 import ssl
+import re
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from pathlib import Path
@@ -15,6 +16,15 @@ app = Flask(
     static_url_path="/static"
 )
 
+EMAIL_RE = re.compile(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+    r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
+)
+
+
+def valid_email(value):
+    return bool(EMAIL_RE.fullmatch(value.strip()))
+
 
 @app.route("/")
 def home():
@@ -23,38 +33,37 @@ def home():
 
 @app.route("/send", methods=["POST"])
 def send_email():
-
     data = request.get_json(silent=True) or {}
 
-    sender_name = data.get("sender_name", "").strip()
-    gmail = data.get("gmail", "").strip()
-    app_password = data.get("app_password", "").strip()
-    recipient = data.get("recipient", "").strip()
-    subject = data.get("subject", "").strip()
-    body = data.get("body", "")
+    sender_name = str(data.get("sender_name", "")).strip()
+    gmail = str(data.get("gmail", "")).strip()
+    app_password = str(data.get("app_password", "")).strip()
+    recipient = str(data.get("recipient", "")).strip()
+    subject = str(data.get("subject", "")).strip()
+    body = str(data.get("body", ""))
 
     if not sender_name:
         return jsonify({
             "success": False,
-            "message": "Sender name is required."
+            "message": "Sender Name is required."
         }), 400
 
-    if not gmail:
+    if not valid_email(gmail):
         return jsonify({
             "success": False,
-            "message": "Gmail address is required."
+            "message": "Enter a valid Gmail address."
         }), 400
 
     if not app_password:
         return jsonify({
             "success": False,
-            "message": "Gmail App Password is required."
+            "message": "Google App Password is required."
         }), 400
 
-    if not recipient:
+    if not valid_email(recipient):
         return jsonify({
             "success": False,
-            "message": "Recipient is required."
+            "message": "Enter a valid recipient email."
         }), 400
 
     if not subject:
@@ -69,25 +78,11 @@ def send_email():
             "message": "Message body is required."
         }), 400
 
-    # One recipient per request
-    if any(x in recipient for x in [",", ";", "\n", "\r"]):
-        return jsonify({
-            "success": False,
-            "message": "Please enter one recipient email at a time."
-        }), 400
-
     try:
-
-        message = MIMEText(
-            body,
-            "plain",
-            "utf-8"
-        )
+        message = MIMEText(body, "plain", "utf-8")
 
         message["Subject"] = subject
-        message["From"] = formataddr(
-            (sender_name, gmail)
-        )
+        message["From"] = formataddr((sender_name, gmail))
         message["To"] = recipient
 
         context = ssl.create_default_context()
@@ -99,10 +94,7 @@ def send_email():
             timeout=30
         ) as server:
 
-            server.login(
-                gmail,
-                app_password
-            )
+            server.login(gmail, app_password)
 
             server.sendmail(
                 gmail,
@@ -112,32 +104,37 @@ def send_email():
 
         return jsonify({
             "success": True,
-            "message": "Email sent successfully."
+            "message": f"Email sent to {recipient}."
         })
 
     except smtplib.SMTPAuthenticationError:
-
         return jsonify({
             "success": False,
             "message": (
                 "Gmail authentication failed. "
-                "Use a valid Google App Password."
+                "Check the Gmail address and Google App Password."
             )
         }), 401
 
     except smtplib.SMTPException as exc:
-
         return jsonify({
             "success": False,
             "message": f"SMTP error: {str(exc)}"
         }), 500
 
     except Exception as exc:
-
         return jsonify({
             "success": False,
             "message": f"Server error: {str(exc)}"
         }), 500
+
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "service": "Secure Mail Console"
+    })
 
 
 if __name__ == "__main__":
