@@ -1,172 +1,237 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+
+    <meta charset="utf-8">
+
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1"
     >
 
-    <title>Secure Mail Console</title>
+    <title>
+        Secure Mail Console
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
 </head>
+
 
 <body>
 
-<div class="page">
 
-    <header class="topbar">
+<header class="topbar">
 
-        <div class="brand">
-            <div class="brand-icon">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
+    <div class="brand">
 
-            <div class="brand-name">
-                Secure Mail Console
-            </div>
+        <div class="brand-icon">
+            <i class="fa-solid fa-shield-halved"></i>
         </div>
 
-        <button
-            class="logout-btn"
-            id="logoutBtn"
-            type="button"
-        >
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout (Double Click)
-        </button>
+        <div>
 
-    </header>
+            <h1>
+                Secure Mail Console
+            </h1>
 
+            <span>
+                Secure email workspace
+            </span>
 
-    <div class="page-title">
-        <i class="fa-solid fa-paper-plane"></i>
-        <span>Bulk Email Sender</span>
+        </div>
+
     </div>
 
 
-    <main class="dashboard">
+    <a
+        href="/logout"
+        class="logout-button"
+    >
 
-        <!-- LEFT -->
-        <section class="left-column">
+        <i class="fa-solid fa-right-from-bracket"></i>
 
-            <div class="card compose-card">
+        Logout
 
-                <div class="card-heading">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>Compose Message</span>
-                </div>
+    </a>
+
+</header>
 
 
-                <div class="form-grid">
+<main class="container">
 
-                    <div class="field">
-                        <label>Sender Name</label>
 
-                        <input
-                            id="senderName"
-                            type="text"
-                            placeholder="Sender Name"
-                            autocomplete="off"
-                        >
+    <div class="page-heading">
+
+        <div>
+
+            <h2>
+                Bulk Email Sender
+            </h2>
+
+            <p>
+                Prepare your message and manage recipients.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="main-grid">
+
+
+        <!-- LEFT SIDE -->
+
+        <section class="card compose-card">
+
+
+            <div class="card-header">
+
+                <div class="card-title">
+
+                    <div class="title-icon">
+                        <i class="fa-regular fa-pen-to-square"></i>
                     </div>
 
+                    <div>
 
-                    <div class="field">
-                        <label>Your Gmail</label>
+                        <h3>
+                            Compose Message
+                        </h3>
 
-                        <input
-                            id="gmail"
-                            type="email"
-                            placeholder="yourname@gmail.com"
-                            autocomplete="off"
-                        >
-                    </div>
+                        <p>
+                            Enter your sender and message details
+                        </p>
 
-
-                    <div class="field">
-
-                        <label>App Password</label>
-
-                        <div class="password-wrapper">
-
-                            <input
-                                id="appPassword"
-                                type="password"
-                                placeholder="Google App Password"
-                                autocomplete="off"
-                            >
-
-                            <button
-                                id="togglePassword"
-                                class="eye-btn"
-                                type="button"
-                            >
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="field">
-                        <label>Email Subject</label>
-
-                        <input
-                            id="subject"
-                            type="text"
-                            placeholder="Email subject"
-                        >
                     </div>
 
                 </div>
 
+            </div>
 
-                <div class="field body-field">
 
-                    <label>Message Body</label>
+            <div class="form-grid">
+
+
+                <div class="field">
+
+                    <label for="senderName">
+                        Sender Name
+                    </label>
+
+                    <input
+                        id="senderName"
+                        type="text"
+                        placeholder="Your name"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="gmail">
+                        Your Gmail
+                    </label>
+
+                    <input
+                        id="gmail"
+                        type="email"
+                        placeholder="yourname@gmail.com"
+                    >
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label for="appPassword">
+                        App Password
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            id="appPassword"
+                            type="password"
+                            placeholder="Google App Password"
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword()"
+                        >
+                            <i
+                                id="passwordIcon"
+                                class="fa-regular fa-eye"
+                            ></i>
+                        </button>
+
+                    </div>
+
+                    <small>
+                        Use a Google App Password, not your normal Gmail password.
+                    </small>
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label for="subject">
+                        Email Subject
+                    </label>
+
+                    <input
+                        id="subject"
+                        type="text"
+                        placeholder="Enter email subject"
+                    >
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label for="message">
+                        Message Body
+                    </label>
 
                     <textarea
-                        id="messageBody"
+                        id="message"
+                        rows="10"
                         placeholder="Write your message here..."
                     ></textarea>
 
                 </div>
 
 
-                <div class="protection">
+                <div class="spam-panel">
 
-                    <div class="protection-title">
-                        <i class="fa-solid fa-shield"></i>
-                        Spam Protection
+                    <div class="spam-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
 
-                    <div class="protection-box">
+                    <div>
 
-                        <div class="success-icon">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
+                        <strong>
+                            Spam Protection
+                        </strong>
 
-                        <div class="protection-text">
-                            <strong>Ready</strong>
-                            <span>
-                                Security checks are enabled.
-                            </span>
-                        </div>
-
-                        <div class="cloud-mark">
-                            <i class="fa-solid fa-cloud"></i>
-                        </div>
+                        <p>
+                            Review your content and recipient before sending.
+                        </p>
 
                     </div>
 
@@ -174,44 +239,63 @@
 
 
                 <button
-                    id="sendBtn"
-                    class="send-btn"
+                    id="sendButton"
+                    class="primary-button"
                     type="button"
+                    onclick="sendCurrent()"
                 >
-                    <i class="fa-solid fa-paper-plane"></i>
+
+                    <i class="fa-regular fa-paper-plane"></i>
+
                     Send Selected Email
+
                 </button>
 
+
             </div>
+
 
         </section>
 
 
-        <!-- RIGHT -->
+        <!-- RIGHT SIDE -->
+
         <section class="right-column">
 
-            <div class="card recipients-card">
 
-                <div class="recipients-header">
+            <!-- RECIPIENTS -->
 
-                    <div>
+            <div class="card">
 
-                        <div class="card-heading">
+
+                <div class="card-header">
+
+                    <div class="card-title">
+
+                        <div class="title-icon">
                             <i class="fa-solid fa-users"></i>
-                            <span>Recipients</span>
                         </div>
 
-                        <div class="helper">
-                            Up to 25 email addresses
+                        <div>
+
+                            <h3>
+                                Recipients
+                            </h3>
+
+                            <p>
+                                Add up to 25 email addresses
+                            </p>
+
                         </div>
 
                     </div>
+
 
                     <div
                         id="recipientCount"
                         class="count-badge"
                     >
-                        0 / 25
+                        0/25
                     </div>
 
                 </div>
@@ -219,14 +303,19 @@
 
                 <textarea
                     id="recipients"
-                    class="recipient-input"
-                    placeholder="Enter up to 25 email addresses, one per line..."
+                    class="recipients-input"
+                    rows="7"
+                    placeholder="Enter email addresses, one per line..."
                 ></textarea>
 
 
-                <div class="recipient-note">
+                <div class="recipient-info">
+
                     <i class="fa-solid fa-circle-info"></i>
-                    One address is selected at a time for sending.
+
+                    Separate addresses with commas,
+                    semicolons, or new lines.
+
                 </div>
 
 
@@ -235,104 +324,168 @@
                     class="recipient-list"
                 ></div>
 
+
             </div>
 
 
+            <!-- PROGRESS -->
+
             <div class="card progress-card">
 
-                <div class="card-heading">
-                    <i class="fa-solid fa-chart-pie"></i>
-                    <span>Progress Monitor</span>
+
+                <div class="card-header">
+
+                    <div class="card-title">
+
+                        <div class="title-icon">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Progress Monitor
+                            </h3>
+
+                            <p>
+                                Track your sending progress
+                            </p>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
 
                 <div class="stats-grid">
 
-                    <div class="stat-box">
-                        <span class="stat-label">TOTAL</span>
-                        <strong id="totalValue">0</strong>
+
+                    <div class="stat">
+
+                        <span>
+                            TOTAL
+                        </span>
+
+                        <strong id="totalCount">
+                            0
+                        </strong>
+
                     </div>
 
-                    <div class="stat-box">
-                        <span class="stat-label">SENT</span>
+
+                    <div class="stat">
+
+                        <span>
+                            SENT
+                        </span>
+
                         <strong
-                            id="sentValue"
-                            class="sent-value"
+                            id="sentCount"
+                            class="success-text"
                         >
                             0
                         </strong>
+
                     </div>
 
-                    <div class="stat-box">
-                        <span class="stat-label">FAILED</span>
+
+                    <div class="stat">
+
+                        <span>
+                            FAILED
+                        </span>
+
                         <strong
-                            id="failedValue"
-                            class="failed-value"
+                            id="failedCount"
+                            class="danger-text"
                         >
                             0
                         </strong>
+
                     </div>
 
-                    <div class="stat-box">
-                        <span class="stat-label">REMAINING</span>
-                        <strong
-                            id="remainingValue"
-                            class="remaining-value"
-                        >
+
+                    <div class="stat">
+
+                        <span>
+                            REMAINING
+                        </span>
+
+                        <strong id="remainingCount">
                             0
                         </strong>
+
                     </div>
+
 
                 </div>
 
 
                 <div class="progress-track">
+
                     <div
-                        id="progressFill"
-                        class="progress-fill"
+                        id="progressBar"
+                        class="progress-bar"
                     ></div>
+
                 </div>
 
 
-                <div
-                    id="statusText"
-                    class="sending-status"
-                >
-                    <i class="fa-regular fa-circle"></i>
-                    Ready to send
+                <div class="progress-status">
+
+                    <span>
+                        Status
+                    </span>
+
+                    <strong id="statusText">
+                        Waiting
+                    </strong>
+
                 </div>
 
 
-                <div class="action-row">
+                <div class="progress-actions">
 
                     <button
-                        id="nextBtn"
-                        class="sending-btn"
+                        id="nextButton"
+                        class="secondary-button"
                         type="button"
-                        disabled
+                        onclick="sendCurrent()"
                     >
-                        <i class="fa-solid fa-paper-plane"></i>
+
+                        <i class="fa-solid fa-forward"></i>
+
                         Send Next
+
                     </button>
 
+
                     <button
-                        id="resetBtn"
-                        class="stop-btn"
+                        class="reset-button"
                         type="button"
+                        onclick="resetProgress()"
                     >
+
                         <i class="fa-solid fa-rotate-left"></i>
+
                         Reset
+
                     </button>
 
                 </div>
+
 
             </div>
 
+
         </section>
 
-    </main>
 
-</div>
+    </div>
+
+
+</main>
 
 
 <div
@@ -343,197 +496,162 @@
 
 <script>
 
-const MAX_RECIPIENTS = 25;
+let recipients = [];
+
+let currentIndex = 0;
+
+let sent = 0;
+
+let failed = 0;
+
 
 const recipientsInput =
     document.getElementById("recipients");
 
-const recipientCount =
-    document.getElementById("recipientCount");
 
 const recipientList =
     document.getElementById("recipientList");
 
-const sendBtn =
-    document.getElementById("sendBtn");
 
-const nextBtn =
-    document.getElementById("nextBtn");
+const recipientCount =
+    document.getElementById("recipientCount");
 
-const resetBtn =
-    document.getElementById("resetBtn");
 
-const totalValue =
-    document.getElementById("totalValue");
+const totalCount =
+    document.getElementById("totalCount");
 
-const sentValue =
-    document.getElementById("sentValue");
 
-const failedValue =
-    document.getElementById("failedValue");
+const sentCount =
+    document.getElementById("sentCount");
 
-const remainingValue =
-    document.getElementById("remainingValue");
 
-const progressFill =
-    document.getElementById("progressFill");
+const failedCount =
+    document.getElementById("failedCount");
+
+
+const remainingCount =
+    document.getElementById("remainingCount");
+
+
+const progressBar =
+    document.getElementById("progressBar");
+
 
 const statusText =
     document.getElementById("statusText");
+
+
+const sendButton =
+    document.getElementById("sendButton");
+
+
+const nextButton =
+    document.getElementById("nextButton");
+
 
 const toast =
     document.getElementById("toast");
 
 
-let recipients = [];
-let statuses = [];
-let currentIndex = 0;
-let sending = false;
+recipientsInput.addEventListener(
+    "input",
+    updateRecipients
+);
 
 
-function showToast(message, type = "success") {
-
-    toast.textContent = message;
-
-    toast.className =
-        "toast show " + type;
-
-    setTimeout(() => {
-        toast.className = "toast";
-    }, 3500);
-}
-
-
-function parseRecipients() {
+function updateRecipients() {
 
     const raw =
         recipientsInput.value;
 
-    const parts =
+    const parsed =
         raw
         .split(/[\n,;]+/)
-        .map(item => item.trim())
+        .map(item => item.trim().toLowerCase())
         .filter(Boolean);
+
 
     const unique = [];
 
-    for (const email of parts) {
+    for (const email of parsed) {
 
         if (!unique.includes(email)) {
+
             unique.push(email);
+
         }
 
     }
 
-    return unique.slice(0, MAX_RECIPIENTS);
+
+    recipients =
+        unique.slice(0, 25);
+
+
+    currentIndex = 0;
+    sent = 0;
+    failed = 0;
+
+
+    renderRecipients();
+    updateProgress();
+
 }
 
 
 function renderRecipients() {
 
-    recipients = parseRecipients();
-
-    statuses = recipients.map(() => "pending");
-
-    currentIndex = 0;
-
-    recipientCount.textContent =
-        `${recipients.length} / ${MAX_RECIPIENTS}`;
-
-    totalValue.textContent =
-        recipients.length;
-
-    sentValue.textContent = "0";
-    failedValue.textContent = "0";
-
-    remainingValue.textContent =
-        recipients.length;
-
-    renderRecipientList();
-    updateProgress();
-    updateButtons();
-
-    if (recipients.length > MAX_RECIPIENTS) {
-
-        showToast(
-            "Only the first 25 recipients are accepted.",
-            "error"
-        );
-    }
-}
-
-
-function renderRecipientList() {
-
     recipientList.innerHTML = "";
 
-    recipients.forEach((email, index) => {
 
-        const row =
-            document.createElement("div");
+    recipients.forEach(
+        (email, index) => {
 
-        row.className =
-            "recipient-row";
+            const row =
+                document.createElement("div");
 
-        if (index === currentIndex) {
-            row.classList.add("active");
-        }
-
-        const number =
-            document.createElement("span");
-
-        number.className =
-            "recipient-number";
-
-        number.textContent =
-            index + 1;
+            row.className =
+                "recipient-row";
 
 
-        const address =
-            document.createElement("span");
+            if (index === currentIndex) {
 
-        address.className =
-            "recipient-address";
+                row.classList.add(
+                    "current"
+                );
 
-        address.textContent =
-            email;
-
-
-        const status =
-            document.createElement("span");
-
-        status.className =
-            "recipient-status";
+            }
 
 
-        if (statuses[index] === "sent") {
+            row.innerHTML = `
 
-            status.innerHTML =
-                '<i class="fa-solid fa-circle-check"></i>';
+                <div class="recipient-number">
+                    ${index + 1}
+                </div>
 
-            status.classList.add("sent");
+                <div class="recipient-email">
+                    ${escapeHtml(email)}
+                </div>
 
-        } else if (statuses[index] === "failed") {
+                <div
+                    id="status-${index}"
+                    class="recipient-status pending"
+                >
+                    Pending
+                </div>
 
-            status.innerHTML =
-                '<i class="fa-solid fa-circle-xmark"></i>';
+            `;
 
-            status.classList.add("failed");
 
-        } else {
-
-            status.innerHTML =
-                '<i class="fa-regular fa-clock"></i>';
+            recipientList.appendChild(row);
 
         }
+    );
 
 
-        row.appendChild(number);
-        row.appendChild(address);
-        row.appendChild(status);
+    recipientCount.textContent =
+        `${recipients.length}/25`;
 
-        recipientList.appendChild(row);
-    });
 }
 
 
@@ -542,351 +660,484 @@ function updateProgress() {
     const total =
         recipients.length;
 
-    const sent =
-        statuses.filter(x => x === "sent").length;
+    const remaining =
+        Math.max(
+            total - sent - failed,
+            0
+        );
 
-    const failed =
-        statuses.filter(x => x === "failed").length;
+
+    totalCount.textContent =
+        total;
+
+    sentCount.textContent =
+        sent;
+
+    failedCount.textContent =
+        failed;
+
+    remainingCount.textContent =
+        remaining;
+
 
     const completed =
         sent + failed;
 
-    const remaining =
-        Math.max(total - completed, 0);
 
-    sentValue.textContent = sent;
-    failedValue.textContent = failed;
-    remainingValue.textContent = remaining;
-
-    const percentage =
-        total
+    const percent =
+        total > 0
             ? (completed / total) * 100
             : 0;
 
-    progressFill.style.width =
-        `${percentage}%`;
+
+    progressBar.style.width =
+        `${percent}%`;
 
 
-    if (!total) {
+    if (total === 0) {
 
-        statusText.innerHTML =
-            '<i class="fa-regular fa-circle"></i> Ready to send';
+        statusText.textContent =
+            "Waiting";
 
-    } else if (completed === total) {
+    } else if (remaining === 0) {
 
-        statusText.innerHTML =
-            '<i class="fa-solid fa-circle-check"></i> All selected emails processed';
+        statusText.textContent =
+            "Completed";
 
     } else {
 
-        statusText.innerHTML =
-            `<i class="fa-solid fa-paper-plane"></i>
-             Ready for recipient ${currentIndex + 1}`;
-    }
-}
+        statusText.textContent =
+            "Ready";
 
-
-function updateButtons() {
-
-    const hasPending =
-        recipients.some(
-            (_, index) =>
-                statuses[index] === "pending"
-        );
-
-    nextBtn.disabled =
-        !hasPending || sending;
-
-    sendBtn.disabled =
-        !hasPending || sending;
-}
-
-
-function findNextPending() {
-
-    for (
-        let i = currentIndex;
-        i < recipients.length;
-        i++
-    ) {
-
-        if (statuses[i] === "pending") {
-            return i;
-        }
     }
 
-    for (
-        let i = 0;
-        i < currentIndex;
-        i++
-    ) {
-
-        if (statuses[i] === "pending") {
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 
 async function sendCurrent() {
 
-    if (sending) return;
-
-    const index =
-        findNextPending();
-
-    if (index === -1) {
+    if (recipients.length === 0) {
 
         showToast(
-            "There are no pending recipients.",
-            "error"
+            "Add at least one recipient.",
+            true
         );
 
         return;
+
+    }
+
+
+    if (
+        currentIndex >=
+        recipients.length
+    ) {
+
+        showToast(
+            "All recipients are completed.",
+            false
+        );
+
+        return;
+
     }
 
 
     const senderName =
-        document
-        .getElementById("senderName")
-        .value
-        .trim();
+        document.getElementById(
+            "senderName"
+        ).value.trim();
+
 
     const gmail =
-        document
-        .getElementById("gmail")
-        .value
-        .trim();
+        document.getElementById(
+            "gmail"
+        ).value.trim();
+
 
     const appPassword =
-        document
-        .getElementById("appPassword")
-        .value
-        .trim();
+        document.getElementById(
+            "appPassword"
+        ).value.trim();
+
 
     const subject =
-        document
-        .getElementById("subject")
-        .value
-        .trim();
+        document.getElementById(
+            "subject"
+        ).value.trim();
+
 
     const body =
-        document
-        .getElementById("messageBody")
-        .value;
+        document.getElementById(
+            "message"
+        ).value;
 
 
-    if (
-        !senderName ||
-        !gmail ||
-        !appPassword ||
-        !subject ||
-        !body.trim()
-    ) {
+    const recipient =
+        recipients[currentIndex];
+
+
+    if (!senderName) {
 
         showToast(
-            "Complete the sender and message fields first.",
-            "error"
+            "Enter Sender Name.",
+            true
         );
 
         return;
+
     }
 
 
-    currentIndex = index;
+    if (!gmail) {
 
-    renderRecipientList();
+        showToast(
+            "Enter Gmail address.",
+            true
+        );
 
-    sending = true;
+        return;
 
-    updateButtons();
+    }
 
 
-    statusText.innerHTML =
-        `<i class="fa-solid fa-circle-notch fa-spin"></i>
-         Sending to ${recipients[index]}`;
+    if (!appPassword) {
+
+        showToast(
+            "Enter App Password.",
+            true
+        );
+
+        return;
+
+    }
+
+
+    if (!subject) {
+
+        showToast(
+            "Enter email subject.",
+            true
+        );
+
+        return;
+
+    }
+
+
+    if (!body.trim()) {
+
+        showToast(
+            "Enter message body.",
+            true
+        );
+
+        return;
+
+    }
+
+
+    setCurrentStatus(
+        "Sending...",
+        "sending"
+    );
+
+
+    sendButton.disabled = true;
+    nextButton.disabled = true;
+
+
+    statusText.textContent =
+        `Sending to ${recipient}`;
 
 
     try {
 
         const response =
-            await fetch("/send", {
+            await fetch(
+                "/send",
+                {
+                    method: "POST",
 
-                method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                    body: JSON.stringify({
 
-                body: JSON.stringify({
+                        sender_name:
+                            senderName,
 
-                    sender_name: senderName,
-                    gmail: gmail,
-                    app_password: appPassword,
-                    recipient: recipients[index],
-                    subject: subject,
-                    body: body
+                        gmail:
+                            gmail,
 
-                })
+                        app_password:
+                            appPassword,
 
-            });
+                        recipient:
+                            recipient,
+
+                        subject:
+                            subject,
+
+                        body:
+                            body
+
+                    })
+
+                }
+            );
 
 
-        const result =
+        const data =
             await response.json();
 
 
-        if (result.success) {
+        if (data.success) {
 
-            statuses[index] = "sent";
+            setCurrentStatus(
+                "Sent",
+                "sent"
+            );
+
+            sent++;
 
             showToast(
-                `Sent to ${recipients[index]}.`,
-                "success"
+                `Email sent to ${recipient}.`,
+                false
             );
 
         } else {
 
-            statuses[index] = "failed";
+            setCurrentStatus(
+                "Failed",
+                "failed"
+            );
+
+            failed++;
 
             showToast(
-                result.message || "Sending failed.",
-                "error"
+                data.message ||
+                "Email could not be sent.",
+                true
             );
+
         }
 
 
     } catch (error) {
 
-        statuses[index] = "failed";
-
-        showToast(
-            "Could not connect to the server.",
-            "error"
+        setCurrentStatus(
+            "Failed",
+            "failed"
         );
 
-    } finally {
+        failed++;
 
-        sending = false;
-
-        const next =
-            findNextPending();
-
-        if (next !== -1) {
-            currentIndex = next;
-        }
-
-        renderRecipientList();
-        updateProgress();
-        updateButtons();
+        showToast(
+            "Connection error.",
+            true
+        );
 
     }
+
+
+    currentIndex++;
+
+
+    updateProgress();
+
+
+    renderRecipients();
+
+
+    sendButton.disabled = false;
+    nextButton.disabled = false;
+
+
+    if (
+        currentIndex >=
+        recipients.length
+    ) {
+
+        statusText.textContent =
+            "Completed";
+
+        sendButton.disabled =
+            true;
+
+        nextButton.disabled =
+            true;
+
+    } else {
+
+        statusText.textContent =
+            "Ready";
+
+    }
+
 }
 
 
-recipientsInput.addEventListener(
-    "input",
-    renderRecipients
-);
+function setCurrentStatus(
+    text,
+    type
+) {
+
+    const element =
+        document.getElementById(
+            `status-${currentIndex}`
+        );
 
 
-sendBtn.addEventListener(
-    "click",
-    sendCurrent
-);
+    if (!element) {
+        return;
+    }
 
 
-nextBtn.addEventListener(
-    "click",
-    sendCurrent
-);
+    element.textContent =
+        text;
 
 
-document
-.getElementById("togglePassword")
-.addEventListener("click", function () {
+    element.className =
+        `recipient-status ${type}`;
+
+}
+
+
+function resetProgress() {
+
+    currentIndex = 0;
+
+    sent = 0;
+
+    failed = 0;
+
+
+    renderRecipients();
+
+    updateProgress();
+
+
+    sendButton.disabled =
+        false;
+
+    nextButton.disabled =
+        false;
+
+
+    statusText.textContent =
+        "Waiting";
+
+
+    showToast(
+        "Progress reset.",
+        false
+    );
+
+}
+
+
+function togglePassword() {
 
     const input =
-        document.getElementById("appPassword");
+        document.getElementById(
+            "appPassword"
+        );
+
+    const icon =
+        document.getElementById(
+            "passwordIcon"
+        );
+
 
     if (input.type === "password") {
 
         input.type = "text";
 
-        this.innerHTML =
-            '<i class="fa-regular fa-eye-slash"></i>';
+        icon.className =
+            "fa-regular fa-eye-slash";
 
     } else {
 
         input.type = "password";
 
-        this.innerHTML =
-            '<i class="fa-regular fa-eye"></i>';
+        icon.className =
+            "fa-regular fa-eye";
+
     }
 
-});
+}
 
 
-resetBtn.addEventListener(
-    "click",
-    function () {
+function showToast(
+    message,
+    error
+) {
 
-        if (sending) return;
+    toast.textContent =
+        message;
 
-        statuses =
-            recipients.map(() => "pending");
 
-        currentIndex = 0;
+    toast.className =
+        "toast show";
 
-        renderRecipientList();
-        updateProgress();
-        updateButtons();
 
-        showToast(
-            "Progress has been reset.",
-            "success"
+    if (error) {
+
+        toast.classList.add(
+            "toast-error"
         );
 
     }
-);
 
 
-let logoutClicks = 0;
-let logoutTimer = null;
+    setTimeout(
+        () => {
+
+            toast.className =
+                "toast";
+
+        },
+        3500
+    );
+
+}
 
 
-document
-.getElementById("logoutBtn")
-.addEventListener("click", function () {
+function escapeHtml(value) {
 
-    logoutClicks++;
-
-    clearTimeout(logoutTimer);
-
-    logoutTimer =
-        setTimeout(() => {
-            logoutClicks = 0;
-        }, 600);
-
-
-    if (logoutClicks >= 2) {
-
-        logoutClicks = 0;
-
-        showToast(
-            "Logout action triggered.",
-            "success"
+    return value
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
         );
-    }
 
-});
+}
 
 
-renderRecipients();
+updateRecipients();
 
 </script>
 
+
 </body>
+
 </html>
