@@ -2,7 +2,6 @@
     box-sizing: border-box;
 }
 
-
 :root {
     --blue: #2563eb;
     --blue-dark: #1d4ed8;
@@ -13,8 +12,8 @@
     --white: #ffffff;
     --green: #16a34a;
     --red: #dc2626;
+    --orange: #d97706;
 }
-
 
 body {
     margin: 0;
@@ -28,13 +27,11 @@ body {
 }
 
 
-/* =========================
-   HEADER
-========================= */
+/* HEADER */
 
 .topbar {
     height: 76px;
-    background: #ffffff;
+    background: #fff;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -42,13 +39,11 @@ body {
     padding: 0 34px;
 }
 
-
 .brand {
     display: flex;
     align-items: center;
     gap: 13px;
 }
-
 
 .brand-icon {
     width: 42px;
@@ -62,21 +57,17 @@ body {
     font-size: 21px;
 }
 
-
 .brand h1 {
     margin: 0;
     font-size: 18px;
-    font-weight: 700;
 }
-
 
 .brand span {
     display: block;
     margin-top: 2px;
-    font-size: 12px;
     color: var(--muted);
+    font-size: 12px;
 }
-
 
 .logout-button {
     text-decoration: none;
@@ -89,32 +80,22 @@ body {
 }
 
 
-.logout-button:hover {
-    background: #f9fafb;
-}
-
-
-/* =========================
-   MAIN
-========================= */
+/* MAIN */
 
 .container {
     width: min(1280px, calc(100% - 40px));
-    margin: 0 auto;
+    margin: auto;
     padding: 32px 0 50px;
 }
-
 
 .page-heading {
     margin-bottom: 22px;
 }
 
-
 .page-heading h2 {
     margin: 0;
     font-size: 25px;
 }
-
 
 .page-heading p {
     margin: 7px 0 0;
@@ -122,14 +103,14 @@ body {
     font-size: 14px;
 }
 
-
 .main-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+    grid-template-columns:
+        minmax(0, 1.15fr)
+        minmax(360px, .85fr);
     gap: 22px;
     align-items: start;
 }
-
 
 .right-column {
     display: flex;
@@ -138,22 +119,20 @@ body {
 }
 
 
-/* =========================
-   CARDS
-========================= */
+/* CARDS */
 
 .card {
-    background: var(--white);
+    background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+    box-shadow:
+        0 4px 18px
+        rgba(15, 23, 42, .035);
 }
-
 
 .compose-card {
     padding-bottom: 24px;
 }
-
 
 .card-header {
     padding: 20px 22px;
@@ -163,13 +142,11 @@ body {
     align-items: center;
 }
 
-
 .card-title {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
 
 .title-icon {
     width: 38px;
@@ -182,19 +159,16 @@ body {
     justify-content: center;
 }
 
-
 .card h3 {
     margin: 0;
     font-size: 16px;
 }
-
 
 .card-header p {
     margin: 4px 0 0;
     color: var(--muted);
     font-size: 12px;
 }
-
 
 .count-badge {
     background: #eff6ff;
@@ -206,9 +180,7 @@ body {
 }
 
 
-/* =========================
-   FORM
-========================= */
+/* FORM */
 
 .form-grid {
     padding: 22px;
@@ -217,16 +189,9 @@ body {
     gap: 18px;
 }
 
-
-.field {
-    min-width: 0;
-}
-
-
 .field.full {
     grid-column: 1 / -1;
 }
-
 
 .field label {
     display: block;
@@ -234,7 +199,6 @@ body {
     font-size: 13px;
     font-weight: 600;
 }
-
 
 .field input,
 .field textarea,
@@ -251,19 +215,18 @@ body {
     resize: vertical;
 }
 
-
 .field input {
     height: 43px;
 }
-
 
 .field input:focus,
 .field textarea:focus,
 .recipients-input:focus {
     border-color: #93b4ff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08);
 }
-
 
 .field small {
     display: block;
@@ -272,23 +235,20 @@ body {
     font-size: 11px;
 }
 
-
 .password-wrapper {
     position: relative;
 }
-
 
 .password-wrapper input {
     padding-right: 45px;
 }
 
-
 .password-toggle {
     position: absolute;
     right: 5px;
     top: 5px;
-    height: 33px;
     width: 35px;
+    height: 33px;
     border: 0;
     background: transparent;
     color: #6b7280;
@@ -296,9 +256,7 @@ body {
 }
 
 
-/* =========================
-   SPAM PANEL
-========================= */
+/* PROTECTION */
 
 .spam-panel {
     grid-column: 1 / -1;
@@ -311,7 +269,6 @@ body {
     align-items: center;
 }
 
-
 .spam-icon {
     width: 35px;
     height: 35px;
@@ -323,12 +280,10 @@ body {
     justify-content: center;
 }
 
-
 .spam-panel strong {
     display: block;
     font-size: 13px;
 }
-
 
 .spam-panel p {
     margin: 3px 0 0;
@@ -337,63 +292,47 @@ body {
 }
 
 
-/* =========================
-   BUTTONS
-========================= */
+/* BUTTONS */
 
-.primary-button {
+.primary-button,
+.stop-button {
     grid-column: 1 / -1;
     height: 45px;
-    border: 0;
     border-radius: 9px;
-    background: var(--blue);
-    color: #fff;
-    font-weight: 700;
     font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
 }
 
+.primary-button {
+    border: 0;
+    background: var(--blue);
+    color: #fff;
+}
 
 .primary-button:hover {
     background: var(--blue-dark);
 }
 
+.stop-button {
+    margin-top: -8px;
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: var(--red);
+}
+
+.stop-button:hover {
+    background: #fef2f2;
+}
 
 .primary-button:disabled,
-.secondary-button:disabled {
-    opacity: 0.55;
+.stop-button:disabled {
+    opacity: .5;
     cursor: not-allowed;
 }
 
 
-.secondary-button,
-.reset-button {
-    height: 40px;
-    border-radius: 8px;
-    padding: 0 14px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-
-.secondary-button {
-    background: var(--blue);
-    border: 1px solid var(--blue);
-    color: white;
-}
-
-
-.reset-button {
-    background: white;
-    border: 1px solid var(--border);
-    color: #4b5563;
-}
-
-
-/* =========================
-   RECIPIENTS
-========================= */
+/* RECIPIENTS */
 
 .recipients-input {
     margin: 20px 22px 0;
@@ -401,26 +340,21 @@ body {
     min-height: 125px;
 }
 
-
 .recipient-info {
     margin: 9px 22px 15px;
     color: var(--muted);
     font-size: 11px;
 }
 
-
 .recipient-info i {
     color: var(--blue);
-    margin-right: 4px;
 }
-
 
 .recipient-list {
     border-top: 1px solid #edf0f4;
-    max-height: 260px;
+    max-height: 290px;
     overflow-y: auto;
 }
-
 
 .recipient-row {
     display: flex;
@@ -430,11 +364,9 @@ body {
     border-bottom: 1px solid #f0f2f5;
 }
 
-
 .recipient-row.current {
     background: #f8fbff;
 }
-
 
 .recipient-number {
     width: 25px;
@@ -443,22 +375,19 @@ body {
     background: #f3f4f6;
     color: #6b7280;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     font-size: 10px;
-    flex: 0 0 auto;
 }
 
-
 .recipient-email {
-    min-width: 0;
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 12px;
 }
-
 
 .recipient-status {
     font-size: 10px;
@@ -466,30 +395,24 @@ body {
     white-space: nowrap;
 }
 
-
 .recipient-status.pending {
     color: #9ca3af;
 }
-
 
 .recipient-status.sending {
     color: var(--blue);
 }
 
-
 .recipient-status.sent {
     color: var(--green);
 }
-
 
 .recipient-status.failed {
     color: var(--red);
 }
 
 
-/* =========================
-   PROGRESS
-========================= */
+/* PROGRESS */
 
 .stats-grid {
     display: grid;
@@ -498,20 +421,16 @@ body {
     gap: 10px;
 }
 
-
 .stat {
     text-align: center;
 }
-
 
 .stat span {
     display: block;
     color: #9ca3af;
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.5px;
 }
-
 
 .stat strong {
     display: block;
@@ -519,16 +438,13 @@ body {
     font-size: 20px;
 }
 
-
 .success-text {
     color: var(--green);
 }
 
-
 .danger-text {
     color: var(--red);
 }
-
 
 .progress-track {
     height: 8px;
@@ -538,15 +454,12 @@ body {
     overflow: hidden;
 }
 
-
 .progress-bar {
     width: 0;
     height: 100%;
     background: var(--blue);
-    border-radius: inherit;
-    transition: width 0.3s ease;
+    transition: width .3s ease;
 }
-
 
 .progress-status {
     padding: 15px 22px;
@@ -556,59 +469,66 @@ body {
     font-size: 12px;
 }
 
-
 .progress-status strong {
     color: var(--text);
 }
 
+.queue-message {
+    margin: 0 22px 15px;
+    padding: 11px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
 
-.progress-actions {
-    display: flex;
-    gap: 9px;
-    padding: 0 22px 22px;
+.queue-message i {
+    color: var(--blue);
+    margin-right: 5px;
+}
+
+.full-reset {
+    width: calc(100% - 44px);
+    margin: 0 22px 22px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: #4b5563;
+    cursor: pointer;
 }
 
 
-.progress-actions button {
-    flex: 1;
-}
-
-
-/* =========================
-   TOAST
-========================= */
+/* TOAST */
 
 .toast {
     position: fixed;
     left: 50%;
     bottom: 25px;
-    transform: translate(-50%, 20px);
+    transform: translate(-50%,20px);
     opacity: 0;
     pointer-events: none;
     background: #172033;
-    color: white;
+    color: #fff;
     padding: 11px 17px;
     border-radius: 8px;
     font-size: 12px;
-    transition: 0.25s ease;
+    transition: .25s ease;
     z-index: 9999;
 }
 
-
 .toast.show {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%,0);
 }
-
 
 .toast-error {
     background: #b91c1c;
 }
 
 
-/* =========================
-   LOGIN PAGE
-========================= */
+/* LOGIN */
 
 .login-page {
     min-height: 100vh;
@@ -624,18 +544,16 @@ body {
     padding: 25px;
 }
 
-
 .login-card {
-    width: min(410px, 100%);
-    background: #ffffff;
+    width: min(410px,100%);
+    background: #fff;
     border: 1px solid var(--border);
     border-radius: 18px;
     padding: 34px;
     box-shadow:
         0 18px 50px
-        rgba(15, 23, 42, 0.09);
+        rgba(15,23,42,.09);
 }
-
 
 .login-logo {
     width: 62px;
@@ -650,13 +568,11 @@ body {
     font-size: 28px;
 }
 
-
 .login-card h1 {
     text-align: center;
     margin: 0;
     font-size: 23px;
 }
-
 
 .login-subtitle {
     text-align: center;
@@ -665,7 +581,6 @@ body {
     margin: 8px 0 28px;
 }
 
-
 .login-field label {
     display: block;
     margin-bottom: 8px;
@@ -673,11 +588,9 @@ body {
     font-weight: 600;
 }
 
-
 .login-password {
     position: relative;
 }
-
 
 .login-password input {
     width: 100%;
@@ -689,15 +602,6 @@ body {
     font-size: 13px;
     outline: none;
 }
-
-
-.login-password input:focus {
-    border-color: #93b4ff;
-    box-shadow:
-        0 0 0 3px
-        rgba(37, 99, 235, 0.08);
-}
-
 
 .login-eye {
     position: absolute;
@@ -711,7 +615,6 @@ body {
     cursor: pointer;
 }
 
-
 .login-error {
     margin-top: 12px;
     padding: 10px 12px;
@@ -721,9 +624,7 @@ body {
     font-size: 12px;
     display: flex;
     gap: 8px;
-    align-items: center;
 }
-
 
 .login-button {
     width: 100%;
@@ -732,17 +633,10 @@ body {
     border: 0;
     border-radius: 9px;
     background: var(--blue);
-    color: white;
+    color: #fff;
     font-weight: 700;
-    font-size: 13px;
     cursor: pointer;
 }
-
-
-.login-button:hover {
-    background: var(--blue-dark);
-}
-
 
 .login-footer {
     margin-top: 25px;
@@ -754,14 +648,7 @@ body {
 }
 
 
-.login-footer i {
-    margin-right: 4px;
-}
-
-
-/* =========================
-   RESPONSIVE
-========================= */
+/* MOBILE */
 
 @media (max-width: 900px) {
 
@@ -771,52 +658,34 @@ body {
 
 }
 
-
 @media (max-width: 600px) {
 
     .topbar {
         padding: 0 16px;
     }
 
-
-    .brand h1 {
-        font-size: 15px;
-    }
-
-
     .brand span {
         display: none;
     }
 
-
     .container {
-        width: min(
-            100% - 24px,
-            1280px
-        );
+        width: calc(100% - 24px);
         padding-top: 22px;
     }
-
 
     .form-grid {
         grid-template-columns: 1fr;
     }
 
-
-    .field.full {
+    .field.full,
+    .primary-button,
+    .stop-button {
         grid-column: auto;
     }
-
-
-    .primary-button {
-        grid-column: auto;
-    }
-
 
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2,1fr);
     }
-
 
     .login-card {
         padding: 27px 22px;
