@@ -16,7 +16,9 @@ from flask import (
     request,
     jsonify,
     session,
-    redirect
+    redirect,
+    Response,
+    stream_with_context
 )
 
 from email.mime.multipart import MIMEMultipart
@@ -27,7 +29,7 @@ from html.parser import HTMLParser
 
 
 # =========================================================
-# APPLICATION CONFIGURATION
+# APPLICATION
 # =========================================================
 
 app = Flask(
@@ -44,7 +46,7 @@ app.secret_key = os.getenv(
 
 
 # =========================================================
-# ENVIRONMENT SETTINGS
+# CONFIGURATION
 # =========================================================
 
 LOGIN_PASSWORD = os.getenv(
@@ -62,8 +64,8 @@ TURNSTILE_SECRET_KEY = os.getenv(
 MAX_RECIPIENTS = 25
 
 
-# Conservative interval between messages.
-# This does not bypass Gmail sending limits.
+# Conservative provider-friendly pacing.
+# This is intentionally not a Gmail-limit bypass.
 MIN_SEND_INTERVAL = 2.0
 
 
@@ -77,9 +79,6 @@ EMAIL_PATTERN = re.compile(
 # =========================================================
 
 def is_valid_email(email):
-    """
-    Basic email address validation.
-    """
 
     if not email:
         return False
@@ -96,17 +95,6 @@ def is_valid_email(email):
 # =========================================================
 
 def parse_recipients(value):
-    """
-    Accepts recipient addresses separated by:
-
-        spaces
-        commas
-        semicolons
-        new lines
-
-    Duplicate addresses are removed.
-    Maximum 25 addresses are accepted.
-    """
 
     if not value:
         return []
@@ -141,18 +129,17 @@ def parse_recipients(value):
 
 
 # =========================================================
-# LOGIN DECORATOR
+# AUTHENTICATION
 # =========================================================
 
 def authentication_required(function):
-    """
-    Only authenticated users can access protected routes.
-    """
 
     @wraps(function)
     def wrapper(*args, **kwargs):
 
-        if not session.get("authenticated"):
+        if not session.get(
+            "authenticated"
+        ):
 
             return redirect(
                 "/login"
@@ -171,14 +158,6 @@ def authentication_required(function):
 # =========================================================
 
 def resolve_spintax(text):
-    """
-    Supports simple content variation such as:
-
-        {Hello|Hi|Hey}
-
-    This is ordinary content variation and is not intended
-    to bypass spam filters.
-    """
 
     if not text:
         return ""
@@ -189,7 +168,9 @@ def resolve_spintax(text):
 
     def replace_match(match):
 
-        choices = match.group(1).split("|")
+        choices = match.group(
+            1
+        ).split("|")
 
         return secrets.choice(
             choices
@@ -216,7 +197,9 @@ def resolve_spintax(text):
 # SAFE HTML PARSER
 # =========================================================
 
-class SafeHTMLParser(HTMLParser):
+class SafeHTMLParser(
+    HTMLParser
+):
 
     ALLOWED_TAGS = {
         "div",
@@ -312,7 +295,10 @@ class SafeHTMLParser(HTMLParser):
         )
 
 
-    def handle_endtag(self, tag):
+    def handle_endtag(
+        self,
+        tag
+    ):
 
         if tag in self.ALLOWED_TAGS:
 
@@ -321,7 +307,10 @@ class SafeHTMLParser(HTMLParser):
             )
 
 
-    def handle_data(self, data):
+    def handle_data(
+        self,
+        data
+    ):
 
         self.output.append(
             data
@@ -348,10 +337,12 @@ def sanitize_html(value):
 
 
 # =========================================================
-# HTML TO PLAIN TEXT
+# HTML -> PLAIN TEXT
 # =========================================================
 
-def html_to_plain_text(html):
+def html_to_plain_text(
+    html
+):
 
     if not html:
         return ""
@@ -397,10 +388,9 @@ def html_to_plain_text(html):
 # CLOUDFLARE TURNSTILE
 # =========================================================
 
-def verify_turnstile(token):
-
-    # If no Turnstile secret is configured,
-    # Turnstile verification is skipped.
+def verify_turnstile(
+    token
+):
 
     if not TURNSTILE_SECRET_KEY:
 
@@ -416,30 +406,33 @@ def verify_turnstile(token):
 
         payload = urllib.parse.urlencode(
             {
-                "secret": TURNSTILE_SECRET_KEY,
-                "response": token
+                "secret":
+                    TURNSTILE_SECRET_KEY,
+
+                "response":
+                    token
             }
         ).encode(
             "utf-8"
         )
 
 
-        request_object = urllib.request.Request(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=payload,
-            method="POST"
+        verification_request = (
+            urllib.request.Request(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data=payload,
+                method="POST"
+            )
         )
 
 
         with urllib.request.urlopen(
-            request_object,
+            verification_request,
             timeout=10
         ) as response:
 
-            response_data = response.read()
-
             result = json.loads(
-                response_data.decode(
+                response.read().decode(
                     "utf-8"
                 )
             )
@@ -463,7 +456,7 @@ def verify_turnstile(token):
 
 
 # =========================================================
-# LOGIN PAGE
+# LOGIN
 # =========================================================
 
 @app.route(
@@ -548,85 +541,42 @@ def dashboard():
 
 
 # =========================================================
-# SEND EMAIL API
+# LIVE SSE EVENT HELPER
+# =========================================================
+
+def sse_event(
+    event_name,
+    payload
+):
+
+    data = json.dumps(
+        payload,
+        ensure_ascii=False
+    )
+
+    return (
+        f"event: {event_name}\n"
+        f"data: {data}\n\n"
+    )
+
+
+# =========================================================
+# LIVE EMAIL SENDING STREAM
 # =========================================================
 
 @app.post(
-    "/api/send"
+    "/api/send-stream"
 )
 @authentication_required
-def send_email():
-
-    print(
-        "--------------------------------------------------"
-    )
-
-    print(
-        "NEW EMAIL SEND REQUEST"
-    )
-
-    print(
-        "--------------------------------------------------"
-    )
-
-
-    # -----------------------------------------------------
-    # READ REQUEST
-    # -----------------------------------------------------
+def send_stream():
 
     data = request.get_json(
         silent=True
-    )
-
-
-    if not isinstance(
-        data,
-        dict
-    ):
-
-        print(
-            "REQUEST ERROR: Invalid JSON request."
-        )
-
-        return jsonify(
-            {
-                "error":
-                "Invalid request data."
-            }
-        ), 400
+    ) or {}
 
 
     # -----------------------------------------------------
-    # CLOUDFLARE VERIFICATION
-    # -----------------------------------------------------
-
-    turnstile_token = str(
-        data.get(
-            "turnstile_token",
-            ""
-        )
-    )
-
-
-    if not verify_turnstile(
-        turnstile_token
-    ):
-
-        print(
-            "TURNSTILE ERROR: Verification failed."
-        )
-
-        return jsonify(
-            {
-                "error":
-                "Cloudflare verification failed. "
-                "Please complete the verification again."
-            }
-        ), 403
-
-
-    # -----------------------------------------------------
-    # READ FORM VALUES
+    # READ INPUTS
     # -----------------------------------------------------
 
     sender_name = str(
@@ -663,16 +613,13 @@ def send_email():
     ).strip()
 
 
-    original_html = str(
-        data.get(
-            "message_html",
-            ""
-        )
-    )
-
-
     message_html = sanitize_html(
-        original_html
+        str(
+            data.get(
+                "message_html",
+                ""
+            )
+        )
     )
 
 
@@ -682,17 +629,21 @@ def send_email():
     )
 
 
+    turnstile_token = str(
+        data.get(
+            "turnstile_token",
+            ""
+        )
+    )
+
+
     # -----------------------------------------------------
-    # BASIC VALIDATION
+    # PRE-VALIDATION
     # -----------------------------------------------------
 
     if not is_valid_email(
         gmail_address
     ):
-
-        print(
-            "VALIDATION ERROR: Invalid Gmail address."
-        )
 
         return jsonify(
             {
@@ -704,10 +655,6 @@ def send_email():
 
     if not app_password:
 
-        print(
-            "VALIDATION ERROR: Missing App Password."
-        )
-
         return jsonify(
             {
                 "error":
@@ -717,10 +664,6 @@ def send_email():
 
 
     if not subject:
-
-        print(
-            "VALIDATION ERROR: Missing subject."
-        )
 
         return jsonify(
             {
@@ -732,10 +675,6 @@ def send_email():
 
     if not message_html.strip():
 
-        print(
-            "VALIDATION ERROR: Missing message."
-        )
-
         return jsonify(
             {
                 "error":
@@ -745,7 +684,24 @@ def send_email():
 
 
     # -----------------------------------------------------
-    # RECIPIENT PROCESSING
+    # TURNSTILE
+    # -----------------------------------------------------
+
+    if not verify_turnstile(
+        turnstile_token
+    ):
+
+        return jsonify(
+            {
+                "error":
+                "Cloudflare verification failed. "
+                "Please complete verification again."
+            }
+        ), 403
+
+
+    # -----------------------------------------------------
+    # RECIPIENTS
     # -----------------------------------------------------
 
     if isinstance(
@@ -753,8 +709,10 @@ def send_email():
         str
     ):
 
-        recipient_list = parse_recipients(
-            raw_recipients
+        recipient_list = (
+            parse_recipients(
+                raw_recipients
+            )
         )
 
     elif isinstance(
@@ -762,10 +720,12 @@ def send_email():
         list
     ):
 
-        recipient_list = parse_recipients(
-            " ".join(
-                str(item)
-                for item in raw_recipients
+        recipient_list = (
+            parse_recipients(
+                " ".join(
+                    str(item)
+                    for item in raw_recipients
+                )
             )
         )
 
@@ -776,10 +736,6 @@ def send_email():
 
     if not recipient_list:
 
-        print(
-            "VALIDATION ERROR: No recipients."
-        )
-
         return jsonify(
             {
                 "error":
@@ -788,19 +744,13 @@ def send_email():
         ), 400
 
 
-    print(
-        "Recipient count:",
-        len(recipient_list)
-    )
-
-
     # -----------------------------------------------------
-    # VALID / INVALID RECIPIENTS
+    # SPLIT VALID AND INVALID
     # -----------------------------------------------------
 
     valid_recipients = []
 
-    failed = []
+    invalid_recipients = []
 
 
     for recipient in recipient_list:
@@ -815,103 +765,263 @@ def send_email():
 
         else:
 
-            failed.append(
-                {
-                    "email": recipient,
-                    "error":
-                    "Invalid email address."
-                }
+            invalid_recipients.append(
+                recipient
             )
 
 
-    if not valid_recipients:
+    # -----------------------------------------------------
+    # STREAM GENERATOR
+    # -----------------------------------------------------
 
-        return jsonify(
+    @stream_with_context
+    def generate():
+
+        total = len(
+            recipient_list
+        )
+
+        sent_count = 0
+
+        failed_count = len(
+            invalid_recipients
+        )
+
+        processed_count = failed_count
+
+        smtp = None
+
+
+        # -------------------------------------------------
+        # INITIAL EVENT
+        # -------------------------------------------------
+
+        yield sse_event(
+            "start",
             {
-                "error":
-                "No valid recipient email addresses were found.",
+                "total":
+                    total,
+
+                "sent":
+                    0,
+
                 "failed":
-                failed
+                    failed_count,
+
+                "remaining":
+                    total - processed_count,
+
+                "message":
+                    "Starting email sending..."
             }
-        ), 400
-
-
-    # -----------------------------------------------------
-    # RESULT ARRAYS
-    # -----------------------------------------------------
-
-    sent = []
-
-
-    smtp = None
-
-
-    # -----------------------------------------------------
-    # SMTP CONNECTION
-    # -----------------------------------------------------
-
-    try:
-
-        print(
-            "Connecting to smtp.gmail.com:465 ..."
-        )
-
-
-        smtp_context = ssl.create_default_context()
-
-
-        smtp = smtplib.SMTP_SSL(
-            "smtp.gmail.com",
-            465,
-            context=smtp_context,
-            timeout=30
-        )
-
-
-        print(
-            "SMTP connection established."
-        )
-
-
-        print(
-            "Logging into Gmail..."
-        )
-
-
-        smtp.login(
-            gmail_address,
-            app_password
-        )
-
-
-        print(
-            "Gmail authentication successful."
         )
 
 
         # -------------------------------------------------
-        # SEND EMAILS
+        # INVALID ADDRESS EVENTS
+        # -------------------------------------------------
+
+        for invalid_email in invalid_recipients:
+
+            processed_count += 1
+
+
+            yield sse_event(
+                "progress",
+                {
+                    "total":
+                        total,
+
+                    "sent":
+                        sent_count,
+
+                    "failed":
+                        failed_count,
+
+                    "remaining":
+                        max(
+                            0,
+                            total - processed_count
+                        ),
+
+                    "message":
+                        "Invalid recipient skipped."
+                }
+            )
+
+
+        # -------------------------------------------------
+        # NO VALID RECIPIENTS
+        # -------------------------------------------------
+
+        if not valid_recipients:
+
+            yield sse_event(
+                "complete",
+                {
+                    "total":
+                        total,
+
+                    "sent":
+                        sent_count,
+
+                    "failed":
+                        failed_count,
+
+                    "remaining":
+                        0,
+
+                    "message":
+                        "No valid recipients were available."
+                }
+            )
+
+            return
+
+
+        # -------------------------------------------------
+        # SMTP CONNECTION
+        # -------------------------------------------------
+
+        try:
+
+            yield sse_event(
+                "status",
+                {
+                    "message":
+                        "Connecting to Gmail..."
+                }
+            )
+
+
+            smtp_context = (
+                ssl.create_default_context()
+            )
+
+
+            smtp = smtplib.SMTP_SSL(
+                "smtp.gmail.com",
+                465,
+                context=smtp_context,
+                timeout=30
+            )
+
+
+            yield sse_event(
+                "status",
+                {
+                    "message":
+                        "Authenticating with Gmail..."
+                }
+            )
+
+
+            smtp.login(
+                gmail_address,
+                app_password
+            )
+
+
+            yield sse_event(
+                "status",
+                {
+                    "message":
+                        "Gmail connected. Sending..."
+                }
+            )
+
+
+        except smtplib.SMTPAuthenticationError as error:
+
+            error_text = str(
+                error
+            )
+
+
+            yield sse_event(
+                "error",
+                {
+                    "message":
+                        "Gmail authentication failed. "
+                        "Check the Gmail address and App Password. "
+                        "Server response: "
+                        + error_text
+                }
+            )
+
+            return
+
+
+        except smtplib.SMTPConnectError as error:
+
+            error_text = str(
+                error
+            )
+
+
+            yield sse_event(
+                "error",
+                {
+                    "message":
+                        "Could not connect to Gmail SMTP. "
+                        "Server response: "
+                        + error_text
+                }
+            )
+
+            return
+
+
+        except smtplib.SMTPException as error:
+
+            error_text = str(
+                error
+            )
+
+
+            yield sse_event(
+                "error",
+                {
+                    "message":
+                        "Gmail SMTP error: "
+                        + error_text
+                }
+            )
+
+            return
+
+
+        except Exception as error:
+
+            error_text = str(
+                error
+            )
+
+
+            yield sse_event(
+                "error",
+                {
+                    "message":
+                        "Email connection failed: "
+                        + error_text
+                }
+            )
+
+            return
+
+
+        # -------------------------------------------------
+        # SEND LOOP
         # -------------------------------------------------
 
         last_send_time = 0
 
 
-        for index, recipient in enumerate(
-            valid_recipients,
-            start=1
-        ):
+        for recipient in valid_recipients:
 
-            print(
-                "Processing recipient",
-                index,
-                "of",
-                len(valid_recipients),
-                ":",
-                recipient
-            )
-
-
-            # Conservative pacing.
+            # ---------------------------------------------
+            # CONSERVATIVE PACING
+            # ---------------------------------------------
 
             elapsed = (
                 time.monotonic()
@@ -931,12 +1041,19 @@ def send_email():
                 )
 
 
+            # ---------------------------------------------
+            # BUILD MESSAGE
+            # ---------------------------------------------
+
             try:
 
-                first_name = recipient.split(
-                    "@",
-                    1
-                )[0]
+                first_name = (
+                    recipient
+                    .split(
+                        "@",
+                        1
+                    )[0]
+                )
 
 
                 personalized_html = (
@@ -968,39 +1085,39 @@ def send_email():
                 )
 
 
-                # -----------------------------------------
-                # BUILD EMAIL
-                # -----------------------------------------
-
-                email_message = MIMEMultipart(
-                    "alternative"
+                email_message = (
+                    MIMEMultipart(
+                        "alternative"
+                    )
                 )
 
 
                 if sender_name:
 
-                    email_message["From"] = (
-                        formataddr(
-                            (
-                                sender_name,
-                                gmail_address
-                            )
+                    email_message[
+                        "From"
+                    ] = formataddr(
+                        (
+                            sender_name,
+                            gmail_address
                         )
                     )
 
                 else:
 
-                    email_message["From"] = (
-                        gmail_address
-                    )
+                    email_message[
+                        "From"
+                    ] = gmail_address
 
 
-                email_message["To"] = recipient
+                email_message[
+                    "To"
+                ] = recipient
 
 
-                email_message["Subject"] = (
-                    personalized_subject
-                )
+                email_message[
+                    "Subject"
+                ] = personalized_subject
 
 
                 email_message.attach(
@@ -1022,14 +1139,8 @@ def send_email():
 
 
                 # -----------------------------------------
-                # SMTP SEND
+                # SEND
                 # -----------------------------------------
-
-                print(
-                    "Sending message to:",
-                    recipient
-                )
-
 
                 smtp.sendmail(
                     gmail_address,
@@ -1038,23 +1149,49 @@ def send_email():
                 )
 
 
-                sent.append(
-                    recipient
-                )
+                sent_count += 1
 
+                processed_count += 1
 
                 last_send_time = (
                     time.monotonic()
                 )
 
 
-                print(
-                    "SUCCESS:",
-                    recipient
+                # -----------------------------------------
+                # LIVE PROGRESS EVENT
+                # -----------------------------------------
+
+                yield sse_event(
+                    "progress",
+                    {
+                        "total":
+                            total,
+
+                        "sent":
+                            sent_count,
+
+                        "failed":
+                            failed_count,
+
+                        "remaining":
+                            max(
+                                0,
+                                total - processed_count
+                            ),
+
+                        "message":
+                            "Email sent successfully."
+                    }
                 )
 
 
             except Exception as recipient_error:
+
+                failed_count += 1
+
+                processed_count += 1
+
 
                 error_text = str(
                     recipient_error
@@ -1063,218 +1200,74 @@ def send_email():
 
                 if not error_text:
 
-                    error_text = (
-                        repr(
-                            recipient_error
-                        )
+                    error_text = repr(
+                        recipient_error
                     )
 
 
                 print(
-                    "RECIPIENT ERROR:",
+                    "RECIPIENT SEND ERROR:",
                     recipient,
-                    error_text
+                    repr(
+                        recipient_error
+                    )
                 )
 
 
-                failed.append(
+                # Don't expose recipient address in UI.
+                yield sse_event(
+                    "progress",
                     {
-                        "email": recipient,
-                        "error": error_text
+                        "total":
+                            total,
+
+                        "sent":
+                            sent_count,
+
+                        "failed":
+                            failed_count,
+
+                        "remaining":
+                            max(
+                                0,
+                                total - processed_count
+                            ),
+
+                        "message":
+                            "One email failed: "
+                            + error_text
                     }
                 )
 
 
         # -------------------------------------------------
-        # FINAL RESPONSE
+        # FINISHED
         # -------------------------------------------------
 
-        print(
-            "--------------------------------------------------"
-        )
-
-        print(
-            "SEND FINISHED"
-        )
-
-        print(
-            "Sent:",
-            len(sent)
-        )
-
-        print(
-            "Failed:",
-            len(failed)
-        )
-
-        print(
-            "--------------------------------------------------"
-        )
-
-
-        return jsonify(
+        yield sse_event(
+            "complete",
             {
-                "ok": True,
-
                 "total":
-                len(recipient_list),
+                    total,
 
                 "sent":
-                sent,
+                    sent_count,
 
                 "failed":
-                failed
+                    failed_count,
+
+                "remaining":
+                    0,
+
+                "message":
+                    "All emails have been processed."
             }
         )
 
 
-    # =====================================================
-    # GMAIL AUTHENTICATION ERROR
-    # =====================================================
-
-    except smtplib.SMTPAuthenticationError as error:
-
-        error_text = str(
-            error
-        )
-
-
-        print(
-            "SMTP AUTHENTICATION ERROR:",
-            repr(error)
-        )
-
-
-        return jsonify(
-            {
-                "error":
-                "Gmail authentication failed. "
-                "Please check the Gmail address and "
-                "16-character Gmail App Password. "
-                "Server response: "
-                + error_text
-            }
-        ), 502
-
-
-    # =====================================================
-    # SMTP CONNECTION ERROR
-    # =====================================================
-
-    except smtplib.SMTPConnectError as error:
-
-        error_text = str(
-            error
-        )
-
-
-        print(
-            "SMTP CONNECTION ERROR:",
-            repr(error)
-        )
-
-
-        return jsonify(
-            {
-                "error":
-                "Could not connect to Gmail SMTP. "
-                "Server response: "
-                + error_text
-            }
-        ), 502
-
-
-    # =====================================================
-    # SMTP SERVER ERROR
-    # =====================================================
-
-    except smtplib.SMTPServerDisconnected as error:
-
-        error_text = str(
-            error
-        )
-
-
-        print(
-            "SMTP DISCONNECTED:",
-            repr(error)
-        )
-
-
-        return jsonify(
-            {
-                "error":
-                "Gmail SMTP disconnected the connection. "
-                "Server response: "
-                + error_text
-            }
-        ), 502
-
-
-    # =====================================================
-    # GENERAL SMTP ERROR
-    # =====================================================
-
-    except smtplib.SMTPException as error:
-
-        error_text = str(
-            error
-        )
-
-
-        print(
-            "GENERAL SMTP ERROR:",
-            repr(error)
-        )
-
-
-        return jsonify(
-            {
-                "error":
-                "Gmail SMTP error: "
-                + error_text
-            }
-        ), 502
-
-
-    # =====================================================
-    # GENERAL ERROR
-    # =====================================================
-
-    except Exception as error:
-
-        error_text = str(
-            error
-        ).strip()
-
-
-        if not error_text:
-
-            error_text = repr(
-                error
-            )
-
-
-        print(
-            "UNEXPECTED EMAIL ERROR:",
-            repr(error)
-        )
-
-
-        return jsonify(
-            {
-                "error":
-                "Email sending failed: "
-                + error_text
-            }
-        ), 502
-
-
-    # =====================================================
-    # SMTP CLEANUP
-    # =====================================================
-
-    finally:
+        # -------------------------------------------------
+        # CLOSE SMTP
+        # -------------------------------------------------
 
         if smtp is not None:
 
@@ -1282,16 +1275,29 @@ def send_email():
 
                 smtp.quit()
 
-                print(
-                    "SMTP connection closed."
-                )
+            except Exception:
 
-            except Exception as close_error:
+                pass
 
-                print(
-                    "SMTP close warning:",
-                    repr(close_error)
-                )
+
+    # -----------------------------------------------------
+    # STREAM RESPONSE
+    # -----------------------------------------------------
+
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control":
+                "no-cache, no-transform",
+
+            "X-Accel-Buffering":
+                "no",
+
+            "Connection":
+                "keep-alive"
+        }
+    )
 
 
 # =========================================================
