@@ -38,7 +38,6 @@ app = Flask(
     static_folder="../static"
 )
 
-
 app.secret_key = os.getenv(
     "SESSION_SECRET",
     "change-this-secret"
@@ -54,20 +53,16 @@ LOGIN_PASSWORD = os.getenv(
     "change-login-password"
 )
 
-
 TURNSTILE_SECRET_KEY = os.getenv(
     "TURNSTILE_SECRET_KEY",
     ""
 )
 
-
 MAX_RECIPIENTS = 25
 
-
-# Conservative provider-friendly pacing.
-# This is intentionally not a Gmail-limit bypass.
+# Provider-compatible pacing.
+# Do not use this to bypass provider limits.
 MIN_SEND_INTERVAL = 2.0
-
 
 EMAIL_PATTERN = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
@@ -83,10 +78,10 @@ def is_valid_email(email):
     if not email:
         return False
 
-    email = email.strip()
-
     return bool(
-        EMAIL_PATTERN.fullmatch(email)
+        EMAIL_PATTERN.fullmatch(
+            email.strip()
+        )
     )
 
 
@@ -99,7 +94,7 @@ def parse_recipients(value):
     if not value:
         return []
 
-    parts = re.split(
+    pieces = re.split(
         r"[\s,;]+",
         str(value)
     )
@@ -108,9 +103,9 @@ def parse_recipients(value):
 
     seen = set()
 
-    for item in parts:
+    for piece in pieces:
 
-        email = item.strip().lower()
+        email = piece.strip().lower()
 
         if not email:
             continue
@@ -129,7 +124,7 @@ def parse_recipients(value):
 
 
 # =========================================================
-# AUTHENTICATION
+# LOGIN CHECK
 # =========================================================
 
 def authentication_required(function):
@@ -140,10 +135,7 @@ def authentication_required(function):
         if not session.get(
             "authenticated"
         ):
-
-            return redirect(
-                "/login"
-            )
+            return redirect("/login")
 
         return function(
             *args,
@@ -217,7 +209,6 @@ class SafeHTMLParser(
         "li"
     }
 
-
     def __init__(self):
 
         super().__init__(
@@ -254,9 +245,9 @@ class SafeHTMLParser(
                     if not value:
                         continue
 
-                    lower_value = (
-                        str(value).lower()
-                    )
+                    lower_value = str(
+                        value
+                    ).lower()
 
                     if not lower_value.startswith(
                         (
@@ -295,10 +286,7 @@ class SafeHTMLParser(
         )
 
 
-    def handle_endtag(
-        self,
-        tag
-    ):
+    def handle_endtag(self, tag):
 
         if tag in self.ALLOWED_TAGS:
 
@@ -307,10 +295,7 @@ class SafeHTMLParser(
             )
 
 
-    def handle_data(
-        self,
-        data
-    ):
+    def handle_data(self, data):
 
         self.output.append(
             data
@@ -337,12 +322,10 @@ def sanitize_html(value):
 
 
 # =========================================================
-# HTML -> PLAIN TEXT
+# HTML TO PLAIN TEXT
 # =========================================================
 
-def html_to_plain_text(
-    html
-):
+def html_to_plain_text(html):
 
     if not html:
         return ""
@@ -388,19 +371,13 @@ def html_to_plain_text(
 # CLOUDFLARE TURNSTILE
 # =========================================================
 
-def verify_turnstile(
-    token
-):
+def verify_turnstile(token):
 
     if not TURNSTILE_SECRET_KEY:
-
         return True
 
-
     if not token:
-
         return False
-
 
     try:
 
@@ -412,9 +389,7 @@ def verify_turnstile(
                 "response":
                     token
             }
-        ).encode(
-            "utf-8"
-        )
+        ).encode("utf-8")
 
 
         verification_request = (
@@ -461,10 +436,7 @@ def verify_turnstile(
 
 @app.route(
     "/login",
-    methods=[
-        "GET",
-        "POST"
-    ]
+    methods=["GET", "POST"]
 )
 def login():
 
@@ -480,9 +452,7 @@ def login():
 
         if secrets.compare_digest(
             submitted_password,
-            str(
-                LOGIN_PASSWORD
-            )
+            str(LOGIN_PASSWORD)
         ):
 
             session.clear()
@@ -491,9 +461,7 @@ def login():
                 "authenticated"
             ] = True
 
-            return redirect(
-                "/"
-            )
+            return redirect("/")
 
 
         return render_template(
@@ -511,20 +479,16 @@ def login():
 # LOGOUT
 # =========================================================
 
-@app.route(
-    "/logout"
-)
+@app.route("/logout")
 def logout():
 
     session.clear()
 
-    return redirect(
-        "/login"
-    )
+    return redirect("/login")
 
 
 # =========================================================
-# DASHBOARD
+# MAIN DASHBOARD
 # =========================================================
 
 @app.route("/")
@@ -541,7 +505,7 @@ def dashboard():
 
 
 # =========================================================
-# LIVE SSE EVENT HELPER
+# SERVER-SENT EVENT
 # =========================================================
 
 def sse_event(
@@ -561,12 +525,10 @@ def sse_event(
 
 
 # =========================================================
-# LIVE EMAIL SENDING STREAM
+# LIVE SEND API
 # =========================================================
 
-@app.post(
-    "/api/send-stream"
-)
+@app.post("/api/send-stream")
 @authentication_required
 def send_stream():
 
@@ -576,7 +538,7 @@ def send_stream():
 
 
     # -----------------------------------------------------
-    # READ INPUTS
+    # INPUT
     # -----------------------------------------------------
 
     sender_name = str(
@@ -638,7 +600,7 @@ def send_stream():
 
 
     # -----------------------------------------------------
-    # PRE-VALIDATION
+    # VALIDATION
     # -----------------------------------------------------
 
     if not is_valid_email(
@@ -646,40 +608,28 @@ def send_stream():
     ):
 
         return jsonify(
-            {
-                "error":
-                "Please enter a valid Gmail address."
-            }
+            error="Please enter a valid Gmail address."
         ), 400
 
 
     if not app_password:
 
         return jsonify(
-            {
-                "error":
-                "Please enter the Gmail App Password."
-            }
+            error="Please enter the Gmail App Password."
         ), 400
 
 
     if not subject:
 
         return jsonify(
-            {
-                "error":
-                "Please enter an email subject."
-            }
+            error="Please enter an email subject."
         ), 400
 
 
     if not message_html.strip():
 
         return jsonify(
-            {
-                "error":
-                "Please enter the message body."
-            }
+            error="Please enter the message body."
         ), 400
 
 
@@ -692,11 +642,8 @@ def send_stream():
     ):
 
         return jsonify(
-            {
-                "error":
-                "Cloudflare verification failed. "
-                "Please complete verification again."
-            }
+            error="Cloudflare verification failed. "
+                  "Please complete verification again."
         ), 403
 
 
@@ -709,10 +656,8 @@ def send_stream():
         str
     ):
 
-        recipient_list = (
-            parse_recipients(
-                raw_recipients
-            )
+        recipient_list = parse_recipients(
+            raw_recipients
         )
 
     elif isinstance(
@@ -720,12 +665,10 @@ def send_stream():
         list
     ):
 
-        recipient_list = (
-            parse_recipients(
-                " ".join(
-                    str(item)
-                    for item in raw_recipients
-                )
+        recipient_list = parse_recipients(
+            " ".join(
+                str(item)
+                for item in raw_recipients
             )
         )
 
@@ -737,15 +680,12 @@ def send_stream():
     if not recipient_list:
 
         return jsonify(
-            {
-                "error":
-                "No recipients were found."
-            }
+            error="No recipients were found."
         ), 400
 
 
     # -----------------------------------------------------
-    # SPLIT VALID AND INVALID
+    # VALID / INVALID
     # -----------------------------------------------------
 
     valid_recipients = []
@@ -793,7 +733,7 @@ def send_stream():
 
 
         # -------------------------------------------------
-        # INITIAL EVENT
+        # INITIAL COUNTER
         # -------------------------------------------------
 
         yield sse_event(
@@ -809,22 +749,18 @@ def send_stream():
                     failed_count,
 
                 "remaining":
-                    total - processed_count,
-
-                "message":
-                    "Starting email sending..."
+                    total - processed_count
             }
         )
 
 
         # -------------------------------------------------
-        # INVALID ADDRESS EVENTS
+        # INVALID RECIPIENTS
         # -------------------------------------------------
 
-        for invalid_email in invalid_recipients:
+        for _invalid_email in invalid_recipients:
 
             processed_count += 1
-
 
             yield sse_event(
                 "progress",
@@ -842,10 +778,7 @@ def send_stream():
                         max(
                             0,
                             total - processed_count
-                        ),
-
-                    "message":
-                        "Invalid recipient skipped."
+                        )
                 }
             )
 
@@ -869,10 +802,7 @@ def send_stream():
                         failed_count,
 
                     "remaining":
-                        0,
-
-                    "message":
-                        "No valid recipients were available."
+                        0
                 }
             )
 
@@ -880,19 +810,10 @@ def send_stream():
 
 
         # -------------------------------------------------
-        # SMTP CONNECTION
+        # CONNECT GMAIL
         # -------------------------------------------------
 
         try:
-
-            yield sse_event(
-                "status",
-                {
-                    "message":
-                        "Connecting to Gmail..."
-                }
-            )
-
 
             smtp_context = (
                 ssl.create_default_context()
@@ -907,45 +828,20 @@ def send_stream():
             )
 
 
-            yield sse_event(
-                "status",
-                {
-                    "message":
-                        "Authenticating with Gmail..."
-                }
-            )
-
-
             smtp.login(
                 gmail_address,
                 app_password
             )
 
 
-            yield sse_event(
-                "status",
-                {
-                    "message":
-                        "Gmail connected. Sending..."
-                }
-            )
-
-
         except smtplib.SMTPAuthenticationError as error:
-
-            error_text = str(
-                error
-            )
-
 
             yield sse_event(
                 "error",
                 {
                     "message":
                         "Gmail authentication failed. "
-                        "Check the Gmail address and App Password. "
-                        "Server response: "
-                        + error_text
+                        "Check your Gmail address and App Password."
                 }
             )
 
@@ -954,18 +850,11 @@ def send_stream():
 
         except smtplib.SMTPConnectError as error:
 
-            error_text = str(
-                error
-            )
-
-
             yield sse_event(
                 "error",
                 {
                     "message":
-                        "Could not connect to Gmail SMTP. "
-                        "Server response: "
-                        + error_text
+                        "Could not connect to Gmail SMTP."
                 }
             )
 
@@ -974,17 +863,12 @@ def send_stream():
 
         except smtplib.SMTPException as error:
 
-            error_text = str(
-                error
-            )
-
-
             yield sse_event(
                 "error",
                 {
                     "message":
                         "Gmail SMTP error: "
-                        + error_text
+                        + str(error)
                 }
             )
 
@@ -993,17 +877,12 @@ def send_stream():
 
         except Exception as error:
 
-            error_text = str(
-                error
-            )
-
-
             yield sse_event(
                 "error",
                 {
                     "message":
                         "Email connection failed: "
-                        + error_text
+                        + str(error)
                 }
             )
 
@@ -1019,8 +898,9 @@ def send_stream():
 
         for recipient in valid_recipients:
 
+
             # ---------------------------------------------
-            # CONSERVATIVE PACING
+            # PROVIDER-FRIENDLY PACING
             # ---------------------------------------------
 
             elapsed = (
@@ -1031,8 +911,7 @@ def send_stream():
 
             if (
                 last_send_time > 0
-                and
-                elapsed < MIN_SEND_INTERVAL
+                and elapsed < MIN_SEND_INTERVAL
             ):
 
                 time.sleep(
@@ -1042,14 +921,13 @@ def send_stream():
 
 
             # ---------------------------------------------
-            # BUILD MESSAGE
+            # PERSONALIZATION
             # ---------------------------------------------
 
             try:
 
                 first_name = (
-                    recipient
-                    .split(
+                    recipient.split(
                         "@",
                         1
                     )[0]
@@ -1094,30 +972,30 @@ def send_stream():
 
                 if sender_name:
 
-                    email_message[
-                        "From"
-                    ] = formataddr(
-                        (
-                            sender_name,
-                            gmail_address
+                    email_message["From"] = (
+                        formataddr(
+                            (
+                                sender_name,
+                                gmail_address
+                            )
                         )
                     )
 
                 else:
 
-                    email_message[
-                        "From"
-                    ] = gmail_address
+                    email_message["From"] = (
+                        gmail_address
+                    )
 
 
-                email_message[
-                    "To"
-                ] = recipient
+                email_message["To"] = (
+                    recipient
+                )
 
 
-                email_message[
-                    "Subject"
-                ] = personalized_subject
+                email_message["Subject"] = (
+                    personalized_subject
+                )
 
 
                 email_message.attach(
@@ -1159,7 +1037,7 @@ def send_stream():
 
 
                 # -----------------------------------------
-                # LIVE PROGRESS EVENT
+                # ONLY COUNTERS
                 # -----------------------------------------
 
                 yield sse_event(
@@ -1178,10 +1056,7 @@ def send_stream():
                             max(
                                 0,
                                 total - processed_count
-                            ),
-
-                        "message":
-                            "Email sent successfully."
+                            )
                     }
                 )
 
@@ -1193,18 +1068,6 @@ def send_stream():
                 processed_count += 1
 
 
-                error_text = str(
-                    recipient_error
-                ).strip()
-
-
-                if not error_text:
-
-                    error_text = repr(
-                        recipient_error
-                    )
-
-
                 print(
                     "RECIPIENT SEND ERROR:",
                     recipient,
@@ -1214,7 +1077,10 @@ def send_stream():
                 )
 
 
-                # Don't expose recipient address in UI.
+                # -----------------------------------------
+                # ONLY COUNTERS
+                # -----------------------------------------
+
                 yield sse_event(
                     "progress",
                     {
@@ -1231,17 +1097,13 @@ def send_stream():
                             max(
                                 0,
                                 total - processed_count
-                            ),
-
-                        "message":
-                            "One email failed: "
-                            + error_text
+                            )
                     }
                 )
 
 
         # -------------------------------------------------
-        # FINISHED
+        # COMPLETE
         # -------------------------------------------------
 
         yield sse_event(
@@ -1257,10 +1119,7 @@ def send_stream():
                     failed_count,
 
                 "remaining":
-                    0,
-
-                "message":
-                    "All emails have been processed."
+                    0
             }
         )
 
@@ -1272,11 +1131,9 @@ def send_stream():
         if smtp is not None:
 
             try:
-
                 smtp.quit()
 
             except Exception:
-
                 pass
 
 
