@@ -28,9 +28,9 @@ from email.utils import formataddr
 from html.parser import HTMLParser
 
 
-# =========================================================
+# ============================================================
 # APPLICATION
-# =========================================================
+# ============================================================
 
 app = Flask(
     __name__,
@@ -38,58 +38,76 @@ app = Flask(
     static_folder="../static"
 )
 
+
+# ============================================================
+# APPLICATION SETTINGS
+# ============================================================
+
 app.secret_key = os.getenv(
     "SESSION_SECRET",
     "change-this-secret"
 )
 
 
-# =========================================================
-# CONFIGURATION
-# =========================================================
-
 LOGIN_PASSWORD = os.getenv(
     "APP_LOGIN_PASSWORD",
-    "change-login-password"
+    "change-this-password"
 )
+
 
 TURNSTILE_SECRET_KEY = os.getenv(
     "TURNSTILE_SECRET_KEY",
     ""
 )
 
+
 MAX_RECIPIENTS = 25
 
-# Provider-compatible pacing.
-# Do not use this to bypass provider limits.
-MIN_SEND_INTERVAL = 2.0
+
+# Keep sending within the provider's acceptable behavior.
+# This is intentionally not a 7-second bulk-send bypass.
+SEND_INTERVAL_SECONDS = 3.0
+
 
 EMAIL_PATTERN = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 )
 
 
-# =========================================================
+# ============================================================
 # EMAIL VALIDATION
-# =========================================================
+# ============================================================
 
 def is_valid_email(email):
+    """
+    Basic email validation.
+    """
 
     if not email:
         return False
 
+    email = str(email).strip()
+
     return bool(
-        EMAIL_PATTERN.fullmatch(
-            email.strip()
-        )
+        EMAIL_PATTERN.fullmatch(email)
     )
 
 
-# =========================================================
-# RECIPIENT PARSER
-# =========================================================
+# ============================================================
+# RECIPIENT PARSING
+# ============================================================
 
 def parse_recipients(value):
+    """
+    Accepts:
+        email1@example.com
+        email2@example.com
+
+    or comma / semicolon / whitespace separated values.
+
+    Removes duplicates while keeping original order.
+    Maximum 25 recipients.
+    """
 
     if not value:
         return []
@@ -99,7 +117,7 @@ def parse_recipients(value):
         str(value)
     )
 
-    result = []
+    recipients = []
 
     seen = set()
 
@@ -115,26 +133,27 @@ def parse_recipients(value):
 
         seen.add(email)
 
-        result.append(email)
+        recipients.append(email)
 
-        if len(result) >= MAX_RECIPIENTS:
+        if len(recipients) >= MAX_RECIPIENTS:
             break
 
-    return result
+    return recipients
 
 
-# =========================================================
-# LOGIN CHECK
-# =========================================================
+# ============================================================
+# LOGIN DECORATOR
+# ============================================================
 
-def authentication_required(function):
+def login_required(function):
+    """
+    Protect dashboard/API routes.
+    """
 
     @wraps(function)
     def wrapper(*args, **kwargs):
 
-        if not session.get(
-            "authenticated"
-        ):
+        if not session.get("authenticated"):
             return redirect("/login")
 
         return function(
@@ -145,11 +164,18 @@ def authentication_required(function):
     return wrapper
 
 
-# =========================================================
+# ============================================================
 # SPINTAX
-# =========================================================
+# ============================================================
 
 def resolve_spintax(text):
+    """
+    Supports simple forms such as:
+
+        {Hi|Hello|Hey}
+
+    This is ordinary message variation.
+    """
 
     if not text:
         return ""
@@ -160,38 +186,34 @@ def resolve_spintax(text):
 
     def replace_match(match):
 
-        choices = match.group(
-            1
-        ).split("|")
+        choices = match.group(1).split("|")
 
         return secrets.choice(
             choices
         )
 
-    previous = text
+    current = text
 
     for _ in range(20):
 
-        current = pattern.sub(
+        updated = pattern.sub(
             replace_match,
-            previous
+            current
         )
 
-        if current == previous:
+        if updated == current:
             break
 
-        previous = current
+        current = updated
 
-    return previous
+    return current
 
 
-# =========================================================
+# ============================================================
 # SAFE HTML PARSER
-# =========================================================
+# ============================================================
 
-class SafeHTMLParser(
-    HTMLParser
-):
+class SafeHTMLParser(HTMLParser):
 
     ALLOWED_TAGS = {
         "div",
@@ -227,9 +249,13 @@ class SafeHTMLParser(
         if tag not in self.ALLOWED_TAGS:
             return
 
-        attributes = []
+        safe_attributes = []
 
         for name, value in attrs:
+
+            # --------------------------------------------
+            # LINKS
+            # --------------------------------------------
 
             if tag == "a":
 
@@ -245,11 +271,11 @@ class SafeHTMLParser(
                     if not value:
                         continue
 
-                    lower_value = str(
+                    href = str(
                         value
                     ).lower()
 
-                    if not lower_value.startswith(
+                    if not href.startswith(
                         (
                             "https://",
                             "http://",
@@ -258,14 +284,23 @@ class SafeHTMLParser(
                     ):
                         continue
 
+            # --------------------------------------------
+            # SPAN
+            # --------------------------------------------
+
             elif tag == "span":
 
                 if name != "class":
                     continue
 
+            # --------------------------------------------
+            # OTHER TAGS
+            # --------------------------------------------
+
             else:
 
                 continue
+
 
             safe_value = str(
                 value
@@ -274,14 +309,16 @@ class SafeHTMLParser(
                 "&quot;"
             )
 
-            attributes.append(
+
+            safe_attributes.append(
                 f' {name}="{safe_value}"'
             )
+
 
         self.output.append(
             "<"
             + tag
-            + "".join(attributes)
+            + "".join(safe_attributes)
             + ">"
         )
 
@@ -291,7 +328,9 @@ class SafeHTMLParser(
         if tag in self.ALLOWED_TAGS:
 
             self.output.append(
-                f"</{tag}>"
+                "</"
+                + tag
+                + ">"
             )
 
 
@@ -302,9 +341,9 @@ class SafeHTMLParser(
         )
 
 
-# =========================================================
-# HTML SANITIZER
-# =========================================================
+# ============================================================
+# HTML CLEANER
+# ============================================================
 
 def sanitize_html(value):
 
@@ -321,21 +360,25 @@ def sanitize_html(value):
     )
 
 
-# =========================================================
-# HTML TO PLAIN TEXT
-# =========================================================
+# ============================================================
+# HTML -> PLAIN TEXT
+# ============================================================
 
 def html_to_plain_text(html):
 
     if not html:
         return ""
 
+    text = html
+
+
     text = re.sub(
         r"<br\s*/?>",
         "\n",
-        html,
+        text,
         flags=re.IGNORECASE
     )
+
 
     text = re.sub(
         r"</p\s*>",
@@ -344,12 +387,14 @@ def html_to_plain_text(html):
         flags=re.IGNORECASE
     )
 
+
     text = re.sub(
         r"</div\s*>",
         "\n",
         text,
         flags=re.IGNORECASE
     )
+
 
     text = re.sub(
         r"</li\s*>",
@@ -358,46 +403,46 @@ def html_to_plain_text(html):
         flags=re.IGNORECASE
     )
 
+
     text = re.sub(
         r"<[^>]+>",
         "",
         text
     )
 
+
     return text.strip()
 
 
-# =========================================================
+# ============================================================
 # CLOUDFLARE TURNSTILE
-# =========================================================
+# ============================================================
 
 def verify_turnstile(token):
 
+    # If no secret is configured, don't block sending.
     if not TURNSTILE_SECRET_KEY:
         return True
+
 
     if not token:
         return False
 
+
     try:
 
-        payload = urllib.parse.urlencode(
+        form_data = urllib.parse.urlencode(
             {
-                "secret":
-                    TURNSTILE_SECRET_KEY,
-
-                "response":
-                    token
+                "secret": TURNSTILE_SECRET_KEY,
+                "response": token
             }
         ).encode("utf-8")
 
 
-        verification_request = (
-            urllib.request.Request(
-                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-                data=payload,
-                method="POST"
-            )
+        verification_request = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=form_data,
+            method="POST"
         )
 
 
@@ -414,25 +459,46 @@ def verify_turnstile(token):
 
 
         return bool(
-            result.get(
-                "success"
-            )
+            result.get("success")
         )
 
 
     except Exception as error:
 
         print(
-            "TURNSTILE ERROR:",
+            "TURNSTILE VERIFICATION ERROR:",
             repr(error)
         )
 
         return False
 
 
-# =========================================================
+# ============================================================
+# SERVER-SENT EVENT HELPER
+# ============================================================
+
+def make_event(
+    event_name,
+    data
+):
+    """
+    Creates one SSE event.
+    """
+
+    json_data = json.dumps(
+        data,
+        ensure_ascii=False
+    )
+
+    return (
+        f"event: {event_name}\n"
+        f"data: {json_data}\n\n"
+    )
+
+
+# ============================================================
 # LOGIN
-# =========================================================
+# ============================================================
 
 @app.route(
     "/login",
@@ -457,9 +523,7 @@ def login():
 
             session.clear()
 
-            session[
-                "authenticated"
-            ] = True
+            session["authenticated"] = True
 
             return redirect("/")
 
@@ -475,9 +539,9 @@ def login():
     )
 
 
-# =========================================================
+# ============================================================
 # LOGOUT
-# =========================================================
+# ============================================================
 
 @app.route("/logout")
 def logout():
@@ -487,13 +551,13 @@ def logout():
     return redirect("/login")
 
 
-# =========================================================
-# MAIN DASHBOARD
-# =========================================================
+# ============================================================
+# DASHBOARD
+# ============================================================
 
 @app.route("/")
-@authentication_required
-def dashboard():
+@login_required
+def index():
 
     return render_template(
         "index.html",
@@ -504,32 +568,12 @@ def dashboard():
     )
 
 
-# =========================================================
-# SERVER-SENT EVENT
-# =========================================================
-
-def sse_event(
-    event_name,
-    payload
-):
-
-    data = json.dumps(
-        payload,
-        ensure_ascii=False
-    )
-
-    return (
-        f"event: {event_name}\n"
-        f"data: {data}\n\n"
-    )
-
-
-# =========================================================
-# LIVE SEND API
-# =========================================================
+# ============================================================
+# LIVE EMAIL SENDING
+# ============================================================
 
 @app.post("/api/send-stream")
-@authentication_required
+@login_required
 def send_stream():
 
     data = request.get_json(
@@ -537,9 +581,9 @@ def send_stream():
     ) or {}
 
 
-    # -----------------------------------------------------
-    # INPUT
-    # -----------------------------------------------------
+    # ========================================================
+    # READ FORM DATA
+    # ========================================================
 
     sender_name = str(
         data.get(
@@ -585,7 +629,7 @@ def send_stream():
     )
 
 
-    raw_recipients = data.get(
+    recipients_input = data.get(
         "recipients",
         []
     )
@@ -599,9 +643,9 @@ def send_stream():
     )
 
 
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
+    # ========================================================
+    # BASIC VALIDATION
+    # ========================================================
 
     if not is_valid_email(
         gmail_address
@@ -615,85 +659,87 @@ def send_stream():
     if not app_password:
 
         return jsonify(
-            error="Please enter the Gmail App Password."
+            error="Gmail App Password is required."
         ), 400
 
 
     if not subject:
 
         return jsonify(
-            error="Please enter an email subject."
+            error="Email subject is required."
         ), 400
 
 
     if not message_html.strip():
 
         return jsonify(
-            error="Please enter the message body."
+            error="Message body is required."
         ), 400
 
 
-    # -----------------------------------------------------
-    # TURNSTILE
-    # -----------------------------------------------------
+    # ========================================================
+    # CLOUDFLARE
+    # ========================================================
 
     if not verify_turnstile(
         turnstile_token
     ):
 
         return jsonify(
-            error="Cloudflare verification failed. "
-                  "Please complete verification again."
+            error=(
+                "Cloudflare verification failed. "
+                "Please complete verification again."
+            )
         ), 403
 
 
-    # -----------------------------------------------------
-    # RECIPIENTS
-    # -----------------------------------------------------
+    # ========================================================
+    # RECIPIENT LIST
+    # ========================================================
 
     if isinstance(
-        raw_recipients,
+        recipients_input,
         str
     ):
 
-        recipient_list = parse_recipients(
-            raw_recipients
+        recipients = parse_recipients(
+            recipients_input
         )
 
     elif isinstance(
-        raw_recipients,
+        recipients_input,
         list
     ):
 
-        recipient_list = parse_recipients(
+        recipients = parse_recipients(
             " ".join(
                 str(item)
-                for item in raw_recipients
+                for item in recipients_input
             )
         )
 
     else:
 
-        recipient_list = []
+        recipients = []
 
 
-    if not recipient_list:
+    if not recipients:
 
         return jsonify(
-            error="No recipients were found."
+            error="No recipients found."
         ), 400
 
 
-    # -----------------------------------------------------
-    # VALID / INVALID
-    # -----------------------------------------------------
+    # ========================================================
+    # SEPARATE VALID / INVALID
+    # ========================================================
 
     valid_recipients = []
 
     invalid_recipients = []
 
 
-    for recipient in recipient_list:
+    for recipient in recipients:
 
         if is_valid_email(
             recipient
@@ -710,16 +756,14 @@ def send_stream():
             )
 
 
-    # -----------------------------------------------------
+    # ========================================================
     # STREAM GENERATOR
-    # -----------------------------------------------------
+    # ========================================================
 
     @stream_with_context
     def generate():
 
-        total = len(
-            recipient_list
-        )
+        total = len(recipients)
 
         sent_count = 0
 
@@ -732,90 +776,76 @@ def send_stream():
         smtp = None
 
 
-        # -------------------------------------------------
-        # INITIAL COUNTER
-        # -------------------------------------------------
+        # ====================================================
+        # INITIAL STATE
+        # ====================================================
 
-        yield sse_event(
+        yield make_event(
             "start",
             {
-                "total":
-                    total,
-
-                "sent":
+                "total": total,
+                "sent": 0,
+                "failed": failed_count,
+                "remaining": max(
                     0,
-
-                "failed":
-                    failed_count,
-
-                "remaining":
                     total - processed_count
+                )
             }
         )
 
 
-        # -------------------------------------------------
+        # ====================================================
         # INVALID RECIPIENTS
-        # -------------------------------------------------
+        # ====================================================
 
-        for _invalid_email in invalid_recipients:
+        for invalid_email in invalid_recipients:
 
-            processed_count += 1
+            print(
+                "Invalid recipient:",
+                invalid_email
+            )
 
-            yield sse_event(
+
+            yield make_event(
                 "progress",
                 {
-                    "total":
-                        total,
-
-                    "sent":
-                        sent_count,
-
-                    "failed":
-                        failed_count,
-
-                    "remaining":
-                        max(
-                            0,
-                            total - processed_count
-                        )
+                    "total": total,
+                    "sent": sent_count,
+                    "failed": failed_count,
+                    "remaining": max(
+                        0,
+                        total - processed_count
+                    )
                 }
             )
 
 
-        # -------------------------------------------------
-        # NO VALID RECIPIENTS
-        # -------------------------------------------------
+        # ====================================================
+        # IF NO VALID EMAILS
+        # ====================================================
 
         if not valid_recipients:
 
-            yield sse_event(
+            yield make_event(
                 "complete",
                 {
-                    "total":
-                        total,
-
-                    "sent":
-                        sent_count,
-
-                    "failed":
-                        failed_count,
-
-                    "remaining":
-                        0
+                    "total": total,
+                    "sent": sent_count,
+                    "failed": failed_count,
+                    "remaining": 0
                 }
             )
 
             return
 
 
-        # -------------------------------------------------
-        # CONNECT GMAIL
-        # -------------------------------------------------
+        # ====================================================
+        # CONNECT TO GMAIL
+        # ====================================================
 
         try:
 
-            smtp_context = (
+            ssl_context = (
                 ssl.create_default_context()
             )
 
@@ -823,7 +853,7 @@ def send_stream():
             smtp = smtplib.SMTP_SSL(
                 "smtp.gmail.com",
                 465,
-                context=smtp_context,
+                context=ssl_context,
                 timeout=30
             )
 
@@ -834,27 +864,30 @@ def send_stream():
             )
 
 
-        except smtplib.SMTPAuthenticationError as error:
+        except smtplib.SMTPAuthenticationError:
 
-            yield sse_event(
+            yield make_event(
                 "error",
                 {
-                    "message":
+                    "message": (
                         "Gmail authentication failed. "
-                        "Check your Gmail address and App Password."
+                        "Check your Gmail address and "
+                        "App Password."
+                    )
                 }
             )
 
             return
 
 
-        except smtplib.SMTPConnectError as error:
+        except smtplib.SMTPConnectError:
 
-            yield sse_event(
+            yield make_event(
                 "error",
                 {
-                    "message":
+                    "message": (
                         "Could not connect to Gmail SMTP."
+                    )
                 }
             )
 
@@ -863,12 +896,13 @@ def send_stream():
 
         except smtplib.SMTPException as error:
 
-            yield sse_event(
+            yield make_event(
                 "error",
                 {
-                    "message":
+                    "message": (
                         "Gmail SMTP error: "
                         + str(error)
+                    )
                 }
             )
 
@@ -877,57 +911,57 @@ def send_stream():
 
         except Exception as error:
 
-            yield sse_event(
+            yield make_event(
                 "error",
                 {
-                    "message":
-                        "Email connection failed: "
+                    "message": (
+                        "SMTP connection failed: "
                         + str(error)
+                    )
                 }
             )
 
             return
 
 
-        # -------------------------------------------------
-        # SEND LOOP
-        # -------------------------------------------------
+        # ====================================================
+        # SEND EMAILS
+        # ====================================================
 
         last_send_time = 0
 
 
         for recipient in valid_recipients:
 
-
-            # ---------------------------------------------
+            # ------------------------------------------------
             # PROVIDER-FRIENDLY PACING
-            # ---------------------------------------------
+            # ------------------------------------------------
 
-            elapsed = (
-                time.monotonic()
-                - last_send_time
-            )
+            if last_send_time:
 
-
-            if (
-                last_send_time > 0
-                and elapsed < MIN_SEND_INTERVAL
-            ):
-
-                time.sleep(
-                    MIN_SEND_INTERVAL
-                    - elapsed
+                elapsed = (
+                    time.monotonic()
+                    - last_send_time
                 )
 
 
-            # ---------------------------------------------
-            # PERSONALIZATION
-            # ---------------------------------------------
+                if elapsed < SEND_INTERVAL_SECONDS:
+
+                    time.sleep(
+                        SEND_INTERVAL_SECONDS
+                        - elapsed
+                    )
+
+
+            # ------------------------------------------------
+            # CREATE PERSONALIZED CONTENT
+            # ------------------------------------------------
 
             try:
 
                 first_name = (
-                    recipient.split(
+                    recipient
+                    .split(
                         "@",
                         1
                     )[0]
@@ -956,58 +990,58 @@ def send_stream():
                 )
 
 
-                plain_body = (
+                plain_text = (
                     html_to_plain_text(
                         personalized_html
                     )
                 )
 
 
-                email_message = (
-                    MIMEMultipart(
-                        "alternative"
-                    )
+                # --------------------------------------------
+                # MIME MESSAGE
+                # --------------------------------------------
+
+                message = MIMEMultipart(
+                    "alternative"
                 )
 
 
                 if sender_name:
 
-                    email_message["From"] = (
-                        formataddr(
-                            (
-                                sender_name,
-                                gmail_address
-                            )
+                    message["From"] = formataddr(
+                        (
+                            sender_name,
+                            gmail_address
                         )
                     )
 
                 else:
 
-                    email_message["From"] = (
+                    message["From"] = (
                         gmail_address
                     )
 
 
-                email_message["To"] = (
+                message["To"] = (
                     recipient
                 )
 
 
-                email_message["Subject"] = (
+                message["Subject"] = (
                     personalized_subject
                 )
 
 
-                email_message.attach(
+                message.attach(
                     MIMEText(
-                        plain_body,
+                        plain_text,
                         "plain",
                         "utf-8"
                     )
                 )
 
 
-                email_message.attach(
+                message.attach(
                     MIMEText(
                         personalized_html,
                         "html",
@@ -1016,14 +1050,14 @@ def send_stream():
                 )
 
 
-                # -----------------------------------------
+                # --------------------------------------------
                 # SEND
-                # -----------------------------------------
+                # --------------------------------------------
 
                 smtp.sendmail(
                     gmail_address,
                     [recipient],
-                    email_message.as_string()
+                    message.as_string()
                 )
 
 
@@ -1036,27 +1070,20 @@ def send_stream():
                 )
 
 
-                # -----------------------------------------
-                # ONLY COUNTERS
-                # -----------------------------------------
+                # --------------------------------------------
+                # ONLY UPDATE COUNTERS
+                # --------------------------------------------
 
-                yield sse_event(
+                yield make_event(
                     "progress",
                     {
-                        "total":
-                            total,
-
-                        "sent":
-                            sent_count,
-
-                        "failed":
-                            failed_count,
-
-                        "remaining":
-                            max(
-                                0,
-                                total - processed_count
-                            )
+                        "total": total,
+                        "sent": sent_count,
+                        "failed": failed_count,
+                        "remaining": max(
+                            0,
+                            total - processed_count
+                        )
                     }
                 )
 
@@ -1069,7 +1096,7 @@ def send_stream():
 
 
                 print(
-                    "RECIPIENT SEND ERROR:",
+                    "SEND ERROR:",
                     recipient,
                     repr(
                         recipient_error
@@ -1077,69 +1104,57 @@ def send_stream():
                 )
 
 
-                # -----------------------------------------
-                # ONLY COUNTERS
-                # -----------------------------------------
+                # --------------------------------------------
+                # UPDATE FAILED COUNTER
+                # --------------------------------------------
 
-                yield sse_event(
+                yield make_event(
                     "progress",
                     {
-                        "total":
-                            total,
-
-                        "sent":
-                            sent_count,
-
-                        "failed":
-                            failed_count,
-
-                        "remaining":
-                            max(
-                                0,
-                                total - processed_count
-                            )
+                        "total": total,
+                        "sent": sent_count,
+                        "failed": failed_count,
+                        "remaining": max(
+                            0,
+                            total - processed_count
+                        )
                     }
                 )
 
 
-        # -------------------------------------------------
-        # COMPLETE
-        # -------------------------------------------------
+        # ====================================================
+        # COMPLETE EVENT
+        # ====================================================
 
-        yield sse_event(
+        yield make_event(
             "complete",
             {
-                "total":
-                    total,
-
-                "sent":
-                    sent_count,
-
-                "failed":
-                    failed_count,
-
-                "remaining":
-                    0
+                "total": total,
+                "sent": sent_count,
+                "failed": failed_count,
+                "remaining": 0
             }
         )
 
 
-        # -------------------------------------------------
+        # ====================================================
         # CLOSE SMTP
-        # -------------------------------------------------
+        # ====================================================
 
         if smtp is not None:
 
             try:
+
                 smtp.quit()
 
             except Exception:
+
                 pass
 
 
-    # -----------------------------------------------------
+    # ========================================================
     # STREAM RESPONSE
-    # -----------------------------------------------------
+    # ========================================================
 
     return Response(
         generate(),
@@ -1157,9 +1172,9 @@ def send_stream():
     )
 
 
-# =========================================================
+# ============================================================
 # LOCAL DEVELOPMENT
-# =========================================================
+# ============================================================
 
 if __name__ == "__main__":
 
