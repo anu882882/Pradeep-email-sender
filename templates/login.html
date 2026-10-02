@@ -10,7 +10,9 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Secure Mail Console</title>
+    <title>
+        Secure Mail Console
+    </title>
 
     <link
         rel="stylesheet"
@@ -23,66 +25,65 @@
 <body class="login-page">
 
 
-    <main class="login-card">
+<div class="login-card">
 
 
-        <div class="login-logo">
-            ◆
-        </div>
+    <div class="login-logo">
+        🛡
+    </div>
 
 
-        <h1>
-            Secure Mail Console
-        </h1>
+    <h1>
+        Secure Mail Console
+    </h1>
 
 
-        <p>
-            Sign in to continue
-        </p>
+    <p>
+        Sign in to continue
+    </p>
 
 
-        <form
-            method="post"
-            autocomplete="off"
+    <form
+        method="post"
+        autocomplete="off"
+    >
+
+
+        <label for="password">
+            Password
+        </label>
+
+
+        <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter password"
+            autofocus
+            required
         >
 
 
-            <label for="password">
-                Password
-            </label>
+        {% if error %}
+
+        <div class="login-error">
+            {{ error }}
+        </div>
+
+        {% endif %}
 
 
-            <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Enter password"
-                autofocus
-                required
-            >
+        <button type="submit">
+            Login
+        </button>
 
 
-            {% if error %}
-
-            <div class="login-error">
-                {{ error }}
-            </div>
-
-            {% endif %}
+    </form>
 
 
-            <button
-                type="submit"
-            >
-                Login
-            </button>
-
-
-        </form>
-
-
-    </main>
+</div>
 
 
 </body>
+
 </html>
