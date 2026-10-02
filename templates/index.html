@@ -72,17 +72,13 @@
 
     <div class="page-heading">
 
-        <div>
+        <h2>
+            Bulk Email Sender
+        </h2>
 
-            <h2>
-                Bulk Email Sender
-            </h2>
-
-            <p>
-                Prepare your message and manage recipients.
-            </p>
-
-        </div>
+        <p>
+            Send to your opted-in or transactional recipients.
+        </p>
 
     </div>
 
@@ -90,10 +86,9 @@
     <div class="main-grid">
 
 
-        <!-- LEFT SIDE -->
+        <!-- COMPOSE -->
 
         <section class="card compose-card">
-
 
             <div class="card-header">
 
@@ -172,16 +167,18 @@
                             class="password-toggle"
                             onclick="togglePassword()"
                         >
+
                             <i
                                 id="passwordIcon"
                                 class="fa-regular fa-eye"
                             ></i>
+
                         </button>
 
                     </div>
 
                     <small>
-                        Use a Google App Password, not your normal Gmail password.
+                        Use a Google App Password.
                     </small>
 
                 </div>
@@ -230,7 +227,7 @@
                         </strong>
 
                         <p>
-                            Review your content and recipient before sending.
+                            Send only to recipients who have opted in or require the transaction.
                         </p>
 
                     </div>
@@ -242,23 +239,37 @@
                     id="sendButton"
                     class="primary-button"
                     type="button"
-                    onclick="sendCurrent()"
+                    onclick="startQueue()"
                 >
 
                     <i class="fa-regular fa-paper-plane"></i>
 
-                    Send Selected Email
+                    Start Sending
+
+                </button>
+
+
+                <button
+                    id="stopButton"
+                    class="stop-button"
+                    type="button"
+                    onclick="stopQueue()"
+                    disabled
+                >
+
+                    <i class="fa-solid fa-stop"></i>
+
+                    Stop Queue
 
                 </button>
 
 
             </div>
 
-
         </section>
 
 
-        <!-- RIGHT SIDE -->
+        <!-- RIGHT -->
 
         <section class="right-column">
 
@@ -266,7 +277,6 @@
             <!-- RECIPIENTS -->
 
             <div class="card">
-
 
                 <div class="card-header">
 
@@ -283,13 +293,12 @@
                             </h3>
 
                             <p>
-                                Add up to 25 email addresses
+                                Add up to 25 addresses
                             </p>
 
                         </div>
 
                     </div>
-
 
                     <div
                         id="recipientCount"
@@ -324,14 +333,12 @@
                     class="recipient-list"
                 ></div>
 
-
             </div>
 
 
             <!-- PROGRESS -->
 
             <div class="card progress-card">
-
 
                 <div class="card-header">
 
@@ -348,7 +355,7 @@
                             </h3>
 
                             <p>
-                                Track your sending progress
+                                Automatic queue progress
                             </p>
 
                         </div>
@@ -360,12 +367,9 @@
 
                 <div class="stats-grid">
 
-
                     <div class="stat">
 
-                        <span>
-                            TOTAL
-                        </span>
+                        <span>TOTAL</span>
 
                         <strong id="totalCount">
                             0
@@ -376,9 +380,7 @@
 
                     <div class="stat">
 
-                        <span>
-                            SENT
-                        </span>
+                        <span>SENT</span>
 
                         <strong
                             id="sentCount"
@@ -392,9 +394,7 @@
 
                     <div class="stat">
 
-                        <span>
-                            FAILED
-                        </span>
+                        <span>FAILED</span>
 
                         <strong
                             id="failedCount"
@@ -408,16 +408,13 @@
 
                     <div class="stat">
 
-                        <span>
-                            REMAINING
-                        </span>
+                        <span>REMAINING</span>
 
                         <strong id="remainingCount">
                             0
                         </strong>
 
                     </div>
-
 
                 </div>
 
@@ -445,45 +442,34 @@
                 </div>
 
 
-                <div class="progress-actions">
+                <div class="queue-message">
 
-                    <button
-                        id="nextButton"
-                        class="secondary-button"
-                        type="button"
-                        onclick="sendCurrent()"
-                    >
+                    <i class="fa-solid fa-circle-info"></i>
 
-                        <i class="fa-solid fa-forward"></i>
-
-                        Send Next
-
-                    </button>
-
-
-                    <button
-                        class="reset-button"
-                        type="button"
-                        onclick="resetProgress()"
-                    >
-
-                        <i class="fa-solid fa-rotate-left"></i>
-
-                        Reset
-
-                    </button>
+                    The queue sends one recipient at a time and updates
+                    the status after each response.
 
                 </div>
 
+
+                <button
+                    class="reset-button full-reset"
+                    type="button"
+                    onclick="resetProgress()"
+                >
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    Reset
+
+                </button>
 
             </div>
 
 
         </section>
 
-
     </div>
-
 
 </main>
 
@@ -504,53 +490,43 @@ let sent = 0;
 
 let failed = 0;
 
+let queueRunning = false;
+
+let stopRequested = false;
+
 
 const recipientsInput =
     document.getElementById("recipients");
 
-
 const recipientList =
     document.getElementById("recipientList");
-
 
 const recipientCount =
     document.getElementById("recipientCount");
 
-
 const totalCount =
     document.getElementById("totalCount");
-
 
 const sentCount =
     document.getElementById("sentCount");
 
-
 const failedCount =
     document.getElementById("failedCount");
-
 
 const remainingCount =
     document.getElementById("remainingCount");
 
-
 const progressBar =
     document.getElementById("progressBar");
-
 
 const statusText =
     document.getElementById("statusText");
 
-
 const sendButton =
     document.getElementById("sendButton");
 
-
-const nextButton =
-    document.getElementById("nextButton");
-
-
-const toast =
-    document.getElementById("toast");
+const stopButton =
+    document.getElementById("stopButton");
 
 
 recipientsInput.addEventListener(
@@ -561,17 +537,25 @@ recipientsInput.addEventListener(
 
 function updateRecipients() {
 
+    if (queueRunning) {
+        return;
+    }
+
     const raw =
         recipientsInput.value;
 
+
     const parsed =
         raw
-        .split(/[\n,;]+/)
-        .map(item => item.trim().toLowerCase())
-        .filter(Boolean);
+            .split(/[\n,;]+/)
+            .map(
+                item => item.trim().toLowerCase()
+            )
+            .filter(Boolean);
 
 
     const unique = [];
+
 
     for (const email of parsed) {
 
@@ -589,11 +573,14 @@ function updateRecipients() {
 
 
     currentIndex = 0;
+
     sent = 0;
+
     failed = 0;
 
 
     renderRecipients();
+
     updateProgress();
 
 }
@@ -614,11 +601,12 @@ function renderRecipients() {
                 "recipient-row";
 
 
-            if (index === currentIndex) {
+            if (
+                index === currentIndex &&
+                !queueRunning
+            ) {
 
-                row.classList.add(
-                    "current"
-                );
+                row.classList.add("current");
 
             }
 
@@ -660,6 +648,7 @@ function updateProgress() {
     const total =
         recipients.length;
 
+
     const remaining =
         Math.max(
             total - sent - failed,
@@ -684,37 +673,85 @@ function updateProgress() {
         sent + failed;
 
 
-    const percent =
+    const percentage =
         total > 0
             ? (completed / total) * 100
             : 0;
 
 
     progressBar.style.width =
-        `${percent}%`;
-
-
-    if (total === 0) {
-
-        statusText.textContent =
-            "Waiting";
-
-    } else if (remaining === 0) {
-
-        statusText.textContent =
-            "Completed";
-
-    } else {
-
-        statusText.textContent =
-            "Ready";
-
-    }
+        `${percentage}%`;
 
 }
 
 
-async function sendCurrent() {
+function getMessageData() {
+
+    return {
+
+        sender_name:
+            document.getElementById(
+                "senderName"
+            ).value.trim(),
+
+        gmail:
+            document.getElementById(
+                "gmail"
+            ).value.trim(),
+
+        app_password:
+            document.getElementById(
+                "appPassword"
+            ).value.trim(),
+
+        subject:
+            document.getElementById(
+                "subject"
+            ).value.trim(),
+
+        body:
+            document.getElementById(
+                "message"
+            ).value
+
+    };
+
+}
+
+
+function validateMessage(data) {
+
+    if (!data.sender_name) {
+        return "Enter Sender Name.";
+    }
+
+    if (!data.gmail) {
+        return "Enter Gmail address.";
+    }
+
+    if (!data.app_password) {
+        return "Enter Google App Password.";
+    }
+
+    if (!data.subject) {
+        return "Enter email subject.";
+    }
+
+    if (!data.body.trim()) {
+        return "Enter message body.";
+    }
+
+    return null;
+
+}
+
+
+async function startQueue() {
+
+    if (queueRunning) {
+        return;
+    }
+
 
     if (recipients.length === 0) {
 
@@ -728,59 +765,18 @@ async function sendCurrent() {
     }
 
 
-    if (
-        currentIndex >=
-        recipients.length
-    ) {
+    const data =
+        getMessageData();
+
+
+    const validation =
+        validateMessage(data);
+
+
+    if (validation) {
 
         showToast(
-            "All recipients are completed.",
-            false
-        );
-
-        return;
-
-    }
-
-
-    const senderName =
-        document.getElementById(
-            "senderName"
-        ).value.trim();
-
-
-    const gmail =
-        document.getElementById(
-            "gmail"
-        ).value.trim();
-
-
-    const appPassword =
-        document.getElementById(
-            "appPassword"
-        ).value.trim();
-
-
-    const subject =
-        document.getElementById(
-            "subject"
-        ).value.trim();
-
-
-    const body =
-        document.getElementById(
-            "message"
-        ).value;
-
-
-    const recipient =
-        recipients[currentIndex];
-
-
-    if (!senderName) {
-
-        showToast(
-            "Enter Sender Name.",
+            validation,
             true
         );
 
@@ -789,205 +785,228 @@ async function sendCurrent() {
     }
 
 
-    if (!gmail) {
+    queueRunning = true;
 
-        showToast(
-            "Enter Gmail address.",
-            true
-        );
-
-        return;
-
-    }
-
-
-    if (!appPassword) {
-
-        showToast(
-            "Enter App Password.",
-            true
-        );
-
-        return;
-
-    }
-
-
-    if (!subject) {
-
-        showToast(
-            "Enter email subject.",
-            true
-        );
-
-        return;
-
-    }
-
-
-    if (!body.trim()) {
-
-        showToast(
-            "Enter message body.",
-            true
-        );
-
-        return;
-
-    }
-
-
-    setCurrentStatus(
-        "Sending...",
-        "sending"
-    );
+    stopRequested = false;
 
 
     sendButton.disabled = true;
-    nextButton.disabled = true;
+
+    stopButton.disabled = false;
+
+    recipientsInput.disabled = true;
 
 
     statusText.textContent =
-        `Sending to ${recipient}`;
+        "Queue running";
 
 
-    try {
+    while (
+        currentIndex < recipients.length &&
+        !stopRequested
+    ) {
 
-        const response =
-            await fetch(
-                "/send",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        sender_name:
-                            senderName,
-
-                        gmail:
-                            gmail,
-
-                        app_password:
-                            appPassword,
-
-                        recipient:
-                            recipient,
-
-                        subject:
-                            subject,
-
-                        body:
-                            body
-
-                    })
-
-                }
-            );
+        const recipient =
+            recipients[currentIndex];
 
 
-        const data =
-            await response.json();
+        setRecipientStatus(
+            currentIndex,
+            "Sending...",
+            "sending"
+        );
 
 
-        if (data.success) {
+        statusText.textContent =
+            `Sending ${currentIndex + 1} of ${recipients.length}`;
 
-            setCurrentStatus(
-                "Sent",
-                "sent"
-            );
 
-            sent++;
+        try {
 
-            showToast(
-                `Email sent to ${recipient}.`,
-                false
-            );
+            const response =
+                await fetch(
+                    "/send",
+                    {
+                        method: "POST",
 
-        } else {
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
 
-            setCurrentStatus(
-                "Failed",
-                "failed"
-            );
+                        body: JSON.stringify({
+
+                            ...data,
+
+                            recipient:
+                                recipient
+
+                        })
+
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (result.success) {
+
+                sent++;
+
+                setRecipientStatus(
+                    currentIndex,
+                    "Sent",
+                    "sent"
+                );
+
+            } else {
+
+                failed++;
+
+                setRecipientStatus(
+                    currentIndex,
+                    "Failed",
+                    "failed"
+                );
+
+            }
+
+
+        } catch (error) {
 
             failed++;
 
-            showToast(
-                data.message ||
-                "Email could not be sent.",
-                true
+            setRecipientStatus(
+                currentIndex,
+                "Failed",
+                "failed"
             );
 
         }
 
 
-    } catch (error) {
+        currentIndex++;
 
-        setCurrentStatus(
-            "Failed",
-            "failed"
-        );
+        updateProgress();
 
-        failed++;
 
-        showToast(
-            "Connection error.",
-            true
-        );
+        if (
+            currentIndex < recipients.length &&
+            !stopRequested
+        ) {
+
+            /*
+             * Small pause between queue items.
+             * This also prevents rapid back-to-back requests.
+             */
+            await delay(1500);
+
+        }
 
     }
 
 
-    currentIndex++;
-
-
-    updateProgress();
-
-
-    renderRecipients();
-
+    queueRunning = false;
 
     sendButton.disabled = false;
-    nextButton.disabled = false;
+
+    stopButton.disabled = true;
+
+    recipientsInput.disabled = false;
 
 
-    if (
-        currentIndex >=
-        recipients.length
-    ) {
+    if (stopRequested) {
 
         statusText.textContent =
-            "Completed";
+            "Stopped";
 
-        sendButton.disabled =
-            true;
-
-        nextButton.disabled =
-            true;
+        showToast(
+            "Queue stopped.",
+            false
+        );
 
     } else {
 
         statusText.textContent =
-            "Ready";
+            "Completed";
+
+        showToast(
+            "Queue completed.",
+            false
+        );
 
     }
+
+
+    renderRecipients();
 
 }
 
 
-function setCurrentStatus(
+function stopQueue() {
+
+    if (!queueRunning) {
+        return;
+    }
+
+
+    stopRequested = true;
+
+    statusText.textContent =
+        "Stopping...";
+
+}
+
+
+function resetProgress() {
+
+    if (queueRunning) {
+
+        showToast(
+            "Stop the queue before resetting.",
+            true
+        );
+
+        return;
+
+    }
+
+
+    currentIndex = 0;
+
+    sent = 0;
+
+    failed = 0;
+
+
+    renderRecipients();
+
+    updateProgress();
+
+
+    statusText.textContent =
+        "Waiting";
+
+
+    showToast(
+        "Progress reset.",
+        false
+    );
+
+}
+
+
+function setRecipientStatus(
+    index,
     text,
     type
 ) {
 
     const element =
         document.getElementById(
-            `status-${currentIndex}`
+            `status-${index}`
         );
 
 
@@ -1003,37 +1022,30 @@ function setCurrentStatus(
     element.className =
         `recipient-status ${type}`;
 
+
+    const rows =
+        recipientList.children;
+
+
+    if (rows[index]) {
+
+        rows[index].classList.add(
+            "current"
+        );
+
+    }
+
 }
 
 
-function resetProgress() {
+function delay(milliseconds) {
 
-    currentIndex = 0;
-
-    sent = 0;
-
-    failed = 0;
-
-
-    renderRecipients();
-
-    updateProgress();
-
-
-    sendButton.disabled =
-        false;
-
-    nextButton.disabled =
-        false;
-
-
-    statusText.textContent =
-        "Waiting";
-
-
-    showToast(
-        "Progress reset.",
-        false
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                milliseconds
+            )
     );
 
 }
@@ -1073,8 +1085,14 @@ function togglePassword() {
 
 function showToast(
     message,
-    error
+    error = false
 ) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
 
     toast.textContent =
         message;
@@ -1139,5 +1157,4 @@ updateRecipients();
 
 
 </body>
-
 </html>
