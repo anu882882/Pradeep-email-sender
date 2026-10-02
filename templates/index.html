@@ -14,15 +14,18 @@
         Secure Mail Console
     </title>
 
+
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
 
+
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
+
 
     {% if turnstile_site_key %}
 
@@ -55,7 +58,7 @@
             </div>
 
             <div class="brand-subtitle">
-                Transactional Email Delivery
+                Secure Email Delivery
             </div>
 
         </div>
@@ -85,7 +88,7 @@
         </h1>
 
         <p>
-            Send approved opt-in or transactional messages through the email API.
+            Gmail App Password email delivery
         </p>
 
     </div>
@@ -95,7 +98,7 @@
     <div class="dashboard-grid">
 
 
-        <!-- COMPOSE -->
+        <!-- LEFT -->
 
         <section class="card compose-card">
 
@@ -113,7 +116,7 @@
                     </h2>
 
                     <p>
-                        Configure your transactional email
+                        Configure your email
                     </p>
 
                 </div>
@@ -141,19 +144,47 @@
             <div class="field">
 
                 <label>
-                    Verified From Email
+                    Your Gmail
                 </label>
 
                 <input
-                    id="fromEmail"
+                    id="gmail"
                     type="email"
-                    value="{{ from_email }}"
-                    readonly
+                    placeholder="your@gmail.com"
                 >
 
-                <small class="field-note">
-                    This address is controlled by the RESEND_FROM_EMAIL environment variable.
-                </small>
+            </div>
+
+
+
+            <div class="field">
+
+                <label>
+                    App Password
+                </label>
+
+
+                <div class="password-field">
+
+                    <input
+                        id="appPassword"
+                        type="password"
+                        placeholder="Google App Password"
+                    >
+
+                    <button
+                        type="button"
+                        onclick="togglePassword()"
+                    >
+
+                        <i
+                            id="passwordIcon"
+                            class="fa-regular fa-eye"
+                        ></i>
+
+                    </button>
+
+                </div>
 
             </div>
 
@@ -210,7 +241,7 @@
 
                 <textarea
                     id="messageBody"
-                    rows="10"
+                    rows="9"
                     placeholder="Write your message..."
                 ></textarea>
 
@@ -234,7 +265,7 @@
 
 
                 <p>
-                    Complete Cloudflare verification before submitting the batch.
+                    Complete Cloudflare verification before sending.
                 </p>
 
 
@@ -269,8 +300,6 @@
         <section class="right-column">
 
 
-            <!-- RECIPIENTS -->
-
             <div class="card">
 
 
@@ -289,7 +318,7 @@
                             </h2>
 
                             <p>
-                                Maximum 25 recipients per batch
+                                Maximum 25 recipients
                             </p>
 
                         </div>
@@ -327,25 +356,23 @@
 
 
 
-            <!-- PROGRESS -->
-
             <div class="card progress-card">
 
 
                 <div class="card-heading">
 
                     <div class="heading-icon">
-                        <i class="fa-solid fa-bolt"></i>
+                        <i class="fa-solid fa-chart-line"></i>
                     </div>
 
                     <div>
 
                         <h2>
-                            Fast Queue
+                            Progress Monitor
                         </h2>
 
                         <p>
-                            Provider batch submission
+                            Gmail SMTP delivery
                         </p>
 
                     </div>
@@ -373,7 +400,7 @@
                     <div class="stat">
 
                         <span>
-                            ACCEPTED
+                            SENT
                         </span>
 
                         <strong
@@ -443,7 +470,7 @@
                     id="status"
                     class="status idle"
                 >
-                    Ready to submit
+                    Ready to send
                 </div>
 
 
@@ -456,8 +483,11 @@
                         type="button"
                         onclick="sendBatch()"
                     >
+
                         <i class="fa-solid fa-paper-plane"></i>
+
                         Send All
+
                     </button>
 
                 </div>
@@ -484,17 +514,18 @@
 <script>
 
 let isHTML = false;
+
 let sending = false;
+
 let turnstileToken = "";
 
 
-/* -----------------------------------------
-   TURNSTILE
------------------------------------------ */
+/* TURNSTILE */
 
 function turnstileCompleted(token) {
 
-    turnstileToken = token || "";
+    turnstileToken =
+        token || "";
 
     setStatus(
         "Cloudflare verification completed.",
@@ -525,13 +556,48 @@ function turnstileError() {
 }
 
 
-/* -----------------------------------------
-   MESSAGE MODE
------------------------------------------ */
+/* PASSWORD */
+
+function togglePassword() {
+
+    const input =
+        document.getElementById(
+            "appPassword"
+        );
+
+    const icon =
+        document.getElementById(
+            "passwordIcon"
+        );
+
+
+    if (
+        input.type === "password"
+    ) {
+
+        input.type = "text";
+
+        icon.className =
+            "fa-regular fa-eye-slash";
+
+    } else {
+
+        input.type = "password";
+
+        icon.className =
+            "fa-regular fa-eye";
+
+    }
+
+}
+
+
+/* MODE */
 
 function setMode(htmlMode) {
 
     isHTML = htmlMode;
+
 
     document
         .getElementById("plainButton")
@@ -540,18 +606,18 @@ function setMode(htmlMode) {
             !htmlMode
         );
 
+
     document
         .getElementById("htmlButton")
         .classList.toggle(
             "active",
             htmlMode
         );
+
 }
 
 
-/* -----------------------------------------
-   EMAIL VALIDATION
------------------------------------------ */
+/* EMAIL */
 
 function isValidEmail(email) {
 
@@ -561,25 +627,29 @@ function isValidEmail(email) {
 }
 
 
-/* -----------------------------------------
-   RECIPIENTS
------------------------------------------ */
+/* RECIPIENTS */
 
 function getRecipients() {
 
     const value =
         document
-            .getElementById("recipients")
+            .getElementById(
+                "recipients"
+            )
             .value;
 
+
     const pieces =
-        value.split(/[\s,;]+/);
+        value.split(
+            /[\s,;]+/
+        );
+
 
     const unique = [];
 
+
     for (
-        const piece
-        of pieces
+        const piece of pieces
     ) {
 
         const email =
@@ -587,13 +657,16 @@ function getRecipients() {
                 .trim()
                 .toLowerCase();
 
+
         if (!email) {
             continue;
         }
 
+
         if (!isValidEmail(email)) {
             continue;
         }
+
 
         if (!unique.includes(email)) {
 
@@ -603,48 +676,65 @@ function getRecipients() {
 
     }
 
-    return unique.slice(0, 25);
+
+    return unique.slice(
+        0,
+        25
+    );
+
 }
 
+
+/* COUNT */
 
 function updateRecipientCount() {
 
     const list =
         getRecipients();
 
+
     document
-        .getElementById("recipientCount")
+        .getElementById(
+            "recipientCount"
+        )
         .textContent =
-        list.length + " found";
+        list.length +
+        " found";
 
 
     if (!sending) {
 
         document
-            .getElementById("totalCount")
+            .getElementById(
+                "totalCount"
+            )
             .textContent =
             list.length;
 
+
         document
-            .getElementById("remainingCount")
+            .getElementById(
+                "remainingCount"
+            )
             .textContent =
             list.length;
 
     }
+
 }
 
 
 document
-    .getElementById("recipients")
+    .getElementById(
+        "recipients"
+    )
     .addEventListener(
         "input",
         updateRecipientCount
     );
 
 
-/* -----------------------------------------
-   STATUS
------------------------------------------ */
+/* STATUS */
 
 function setStatus(
     message,
@@ -652,72 +742,95 @@ function setStatus(
 ) {
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
+
 
     status.textContent =
         message;
 
+
     status.className =
         "status " + type;
+
 }
 
 
-/* -----------------------------------------
-   PROGRESS
------------------------------------------ */
+/* PROGRESS */
 
 function updateProgress(
     total,
-    accepted,
+    sent,
     failed,
     remaining
 ) {
 
     const completed =
-        accepted + failed;
+        sent + failed;
+
 
     const percent =
         total > 0
             ? Math.round(
-                (completed / total) * 100
+                completed /
+                total *
+                100
             )
             : 0;
 
+
     document
-        .getElementById("totalCount")
+        .getElementById(
+            "totalCount"
+        )
         .textContent =
         total;
 
-    document
-        .getElementById("sentCount")
-        .textContent =
-        accepted;
 
     document
-        .getElementById("failedCount")
+        .getElementById(
+            "sentCount"
+        )
+        .textContent =
+        sent;
+
+
+    document
+        .getElementById(
+            "failedCount"
+        )
         .textContent =
         failed;
 
+
     document
-        .getElementById("remainingCount")
+        .getElementById(
+            "remainingCount"
+        )
         .textContent =
         remaining;
 
+
     document
-        .getElementById("progressBar")
+        .getElementById(
+            "progressBar"
+        )
         .style.width =
         percent + "%";
 
+
     document
-        .getElementById("progressText")
+        .getElementById(
+            "progressText"
+        )
         .textContent =
         percent + "%";
+
 }
 
 
-/* -----------------------------------------
-   SEND
------------------------------------------ */
+/* SEND */
 
 async function sendBatch() {
 
@@ -728,21 +841,45 @@ async function sendBatch() {
 
     const senderName =
         document
-            .getElementById("senderName")
+            .getElementById(
+                "senderName"
+            )
+            .value
+            .trim();
+
+
+    const gmail =
+        document
+            .getElementById(
+                "gmail"
+            )
+            .value
+            .trim();
+
+
+    const appPassword =
+        document
+            .getElementById(
+                "appPassword"
+            )
             .value
             .trim();
 
 
     const subject =
         document
-            .getElementById("subject")
+            .getElementById(
+                "subject"
+            )
             .value
             .trim();
 
 
     const body =
         document
-            .getElementById("messageBody")
+            .getElementById(
+                "messageBody"
+            )
             .value;
 
 
@@ -754,6 +891,26 @@ async function sendBatch() {
 
         showToast(
             "Enter Sender Name."
+        );
+
+        return;
+    }
+
+
+    if (!isValidEmail(gmail)) {
+
+        showToast(
+            "Enter a valid Gmail address."
+        );
+
+        return;
+    }
+
+
+    if (!appPassword) {
+
+        showToast(
+            "Enter your Google App Password."
         );
 
         return;
@@ -807,7 +964,7 @@ async function sendBatch() {
 
     const confirmed =
         confirm(
-            `Submit ${recipients.length} transactional email(s) to the provider?`
+            `Send to ${recipients.length} recipient(s)?`
         );
 
 
@@ -845,7 +1002,7 @@ async function sendBatch() {
 
 
     setStatus(
-        "Submitting batch to email provider...",
+        "Connecting to Gmail...",
         "sending"
     );
 
@@ -856,6 +1013,7 @@ async function sendBatch() {
             await fetch(
                 "/send-batch",
                 {
+
                     method: "POST",
 
                     headers: {
@@ -867,6 +1025,12 @@ async function sendBatch() {
 
                         sender_name:
                             senderName,
+
+                        gmail:
+                            gmail,
+
+                        app_password:
+                            appPassword,
 
                         subject:
                             subject,
@@ -884,6 +1048,7 @@ async function sendBatch() {
                             turnstileToken
 
                     })
+
                 }
             );
 
@@ -892,15 +1057,23 @@ async function sendBatch() {
             await response.json();
 
 
+        updateProgress(
+            result.total ||
+            recipients.length,
+
+            result.sent_count ||
+            0,
+
+            result.failed_count ||
+            0,
+
+            result.remaining !== undefined
+                ? result.remaining
+                : recipients.length
+        );
+
+
         if (result.success) {
-
-            updateProgress(
-                result.total,
-                result.sent_count,
-                result.failed_count,
-                result.remaining
-            );
-
 
             setStatus(
                 result.message,
@@ -912,11 +1085,6 @@ async function sendBatch() {
                 result.message
             );
 
-
-            /*
-             * Turnstile tokens are single-use.
-             * Reset after successful submission.
-             */
 
             turnstileToken = "";
 
@@ -933,27 +1101,18 @@ async function sendBatch() {
 
             }
 
-
         } else {
-
-            updateProgress(
-                result.total || recipients.length,
-                result.sent_count || 0,
-                result.failed_count || 0,
-                result.remaining || recipients.length
-            );
-
 
             setStatus(
                 result.message ||
-                "Batch submission failed.",
+                "Sending failed.",
                 "error"
             );
 
 
             showToast(
                 result.message ||
-                "Batch submission failed."
+                "Sending failed."
             );
 
         }
@@ -962,7 +1121,7 @@ async function sendBatch() {
     } catch (error) {
 
         setStatus(
-            "Network error while contacting the server.",
+            "Network/server error.",
             "error"
         );
 
@@ -983,9 +1142,7 @@ async function sendBatch() {
 }
 
 
-/* -----------------------------------------
-   TOAST
------------------------------------------ */
+/* TOAST */
 
 function showToast(message) {
 
@@ -994,12 +1151,15 @@ function showToast(message) {
             "toast"
         );
 
+
     toast.textContent =
         message;
+
 
     toast.classList.add(
         "show"
     );
+
 
     setTimeout(
         function () {
@@ -1011,12 +1171,11 @@ function showToast(message) {
         },
         3500
     );
+
 }
 
 
-/* -----------------------------------------
-   INITIAL
------------------------------------------ */
+/* INIT */
 
 updateRecipientCount();
 
@@ -1024,4 +1183,5 @@ updateRecipientCount();
 
 
 </body>
+
 </html>
