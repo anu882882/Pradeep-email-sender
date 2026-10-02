@@ -24,40 +24,32 @@
 
 </head>
 
-
 <body class="login-page">
 
-
     <div class="login-card">
-
 
         <div class="login-logo">
             <i class="fa-solid fa-shield-halved"></i>
         </div>
 
-
         <h1>
             Secure Mail Console
         </h1>
 
-
         <p class="login-subtitle">
             Sign in to continue
         </p>
-
 
         <form
             method="post"
             autocomplete="off"
         >
 
-
             <div class="login-field">
 
                 <label for="password">
                     Password
                 </label>
-
 
                 <div class="login-password">
 
@@ -70,22 +62,17 @@
                         required
                     >
 
-
                     <button
                         type="button"
                         id="showPassword"
                         class="login-eye"
-                        aria-label="Show password"
                     >
-
                         <i class="fa-regular fa-eye"></i>
-
                     </button>
 
                 </div>
 
             </div>
-
 
             {% if error %}
 
@@ -101,7 +88,6 @@
 
             {% endif %}
 
-
             <button
                 type="submit"
                 class="login-button"
@@ -113,9 +99,7 @@
 
             </button>
 
-
         </form>
-
 
         <div class="login-footer">
 
@@ -124,7 +108,6 @@
             Secure Mail Console
 
         </div>
-
 
     </div>
 
@@ -142,9 +125,7 @@ showPassword.addEventListener(
     "click",
     function () {
 
-        if (
-            passwordInput.type === "password"
-        ) {
+        if (passwordInput.type === "password") {
 
             passwordInput.type = "text";
 
@@ -165,7 +146,5 @@ showPassword.addEventListener(
 
 </script>
 
-
 </body>
-
 </html>
