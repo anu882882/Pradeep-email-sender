@@ -80,7 +80,9 @@
                 id="showPassword"
             >
 
-                <i class="fa-regular fa-eye"></i>
+                <i
+                    class="fa-regular fa-eye"
+                ></i>
 
             </button>
 
@@ -145,17 +147,20 @@ button.addEventListener(
     function () {
 
         if (
-            password.type === "password"
+            password.type ===
+            "password"
         ) {
 
-            password.type = "text";
+            password.type =
+                "text";
 
             this.innerHTML =
                 '<i class="fa-regular fa-eye-slash"></i>';
 
         } else {
 
-            password.type = "password";
+            password.type =
+                "password";
 
             this.innerHTML =
                 '<i class="fa-regular fa-eye"></i>';
@@ -169,4 +174,5 @@ button.addEventListener(
 
 
 </body>
+
 </html>
