@@ -10,12 +10,16 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Secure Mail Console</title>
+    <title>
+        Secure Mail Console
+    </title>
+
 
     <link
         rel="stylesheet"
         href="/static/style.css"
     >
+
 
     {% if turnstile_site_key %}
 
@@ -29,7 +33,9 @@
 
 </head>
 
+
 <body>
+
 
 <header class="topbar">
 
@@ -45,6 +51,7 @@
 
     </div>
 
+
     <a
         href="/logout"
         class="logout"
@@ -55,7 +62,9 @@
 </header>
 
 
+
 <main class="page">
+
 
     <div class="page-title">
 
@@ -70,28 +79,39 @@
     </div>
 
 
+
     <div class="dashboard">
 
 
-        <!-- LEFT SIDE -->
+        <!-- =================================================
+             LEFT COLUMN
+        ================================================== -->
 
         <div class="left-column">
 
+
             <section class="card compose-card">
+
 
                 <h2>
                     ✐ Compose Message
                 </h2>
 
 
+
                 <div class="form-grid">
 
 
+                    <!-- SENDER NAME -->
+
                     <div class="field">
 
-                        <label for="senderName">
+                        <label
+                            for="senderName"
+                        >
                             Sender Name
                         </label>
+
 
                         <input
                             id="senderName"
@@ -103,11 +123,17 @@
                     </div>
 
 
+
+                    <!-- GMAIL -->
+
                     <div class="field">
 
-                        <label for="gmail">
+                        <label
+                            for="gmail"
+                        >
                             Your Gmail
                         </label>
+
 
                         <input
                             id="gmail"
@@ -119,13 +145,20 @@
                     </div>
 
 
+
+                    <!-- APP PASSWORD -->
+
                     <div class="field">
 
-                        <label for="appPassword">
+                        <label
+                            for="appPassword"
+                        >
                             App Password
                         </label>
 
+
                         <div class="password-wrapper">
+
 
                             <input
                                 id="appPassword"
@@ -133,6 +166,7 @@
                                 placeholder="Gmail App Password"
                                 autocomplete="off"
                             >
+
 
                             <button
                                 type="button"
@@ -143,16 +177,23 @@
                                 ◉
                             </button>
 
+
                         </div>
 
                     </div>
 
 
+
+                    <!-- SUBJECT -->
+
                     <div class="field">
 
-                        <label for="subject">
+                        <label
+                            for="subject"
+                        >
                             Email Subject
                         </label>
+
 
                         <input
                             id="subject"
@@ -166,28 +207,40 @@
                 </div>
 
 
+
+                <!-- MESSAGE -->
+
                 <div class="message-section">
 
-                    <label for="editor">
+
+                    <label
+                        for="editor"
+                    >
                         Message Body
                     </label>
+
 
                     <div
                         id="editor"
                         class="message-editor"
                         contenteditable="true"
                         spellcheck="true"
-                        aria-label="Message Body"
                     ></div>
+
 
                     <div class="editor-help">
                         Supports {name} and {Hi|Hello|Hey}
                     </div>
 
+
                 </div>
 
 
+
+                <!-- SPAM PROTECTION -->
+
                 <div class="spam-section">
+
 
                     <div class="spam-title">
                         🛡 Spam Protection
@@ -196,29 +249,41 @@
 
                     {% if turnstile_site_key %}
 
+
                     <div
                         class="cf-turnstile"
                         data-sitekey="{{ turnstile_site_key }}"
                         data-theme="light"
                     ></div>
 
+
                     {% else %}
 
+
                     <div class="turnstile-message">
-                        Spam protection is configured through
-                        the application settings.
+
+                        Spam protection is configured
+                        through the application settings.
+
                     </div>
+
 
                     {% endif %}
 
+
                 </div>
 
+
             </section>
+
 
         </div>
 
 
-        <!-- RIGHT SIDE -->
+
+        <!-- =================================================
+             RIGHT COLUMN
+        ================================================== -->
 
         <div class="right-column">
 
@@ -227,20 +292,29 @@
 
             <section class="card recipients-card">
 
+
                 <div class="section-header">
 
+
                     <div>
+
 
                         <h2>
                             ♣ Recipients
                         </h2>
 
+
                         <div class="section-description">
-                            Paste emails separated by commas,
-                            spaces, semicolons, or new lines.
+
+                            Paste emails separated by
+                            commas, spaces, semicolons,
+                            or new lines.
+
                         </div>
 
+
                     </div>
+
 
 
                     <div
@@ -250,7 +324,9 @@
                         0 found
                     </div>
 
+
                 </div>
+
 
 
                 <textarea
@@ -263,20 +339,27 @@ another@example.com"
                 ></textarea>
 
 
+
                 <div class="recipient-note">
+
                     Maximum 25 recipients per sending run.
+
                 </div>
 
+
             </section>
+
 
 
             <!-- PROGRESS -->
 
             <section class="card progress-card">
 
+
                 <h2>
                     ◔ Progress Monitor
                 </h2>
+
 
 
                 <div class="stats-grid">
@@ -295,6 +378,7 @@ another@example.com"
                     </div>
 
 
+
                     <div class="stat-box sent-stat">
 
                         <span>
@@ -308,6 +392,7 @@ another@example.com"
                     </div>
 
 
+
                     <div class="stat-box failed-stat">
 
                         <span>
@@ -319,6 +404,7 @@ another@example.com"
                         </strong>
 
                     </div>
+
 
 
                     <div class="stat-box remaining-stat">
@@ -337,23 +423,34 @@ another@example.com"
                 </div>
 
 
+
+                <!-- PROGRESS BAR -->
+
                 <div class="progress-track">
+
 
                     <div
                         id="progressBar"
                         class="progress-bar"
                     ></div>
 
+
                 </div>
 
+
+
+                <!-- SENDER -->
 
                 <div
                     id="senderStatus"
                     class="sender-status"
                 >
-                    ◯ Sent: —
+                    ◯ Sending from: —
                 </div>
 
+
+
+                <!-- STATUS -->
 
                 <div
                     id="sendStatus"
@@ -362,6 +459,18 @@ another@example.com"
                     Ready
                 </div>
 
+
+
+                <!-- ACTUAL ERROR -->
+
+                <div
+                    id="errorDetails"
+                    class="error-details"
+                ></div>
+
+
+
+                <!-- BUTTONS -->
 
                 <div class="button-row">
 
@@ -389,634 +498,798 @@ another@example.com"
                 </div>
 
 
-                <div
-                    id="errorDetails"
-                    class="error-details"
-                ></div>
-
-
             </section>
+
 
         </div>
 
+
     </div>
+
 
 </main>
 
 
+
 <script>
 
-    /*
-     * -----------------------------------------------------
-     * APPLICATION STATE
-     * -----------------------------------------------------
-     */
 
-    let sending = false;
-
-    let stopRequested = false;
+/* ========================================================
+   GLOBAL STATE
+======================================================== */
 
 
-    /*
-     * -----------------------------------------------------
-     * DOM HELPER
-     * -----------------------------------------------------
-     */
+let sending = false;
 
-    function getElement(id) {
-
-        return document.getElementById(id);
-
-    }
+let stopRequested = false;
 
 
-    /*
-     * -----------------------------------------------------
-     * RECIPIENT PARSING
-     * -----------------------------------------------------
-     */
 
-    function getRecipients() {
+/* ========================================================
+   DOM HELPER
+======================================================== */
 
-        const input = getElement(
+
+function getElement(id) {
+
+    return document.getElementById(id);
+
+}
+
+
+
+/* ========================================================
+   RECIPIENT PARSER
+======================================================== */
+
+
+function getRecipients() {
+
+    const input =
+        getElement(
             "recipients"
         );
 
-        const rawValue = input.value || "";
 
-        const pieces = rawValue.split(
+    const rawValue =
+        input.value || "";
+
+
+    const pieces =
+        rawValue.split(
             /[\s,;]+/
         );
 
-        const uniqueRecipients = [];
 
-        const seen = new Set();
+    const uniqueRecipients = [];
+
+    const seen = new Set();
 
 
-        for (const piece of pieces) {
+    for (
+        const piece of pieces
+    ) {
 
-            const email = piece
+
+        const email =
+            piece
                 .trim()
                 .toLowerCase();
 
 
-            if (!email) {
-                continue;
-            }
+        if (!email) {
 
-
-            if (seen.has(email)) {
-                continue;
-            }
-
-
-            seen.add(email);
-
-            uniqueRecipients.push(
-                email
-            );
-
-
-            if (
-                uniqueRecipients.length >= 25
-            ) {
-                break;
-            }
+            continue;
 
         }
 
 
-        return uniqueRecipients;
+        if (seen.has(email)) {
 
-    }
+            continue;
 
-
-    /*
-     * -----------------------------------------------------
-     * RECIPIENT COUNT
-     * -----------------------------------------------------
-     */
-
-    function updateRecipientCount() {
-
-        const recipients =
-            getRecipients();
+        }
 
 
-        getElement(
-            "recipientCount"
-        ).textContent =
-            recipients.length + " found";
+        seen.add(
+            email
+        );
 
 
-        getElement(
-            "totalCount"
-        ).textContent =
-            recipients.length;
-
-
-        getElement(
-            "remainingCount"
-        ).textContent =
-            recipients.length;
-
-    }
-
-
-    /*
-     * -----------------------------------------------------
-     * PASSWORD VISIBILITY
-     * -----------------------------------------------------
-     */
-
-    function togglePassword() {
-
-        const passwordInput =
-            getElement(
-                "appPassword"
-            );
+        uniqueRecipients.push(
+            email
+        );
 
 
         if (
-            passwordInput.type ===
-            "password"
+            uniqueRecipients.length >= 25
         ) {
 
-            passwordInput.type =
-                "text";
-
-        } else {
-
-            passwordInput.type =
-                "password";
+            break;
 
         }
 
     }
 
 
-    /*
-     * -----------------------------------------------------
-     * TURNSTILE TOKEN
-     * -----------------------------------------------------
-     */
+    return uniqueRecipients;
 
-    function getTurnstileToken() {
-
-        const tokenInput =
-            document.querySelector(
-                'input[name="cf-turnstile-response"]'
-            );
+}
 
 
-        if (!tokenInput) {
-            return "";
-        }
+
+/* ========================================================
+   RECIPIENT COUNT
+======================================================== */
 
 
-        return tokenInput.value || "";
+function updateRecipientCount() {
 
-    }
-
-
-    /*
-     * -----------------------------------------------------
-     * STOP
-     * -----------------------------------------------------
-     */
-
-    function stopSending() {
-
-        if (!sending) {
-            return;
-        }
+    const recipients =
+        getRecipients();
 
 
-        stopRequested = true;
+    getElement(
+        "recipientCount"
+    ).textContent =
+        recipients.length +
+        " found";
 
 
+    getElement(
+        "totalCount"
+    ).textContent =
+        recipients.length;
+
+
+    getElement(
+        "remainingCount"
+    ).textContent =
+        recipients.length;
+
+}
+
+
+
+/* ========================================================
+   PASSWORD TOGGLE
+======================================================== */
+
+
+function togglePassword() {
+
+    const passwordInput =
         getElement(
-            "sendStatus"
-        ).textContent =
-            "Stop requested. Current sending operation will finish.";
+            "appPassword"
+        );
+
+
+    if (
+        passwordInput.type ===
+        "password"
+    ) {
+
+        passwordInput.type =
+            "text";
+
+    } else {
+
+        passwordInput.type =
+            "password";
 
     }
 
-
-    /*
-     * -----------------------------------------------------
-     * VALIDATION
-     * -----------------------------------------------------
-     */
-
-    function validateForm(recipients) {
-
-        if (!recipients.length) {
-
-            return "Please add at least one recipient.";
-
-        }
+}
 
 
-        const gmail =
-            getElement("gmail").value.trim();
+
+/* ========================================================
+   TURNSTILE TOKEN
+======================================================== */
 
 
-        if (!gmail) {
+function getTurnstileToken() {
 
-            return "Please enter your Gmail address.";
-
-        }
-
-
-        const appPassword =
-            getElement(
-                "appPassword"
-            ).value.trim();
+    const tokenInput =
+        document.querySelector(
+            'input[name="cf-turnstile-response"]'
+        );
 
 
-        if (!appPassword) {
-
-            return "Please enter your Gmail App Password.";
-
-        }
-
-
-        const subject =
-            getElement(
-                "subject"
-            ).value.trim();
-
-
-        if (!subject) {
-
-            return "Please enter an email subject.";
-
-        }
-
-
-        const message =
-            getElement(
-                "editor"
-            ).innerHTML.trim();
-
-
-        if (!message) {
-
-            return "Please enter the message body.";
-
-        }
-
-
-        {% if turnstile_site_key %}
-
-        if (!getTurnstileToken()) {
-
-            return "Please complete Cloudflare verification.";
-
-        }
-
-        {% endif %}
-
+    if (!tokenInput) {
 
         return "";
 
     }
 
 
-    /*
-     * -----------------------------------------------------
-     * PROGRESS RESET
-     * -----------------------------------------------------
-     */
+    return tokenInput.value || "";
 
-    function resetProgress(total) {
+}
+
+
+
+/* ========================================================
+   STOP BUTTON
+======================================================== */
+
+
+function stopSending() {
+
+    if (!sending) {
+
+        return;
+
+    }
+
+
+    stopRequested = true;
+
+
+    getElement(
+        "sendStatus"
+    ).textContent =
+        "Stop requested. Current operation will finish.";
+
+}
+
+
+
+/* ========================================================
+   FORM VALIDATION
+======================================================== */
+
+
+function validateForm(
+    recipients
+) {
+
+
+    if (
+        !recipients.length
+    ) {
+
+        return (
+            "Please add at least one recipient."
+        );
+
+    }
+
+
+    const gmail =
+        getElement(
+            "gmail"
+        ).value.trim();
+
+
+    if (!gmail) {
+
+        return (
+            "Please enter your Gmail address."
+        );
+
+    }
+
+
+    const appPassword =
+        getElement(
+            "appPassword"
+        ).value.trim();
+
+
+    if (!appPassword) {
+
+        return (
+            "Please enter the Gmail App Password."
+        );
+
+    }
+
+
+    const subject =
+        getElement(
+            "subject"
+        ).value.trim();
+
+
+    if (!subject) {
+
+        return (
+            "Please enter an email subject."
+        );
+
+    }
+
+
+    const message =
+        getElement(
+            "editor"
+        ).innerHTML.trim();
+
+
+    if (!message) {
+
+        return (
+            "Please enter the message body."
+        );
+
+    }
+
+
+    {% if turnstile_site_key %}
+
+
+    if (
+        !getTurnstileToken()
+    ) {
+
+        return (
+            "Please complete Cloudflare verification."
+        );
+
+    }
+
+
+    {% endif %}
+
+
+    return "";
+
+}
+
+
+
+/* ========================================================
+   RESET PROGRESS
+======================================================== */
+
+
+function resetProgress(
+    total
+) {
+
+    getElement(
+        "totalCount"
+    ).textContent =
+        total;
+
+
+    getElement(
+        "sentCount"
+    ).textContent =
+        "0";
+
+
+    getElement(
+        "failedCount"
+    ).textContent =
+        "0";
+
+
+    getElement(
+        "remainingCount"
+    ).textContent =
+        total;
+
+
+    getElement(
+        "progressBar"
+    ).style.width =
+        "0%";
+
+
+    getElement(
+        "errorDetails"
+    ).textContent =
+        "";
+
+}
+
+
+
+/* ========================================================
+   START SENDING
+======================================================== */
+
+
+async function startSending() {
+
+
+    if (sending) {
+
+        return;
+
+    }
+
+
+    const recipients =
+        getRecipients();
+
+
+    const validationError =
+        validateForm(
+            recipients
+        );
+
+
+    if (validationError) {
 
         getElement(
-            "totalCount"
-        ).textContent = total;
+            "sendStatus"
+        ).textContent =
+            validationError;
 
-
-        getElement(
-            "sentCount"
-        ).textContent = 0;
-
-
-        getElement(
-            "failedCount"
-        ).textContent = 0;
-
-
-        getElement(
-            "remainingCount"
-        ).textContent = total;
-
-
-        getElement(
-            "progressBar"
-        ).style.width = "0%";
-
-
-        getElement(
-            "errorDetails"
-        ).textContent = "";
+        return;
 
     }
 
 
     /*
-     * -----------------------------------------------------
-     * START SENDING
-     * -----------------------------------------------------
+     * Create a snapshot of the fields.
+     * Later UI changes won't modify
+     * this sending request.
      */
 
-    async function startSending() {
 
-        if (sending) {
-            return;
-        }
+    const payload = {
 
 
-        const recipients =
-            getRecipients();
+        sender_name:
+            getElement(
+                "senderName"
+            ).value.trim(),
 
 
-        const validationError =
-            validateForm(
-                recipients
+        gmail:
+            getElement(
+                "gmail"
+            ).value.trim(),
+
+
+        app_password:
+            getElement(
+                "appPassword"
+            ).value,
+
+
+        subject:
+            getElement(
+                "subject"
+            ).value,
+
+
+        message_html:
+            getElement(
+                "editor"
+            ).innerHTML,
+
+
+        recipients:
+            recipients,
+
+
+        turnstile_token:
+            getTurnstileToken()
+
+
+    };
+
+
+    sending = true;
+
+
+    stopRequested = false;
+
+
+    getElement(
+        "sendButton"
+    ).disabled =
+        true;
+
+
+    getElement(
+        "senderStatus"
+    ).innerHTML =
+        "◯ Sending from: <strong>" +
+        payload.gmail +
+        "</strong>";
+
+
+    getElement(
+        "sendStatus"
+    ).textContent =
+        "Connecting to Gmail...";
+
+
+    getElement(
+        "errorDetails"
+    ).textContent =
+        "";
+
+
+    resetProgress(
+        recipients.length
+    );
+
+
+    try {
+
+
+        /*
+         * SEND REQUEST
+         */
+
+
+        const response =
+            await fetch(
+                "/api/send",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
+                }
             );
 
 
-        if (validationError) {
+        /*
+         * Read response safely.
+         */
 
-            getElement(
-                "sendStatus"
-            ).textContent =
-                validationError;
+        let result;
 
-            return;
+
+        try {
+
+            result =
+                await response.json();
+
+        } catch (jsonError) {
+
+            throw new Error(
+                "The server returned an invalid response. "
+                +
+                "HTTP status: "
+                +
+                response.status
+            );
 
         }
 
 
         /*
-         * Snapshot the fields before sending.
-         * Changes made in the interface after
-         * clicking Send do not modify this run.
+         * IMPORTANT:
+         *
+         * If backend returned an error,
+         * display its REAL message.
          */
 
-        const payload = {
+        if (!response.ok) {
 
-            sender_name:
-                getElement(
-                    "senderName"
-                ).value.trim(),
+            throw new Error(
+                result.error ||
+                (
+                    "Server request failed. "
+                    +
+                    "HTTP status: "
+                    +
+                    response.status
+                )
+            );
 
-            gmail:
-                getElement(
-                    "gmail"
-                ).value.trim(),
-
-            app_password:
-                getElement(
-                    "appPassword"
-                ).value,
-
-            subject:
-                getElement(
-                    "subject"
-                ).value,
-
-            message_html:
-                getElement(
-                    "editor"
-                ).innerHTML,
-
-            recipients:
-                recipients,
-
-            turnstile_token:
-                getTurnstileToken()
-
-        };
+        }
 
 
-        sending = true;
+        const sent =
+            Array.isArray(
+                result.sent
+            )
+                ? result.sent
+                : [];
 
-        stopRequested = false;
+
+        const failed =
+            Array.isArray(
+                result.failed
+            )
+                ? result.failed
+                : [];
+
+
+        /*
+         * FINAL COUNTS
+         */
 
 
         getElement(
-            "sendButton"
-        ).disabled = true;
-
-
-        getElement(
-            "senderStatus"
-        ).innerHTML =
-            "◯ Sending from: <strong>" +
-            payload.gmail +
-            "</strong>";
-
-
-        getElement(
-            "sendStatus"
+            "sentCount"
         ).textContent =
-            "Connecting to Gmail...";
+            sent.length;
 
 
-        resetProgress(
-            recipients.length
-        );
+        getElement(
+            "failedCount"
+        ).textContent =
+            failed.length;
 
 
-        try {
-
-            const response =
-                await fetch(
-                    "/api/send",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify(
-                                payload
-                            )
-                    }
-                );
+        getElement(
+            "remainingCount"
+        ).textContent =
+            "0";
 
 
-            const result =
-                await response.json();
+        getElement(
+            "progressBar"
+        ).style.width =
+            "100%";
 
 
-            if (!response.ok) {
-
-                throw new Error(
-                    result.error ||
-                    "The server rejected the sending request."
-                );
-
-            }
+        /*
+         * SHOW FAILED DETAILS
+         */
 
 
-            const sent =
-                Array.isArray(
-                    result.sent
-                )
-                    ? result.sent
-                    : [];
+        if (
+            failed.length > 0
+        ) {
 
 
-            const failed =
-                Array.isArray(
-                    result.failed
-                )
-                    ? result.failed
-                    : [];
+            const failureText =
+                failed
+                    .slice(
+                        0,
+                        10
+                    )
+                    .map(
+                        item => {
 
-
-            /*
-             * Update final progress.
-             */
-
-            getElement(
-                "sentCount"
-            ).textContent =
-                sent.length;
-
-
-            getElement(
-                "failedCount"
-            ).textContent =
-                failed.length;
-
-
-            getElement(
-                "remainingCount"
-            ).textContent =
-                0;
-
-
-            getElement(
-                "progressBar"
-            ).style.width =
-                "100%";
-
-
-            /*
-             * Display failure information.
-             */
-
-            if (failed.length) {
-
-                const failureText =
-                    failed
-                        .slice(0, 5)
-                        .map(
-                            item =>
-                                item.email +
-                                ": " +
+                            return (
+                                item.email
+                                +
+                                ": "
+                                +
                                 item.error
-                        )
-                        .join("\n");
+                            );
 
-
-                getElement(
-                    "errorDetails"
-                ).textContent =
-                    failureText;
-
-
-                getElement(
-                    "sendStatus"
-                ).textContent =
-                    sent.length +
-                    " sent, " +
-                    failed.length +
-                    " failed.";
-
-            } else {
-
-                getElement(
-                    "sendStatus"
-                ).textContent =
-                    "All emails processed successfully.";
-
-            }
-
-
-            /*
-             * Reset Turnstile after the run.
-             */
-
-            {% if turnstile_site_key %}
-
-            if (
-                window.turnstile &&
-                typeof window.turnstile.reset ===
-                    "function"
-            ) {
-
-                try {
-
-                    window.turnstile.reset();
-
-                } catch (error) {
-
-                    console.debug(
-                        "Turnstile reset failed.",
-                        error
+                        }
+                    )
+                    .join(
+                        "\n"
                     );
-
-                }
-
-            }
-
-            {% endif %}
-
-
-        } catch (error) {
-
-            getElement(
-                "sendStatus"
-            ).textContent =
-                error.message ||
-                "Sending failed.";
 
 
             getElement(
                 "errorDetails"
             ).textContent =
-                "No emails were confirmed by the application after the request failed.";
+                failureText;
 
-        } finally {
-
-            sending = false;
 
             getElement(
-                "sendButton"
-            ).disabled = false;
+                "sendStatus"
+            ).textContent =
+                sent.length
+                +
+                " sent, "
+                +
+                failed.length
+                +
+                " failed.";
+
+
+        } else {
+
+
+            getElement(
+                "sendStatus"
+            ).textContent =
+                "All emails processed successfully.";
+
 
         }
 
+
+        /*
+         * RESET TURNSTILE
+         */
+
+
+        {% if turnstile_site_key %}
+
+
+        if (
+            window.turnstile &&
+            typeof window.turnstile.reset ===
+            "function"
+        ) {
+
+
+            try {
+
+                window.turnstile.reset();
+
+            } catch (resetError) {
+
+                console.log(
+                    "Turnstile reset error:",
+                    resetError
+                );
+
+            }
+
+        }
+
+
+        {% endif %}
+
+
+    } catch (error) {
+
+
+        /*
+         * IMPORTANT:
+         *
+         * This now shows the REAL error
+         * returned from Flask instead of
+         * the old generic message.
+         */
+
+
+        console.error(
+            "EMAIL SEND ERROR:",
+            error
+        );
+
+
+        getElement(
+            "sendStatus"
+        ).textContent =
+            "Sending failed.";
+
+
+        getElement(
+            "errorDetails"
+        ).textContent =
+            error.message ||
+            "The server could not complete the email request.";
+
+
+    } finally {
+
+
+        sending = false;
+
+
+        getElement(
+            "sendButton"
+        ).disabled =
+            false;
+
+
     }
 
+}
 
-    /*
-     * -----------------------------------------------------
-     * INITIAL STATE
-     * -----------------------------------------------------
-     */
 
-    updateRecipientCount();
+
+/* ========================================================
+   INITIALIZATION
+======================================================== */
+
+
+updateRecipientCount();
+
 
 </script>
 
+
 </body>
+
 </html>
