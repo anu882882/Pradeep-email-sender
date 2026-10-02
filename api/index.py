@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 import smtplib
 import ssl
 import re
+import os
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from pathlib import Path
@@ -16,6 +17,8 @@ app = Flask(
     static_url_path="/static"
 )
 
+app.secret_key = os.environ.get("SESSION_SECRET", "")
+
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
     r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
@@ -26,21 +29,107 @@ def valid_email(value):
     return bool(EMAIL_RE.fullmatch(value.strip()))
 
 
+def is_authenticated():
+    return session.get("authenticated") is True
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if is_authenticated():
+        return redirect(url_for("home"))
+
+    error = None
+
+    if request.method == "POST":
+
+        password = str(
+            request.form.get("password", "")
+        )
+
+        login_password = os.environ.get(
+            "LOGIN_PASSWORD",
+            ""
+        )
+
+        if not login_password:
+            error = "Login password is not configured."
+
+        elif password == login_password:
+
+            session["authenticated"] = True
+
+            return redirect(url_for("home"))
+
+        else:
+
+            error = "Incorrect password."
+
+    return render_template(
+        "login.html",
+        error=error
+    )
+
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+
+
 @app.route("/")
 def home():
-    return render_template("index.html")
+
+    if not is_authenticated():
+        return redirect(
+            url_for("login")
+        )
+
+    return render_template(
+        "index.html"
+    )
 
 
 @app.route("/send", methods=["POST"])
 def send_email():
-    data = request.get_json(silent=True) or {}
 
-    sender_name = str(data.get("sender_name", "")).strip()
-    gmail = str(data.get("gmail", "")).strip()
-    app_password = str(data.get("app_password", "")).strip()
-    recipient = str(data.get("recipient", "")).strip()
-    subject = str(data.get("subject", "")).strip()
-    body = str(data.get("body", ""))
+    if not is_authenticated():
+        return jsonify({
+            "success": False,
+            "message": "Authentication required."
+        }), 401
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    sender_name = str(
+        data.get("sender_name", "")
+    ).strip()
+
+    gmail = str(
+        data.get("gmail", "")
+    ).strip()
+
+    app_password = str(
+        data.get("app_password", "")
+    ).strip()
+
+    recipient = str(
+        data.get("recipient", "")
+    ).strip()
+
+    subject = str(
+        data.get("subject", "")
+    ).strip()
+
+    body = str(
+        data.get("body", "")
+    )
 
     if not sender_name:
         return jsonify({
@@ -79,10 +168,22 @@ def send_email():
         }), 400
 
     try:
-        message = MIMEText(body, "plain", "utf-8")
+
+        message = MIMEText(
+            body,
+            "plain",
+            "utf-8"
+        )
 
         message["Subject"] = subject
-        message["From"] = formataddr((sender_name, gmail))
+
+        message["From"] = formataddr(
+            (
+                sender_name,
+                gmail
+            )
+        )
+
         message["To"] = recipient
 
         context = ssl.create_default_context()
@@ -94,7 +195,10 @@ def send_email():
             timeout=30
         ) as server:
 
-            server.login(gmail, app_password)
+            server.login(
+                gmail,
+                app_password
+            )
 
             server.sendmail(
                 gmail,
@@ -104,25 +208,30 @@ def send_email():
 
         return jsonify({
             "success": True,
-            "message": f"Email sent to {recipient}."
+            "message": (
+                f"Email sent to {recipient}."
+            )
         })
 
     except smtplib.SMTPAuthenticationError:
+
         return jsonify({
             "success": False,
             "message": (
                 "Gmail authentication failed. "
-                "Check the Gmail address and Google App Password."
+                "Check Gmail and App Password."
             )
         }), 401
 
     except smtplib.SMTPException as exc:
+
         return jsonify({
             "success": False,
             "message": f"SMTP error: {str(exc)}"
         }), 500
 
     except Exception as exc:
+
         return jsonify({
             "success": False,
             "message": f"Server error: {str(exc)}"
@@ -131,6 +240,7 @@ def send_email():
 
 @app.route("/health")
 def health():
+
     return jsonify({
         "status": "ok",
         "service": "Secure Mail Console"
@@ -138,6 +248,7 @@ def health():
 
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
         port=5000,
