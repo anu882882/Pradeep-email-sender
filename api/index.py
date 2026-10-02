@@ -19,6 +19,7 @@ app = Flask(
 
 app.secret_key = os.environ.get("SESSION_SECRET", "")
 
+
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
     r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
@@ -96,7 +97,9 @@ def send_email():
             "message": "Authentication required."
         }), 401
 
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(
+        silent=True
+    ) or {}
 
     sender_name = str(
         data.get("sender_name", "")
@@ -122,11 +125,17 @@ def send_email():
         data.get("body", "")
     )
 
+    is_html = bool(
+        data.get("is_html", False)
+    )
+
+
     if not sender_name:
         return jsonify({
             "success": False,
             "message": "Sender Name is required."
         }), 400
+
 
     if not valid_email(gmail):
         return jsonify({
@@ -134,11 +143,13 @@ def send_email():
             "message": "Enter a valid Gmail address."
         }), 400
 
+
     if not app_password:
         return jsonify({
             "success": False,
             "message": "Google App Password is required."
         }), 400
+
 
     if not valid_email(recipient):
         return jsonify({
@@ -146,11 +157,13 @@ def send_email():
             "message": "Invalid recipient email."
         }), 400
 
+
     if not subject:
         return jsonify({
             "success": False,
             "message": "Subject is required."
         }), 400
+
 
     if not body.strip():
         return jsonify({
@@ -158,11 +171,14 @@ def send_email():
             "message": "Message body is required."
         }), 400
 
+
     try:
+
+        content_type = "html" if is_html else "plain"
 
         message = MIMEText(
             body,
-            "plain",
+            content_type,
             "utf-8"
         )
 
@@ -177,7 +193,9 @@ def send_email():
 
         message["To"] = recipient
 
+
         context = ssl.create_default_context()
+
 
         with smtplib.SMTP_SSL(
             "smtp.gmail.com",
@@ -197,10 +215,12 @@ def send_email():
                 message.as_string()
             )
 
+
         return jsonify({
             "success": True,
             "message": f"Email sent to {recipient}."
         })
+
 
     except smtplib.SMTPAuthenticationError:
 
@@ -212,12 +232,14 @@ def send_email():
             )
         }), 401
 
+
     except smtplib.SMTPException as exc:
 
         return jsonify({
             "success": False,
             "message": f"SMTP error: {str(exc)}"
         }), 500
+
 
     except Exception as exc:
 
