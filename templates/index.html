@@ -38,17 +38,9 @@
             <i class="fa-solid fa-shield-halved"></i>
         </div>
 
-        <div>
-
-            <h1>
-                Secure Mail Console
-            </h1>
-
-            <span>
-                Secure email workspace
-            </span>
-
-        </div>
+        <h1>
+            Secure Mail Console
+        </h1>
 
     </div>
 
@@ -73,12 +65,10 @@
     <div class="page-heading">
 
         <h2>
+            <i class="fa-solid fa-paper-plane"></i>
+
             Bulk Email Sender
         </h2>
-
-        <p>
-            Send to your opted-in or transactional recipients.
-        </p>
 
     </div>
 
@@ -86,31 +76,20 @@
     <div class="main-grid">
 
 
-        <!-- COMPOSE -->
+        <!-- LEFT -->
 
         <section class="card compose-card">
 
-            <div class="card-header">
 
-                <div class="card-title">
+            <div class="card-title">
 
-                    <div class="title-icon">
-                        <i class="fa-regular fa-pen-to-square"></i>
-                    </div>
+                <h3>
 
-                    <div>
+                    <i class="fa-regular fa-pen-to-square"></i>
 
-                        <h3>
-                            Compose Message
-                        </h3>
+                    Compose Message
 
-                        <p>
-                            Enter your sender and message details
-                        </p>
-
-                    </div>
-
-                </div>
+                </h3>
 
             </div>
 
@@ -120,14 +99,14 @@
 
                 <div class="field">
 
-                    <label for="senderName">
+                    <label>
                         Sender Name
                     </label>
 
                     <input
                         id="senderName"
                         type="text"
-                        placeholder="Your name"
+                        placeholder="E.g., John Doe"
                     >
 
                 </div>
@@ -135,36 +114,35 @@
 
                 <div class="field">
 
-                    <label for="gmail">
+                    <label>
                         Your Gmail
                     </label>
 
                     <input
                         id="gmail"
                         type="email"
-                        placeholder="yourname@gmail.com"
+                        placeholder="you@gmail.com"
                     >
 
                 </div>
 
 
-                <div class="field full">
+                <div class="field">
 
-                    <label for="appPassword">
+                    <label>
                         App Password
                     </label>
 
-                    <div class="password-wrapper">
+                    <div class="password-box">
 
                         <input
                             id="appPassword"
                             type="password"
-                            placeholder="Google App Password"
+                            placeholder="16-char app password"
                         >
 
                         <button
                             type="button"
-                            class="password-toggle"
                             onclick="togglePassword()"
                         >
 
@@ -177,23 +155,19 @@
 
                     </div>
 
-                    <small>
-                        Use a Google App Password.
-                    </small>
-
                 </div>
 
 
-                <div class="field full">
+                <div class="field">
 
-                    <label for="subject">
+                    <label>
                         Email Subject
                     </label>
 
                     <input
                         id="subject"
                         type="text"
-                        placeholder="Enter email subject"
+                        placeholder="Enter subject line..."
                     >
 
                 </div>
@@ -201,50 +175,243 @@
 
                 <div class="field full">
 
-                    <label for="message">
+                    <label>
                         Message Body
+                        <span>
+                            (Plain Text / HTML)
+                        </span>
                     </label>
 
                     <textarea
                         id="message"
-                        rows="10"
-                        placeholder="Write your message here..."
+                        rows="12"
+                        placeholder="Write your email here... Spintax supported: {Hi|Hello} {name}"
                     ></textarea>
 
                 </div>
 
 
-                <div class="spam-panel">
+                <div class="spam-heading">
 
-                    <div class="spam-icon">
-                        <i class="fa-solid fa-shield-halved"></i>
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    Spam Protection
+
+                </div>
+
+
+                <div class="spam-box">
+
+                    <div class="cloud-check">
+
+                        <i class="fa-solid fa-check"></i>
+
                     </div>
 
                     <div>
 
                         <strong>
-                            Spam Protection
+                            Success!
                         </strong>
 
+                        <small>
+                            Protected sending workspace
+                        </small>
+
+                    </div>
+
+                    <div class="cloudflare">
+
+                        <strong>
+                            CLOUDFLARE
+                        </strong>
+
+                        <small>
+                            Privacy · Help
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT -->
+
+        <section class="right-column">
+
+
+            <!-- RECIPIENTS -->
+
+            <div class="card recipients-card">
+
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h3>
+
+                            <i class="fa-solid fa-users"></i>
+
+                            Recipients
+
+                        </h3>
+
                         <p>
-                            Send only to recipients who have opted in or require the transaction.
+                            Paste emails (comma separated, new lines, or Excel copy)
                         </p>
 
                     </div>
+
+
+                    <div
+                        id="recipientCount"
+                        class="found-badge"
+                    >
+                        0 found
+                    </div>
+
+                </div>
+
+
+                <textarea
+                    id="recipients"
+                    class="recipients-input"
+                    placeholder="recipient1@example.com&#10;recipient2@example.com"
+                ></textarea>
+
+
+            </div>
+
+
+            <!-- PROGRESS -->
+
+            <div class="card progress-card">
+
+
+                <div class="progress-title">
+
+                    <h3>
+
+                        <i class="fa-solid fa-chart-pie"></i>
+
+                        Progress Monitor
+
+                    </h3>
+
+                </div>
+
+
+                <div class="stats-grid">
+
+
+                    <div class="stat-box">
+
+                        <span>
+                            TOTAL
+                        </span>
+
+                        <strong id="totalCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span>
+                            SENT
+                        </span>
+
+                        <strong
+                            id="sentCount"
+                            class="green"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span>
+                            FAILED
+                        </span>
+
+                        <strong
+                            id="failedCount"
+                            class="red"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box">
+
+                        <span>
+                            REMAINING
+                        </span>
+
+                        <strong
+                            id="remainingCount"
+                            class="orange"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="progress-track">
+
+                    <div
+                        id="progressBar"
+                        class="progress-bar"
+                    ></div>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <span>
+
+                        <i
+                            id="statusIcon"
+                            class="fa-solid fa-circle-pause"
+                        ></i>
+
+                        <span id="statusText">
+                            Ready to send
+                        </span>
+
+                    </span>
 
                 </div>
 
 
                 <button
                     id="sendButton"
-                    class="primary-button"
+                    class="send-all"
                     type="button"
                     onclick="startQueue()"
                 >
 
-                    <i class="fa-regular fa-paper-plane"></i>
+                    <i class="fa-solid fa-paper-plane"></i>
 
-                    Start Sending
+                    Send All
 
                 </button>
 
@@ -266,210 +433,12 @@
 
             </div>
 
+
         </section>
 
-
-        <!-- RIGHT -->
-
-        <section class="right-column">
-
-
-            <!-- RECIPIENTS -->
-
-            <div class="card">
-
-                <div class="card-header">
-
-                    <div class="card-title">
-
-                        <div class="title-icon">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                Recipients
-                            </h3>
-
-                            <p>
-                                Add up to 25 addresses
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <div
-                        id="recipientCount"
-                        class="count-badge"
-                    >
-                        0/25
-                    </div>
-
-                </div>
-
-
-                <textarea
-                    id="recipients"
-                    class="recipients-input"
-                    rows="7"
-                    placeholder="Enter email addresses, one per line..."
-                ></textarea>
-
-
-                <div class="recipient-info">
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    Separate addresses with commas,
-                    semicolons, or new lines.
-
-                </div>
-
-
-                <div
-                    id="recipientList"
-                    class="recipient-list"
-                ></div>
-
-            </div>
-
-
-            <!-- PROGRESS -->
-
-            <div class="card progress-card">
-
-                <div class="card-header">
-
-                    <div class="card-title">
-
-                        <div class="title-icon">
-                            <i class="fa-solid fa-chart-simple"></i>
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                Progress Monitor
-                            </h3>
-
-                            <p>
-                                Automatic queue progress
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="stats-grid">
-
-                    <div class="stat">
-
-                        <span>TOTAL</span>
-
-                        <strong id="totalCount">
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat">
-
-                        <span>SENT</span>
-
-                        <strong
-                            id="sentCount"
-                            class="success-text"
-                        >
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat">
-
-                        <span>FAILED</span>
-
-                        <strong
-                            id="failedCount"
-                            class="danger-text"
-                        >
-                            0
-                        </strong>
-
-                    </div>
-
-
-                    <div class="stat">
-
-                        <span>REMAINING</span>
-
-                        <strong id="remainingCount">
-                            0
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="progress-track">
-
-                    <div
-                        id="progressBar"
-                        class="progress-bar"
-                    ></div>
-
-                </div>
-
-
-                <div class="progress-status">
-
-                    <span>
-                        Status
-                    </span>
-
-                    <strong id="statusText">
-                        Waiting
-                    </strong>
-
-                </div>
-
-
-                <div class="queue-message">
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    The queue sends one recipient at a time and updates
-                    the status after each response.
-
-                </div>
-
-
-                <button
-                    class="reset-button full-reset"
-                    type="button"
-                    onclick="resetProgress()"
-                >
-
-                    <i class="fa-solid fa-rotate-left"></i>
-
-                    Reset
-
-                </button>
-
-            </div>
-
-
-        </section>
 
     </div>
+
 
 </main>
 
@@ -481,6 +450,7 @@
 
 
 <script>
+
 
 let recipients = [];
 
@@ -495,59 +465,27 @@ let queueRunning = false;
 let stopRequested = false;
 
 
-const recipientsInput =
-    document.getElementById("recipients");
-
-const recipientList =
-    document.getElementById("recipientList");
-
-const recipientCount =
-    document.getElementById("recipientCount");
-
-const totalCount =
-    document.getElementById("totalCount");
-
-const sentCount =
-    document.getElementById("sentCount");
-
-const failedCount =
-    document.getElementById("failedCount");
-
-const remainingCount =
-    document.getElementById("remainingCount");
-
-const progressBar =
-    document.getElementById("progressBar");
-
-const statusText =
-    document.getElementById("statusText");
-
-const sendButton =
-    document.getElementById("sendButton");
-
-const stopButton =
-    document.getElementById("stopButton");
+const recipientInput =
+    document.getElementById(
+        "recipients"
+    );
 
 
-recipientsInput.addEventListener(
+recipientInput.addEventListener(
     "input",
     updateRecipients
 );
 
 
-function updateRecipients() {
-
-    if (queueRunning) {
-        return;
-    }
+function parseRecipients() {
 
     const raw =
-        recipientsInput.value;
+        recipientInput.value;
 
 
-    const parsed =
+    const emails =
         raw
-            .split(/[\n,;]+/)
+            .split(/[\s,;]+/)
             .map(
                 item => item.trim().toLowerCase()
             )
@@ -557,9 +495,13 @@ function updateRecipients() {
     const unique = [];
 
 
-    for (const email of parsed) {
+    for (
+        const email of emails
+    ) {
 
-        if (!unique.includes(email)) {
+        if (
+            !unique.includes(email)
+        ) {
 
             unique.push(email);
 
@@ -568,8 +510,20 @@ function updateRecipients() {
     }
 
 
+    return unique.slice(0, 25);
+
+}
+
+
+function updateRecipients() {
+
+    if (queueRunning) {
+        return;
+    }
+
+
     recipients =
-        unique.slice(0, 25);
+        parseRecipients();
 
 
     currentIndex = 0;
@@ -579,71 +533,12 @@ function updateRecipients() {
     failed = 0;
 
 
-    renderRecipients();
-
-    updateProgress();
+    updateCounters();
 
 }
 
 
-function renderRecipients() {
-
-    recipientList.innerHTML = "";
-
-
-    recipients.forEach(
-        (email, index) => {
-
-            const row =
-                document.createElement("div");
-
-            row.className =
-                "recipient-row";
-
-
-            if (
-                index === currentIndex &&
-                !queueRunning
-            ) {
-
-                row.classList.add("current");
-
-            }
-
-
-            row.innerHTML = `
-
-                <div class="recipient-number">
-                    ${index + 1}
-                </div>
-
-                <div class="recipient-email">
-                    ${escapeHtml(email)}
-                </div>
-
-                <div
-                    id="status-${index}"
-                    class="recipient-status pending"
-                >
-                    Pending
-                </div>
-
-            `;
-
-
-            recipientList.appendChild(row);
-
-        }
-    );
-
-
-    recipientCount.textContent =
-        `${recipients.length}/25`;
-
-}
-
-
-function updateProgress() {
+function updateCounters() {
 
     const total =
         recipients.length;
@@ -656,16 +551,33 @@ function updateProgress() {
         );
 
 
-    totalCount.textContent =
+    document.getElementById(
+        "recipientCount"
+    ).textContent =
+        `${total} found`;
+
+
+    document.getElementById(
+        "totalCount"
+    ).textContent =
         total;
 
-    sentCount.textContent =
+
+    document.getElementById(
+        "sentCount"
+    ).textContent =
         sent;
 
-    failedCount.textContent =
+
+    document.getElementById(
+        "failedCount"
+    ).textContent =
         failed;
 
-    remainingCount.textContent =
+
+    document.getElementById(
+        "remainingCount"
+    ).textContent =
         remaining;
 
 
@@ -675,17 +587,19 @@ function updateProgress() {
 
     const percentage =
         total > 0
-            ? (completed / total) * 100
+            ? completed / total * 100
             : 0;
 
 
-    progressBar.style.width =
+    document.getElementById(
+        "progressBar"
+    ).style.width =
         `${percentage}%`;
 
 }
 
 
-function getMessageData() {
+function getFormData() {
 
     return {
 
@@ -712,34 +626,52 @@ function getMessageData() {
         body:
             document.getElementById(
                 "message"
-            ).value
+            ).value,
+
+        is_html:
+            false
 
     };
 
 }
 
 
-function validateMessage(data) {
+function validateForm(data) {
 
     if (!data.sender_name) {
+
         return "Enter Sender Name.";
+
     }
+
 
     if (!data.gmail) {
+
         return "Enter Gmail address.";
+
     }
+
 
     if (!data.app_password) {
-        return "Enter Google App Password.";
+
+        return "Enter App Password.";
+
     }
+
 
     if (!data.subject) {
-        return "Enter email subject.";
+
+        return "Enter Email Subject.";
+
     }
 
+
     if (!data.body.trim()) {
-        return "Enter message body.";
+
+        return "Enter Message Body.";
+
     }
+
 
     return null;
 
@@ -753,7 +685,13 @@ async function startQueue() {
     }
 
 
-    if (recipients.length === 0) {
+    recipients =
+        parseRecipients();
+
+
+    if (
+        recipients.length === 0
+    ) {
 
         showToast(
             "Add at least one recipient.",
@@ -766,11 +704,11 @@ async function startQueue() {
 
 
     const data =
-        getMessageData();
+        getFormData();
 
 
     const validation =
-        validateMessage(data);
+        validateForm(data);
 
 
     if (validation) {
@@ -790,35 +728,39 @@ async function startQueue() {
     stopRequested = false;
 
 
-    sendButton.disabled = true;
+    currentIndex = 0;
 
-    stopButton.disabled = false;
+    sent = 0;
 
-    recipientsInput.disabled = true;
-
-
-    statusText.textContent =
-        "Queue running";
+    failed = 0;
 
 
-    while (
-        currentIndex < recipients.length &&
-        !stopRequested
+    setRunningUI(true);
+
+
+    updateCounters();
+
+
+    for (
+        ;
+        currentIndex < recipients.length;
+        currentIndex++
     ) {
+
+
+        if (stopRequested) {
+            break;
+        }
+
 
         const recipient =
             recipients[currentIndex];
 
 
-        setRecipientStatus(
-            currentIndex,
-            "Sending...",
+        setStatus(
+            `Sending ${currentIndex + 1} of ${recipients.length}`,
             "sending"
         );
-
-
-        statusText.textContent =
-            `Sending ${currentIndex + 1} of ${recipients.length}`;
 
 
         try {
@@ -851,25 +793,15 @@ async function startQueue() {
                 await response.json();
 
 
-            if (result.success) {
+            if (
+                result.success
+            ) {
 
                 sent++;
-
-                setRecipientStatus(
-                    currentIndex,
-                    "Sent",
-                    "sent"
-                );
 
             } else {
 
                 failed++;
-
-                setRecipientStatus(
-                    currentIndex,
-                    "Failed",
-                    "failed"
-                );
 
             }
 
@@ -878,29 +810,18 @@ async function startQueue() {
 
             failed++;
 
-            setRecipientStatus(
-                currentIndex,
-                "Failed",
-                "failed"
-            );
-
         }
 
 
-        currentIndex++;
-
-        updateProgress();
+        updateCounters();
 
 
         if (
-            currentIndex < recipients.length &&
+            currentIndex <
+            recipients.length - 1 &&
             !stopRequested
         ) {
 
-            /*
-             * Small pause between queue items.
-             * This also prevents rapid back-to-back requests.
-             */
             await delay(1500);
 
         }
@@ -910,37 +831,35 @@ async function startQueue() {
 
     queueRunning = false;
 
-    sendButton.disabled = false;
-
-    stopButton.disabled = true;
-
-    recipientsInput.disabled = false;
+    setRunningUI(false);
 
 
     if (stopRequested) {
 
-        statusText.textContent =
-            "Stopped";
-
-        showToast(
-            "Queue stopped.",
-            false
+        setStatus(
+            "Queue stopped",
+            "stopped"
         );
 
     } else {
 
-        statusText.textContent =
-            "Completed";
-
-        showToast(
-            "Queue completed.",
-            false
+        setStatus(
+            "Completed",
+            "complete"
         );
 
     }
 
 
-    renderRecipients();
+    updateCounters();
+
+
+    showToast(
+        stopRequested
+            ? "Queue stopped."
+            : "All recipients processed.",
+        false
+    );
 
 }
 
@@ -954,22 +873,115 @@ function stopQueue() {
 
     stopRequested = true;
 
-    statusText.textContent =
-        "Stopping...";
+
+    setStatus(
+        "Stopping...",
+        "stopping"
+    );
 
 }
 
 
-function resetProgress() {
+function setRunningUI(running) {
+
+    const sendButton =
+        document.getElementById(
+            "sendButton"
+        );
+
+
+    const stopButton =
+        document.getElementById(
+            "stopButton"
+        );
+
+
+    sendButton.disabled =
+        running;
+
+
+    stopButton.disabled =
+        !running;
+
+
+    recipientInput.disabled =
+        running;
+
+
+    if (running) {
+
+        sendButton.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Sending...
+        `;
+
+    } else {
+
+        sendButton.innerHTML = `
+            <i class="fa-solid fa-paper-plane"></i>
+            Send All
+        `;
+
+    }
+
+}
+
+
+function setStatus(
+    text,
+    state
+) {
+
+    const statusText =
+        document.getElementById(
+            "statusText"
+        );
+
+
+    const statusIcon =
+        document.getElementById(
+            "statusIcon"
+        );
+
+
+    statusText.textContent =
+        text;
+
+
+    if (state === "sending") {
+
+        statusIcon.className =
+            "fa-solid fa-spinner fa-spin";
+
+    } else if (
+        state === "complete"
+    ) {
+
+        statusIcon.className =
+            "fa-solid fa-circle-check";
+
+    } else if (
+        state === "stopped"
+    ) {
+
+        statusIcon.className =
+            "fa-solid fa-circle-stop";
+
+    } else {
+
+        statusIcon.className =
+            "fa-solid fa-circle-pause";
+
+    }
+
+}
+
+
+function resetQueue() {
 
     if (queueRunning) {
 
-        showToast(
-            "Stop the queue before resetting.",
-            true
-        );
-
-        return;
+        stopQueue();
 
     }
 
@@ -980,72 +992,11 @@ function resetProgress() {
 
     failed = 0;
 
+    updateRecipients();
 
-    renderRecipients();
-
-    updateProgress();
-
-
-    statusText.textContent =
-        "Waiting";
-
-
-    showToast(
-        "Progress reset.",
-        false
-    );
-
-}
-
-
-function setRecipientStatus(
-    index,
-    text,
-    type
-) {
-
-    const element =
-        document.getElementById(
-            `status-${index}`
-        );
-
-
-    if (!element) {
-        return;
-    }
-
-
-    element.textContent =
-        text;
-
-
-    element.className =
-        `recipient-status ${type}`;
-
-
-    const rows =
-        recipientList.children;
-
-
-    if (rows[index]) {
-
-        rows[index].classList.add(
-            "current"
-        );
-
-    }
-
-}
-
-
-function delay(milliseconds) {
-
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                milliseconds
-            )
+    setStatus(
+        "Ready to send",
+        "ready"
     );
 
 }
@@ -1058,13 +1009,16 @@ function togglePassword() {
             "appPassword"
         );
 
+
     const icon =
         document.getElementById(
             "passwordIcon"
         );
 
 
-    if (input.type === "password") {
+    if (
+        input.type === "password"
+    ) {
 
         input.type = "text";
 
@@ -1079,6 +1033,19 @@ function togglePassword() {
             "fa-regular fa-eye";
 
     }
+
+}
+
+
+function delay(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
 
 }
 
@@ -1124,37 +1091,12 @@ function showToast(
 }
 
 
-function escapeHtml(value) {
-
-    return value
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
 updateRecipients();
+
 
 </script>
 
 
 </body>
+
 </html>
