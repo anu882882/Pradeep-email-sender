@@ -10,13 +10,16 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>
-        Secure Mail Console
-    </title>
+    <title>Secure Mail Console - Login</title>
 
     <link
         rel="stylesheet"
-        href="/static/style.css"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
 </head>
@@ -25,63 +28,142 @@
 <body class="login-page">
 
 
-<div class="login-card">
+    <div class="login-card">
 
 
-    <div class="login-logo">
-        🛡
-    </div>
+        <div class="login-logo">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
 
 
-    <h1>
-        Secure Mail Console
-    </h1>
+        <h1>
+            Secure Mail Console
+        </h1>
 
 
-    <p>
-        Sign in to continue
-    </p>
+        <p class="login-subtitle">
+            Sign in to continue
+        </p>
 
 
-    <form
-        method="post"
-        autocomplete="off"
-    >
-
-
-        <label for="password">
-            Password
-        </label>
-
-
-        <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Enter password"
-            autofocus
-            required
+        <form
+            method="post"
+            autocomplete="off"
         >
 
 
-        {% if error %}
+            <div class="login-field">
 
-        <div class="login-error">
-            {{ error }}
+                <label for="password">
+                    Password
+                </label>
+
+
+                <div class="login-password">
+
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Enter password"
+                        autofocus
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        id="showPassword"
+                        class="login-eye"
+                        aria-label="Show password"
+                    >
+
+                        <i class="fa-regular fa-eye"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            {% if error %}
+
+            <div class="login-error">
+
+                <i class="fa-solid fa-circle-exclamation"></i>
+
+                <span>
+                    {{ error }}
+                </span>
+
+            </div>
+
+            {% endif %}
+
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+
+                <i class="fa-solid fa-right-to-bracket"></i>
+
+                Login
+
+            </button>
+
+
+        </form>
+
+
+        <div class="login-footer">
+
+            <i class="fa-solid fa-shield-halved"></i>
+
+            Secure Mail Console
+
         </div>
 
-        {% endif %}
+
+    </div>
 
 
-        <button type="submit">
-            Login
-        </button>
+<script>
+
+const passwordInput =
+    document.getElementById("password");
+
+const showPassword =
+    document.getElementById("showPassword");
 
 
-    </form>
+showPassword.addEventListener(
+    "click",
+    function () {
 
+        if (
+            passwordInput.type === "password"
+        ) {
 
-</div>
+            passwordInput.type = "text";
+
+            this.innerHTML =
+                '<i class="fa-regular fa-eye-slash"></i>';
+
+        } else {
+
+            passwordInput.type = "password";
+
+            this.innerHTML =
+                '<i class="fa-regular fa-eye"></i>';
+
+        }
+
+    }
+);
+
+</script>
 
 
 </body>
