@@ -29,16 +29,15 @@ button {
 }
 
 
-/* =========================
-   TOPBAR
-========================= */
+/* TOPBAR */
 
 .topbar {
     height: 72px;
 
     background: #ffffff;
 
-    border-bottom: 1px solid #e6ebf2;
+    border-bottom:
+        1px solid #e6ebf2;
 
     display: flex;
 
@@ -61,6 +60,7 @@ button {
 
 .brand-icon {
     width: 42px;
+
     height: 42px;
 
     border-radius: 11px;
@@ -102,7 +102,8 @@ button {
 
     color: #4c5667;
 
-    border: 1px solid #e1e6ed;
+    border:
+        1px solid #e1e6ed;
 
     padding: 10px 15px;
 
@@ -114,21 +115,15 @@ button {
 }
 
 
-.logout-button:hover {
-    background: #edf1f6;
-}
-
-
-/* =========================
-   MAIN
-========================= */
+/* MAIN */
 
 .container {
     max-width: 1260px;
 
     margin: auto;
 
-    padding: 34px 24px 50px;
+    padding:
+        34px 24px 50px;
 }
 
 
@@ -160,7 +155,7 @@ button {
 
     grid-template-columns:
         minmax(0, 1.15fr)
-        minmax(0, 0.85fr);
+        minmax(0, .85fr);
 
     gap: 22px;
 
@@ -177,14 +172,13 @@ button {
 }
 
 
-/* =========================
-   CARDS
-========================= */
+/* CARD */
 
 .card {
     background: #ffffff;
 
-    border: 1px solid #e5eaf1;
+    border:
+        1px solid #e5eaf1;
 
     border-radius: 14px;
 
@@ -192,7 +186,7 @@ button {
 
     box-shadow:
         0 4px 18px
-        rgba(25, 48, 85, 0.035);
+        rgba(25,48,85,.035);
 }
 
 
@@ -209,6 +203,7 @@ button {
 
 .heading-icon {
     width: 39px;
+
     height: 39px;
 
     border-radius: 10px;
@@ -267,9 +262,7 @@ button {
 }
 
 
-/* =========================
-   FIELDS
-========================= */
+/* FIELDS */
 
 .field {
     margin-bottom: 18px;
@@ -294,7 +287,8 @@ button {
 .recipients-box {
     width: 100%;
 
-    border: 1px solid #dfe5ed;
+    border:
+        1px solid #dfe5ed;
 
     border-radius: 9px;
 
@@ -305,10 +299,6 @@ button {
     outline: none;
 
     font-size: 13px;
-
-    transition:
-        border-color .15s,
-        box-shadow .15s;
 }
 
 
@@ -337,35 +327,42 @@ button {
 
     box-shadow:
         0 0 0 3px
-        rgba(22, 119, 255, 0.08);
+        rgba(22,119,255,.08);
 }
 
 
-.field input[readonly] {
-    background: #f7f9fc;
+/* PASSWORD */
 
-    color: #697587;
-
-    cursor: not-allowed;
+.password-field {
+    position: relative;
 }
 
 
-.field-note {
-    display: block;
-
-    margin-top: 6px;
-
-    color: #8994a4;
-
-    font-size: 10px;
-
-    line-height: 1.4;
+.password-field input {
+    padding-right: 45px;
 }
 
 
-/* =========================
-   MESSAGE BODY
-========================= */
+.password-field button {
+    position: absolute;
+
+    right: 6px;
+
+    top: 5px;
+
+    width: 34px;
+
+    height: 33px;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #788395;
+}
+
+
+/* BODY */
 
 .body-label-row {
     display: flex;
@@ -386,7 +383,8 @@ button {
 
 
 .mode {
-    border: 1px solid #dfe5ed;
+    border:
+        1px solid #dfe5ed;
 
     background: #ffffff;
 
@@ -409,12 +407,11 @@ button {
 }
 
 
-/* =========================
-   SECURITY
-========================= */
+/* SECURITY */
 
 .security-box {
-    border: 1px solid #dce8f7;
+    border:
+        1px solid #dce8f7;
 
     background: #f7fbff;
 
@@ -455,7 +452,8 @@ button {
 
     background: #fff5f5;
 
-    border: 1px solid #ffd6d6;
+    border:
+        1px solid #ffd6d6;
 
     color: #bd3b3b;
 
@@ -465,9 +463,7 @@ button {
 }
 
 
-/* =========================
-   RECIPIENTS
-========================= */
+/* RECIPIENTS */
 
 .recipients-box {
     resize: vertical;
@@ -489,14 +485,7 @@ button {
 }
 
 
-.recipient-help i {
-    margin-right: 4px;
-}
-
-
-/* =========================
-   STATS
-========================= */
+/* STATS */
 
 .stats-grid {
     display: grid;
@@ -513,7 +502,8 @@ button {
 .stat {
     padding: 12px 8px;
 
-    border: 1px solid #e9edf3;
+    border:
+        1px solid #e9edf3;
 
     border-radius: 9px;
 
@@ -531,8 +521,6 @@ button {
     color: #8b95a4;
 
     font-weight: 700;
-
-    letter-spacing: .5px;
 }
 
 
@@ -555,9 +543,7 @@ button {
 }
 
 
-/* =========================
-   PROGRESS
-========================= */
+/* PROGRESS */
 
 .progress-track {
     width: 100%;
@@ -630,15 +616,9 @@ button {
 }
 
 
-/* =========================
-   BUTTON
-========================= */
+/* SEND */
 
 .button-row {
-    display: flex;
-
-    gap: 10px;
-
     margin-top: 15px;
 }
 
@@ -674,9 +654,7 @@ button {
 }
 
 
-/* =========================
-   TOAST
-========================= */
+/* TOAST */
 
 .toast {
     position: fixed;
@@ -696,10 +674,6 @@ button {
     color: #ffffff;
 
     font-size: 12px;
-
-    box-shadow:
-        0 10px 30px
-        rgba(0,0,0,.15);
 
     opacity: 0;
 
@@ -722,9 +696,7 @@ button {
 }
 
 
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 
 .login-page {
     min-height: 100vh;
@@ -753,7 +725,8 @@ button {
 
     background: #ffffff;
 
-    border: 1px solid #e4e9f0;
+    border:
+        1px solid #e4e9f0;
 
     border-radius: 16px;
 
@@ -761,7 +734,7 @@ button {
 
     box-shadow:
         0 18px 60px
-        rgba(33, 65, 105, .08);
+        rgba(33,65,105,.08);
 
     text-align: center;
 }
@@ -772,7 +745,8 @@ button {
 
     height: 60px;
 
-    margin: 0 auto 17px;
+    margin:
+        0 auto 17px;
 
     border-radius: 16px;
 
@@ -834,24 +808,17 @@ button {
 
     height: 45px;
 
-    padding: 0 45px 0 13px;
+    padding:
+        0 45px 0 13px;
 
-    border: 1px solid #dfe5ed;
+    border:
+        1px solid #dfe5ed;
 
     border-radius: 9px;
 
     outline: none;
 
     font-size: 13px;
-}
-
-
-.login-password input:focus {
-    border-color: #7db4ff;
-
-    box-shadow:
-        0 0 0 3px
-        rgba(22,119,255,.08);
 }
 
 
@@ -908,17 +875,13 @@ button {
 }
 
 
-.login-button:hover {
-    background: #0868ea;
-}
-
-
 .login-footer {
     margin-top: 25px;
 
     padding-top: 18px;
 
-    border-top: 1px solid #edf0f4;
+    border-top:
+        1px solid #edf0f4;
 
     color: #929baa;
 
@@ -926,16 +889,7 @@ button {
 }
 
 
-.login-footer i {
-    margin-right: 4px;
-
-    color: #1677ff;
-}
-
-
-/* =========================
-   RESPONSIVE
-========================= */
+/* MOBILE */
 
 @media (max-width: 900px) {
 
@@ -961,16 +915,6 @@ button {
     .container {
         padding:
             24px 14px 35px;
-    }
-
-
-    .page-heading h1 {
-        font-size: 23px;
-    }
-
-
-    .card {
-        padding: 17px;
     }
 
 
