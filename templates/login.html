@@ -1,40 +1,88 @@
 <!doctype html>
-<html>
+<html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Secure Mail Console</title>
-<link rel="stylesheet" href="/static/style.css">
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Secure Mail Console</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
 </head>
+
 
 <body class="login-page">
 
-<div class="login-card">
 
-<div class="login-logo">◆</div>
-<h1>Secure Mail Console</h1>
-<p>Sign in to continue</p>
+    <main class="login-card">
 
-<form method="post">
 
-<label>Password</label>
+        <div class="login-logo">
+            ◆
+        </div>
 
-<input
-type="password"
-name="password"
-placeholder="Enter password"
-autofocus
-required>
 
-{% if error %}
-<div class="login-error">{{error}}</div>
-{% endif %}
+        <h1>
+            Secure Mail Console
+        </h1>
 
-<button type="submit">Login</button>
 
-</form>
+        <p>
+            Sign in to continue
+        </p>
 
-</div>
+
+        <form
+            method="post"
+            autocomplete="off"
+        >
+
+
+            <label for="password">
+                Password
+            </label>
+
+
+            <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                autofocus
+                required
+            >
+
+
+            {% if error %}
+
+            <div class="login-error">
+                {{ error }}
+            </div>
+
+            {% endif %}
+
+
+            <button
+                type="submit"
+            >
+                Login
+            </button>
+
+
+        </form>
+
+
+    </main>
+
 
 </body>
 </html>
