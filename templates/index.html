@@ -39,15 +39,19 @@
 
 <header class="topbar">
 
+
     <div class="brand">
+
 
         <div class="shield">
             ◆
         </div>
 
+
         <div class="brand-title">
             Secure Mail Console
         </div>
+
 
     </div>
 
@@ -58,6 +62,7 @@
     >
         ⇥ Logout
     </a>
+
 
 </header>
 
@@ -106,6 +111,7 @@
 
                     <div class="field">
 
+
                         <label
                             for="senderName"
                         >
@@ -120,6 +126,7 @@
                             autocomplete="name"
                         >
 
+
                     </div>
 
 
@@ -127,6 +134,7 @@
                     <!-- GMAIL -->
 
                     <div class="field">
+
 
                         <label
                             for="gmail"
@@ -142,6 +150,7 @@
                             autocomplete="email"
                         >
 
+
                     </div>
 
 
@@ -149,6 +158,7 @@
                     <!-- APP PASSWORD -->
 
                     <div class="field">
+
 
                         <label
                             for="appPassword"
@@ -172,13 +182,13 @@
                                 type="button"
                                 class="password-toggle"
                                 onclick="togglePassword()"
-                                aria-label="Show or hide password"
                             >
                                 ◉
                             </button>
 
 
                         </div>
+
 
                     </div>
 
@@ -187,6 +197,7 @@
                     <!-- SUBJECT -->
 
                     <div class="field">
+
 
                         <label
                             for="subject"
@@ -201,6 +212,7 @@
                             placeholder="Email subject"
                         >
 
+
                     </div>
 
 
@@ -208,7 +220,9 @@
 
 
 
-                <!-- MESSAGE -->
+                <!-- =================================================
+                     MESSAGE EDITOR
+                ================================================== -->
 
                 <div class="message-section">
 
@@ -237,7 +251,9 @@
 
 
 
-                <!-- SPAM PROTECTION -->
+                <!-- =================================================
+                     TURNSTILE
+                ================================================== -->
 
                 <div class="spam-section">
 
@@ -263,7 +279,7 @@
                     <div class="turnstile-message">
 
                         Spam protection is configured
-                        through the application settings.
+                        through application settings.
 
                     </div>
 
@@ -288,7 +304,9 @@
         <div class="right-column">
 
 
-            <!-- RECIPIENTS -->
+            <!-- =================================================
+                 RECIPIENTS
+            ================================================== -->
 
             <section class="card recipients-card">
 
@@ -306,15 +324,13 @@
 
                         <div class="section-description">
 
-                            Paste emails separated by
-                            commas, spaces, semicolons,
-                            or new lines.
+                            Paste emails separated by commas,
+                            spaces, semicolons, or new lines.
 
                         </div>
 
 
                     </div>
-
 
 
                     <div
@@ -351,7 +367,9 @@ another@example.com"
 
 
 
-            <!-- PROGRESS -->
+            <!-- =================================================
+                 PROGRESS MONITOR
+            ================================================== -->
 
             <section class="card progress-card">
 
@@ -365,57 +383,85 @@ another@example.com"
                 <div class="stats-grid">
 
 
+                    <!-- TOTAL -->
+
                     <div class="stat-box total-stat">
+
 
                         <span>
                             TOTAL
                         </span>
 
-                        <strong id="totalCount">
+
+                        <strong
+                            id="totalCount"
+                        >
                             0
                         </strong>
+
 
                     </div>
 
 
 
+                    <!-- SENT -->
+
                     <div class="stat-box sent-stat">
+
 
                         <span>
                             SENT
                         </span>
 
-                        <strong id="sentCount">
+
+                        <strong
+                            id="sentCount"
+                        >
                             0
                         </strong>
+
 
                     </div>
 
 
 
+                    <!-- FAILED -->
+
                     <div class="stat-box failed-stat">
+
 
                         <span>
                             FAILED
                         </span>
 
-                        <strong id="failedCount">
+
+                        <strong
+                            id="failedCount"
+                        >
                             0
                         </strong>
+
 
                     </div>
 
 
 
+                    <!-- REMAINING -->
+
                     <div class="stat-box remaining-stat">
+
 
                         <span>
                             REMAINING
                         </span>
 
-                        <strong id="remainingCount">
+
+                        <strong
+                            id="remainingCount"
+                        >
                             0
                         </strong>
+
 
                     </div>
 
@@ -424,7 +470,9 @@ another@example.com"
 
 
 
-                <!-- PROGRESS BAR -->
+                <!-- =================================================
+                     PROGRESS BAR
+                ================================================== -->
 
                 <div class="progress-track">
 
@@ -439,7 +487,9 @@ another@example.com"
 
 
 
-                <!-- SENDER -->
+                <!-- =================================================
+                     SENDER STATUS
+                ================================================== -->
 
                 <div
                     id="senderStatus"
@@ -450,18 +500,41 @@ another@example.com"
 
 
 
-                <!-- STATUS -->
+                <!-- =================================================
+                     LIVE STATUS
+                ================================================== -->
 
                 <div
                     id="sendStatus"
                     class="send-status"
+                    aria-live="polite"
                 >
                     Ready
                 </div>
 
 
 
-                <!-- ACTUAL ERROR -->
+                <!-- =================================================
+                     LIVE ACTIVITY
+                ================================================== -->
+
+                <div
+                    id="liveActivity"
+                    class="live-activity"
+                    aria-live="polite"
+                >
+
+                    <div class="activity-empty">
+                        Waiting for sending to start...
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ERROR DETAILS
+                ================================================== -->
 
                 <div
                     id="errorDetails"
@@ -470,7 +543,9 @@ another@example.com"
 
 
 
-                <!-- BUTTONS -->
+                <!-- =================================================
+                     BUTTONS
+                ================================================== -->
 
                 <div class="button-row">
 
@@ -515,13 +590,15 @@ another@example.com"
 
 
 /* ========================================================
-   GLOBAL STATE
+   APPLICATION STATE
 ======================================================== */
 
 
 let sending = false;
 
 let stopRequested = false;
+
+let activeReader = null;
 
 
 
@@ -530,9 +607,13 @@ let stopRequested = false;
 ======================================================== */
 
 
-function getElement(id) {
+function getElement(
+    id
+) {
 
-    return document.getElementById(id);
+    return document.getElementById(
+        id
+    );
 
 }
 
@@ -584,7 +665,9 @@ function getRecipients() {
         }
 
 
-        if (seen.has(email)) {
+        if (
+            seen.has(email)
+        ) {
 
             continue;
 
@@ -703,33 +786,228 @@ function getTurnstileToken() {
     }
 
 
-    return tokenInput.value || "";
+    return (
+        tokenInput.value ||
+        ""
+    );
 
 }
 
 
 
 /* ========================================================
-   STOP BUTTON
+   LIVE ACTIVITY
 ======================================================== */
 
 
-function stopSending() {
+function addActivity(
+    message,
+    type
+) {
 
-    if (!sending) {
+    const activity =
+        getElement(
+            "liveActivity"
+        );
 
-        return;
+
+    const empty =
+        activity.querySelector(
+            ".activity-empty"
+        );
+
+
+    if (empty) {
+
+        empty.remove();
 
     }
 
 
-    stopRequested = true;
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "activity-item " +
+        (
+            type === "error"
+                ? "activity-error"
+                : "activity-success"
+        );
+
+
+    const icon =
+        document.createElement(
+            "span"
+        );
+
+
+    icon.className =
+        "activity-icon";
+
+
+    icon.textContent =
+        type === "error"
+            ? "✕"
+            : "✓";
+
+
+    const text =
+        document.createElement(
+            "span"
+        );
+
+
+    text.className =
+        "activity-text";
+
+
+    text.textContent =
+        message;
+
+
+    item.appendChild(
+        icon
+    );
+
+
+    item.appendChild(
+        text
+    );
+
+
+    activity.appendChild(
+        item
+    );
+
+
+    /*
+     * Keep the monitor compact.
+     * Only recent activity remains visible.
+     */
+
+    while (
+        activity.children.length > 8
+    ) {
+
+        activity.removeChild(
+            activity.firstElementChild
+        );
+
+    }
+
+
+    activity.scrollTop =
+        activity.scrollHeight;
+
+}
+
+
+
+/* ========================================================
+   UPDATE LIVE COUNTERS
+======================================================== */
+
+
+function updateProgress(
+    data
+) {
+
+    const total =
+        Number(
+            data.total || 0
+        );
+
+
+    const sent =
+        Number(
+            data.sent || 0
+        );
+
+
+    const failed =
+        Number(
+            data.failed || 0
+        );
+
+
+    const remaining =
+        Number(
+            data.remaining || 0
+        );
 
 
     getElement(
-        "sendStatus"
+        "totalCount"
     ).textContent =
-        "Stop requested. Current operation will finish.";
+        total;
+
+
+    getElement(
+        "sentCount"
+    ).textContent =
+        sent;
+
+
+    getElement(
+        "failedCount"
+    ).textContent =
+        failed;
+
+
+    getElement(
+        "remainingCount"
+    ).textContent =
+        remaining;
+
+
+    const processed =
+        sent + failed;
+
+
+    let percentage = 0;
+
+
+    if (total > 0) {
+
+        percentage =
+            (
+                processed /
+                total
+            ) * 100;
+
+    }
+
+
+    percentage =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percentage
+            )
+        );
+
+
+    getElement(
+        "progressBar"
+    ).style.width =
+        percentage + "%";
+
+
+    if (
+        data.message
+    ) {
+
+        getElement(
+            "sendStatus"
+        ).textContent =
+            data.message;
+
+    }
 
 }
 
@@ -883,6 +1161,169 @@ function resetProgress(
     ).textContent =
         "";
 
+
+    getElement(
+        "liveActivity"
+    ).innerHTML =
+        '<div class="activity-empty">' +
+        'Starting sending...' +
+        '</div>';
+
+}
+
+
+
+/* ========================================================
+   STOP SENDING
+======================================================== */
+
+
+function stopSending() {
+
+    if (!sending) {
+
+        return;
+
+    }
+
+
+    stopRequested = true;
+
+
+    getElement(
+        "sendStatus"
+    ).textContent =
+        "Stopping the current sending request...";
+
+
+    /*
+     * Abort the browser-side stream.
+     * The server/provider may still finish a message
+     * that is already being processed.
+     */
+
+    if (
+        activeReader &&
+        typeof activeReader.cancel ===
+        "function"
+    ) {
+
+        activeReader.cancel()
+            .catch(
+                function () {}
+            );
+
+    }
+
+}
+
+
+
+/* ========================================================
+   SSE EVENT PARSER
+======================================================== */
+
+
+function processServerEvent(
+    eventBlock
+) {
+
+    if (!eventBlock.trim()) {
+
+        return null;
+
+    }
+
+
+    const lines =
+        eventBlock.split(
+            "\n"
+        );
+
+
+    let eventName =
+        "message";
+
+
+    let dataText =
+        "";
+
+
+    for (
+        const line of lines
+    ) {
+
+
+        if (
+            line.startsWith(
+                "event:"
+            )
+        ) {
+
+            eventName =
+                line.substring(
+                    6
+                ).trim();
+
+        }
+
+
+        if (
+            line.startsWith(
+                "data:"
+            )
+        ) {
+
+            dataText +=
+                line.substring(
+                    5
+                ).trim();
+
+        }
+
+    }
+
+
+    if (!dataText) {
+
+        return {
+            event:
+                eventName,
+
+            data:
+                {}
+        };
+
+    }
+
+
+    try {
+
+        return {
+            event:
+                eventName,
+
+            data:
+                JSON.parse(
+                    dataText
+                )
+        };
+
+    } catch (error) {
+
+        return {
+            event:
+                eventName,
+
+            data:
+                {
+                    message:
+                        dataText
+                }
+        };
+
+    }
+
 }
 
 
@@ -925,11 +1366,8 @@ async function startSending() {
 
 
     /*
-     * Create a snapshot of the fields.
-     * Later UI changes won't modify
-     * this sending request.
+     * Snapshot all form values.
      */
-
 
     const payload = {
 
@@ -977,7 +1415,6 @@ async function startSending() {
 
     sending = true;
 
-
     stopRequested = false;
 
 
@@ -998,13 +1435,7 @@ async function startSending() {
     getElement(
         "sendStatus"
     ).textContent =
-        "Connecting to Gmail...";
-
-
-    getElement(
-        "errorDetails"
-    ).textContent =
-        "";
+        "Starting...";
 
 
     resetProgress(
@@ -1016,19 +1447,22 @@ async function startSending() {
 
 
         /*
-         * SEND REQUEST
+         * POST REQUEST
          */
-
 
         const response =
             await fetch(
-                "/api/send",
+                "/api/send-stream",
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
                         "Content-Type":
-                            "application/json"
+                            "application/json",
+
+                        "Accept":
+                            "text/event-stream"
                     },
 
                     body:
@@ -1040,165 +1474,374 @@ async function startSending() {
 
 
         /*
-         * Read response safely.
+         * HTTP ERROR
          */
-
-        let result;
-
-
-        try {
-
-            result =
-                await response.json();
-
-        } catch (jsonError) {
-
-            throw new Error(
-                "The server returned an invalid response. "
-                +
-                "HTTP status: "
-                +
-                response.status
-            );
-
-        }
-
-
-        /*
-         * IMPORTANT:
-         *
-         * If backend returned an error,
-         * display its REAL message.
-         */
-
-        if (!response.ok) {
-
-            throw new Error(
-                result.error ||
-                (
-                    "Server request failed. "
-                    +
-                    "HTTP status: "
-                    +
-                    response.status
-                )
-            );
-
-        }
-
-
-        const sent =
-            Array.isArray(
-                result.sent
-            )
-                ? result.sent
-                : [];
-
-
-        const failed =
-            Array.isArray(
-                result.failed
-            )
-                ? result.failed
-                : [];
-
-
-        /*
-         * FINAL COUNTS
-         */
-
-
-        getElement(
-            "sentCount"
-        ).textContent =
-            sent.length;
-
-
-        getElement(
-            "failedCount"
-        ).textContent =
-            failed.length;
-
-
-        getElement(
-            "remainingCount"
-        ).textContent =
-            "0";
-
-
-        getElement(
-            "progressBar"
-        ).style.width =
-            "100%";
-
-
-        /*
-         * SHOW FAILED DETAILS
-         */
-
 
         if (
-            failed.length > 0
+            !response.ok
         ) {
 
 
-            const failureText =
-                failed
-                    .slice(
-                        0,
-                        10
-                    )
-                    .map(
-                        item => {
+            let errorMessage =
+                "Server request failed. HTTP status: "
+                +
+                response.status;
 
-                            return (
-                                item.email
-                                +
-                                ": "
-                                +
-                                item.error
-                            );
 
-                        }
-                    )
-                    .join(
-                        "\n"
+            try {
+
+                const errorData =
+                    await response.json();
+
+
+                if (
+                    errorData.error
+                ) {
+
+                    errorMessage =
+                        errorData.error;
+
+                }
+
+            } catch (
+                ignored
+            ) {}
+
+
+            throw new Error(
+                errorMessage
+            );
+
+        }
+
+
+        /*
+         * STREAM SUPPORT CHECK
+         */
+
+        if (
+            !response.body
+        ) {
+
+            throw new Error(
+                "The browser could not open the live progress stream."
+            );
+
+        }
+
+
+        const reader =
+            response.body.getReader();
+
+
+        activeReader =
+            reader;
+
+
+        const decoder =
+            new TextDecoder(
+                "utf-8"
+            );
+
+
+        let buffer =
+            "";
+
+
+        /*
+         * READ STREAM
+         */
+
+        while (true) {
+
+
+            if (
+                stopRequested
+            ) {
+
+                break;
+
+            }
+
+
+            const {
+                value,
+                done
+            } =
+                await reader.read();
+
+
+            if (done) {
+
+                break;
+
+            }
+
+
+            buffer +=
+                decoder.decode(
+                    value,
+                    {
+                        stream:
+                            true
+                    }
+                );
+
+
+            /*
+             * SSE messages are separated
+             * by a blank line.
+             */
+
+            const events =
+                buffer.split(
+                    "\n\n"
+                );
+
+
+            buffer =
+                events.pop() || "";
+
+
+            for (
+                const eventBlock
+                of events
+            ) {
+
+
+                const serverEvent =
+                    processServerEvent(
+                        eventBlock
                     );
+
+
+                if (!serverEvent) {
+
+                    continue;
+
+                }
+
+
+                const eventName =
+                    serverEvent.event;
+
+
+                const data =
+                    serverEvent.data;
+
+
+                /* -----------------------------------------
+                   START
+                ----------------------------------------- */
+
+                if (
+                    eventName ===
+                    "start"
+                ) {
+
+                    updateProgress(
+                        data
+                    );
+
+                    getElement(
+                        "sendStatus"
+                    ).textContent =
+                        "Preparing emails...";
+
+                }
+
+
+                /* -----------------------------------------
+                   STATUS
+                ----------------------------------------- */
+
+                else if (
+                    eventName ===
+                    "status"
+                ) {
+
+                    getElement(
+                        "sendStatus"
+                    ).textContent =
+                        data.message ||
+                        "Processing...";
+
+                }
+
+
+                /* -----------------------------------------
+                   LIVE PROGRESS
+                ----------------------------------------- */
+
+                else if (
+                    eventName ===
+                    "progress"
+                ) {
+
+                    updateProgress(
+                        data
+                    );
+
+
+                    if (
+                        data.message
+                    ) {
+
+                        const isError =
+                            data.message
+                                .toLowerCase()
+                                .includes(
+                                    "failed"
+                                );
+
+
+                        addActivity(
+                            data.message,
+                            isError
+                                ? "error"
+                                : "success"
+                        );
+
+                    }
+
+                }
+
+
+                /* -----------------------------------------
+                   ERROR
+                ----------------------------------------- */
+
+                else if (
+                    eventName ===
+                    "error"
+                ) {
+
+                    getElement(
+                        "sendStatus"
+                    ).textContent =
+                        "Sending failed.";
+
+
+                    getElement(
+                        "errorDetails"
+                    ).textContent =
+                        data.message ||
+                        "Unknown server error.";
+
+
+                    addActivity(
+                        data.message ||
+                        "Sending failed.",
+                        "error"
+                    );
+
+                }
+
+
+                /* -----------------------------------------
+                   COMPLETE
+                ----------------------------------------- */
+
+                else if (
+                    eventName ===
+                    "complete"
+                ) {
+
+                    updateProgress(
+                        data
+                    );
+
+
+                    getElement(
+                        "sendStatus"
+                    ).textContent =
+                        data.message ||
+                        "All emails processed.";
+
+
+                    addActivity(
+                        data.message ||
+                        "Sending completed.",
+                        "success"
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * STREAM ENDED
+         */
+
+        if (
+            stopRequested
+        ) {
+
+            getElement(
+                "sendStatus"
+            ).textContent =
+                "Sending stopped by user.";
+
+        }
+
+
+    } catch (error) {
+
+
+        /*
+         * SHOW REAL ERROR
+         */
+
+        console.error(
+            "LIVE SEND ERROR:",
+            error
+        );
+
+
+        if (
+            !stopRequested
+        ) {
+
+            getElement(
+                "sendStatus"
+            ).textContent =
+                "Sending failed.";
 
 
             getElement(
                 "errorDetails"
             ).textContent =
-                failureText;
+                error.message ||
+                "The server could not complete the request.";
 
 
-            getElement(
-                "sendStatus"
-            ).textContent =
-                sent.length
-                +
-                " sent, "
-                +
-                failed.length
-                +
-                " failed.";
-
-
-        } else {
-
-
-            getElement(
-                "sendStatus"
-            ).textContent =
-                "All emails processed successfully.";
-
+            addActivity(
+                error.message ||
+                "The server could not complete the request.",
+                "error"
+            );
 
         }
 
 
-        /*
-         * RESET TURNSTILE
-         */
+    } finally {
+
+
+        activeReader =
+            null;
+
+
+        sending =
+            false;
+
+
+        getElement(
+            "sendButton"
+        ).disabled =
+            false;
 
 
         {% if turnstile_site_key %}
@@ -1210,67 +1853,18 @@ async function startSending() {
             "function"
         ) {
 
-
             try {
 
                 window.turnstile.reset();
 
-            } catch (resetError) {
-
-                console.log(
-                    "Turnstile reset error:",
-                    resetError
-                );
-
-            }
+            } catch (
+                ignored
+            ) {}
 
         }
 
 
         {% endif %}
-
-
-    } catch (error) {
-
-
-        /*
-         * IMPORTANT:
-         *
-         * This now shows the REAL error
-         * returned from Flask instead of
-         * the old generic message.
-         */
-
-
-        console.error(
-            "EMAIL SEND ERROR:",
-            error
-        );
-
-
-        getElement(
-            "sendStatus"
-        ).textContent =
-            "Sending failed.";
-
-
-        getElement(
-            "errorDetails"
-        ).textContent =
-            error.message ||
-            "The server could not complete the email request.";
-
-
-    } finally {
-
-
-        sending = false;
-
-
-        getElement(
-            "sendButton"
-        ).disabled =
-            false;
 
 
     }
@@ -1280,7 +1874,7 @@ async function startSending() {
 
 
 /* ========================================================
-   INITIALIZATION
+   INITIALIZE
 ======================================================== */
 
 
