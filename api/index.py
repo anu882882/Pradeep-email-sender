@@ -3,17 +3,27 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.utils import formataddr
+from pathlib import Path
 
-app = Flask(__name__)
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+app = Flask(
+    __name__,
+    template_folder=str(BASE_DIR / "templates"),
+    static_folder=str(BASE_DIR / "static"),
+    static_url_path="/static"
+)
 
 
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
 
 @app.route("/send", methods=["POST"])
 def send_email():
+
     data = request.get_json(silent=True) or {}
 
     sender_name = data.get("sender_name", "").strip()
@@ -23,31 +33,62 @@ def send_email():
     subject = data.get("subject", "").strip()
     body = data.get("body", "")
 
-    if not all([
-        sender_name,
-        gmail,
-        app_password,
-        recipient,
-        subject,
-        body
-    ]):
+    if not sender_name:
         return jsonify({
             "success": False,
-            "message": "Please complete all required fields."
+            "message": "Sender name is required."
         }), 400
 
-    # This version intentionally sends to one recipient per request.
-    if "," in recipient or ";" in recipient or "\n" in recipient:
+    if not gmail:
         return jsonify({
             "success": False,
-            "message": "Please send to one recipient at a time."
+            "message": "Gmail address is required."
+        }), 400
+
+    if not app_password:
+        return jsonify({
+            "success": False,
+            "message": "Gmail App Password is required."
+        }), 400
+
+    if not recipient:
+        return jsonify({
+            "success": False,
+            "message": "Recipient is required."
+        }), 400
+
+    if not subject:
+        return jsonify({
+            "success": False,
+            "message": "Subject is required."
+        }), 400
+
+    if not body.strip():
+        return jsonify({
+            "success": False,
+            "message": "Message body is required."
+        }), 400
+
+    # One recipient per request
+    if any(x in recipient for x in [",", ";", "\n", "\r"]):
+        return jsonify({
+            "success": False,
+            "message": "Please enter one recipient email at a time."
         }), 400
 
     try:
-        msg = MIMEText(body, "plain", "utf-8")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((sender_name, gmail))
-        msg["To"] = recipient
+
+        message = MIMEText(
+            body,
+            "plain",
+            "utf-8"
+        )
+
+        message["Subject"] = subject
+        message["From"] = formataddr(
+            (sender_name, gmail)
+        )
+        message["To"] = recipient
 
         context = ssl.create_default_context()
 
@@ -57,11 +98,16 @@ def send_email():
             context=context,
             timeout=30
         ) as server:
-            server.login(gmail, app_password)
+
+            server.login(
+                gmail,
+                app_password
+            )
+
             server.sendmail(
                 gmail,
                 [recipient],
-                msg.as_string()
+                message.as_string()
             )
 
         return jsonify({
@@ -70,15 +116,27 @@ def send_email():
         })
 
     except smtplib.SMTPAuthenticationError:
+
         return jsonify({
             "success": False,
-            "message": "Gmail authentication failed. Check your email and App Password."
+            "message": (
+                "Gmail authentication failed. "
+                "Use a valid Google App Password."
+            )
         }), 401
 
-    except Exception as exc:
+    except smtplib.SMTPException as exc:
+
         return jsonify({
             "success": False,
-            "message": str(exc)
+            "message": f"SMTP error: {str(exc)}"
+        }), 500
+
+    except Exception as exc:
+
+        return jsonify({
+            "success": False,
+            "message": f"Server error: {str(exc)}"
         }), 500
 
 
