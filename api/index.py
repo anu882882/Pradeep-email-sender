@@ -77,6 +77,7 @@ def verify_turnstile(token, remote_ip=None):
     )
 
     try:
+
         with urllib.request.urlopen(
             req,
             timeout=10
@@ -95,9 +96,9 @@ def verify_turnstile(token, remote_ip=None):
         return False, "Unable to verify Cloudflare."
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGIN
-# --------------------------------------------------
+# ==================================================
 
 @app.route(
     "/login",
@@ -151,9 +152,9 @@ def login():
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGOUT
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/logout")
 def logout():
@@ -165,14 +166,15 @@ def logout():
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # HOME
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/")
 def home():
 
     if not authenticated():
+
         return redirect(
             url_for("login")
         )
@@ -186,9 +188,9 @@ def home():
     )
 
 
-# --------------------------------------------------
-# GMAIL SMTP BATCH
-# --------------------------------------------------
+# ==================================================
+# SEND BATCH
+# ==================================================
 
 @app.route(
     "/send-batch",
@@ -203,9 +205,11 @@ def send_batch():
             "message": "Authentication required."
         }), 401
 
+
     data = request.get_json(
         silent=True
     ) or {}
+
 
     sender_name = str(
         data.get(
@@ -214,12 +218,14 @@ def send_batch():
         )
     ).strip()
 
+
     gmail = str(
         data.get(
             "gmail",
             ""
         )
     ).strip()
+
 
     app_password = str(
         data.get(
@@ -228,12 +234,14 @@ def send_batch():
         )
     ).strip()
 
+
     subject = str(
         data.get(
             "subject",
             ""
         )
     ).strip()
+
 
     body = str(
         data.get(
@@ -242,6 +250,7 @@ def send_batch():
         )
     )
 
+
     is_html = bool(
         data.get(
             "is_html",
@@ -249,10 +258,12 @@ def send_batch():
         )
     )
 
+
     recipients = data.get(
         "recipients",
         []
     )
+
 
     turnstile_token = str(
         data.get(
@@ -262,9 +273,9 @@ def send_batch():
     ).strip()
 
 
-    # -----------------------------
+    # ==================================================
     # VALIDATION
-    # -----------------------------
+    # ==================================================
 
     if not sender_name:
 
@@ -294,7 +305,7 @@ def send_batch():
 
         return jsonify({
             "success": False,
-            "message": "Subject is required."
+            "message": "Email subject is required."
         }), 400
 
 
@@ -317,7 +328,12 @@ def send_batch():
         }), 400
 
 
+    # ==================================================
+    # CLEAN RECIPIENTS
+    # ==================================================
+
     clean_recipients = []
+
 
     for item in recipients:
 
@@ -325,11 +341,16 @@ def send_batch():
             item
         ).strip().lower()
 
+
         if not valid_email(email):
             continue
 
+
         if email not in clean_recipients:
-            clean_recipients.append(email)
+
+            clean_recipients.append(
+                email
+            )
 
 
     clean_recipients = clean_recipients[
@@ -345,9 +366,9 @@ def send_batch():
         }), 400
 
 
-    # -----------------------------
-    # TURNSTILE
-    # -----------------------------
+    # ==================================================
+    # CLOUDFLARE TURNSTILE
+    # ==================================================
 
     verified, verify_error = verify_turnstile(
         turnstile_token,
@@ -367,12 +388,17 @@ def send_batch():
 
 
     sent = []
+
     failed = []
 
 
-    # -----------------------------
-    # ONE SMTP CONNECTION
-    # -----------------------------
+    # ==================================================
+    # GMAIL SMTP
+    #
+    # ONE CONNECTION
+    # ONE LOGIN
+    # NO ARTIFICIAL DELAY
+    # ==================================================
 
     context = ssl.create_default_context()
 
@@ -383,18 +409,18 @@ def send_batch():
             "smtp.gmail.com",
             465,
             context=context,
-            timeout=30
+            timeout=15
         ) as server:
 
-            # Login once.
+            # Login only once
             server.login(
                 gmail,
                 app_password
             )
 
 
-            # Send recipients sequentially
-            # using the same SMTP connection.
+            # Send sequentially using
+            # the same SMTP connection
 
             for recipient in clean_recipients:
 
@@ -416,12 +442,14 @@ def send_batch():
 
                     message["Subject"] = subject
 
+
                     message["From"] = formataddr(
                         (
                             sender_name,
                             gmail
                         )
                     )
+
 
                     message["To"] = recipient
 
@@ -446,16 +474,33 @@ def send_batch():
                     })
 
 
+    # ==================================================
+    # GMAIL AUTH ERROR
+    # ==================================================
+
     except smtplib.SMTPAuthenticationError:
 
         return jsonify({
             "success": False,
             "message": (
                 "Gmail authentication failed. "
-                "Check Gmail address and Google App Password."
+                "Use the correct Google App Password."
+            ),
+            "sent": sent,
+            "failed": failed,
+            "sent_count": len(sent),
+            "failed_count": len(failed),
+            "remaining": (
+                len(clean_recipients)
+                - len(sent)
+                - len(failed)
             )
         }), 401
 
+
+    # ==================================================
+    # SMTP ERROR
+    # ==================================================
 
     except smtplib.SMTPException as exc:
 
@@ -476,6 +521,10 @@ def send_batch():
         }), 500
 
 
+    # ==================================================
+    # GENERAL ERROR
+    # ==================================================
+
     except Exception as exc:
 
         return jsonify({
@@ -495,9 +544,9 @@ def send_batch():
         }), 500
 
 
-    # -----------------------------
-    # RESULT
-    # -----------------------------
+    # ==================================================
+    # FINAL RESPONSE
+    # ==================================================
 
     return jsonify({
 
@@ -530,9 +579,9 @@ def send_batch():
     })
 
 
-# --------------------------------------------------
-# HEALTH
-# --------------------------------------------------
+# ==================================================
+# HEALTH CHECK
+# ==================================================
 
 @app.route("/health")
 def health():
@@ -543,6 +592,10 @@ def health():
         "mailer": "Gmail SMTP"
     })
 
+
+# ==================================================
+# LOCAL RUN
+# ==================================================
 
 if __name__ == "__main__":
 
