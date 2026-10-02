@@ -37,24 +37,23 @@ body {
     gap: 10px;
 }
 
-.brand-shield {
+.brand-icon {
     color: #407cf4;
     font-size: 32px;
-    line-height: 1;
 }
 
 .brand-name {
+    color: #506df1;
     font-size: 31px;
     font-weight: 750;
     letter-spacing: -1px;
-    color: #506df1;
 }
 
 .logout-btn {
     height: 30px;
     padding: 0 13px;
     border-radius: 7px;
-    background: white;
+    background: #fff;
     border: 1px solid #ffbaba;
     color: #f04444;
     font-size: 12px;
@@ -73,12 +72,8 @@ body {
     font-weight: 750;
 }
 
-.page-title i {
-    font-size: 21px;
-}
 
-
-/* MAIN */
+/* LAYOUT */
 
 .dashboard {
     display: grid;
@@ -87,11 +82,17 @@ body {
     align-items: start;
 }
 
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 
 /* CARD */
 
 .card {
-    background: #ffffff;
+    background: #fff;
     border-radius: 12px;
     box-shadow:
         0 2px 5px rgba(16, 24, 40, .08),
@@ -99,7 +100,7 @@ body {
 }
 
 
-/* LEFT */
+/* COMPOSE */
 
 .compose-card {
     padding: 31px;
@@ -108,23 +109,17 @@ body {
 .card-heading {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     font-size: 18px;
     font-weight: 750;
 }
-
-.card-heading i {
-    font-size: 17px;
-}
-
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px 14px;
-    margin-top: 2px;
+    margin-top: 22px;
 }
-
 
 .field {
     width: 100%;
@@ -132,22 +127,23 @@ body {
 
 .field label {
     display: block;
+    color: #18233b;
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 9px;
-    color: #18233b;
 }
 
-
 .field input,
-.field textarea {
+.field textarea,
+.recipient-input {
     width: 100%;
     border: 1px solid #d9e1ef;
     border-radius: 7px;
     outline: none;
-    font-size: 13px;
+    background: #fff;
     color: #202938;
-    background: white;
+    font-family: inherit;
+    font-size: 13px;
     transition: .15s ease;
 }
 
@@ -163,7 +159,6 @@ body {
     box-shadow: 0 0 0 2px rgba(91, 141, 248, .12);
 }
 
-
 .password-wrapper {
     position: relative;
 }
@@ -176,68 +171,59 @@ body {
     position: absolute;
     right: 0;
     top: 0;
-    height: 41px;
     width: 42px;
+    height: 41px;
     border: 0;
     background: transparent;
     color: #718096;
     cursor: pointer;
 }
 
-
 .body-field {
     margin-top: 20px;
 }
 
 .body-field textarea {
-    height: 264px;
+    height: 230px;
     padding: 13px 14px;
     resize: vertical;
     line-height: 1.45;
 }
 
 
-/* SPAM PROTECTION */
+/* PROTECTION */
 
 .protection {
-    margin-top: 26px;
+    margin-top: 25px;
 }
 
 .protection-title {
     display: flex;
     align-items: center;
     gap: 5px;
+    margin-bottom: 9px;
     font-size: 13px;
     font-weight: 700;
-    margin-bottom: 9px;
 }
-
-.protection-title i {
-    font-size: 13px;
-}
-
 
 .protection-box {
     height: 59px;
-    border: 1px solid #d6d6d6;
     display: flex;
     align-items: center;
     padding: 8px 10px;
-    position: relative;
-    overflow: hidden;
+    border: 1px solid #d6d6d6;
 }
-
 
 .success-icon {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: #26984f;
-    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 9px;
+    border-radius: 50%;
+    background: #26984f;
+    color: #fff;
 }
 
 .protection-text {
@@ -257,7 +243,6 @@ body {
 
 .cloud-mark {
     margin-left: auto;
-    margin-right: 3px;
     color: #f39b2f;
     font-size: 24px;
 }
@@ -268,13 +253,13 @@ body {
 .send-btn {
     width: 100%;
     height: 43px;
+    margin-top: 22px;
     border: 0;
     border-radius: 7px;
     background: #477ff1;
-    color: white;
+    color: #fff;
     font-size: 14px;
     font-weight: 700;
-    margin-top: 22px;
     cursor: pointer;
 }
 
@@ -283,19 +268,12 @@ body {
 }
 
 .send-btn:disabled {
-    opacity: .55;
+    opacity: .5;
     cursor: not-allowed;
 }
 
 
-/* RIGHT */
-
-.right-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
+/* RECIPIENTS */
 
 .recipients-card {
     padding: 31px;
@@ -303,37 +281,91 @@ body {
 
 .recipients-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
 }
 
 .helper {
+    margin-top: 3px;
     color: #7c8aa4;
     font-size: 11px;
-    margin-top: 2px;
 }
 
 .count-badge {
+    padding: 6px 10px;
+    border-radius: 20px;
     background: #eff6ff;
     color: #4b84e8;
     font-size: 11px;
     font-weight: 700;
-    padding: 6px 9px;
-    border-radius: 20px;
+}
+
+.recipient-input {
+    height: 125px;
+    margin-top: 17px;
+    padding: 13px;
+    resize: none;
+}
+
+.recipient-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 9px;
+    color: #7b879b;
+    font-size: 10px;
 }
 
 
-.recipient-input {
-    width: 100%;
-    height: 136px;
-    resize: none;
-    margin-top: 17px;
-    padding: 13px;
-    border-radius: 8px;
-    border: 1px solid #d8e1f0;
-    outline: none;
-    font-size: 13px;
-    font-family: inherit;
+/* RECIPIENT LIST */
+
+.recipient-list {
+    max-height: 165px;
+    margin-top: 12px;
+    overflow-y: auto;
+}
+
+.recipient-row {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 11px;
+}
+
+.recipient-row.active {
+    border-color: #cfe0ff;
+    background: #f5f8ff;
+}
+
+.recipient-number {
+    width: 24px;
+    color: #718096;
+    font-weight: 700;
+}
+
+.recipient-address {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recipient-status {
+    width: 24px;
+    text-align: center;
+    color: #98a2b3;
+}
+
+.recipient-status.sent {
+    color: #12b886;
+}
+
+.recipient-status.failed {
+    color: #f04444;
 }
 
 
@@ -347,43 +379,41 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
-    margin-top: 3px;
+    margin-top: 20px;
 }
 
-
 .stat-box {
-    height: 90px;
-    border: 1px solid #dbe3ef;
-    border-radius: 7px;
+    height: 88px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    border: 1px solid #dbe3ef;
+    border-radius: 7px;
 }
 
 .stat-label {
+    margin-bottom: 6px;
     color: #60708e;
     font-size: 11px;
     font-weight: 600;
-    margin-bottom: 6px;
 }
 
 .stat-box strong {
     color: #407ff1;
     font-size: 25px;
-    line-height: 1;
 }
 
-.stat-box .sent-value {
-    color: #12b886;
+.sent-value {
+    color: #12b886 !important;
 }
 
-.stat-box .failed-value {
-    color: #f04444;
+.failed-value {
+    color: #f04444 !important;
 }
 
-.stat-box .remaining-value {
-    color: #f59e0b;
+.remaining-value {
+    color: #f59e0b !important;
 }
 
 
@@ -392,15 +422,16 @@ body {
 .progress-track {
     width: 100%;
     height: 7px;
-    border-radius: 20px;
-    background: #dfe5ed;
     margin-top: 22px;
     overflow: hidden;
+    border-radius: 20px;
+    background: #dfe5ed;
 }
 
 .progress-fill {
-    height: 100%;
     width: 0;
+    height: 100%;
+    border-radius: 20px;
     background: #14b884;
     transition: width .25s ease;
 }
@@ -413,18 +444,15 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    min-height: 42px;
+    margin: 12px 0;
+    color: #172033;
     font-size: 12px;
     font-weight: 650;
-    color: #172033;
-    margin: 18px 0 22px;
-}
-
-.sending-status i {
-    font-size: 15px;
 }
 
 
-/* ACTIONS */
+/* BUTTONS */
 
 .action-row {
     display: grid;
@@ -437,9 +465,10 @@ body {
     height: 39px;
     border: 0;
     border-radius: 7px;
-    color: white;
+    color: #fff;
     font-size: 13px;
     font-weight: 700;
+    cursor: pointer;
 }
 
 .sending-btn {
@@ -450,9 +479,9 @@ body {
     background: #ef3e43;
 }
 
-.sending-btn:disabled,
-.stop-btn:disabled {
-    opacity: .55;
+.sending-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
 }
 
 
@@ -462,9 +491,10 @@ body {
     position: fixed;
     right: 25px;
     bottom: 25px;
+    z-index: 1000;
     padding: 12px 17px;
     border-radius: 8px;
-    color: white;
+    color: #fff;
     font-size: 13px;
     font-weight: 600;
     opacity: 0;
@@ -495,14 +525,9 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .topbar {
-        gap: 20px;
-    }
-
     .brand-name {
         font-size: 25px;
     }
-
 }
 
 
@@ -515,6 +540,7 @@ body {
 
     .topbar {
         align-items: flex-start;
+        gap: 15px;
     }
 
     .brand-name {
@@ -534,5 +560,4 @@ body {
     .action-row {
         grid-template-columns: 1fr;
     }
-
 }
