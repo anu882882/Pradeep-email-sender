@@ -3,11 +3,6 @@
    COMPLETE STYLE SHEET
    ========================================================= */
 
-
-/* =========================================================
-   GLOBAL RESET
-   ========================================================= */
-
 * {
     box-sizing: border-box;
 }
@@ -45,6 +40,7 @@ body {
         );
 
     -webkit-font-smoothing: antialiased;
+
     text-rendering: optimizeLegibility;
 }
 
@@ -67,7 +63,7 @@ a {
 
 
 /* =========================================================
-   TOP NAVIGATION
+   TOPBAR
    ========================================================= */
 
 .topbar {
@@ -75,8 +71,7 @@ a {
 
     min-height: 68px;
 
-    padding:
-        0 28px;
+    padding: 0 28px;
 
     display: flex;
 
@@ -133,14 +128,6 @@ a {
     font-size: 16px;
 
     font-weight: 800;
-
-    box-shadow:
-        0 4px 10px rgba(
-            20,
-            55,
-            105,
-            0.16
-        );
 }
 
 
@@ -150,8 +137,6 @@ a {
     font-size: 17px;
 
     font-weight: 800;
-
-    letter-spacing: -0.2px;
 }
 
 
@@ -164,26 +149,20 @@ a {
 
     min-height: 36px;
 
-    padding:
-        0 14px;
+    padding: 0 14px;
+
+    color: #52637a;
+
+    background: #ffffff;
 
     border:
         1px solid #dce3ec;
 
     border-radius: 7px;
 
-    color: #52637a;
-
-    background: #ffffff;
-
     font-size: 12px;
 
     font-weight: 700;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease;
 }
 
 
@@ -197,7 +176,7 @@ a {
 
 
 /* =========================================================
-   MAIN PAGE
+   PAGE
    ========================================================= */
 
 .page {
@@ -205,8 +184,7 @@ a {
 
     max-width: 1180px;
 
-    margin:
-        0 auto;
+    margin: 0 auto;
 
     padding:
         28px 22px 50px;
@@ -225,15 +203,11 @@ a {
     color: #10233f;
 
     font-size: 17px;
-
-    line-height: 1.3;
 }
 
 
 .page-title span {
     color: #1f4f92;
-
-    font-size: 17px;
 }
 
 
@@ -243,7 +217,7 @@ a {
 
 
 /* =========================================================
-   DASHBOARD GRID
+   DASHBOARD
    ========================================================= */
 
 .dashboard {
@@ -265,15 +239,7 @@ a {
 }
 
 
-.left-column {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 18px;
-}
-
-
+.left-column,
 .right-column {
     display: flex;
 
@@ -320,13 +286,11 @@ a {
     line-height: 1.3;
 
     font-weight: 800;
-
-    letter-spacing: -0.15px;
 }
 
 
 /* =========================================================
-   COMPOSE CARD
+   FORM
    ========================================================= */
 
 .compose-card {
@@ -361,8 +325,6 @@ a {
     font-size: 11px;
 
     font-weight: 800;
-
-    letter-spacing: 0.1px;
 }
 
 
@@ -371,8 +333,7 @@ a {
 
     height: 42px;
 
-    padding:
-        0 12px;
+    padding: 0 12px;
 
     color: #1a2d47;
 
@@ -386,11 +347,6 @@ a {
     outline: none;
 
     font-size: 12px;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
 }
 
 
@@ -400,8 +356,6 @@ a {
 
 
 .field input:focus {
-    background: #ffffff;
-
     border-color: #6e96ca;
 
     box-shadow:
@@ -415,7 +369,7 @@ a {
 
 
 /* =========================================================
-   PASSWORD FIELD
+   PASSWORD
    ========================================================= */
 
 .password-wrapper {
@@ -459,8 +413,6 @@ a {
     border: 0;
 
     border-radius: 5px;
-
-    font-size: 13px;
 }
 
 
@@ -472,7 +424,7 @@ a {
 
 
 /* =========================================================
-   MESSAGE SECTION
+   MESSAGE
    ========================================================= */
 
 .message-section {
@@ -506,12 +458,6 @@ a {
     font-size: 13px;
 
     line-height: 1.65;
-
-    word-break: break-word;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
 }
 
 
@@ -538,44 +484,12 @@ a {
 }
 
 
-.message-editor p {
-    margin:
-        0 0 10px;
-}
-
-
-.message-editor p:last-child {
-    margin-bottom: 0;
-}
-
-
-.message-editor a {
-    color: #1e5aa8;
-
-    text-decoration: underline;
-}
-
-
-.message-editor strong,
-.message-editor b {
-    font-weight: 800;
-}
-
-
-.message-editor em,
-.message-editor i {
-    font-style: italic;
-}
-
-
 .editor-help {
     margin-top: 6px;
 
     color: #8a96a7;
 
     font-size: 10px;
-
-    line-height: 1.5;
 }
 
 
@@ -624,13 +538,8 @@ a {
 
 
 /* =========================================================
-   RECIPIENTS CARD
+   RECIPIENTS
    ========================================================= */
-
-.recipients-card {
-    padding-bottom: 20px;
-}
-
 
 .section-header {
     display: flex;
@@ -662,8 +571,7 @@ a {
 
 
 .recipient-count {
-    flex:
-        0 0 auto;
+    flex: 0 0 auto;
 
     margin-top: 1px;
 
@@ -709,15 +617,6 @@ a {
     font-size: 12px;
 
     line-height: 1.65;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-
-.recipient-input::placeholder {
-    color: #a4afbd;
 }
 
 
@@ -731,6 +630,11 @@ a {
             172,
             0.09
         );
+}
+
+
+.recipient-input::placeholder {
+    color: #a4afbd;
 }
 
 
@@ -753,12 +657,6 @@ a {
 
 
 .progress-card h2 {
-    display: flex;
-
-    align-items: center;
-
-    gap: 7px;
-
     margin-bottom: 19px;
 }
 
@@ -769,8 +667,7 @@ a {
     grid-template-columns:
         1fr 1fr;
 
-    gap:
-        14px;
+    gap: 14px;
 }
 
 
@@ -897,8 +794,6 @@ a {
     border-radius: 6px;
 
     font-size: 10px;
-
-    line-height: 1.5;
 }
 
 
@@ -910,7 +805,7 @@ a {
 
 
 /* =========================================================
-   LIVE SEND STATUS
+   SEND STATUS
    ========================================================= */
 
 .send-status {
@@ -929,153 +824,7 @@ a {
 
 
 /* =========================================================
-   LIVE ACTIVITY
-   ========================================================= */
-
-.live-activity {
-    width: 100%;
-
-    max-height: 150px;
-
-    margin-top: 10px;
-
-    padding: 7px;
-
-    overflow-y: auto;
-
-    background: #f9fbfd;
-
-    border:
-        1px solid #e1e6ee;
-
-    border-radius: 7px;
-
-    scrollbar-width: thin;
-
-    scrollbar-color:
-        #c7d0dc
-        transparent;
-}
-
-
-.live-activity::-webkit-scrollbar {
-    width: 5px;
-}
-
-
-.live-activity::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-.live-activity::-webkit-scrollbar-thumb {
-    background: #c7d0dc;
-
-    border-radius: 100px;
-}
-
-
-.activity-empty {
-    padding:
-        11px 8px;
-
-    color: #8a94a5;
-
-    text-align: center;
-
-    font-size: 10px;
-}
-
-
-.activity-item {
-    display: flex;
-
-    align-items: flex-start;
-
-    gap: 7px;
-
-    padding:
-        6px 7px;
-
-    border-bottom:
-        1px solid #edf0f4;
-
-    font-size: 10px;
-
-    line-height: 1.4;
-
-    animation:
-        activityAppear
-        0.18s
-        ease-out;
-}
-
-
-.activity-item:last-child {
-    border-bottom: 0;
-}
-
-
-.activity-icon {
-    flex:
-        0 0 auto;
-
-    width: 14px;
-
-    font-weight: 800;
-
-    text-align: center;
-}
-
-
-.activity-success
-.activity-icon {
-    color: #08a970;
-}
-
-
-.activity-error
-.activity-icon {
-    color: #e43d43;
-}
-
-
-.activity-text {
-    min-width: 0;
-
-    overflow-wrap: anywhere;
-
-    color: #536075;
-}
-
-
-.activity-error
-.activity-text {
-    color: #d23d44;
-}
-
-
-@keyframes activityAppear {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(-3px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-
-}
-
-
-/* =========================================================
-   ERROR DETAILS
+   ERROR
    ========================================================= */
 
 .error-details {
@@ -1133,20 +882,6 @@ a {
     font-size: 11px;
 
     font-weight: 800;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        opacity 0.2s ease,
-        transform 0.1s ease;
-}
-
-
-.send-button:active,
-.stop-button:active {
-    transform:
-        translateY(1px);
 }
 
 
@@ -1164,14 +899,6 @@ a {
 
     border:
         1px solid #173f78;
-
-    box-shadow:
-        0 3px 8px rgba(
-            27,
-            72,
-            130,
-            0.14
-        );
 }
 
 
@@ -1189,8 +916,6 @@ a {
     cursor: not-allowed;
 
     opacity: 0.55;
-
-    box-shadow: none;
 }
 
 
@@ -1216,7 +941,7 @@ a {
 
 
 /* =========================================================
-   LOGIN PAGE
+   LOGIN
    ========================================================= */
 
 .login-page {
@@ -1289,10 +1014,6 @@ a {
         );
 
     border-radius: 11px;
-
-    font-size: 19px;
-
-    font-weight: 800;
 }
 
 
@@ -1305,10 +1026,6 @@ a {
     text-align: center;
 
     font-size: 20px;
-
-    line-height: 1.3;
-
-    font-weight: 800;
 }
 
 
@@ -1360,12 +1077,6 @@ a {
     border-radius: 6px;
 
     outline: none;
-
-    font-size: 12px;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
 }
 
 
@@ -1379,11 +1090,6 @@ a {
             172,
             0.09
         );
-}
-
-
-.login-card input::placeholder {
-    color: #a0acbb;
 }
 
 
@@ -1411,26 +1117,6 @@ a {
     font-size: 11px;
 
     font-weight: 800;
-
-    transition:
-        background 0.2s ease,
-        transform 0.1s ease;
-}
-
-
-.login-card button:hover {
-    background:
-        linear-gradient(
-            135deg,
-            #14366a,
-            #1f508e
-        );
-}
-
-
-.login-card button:active {
-    transform:
-        translateY(1px);
 }
 
 
@@ -1450,311 +1136,121 @@ a {
     border-radius: 6px;
 
     font-size: 10px;
-
-    line-height: 1.4;
 }
 
 
 /* =========================================================
-   SCROLLBAR
+   RESPONSIVE
    ========================================================= */
 
-* {
-    scrollbar-width: thin;
-
-    scrollbar-color:
-        #c8d2df
-        transparent;
-}
-
-
-*::-webkit-scrollbar {
-    width: 7px;
-
-    height: 7px;
-}
-
-
-*::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-*::-webkit-scrollbar-thumb {
-    background: #c8d2df;
-
-    border-radius: 100px;
-}
-
-
-*::-webkit-scrollbar-thumb:hover {
-    background: #aebaca;
-}
-
-
-/* =========================================================
-   RESPONSIVE — TABLET
-   ========================================================= */
-
-@media (
-    max-width: 950px
-) {
+@media (max-width: 950px) {
 
     .dashboard {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .left-column,
-    .right-column {
-
-        width: 100%;
-
-    }
-
-
-    .compose-card {
-
-        min-height: auto;
-
+        grid-template-columns: 1fr;
     }
 
 }
 
 
-/* =========================================================
-   RESPONSIVE — MOBILE
-   ========================================================= */
-
-@media (
-    max-width: 650px
-) {
+@media (max-width: 650px) {
 
     .topbar {
-
         min-height: 62px;
 
         padding:
             0 15px;
-
     }
 
 
     .brand-title {
-
         font-size: 14px;
-
-    }
-
-
-    .shield {
-
-        width: 32px;
-
-        height: 32px;
-
-        font-size: 14px;
-
-    }
-
-
-    .logout {
-
-        min-height: 33px;
-
-        padding:
-            0 10px;
-
-        font-size: 10px;
-
     }
 
 
     .page {
-
         padding:
             20px 13px 35px;
-
-    }
-
-
-    .page-title {
-
-        font-size: 15px;
-
-    }
-
-
-    .card {
-
-        padding:
-            17px;
-
-        border-radius: 9px;
-
     }
 
 
     .form-grid {
-
-        grid-template-columns:
-            1fr;
-
-        gap: 13px;
-
+        grid-template-columns: 1fr;
     }
 
 
     .stats-grid {
-
         grid-template-columns:
             1fr 1fr;
 
         gap: 10px;
-
     }
 
 
     .stat-box {
-
         min-height: 82px;
-
     }
 
 
     .stat-box strong {
-
         font-size: 24px;
-
     }
 
 
     .section-header {
-
         flex-direction: column;
-
-        gap: 8px;
-
-    }
-
-
-    .recipient-count {
-
-        align-self: flex-start;
-
     }
 
 
     .button-row {
-
         flex-direction: column;
-
     }
 
 
     .send-button,
     .stop-button {
-
         width: 100%;
-
-    }
-
-
-    .live-activity {
-
-        max-height: 130px;
-
     }
 
 
     .login-card {
-
         padding:
             28px 22px;
-
     }
 
 }
 
 
-/* =========================================================
-   RESPONSIVE — VERY SMALL SCREENS
-   ========================================================= */
-
-@media (
-    max-width: 390px
-) {
+@media (max-width: 390px) {
 
     .topbar {
-
         padding:
             0 11px;
-
     }
 
 
     .brand-title {
-
         font-size: 13px;
-
-    }
-
-
-    .logout {
-
-        padding:
-            0 8px;
-
     }
 
 
     .page {
-
         padding:
             17px 9px 28px;
-
     }
 
 
     .card {
-
-        padding:
-            14px;
-
-    }
-
-
-    .stats-grid {
-
-        gap: 8px;
-
+        padding: 14px;
     }
 
 
     .stat-box {
-
         min-height: 76px;
-
-        padding:
-            10px 6px;
-
-    }
-
-
-    .stat-box span {
-
-        font-size: 8px;
-
     }
 
 
     .stat-box strong {
-
         font-size: 22px;
-
     }
 
 }
