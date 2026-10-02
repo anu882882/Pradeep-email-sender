@@ -29,7 +29,9 @@ button {
 }
 
 
-/* TOPBAR */
+/* =====================================================
+   TOPBAR
+   ===================================================== */
 
 .topbar {
     height: 72px;
@@ -115,7 +117,9 @@ button {
 }
 
 
-/* MAIN */
+/* =====================================================
+   MAIN
+   ===================================================== */
 
 .container {
     max-width: 1260px;
@@ -172,7 +176,9 @@ button {
 }
 
 
-/* CARD */
+/* =====================================================
+   CARD
+   ===================================================== */
 
 .card {
     background: #ffffff;
@@ -262,7 +268,9 @@ button {
 }
 
 
-/* FIELDS */
+/* =====================================================
+   FIELDS
+   ===================================================== */
 
 .field {
     margin-bottom: 18px;
@@ -331,7 +339,9 @@ button {
 }
 
 
-/* PASSWORD */
+/* =====================================================
+   PASSWORD
+   ===================================================== */
 
 .password-field {
     position: relative;
@@ -362,7 +372,9 @@ button {
 }
 
 
-/* BODY */
+/* =====================================================
+   BODY
+   ===================================================== */
 
 .body-label-row {
     display: flex;
@@ -407,7 +419,145 @@ button {
 }
 
 
-/* SECURITY */
+/* =====================================================
+   SPINTAX
+   ===================================================== */
+
+.spintax-box {
+    margin-bottom: 18px;
+
+    padding: 15px;
+
+    border:
+        1px solid #e5eaf1;
+
+    border-radius: 11px;
+
+    background: #fbfcfe;
+}
+
+
+.spintax-top {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+.spintax-title {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: #344154;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+
+.spintax-title i {
+    color: #1677ff;
+}
+
+
+.spintax-help {
+    margin-top: 5px;
+
+    color: #8792a2;
+
+    font-size: 11px;
+}
+
+
+.spintax-example {
+    margin-top: 11px;
+
+    color: #7d8796;
+
+    font-size: 11px;
+}
+
+
+.spintax-example code {
+    display: inline-block;
+
+    margin-left: 5px;
+
+    padding: 4px 6px;
+
+    border-radius: 5px;
+
+    background: #eef3f8;
+
+    color: #465568;
+
+    font-size: 10px;
+}
+
+
+.preview-button {
+    margin-top: 11px;
+
+    padding: 7px 10px;
+
+    border:
+        1px solid #dce4ee;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #536176;
+
+    font-size: 11px;
+}
+
+
+.preview-button:hover {
+    background: #f5f8fc;
+}
+
+
+.spintax-preview {
+    display: none;
+
+    margin-top: 10px;
+
+    padding: 10px;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    border:
+        1px solid #e1e7ef;
+
+    color: #455163;
+
+    font-size: 11px;
+
+    line-height: 1.55;
+
+    white-space: pre-wrap;
+}
+
+
+.spintax-preview.show {
+    display: block;
+}
+
+
+/* =====================================================
+   SECURITY
+   ===================================================== */
 
 .security-box {
     border:
@@ -463,7 +613,9 @@ button {
 }
 
 
-/* RECIPIENTS */
+/* =====================================================
+   RECIPIENTS
+   ===================================================== */
 
 .recipients-box {
     resize: vertical;
@@ -485,7 +637,9 @@ button {
 }
 
 
-/* STATS */
+/* =====================================================
+   STATS
+   ===================================================== */
 
 .stats-grid {
     display: grid;
@@ -543,7 +697,9 @@ button {
 }
 
 
-/* PROGRESS */
+/* =====================================================
+   PROGRESS
+   ===================================================== */
 
 .progress-track {
     width: 100%;
@@ -616,7 +772,9 @@ button {
 }
 
 
-/* SEND */
+/* =====================================================
+   SEND
+   ===================================================== */
 
 .button-row {
     margin-top: 15px;
@@ -654,7 +812,9 @@ button {
 }
 
 
-/* TOAST */
+/* =====================================================
+   TOAST
+   ===================================================== */
 
 .toast {
     position: fixed;
@@ -679,7 +839,8 @@ button {
 
     pointer-events: none;
 
-    transform: translateY(10px);
+    transform:
+        translateY(10px);
 
     transition:
         opacity .2s,
@@ -692,11 +853,14 @@ button {
 .toast.show {
     opacity: 1;
 
-    transform: translateY(0);
+    transform:
+        translateY(0);
 }
 
 
-/* LOGIN */
+/* =====================================================
+   LOGIN
+   ===================================================== */
 
 .login-page {
     min-height: 100vh;
@@ -772,7 +936,8 @@ button {
 
 
 .login-subtitle {
-    margin: 8px 0 26px;
+    margin:
+        8px 0 26px;
 
     color: #8791a1;
 
@@ -889,7 +1054,9 @@ button {
 }
 
 
-/* MOBILE */
+/* =====================================================
+   MOBILE
+   ===================================================== */
 
 @media (max-width: 900px) {
 
@@ -932,7 +1099,8 @@ button {
 
 
     .login-card {
-        padding: 27px 21px;
+        padding:
+            27px 21px;
     }
 
 }
