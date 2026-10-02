@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 
 <head>
@@ -48,9 +49,7 @@
     <div class="brand">
 
         <div class="brand-icon">
-
             <i class="fa-solid fa-shield-halved"></i>
-
         </div>
 
 
@@ -105,7 +104,7 @@
 
 
         <!-- ================================================= -->
-        <!-- COMPOSE -->
+        <!-- LEFT -->
         <!-- ================================================= -->
 
         <section class="card compose-card">
@@ -114,9 +113,7 @@
             <div class="card-heading">
 
                 <div class="heading-icon">
-
                     <i class="fa-solid fa-pen-to-square"></i>
-
                 </div>
 
 
@@ -255,7 +252,7 @@
 
                 <textarea
                     id="messageBody"
-                    rows="9"
+                    rows="10"
                     placeholder="{Hi|Hello|Hey} there,
 
 {Thanks for reaching out|Thank you for your interest}.
@@ -268,64 +265,29 @@ Write your message here..."
 
 
             <!-- ================================================= -->
-            <!-- SPINTAX — ALWAYS ON -->
+            <!-- SPINTAX STATUS ONLY -->
             <!-- ================================================= -->
 
-            <div class="spintax-box">
+            <div class="spintax-status">
 
-                <div class="spintax-top">
+                <div class="spintax-status-icon">
 
-                    <div>
+                    <i class="fa-solid fa-shuffle"></i>
 
-                        <div class="spintax-title">
+                </div>
 
-                            <i class="fa-solid fa-shuffle"></i>
 
-                            Spintax Enabled
+                <div>
 
-                        </div>
+                    <div class="spintax-status-title">
+                        Spintax Enabled
+                    </div>
 
-                        <div class="spintax-help">
-
-                            Spintax is always ON.
-                            Use {option 1|option 2|option 3}
-                            for message variations.
-
-                        </div>
-
+                    <div class="spintax-status-text">
+                        Spintax is automatically applied to each message.
                     </div>
 
                 </div>
-
-
-                <div class="spintax-example">
-
-                    Example:
-
-                    <code>
-                        {Hi|Hello|Hey} there
-                    </code>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    class="preview-button"
-                    onclick="previewSpintax()"
-                >
-
-                    <i class="fa-regular fa-eye"></i>
-
-                    Preview Variation
-
-                </button>
-
-
-                <div
-                    id="spintaxPreview"
-                    class="spintax-preview"
-                ></div>
 
             </div>
 
@@ -380,7 +342,7 @@ Write your message here..."
 
 
         <!-- ================================================= -->
-        <!-- RIGHT COLUMN -->
+        <!-- RIGHT -->
         <!-- ================================================= -->
 
         <section class="right-column">
@@ -389,7 +351,6 @@ Write your message here..."
             <!-- RECIPIENTS -->
 
             <div class="card">
-
 
                 <div class="card-heading">
 
@@ -450,7 +411,6 @@ Write your message here..."
             <!-- PROGRESS -->
 
             <div class="card progress-card">
-
 
                 <div class="card-heading">
 
@@ -537,7 +497,6 @@ Write your message here..."
 
                     </div>
 
-
                 </div>
 
 
@@ -610,10 +569,6 @@ Write your message here..."
 <script>
 
 
-// =========================================================
-// STATE
-// =========================================================
-
 let isHTML = false;
 
 let sending = false;
@@ -630,12 +585,10 @@ function turnstileCompleted(token) {
     turnstileToken =
         token || "";
 
-
     setStatus(
         "Cloudflare verification completed.",
         "success"
     );
-
 }
 
 
@@ -643,12 +596,10 @@ function turnstileExpired() {
 
     turnstileToken = "";
 
-
     setStatus(
         "Cloudflare verification expired.",
         "error"
     );
-
 }
 
 
@@ -656,12 +607,10 @@ function turnstileError() {
 
     turnstileToken = "";
 
-
     setStatus(
         "Cloudflare verification failed.",
         "error"
     );
-
 }
 
 
@@ -675,7 +624,6 @@ function togglePassword() {
         document.getElementById(
             "appPassword"
         );
-
 
     const icon =
         document.getElementById(
@@ -700,7 +648,6 @@ function togglePassword() {
             "fa-regular fa-eye";
 
     }
-
 }
 
 
@@ -727,7 +674,6 @@ function setMode(htmlMode) {
             "active",
             htmlMode
         );
-
 }
 
 
@@ -777,22 +723,16 @@ function getRecipients() {
 
 
         if (!email) {
-
             continue;
-
         }
 
 
         if (!isValidEmail(email)) {
-
             continue;
-
         }
 
 
-        if (
-            !unique.includes(email)
-        ) {
+        if (!unique.includes(email)) {
 
             unique.push(email);
 
@@ -805,12 +745,11 @@ function getRecipients() {
         0,
         25
     );
-
 }
 
 
 // =========================================================
-// RECIPIENT COUNT
+// COUNT
 // =========================================================
 
 function updateRecipientCount() {
@@ -846,7 +785,6 @@ function updateRecipientCount() {
             list.length;
 
     }
-
 }
 
 
@@ -858,99 +796,6 @@ document
         "input",
         updateRecipientCount
     );
-
-
-// =========================================================
-// CLIENT SPINTAX
-// =========================================================
-
-function expandSpintaxClient(text) {
-
-    return text.replace(
-        /\{([^{}]+)\}/g,
-        function(
-            match,
-            content
-        ) {
-
-            const options =
-                content
-                    .split("|")
-                    .map(
-                        item =>
-                            item.trim()
-                    )
-                    .filter(
-                        item =>
-                            item.length
-                    );
-
-
-            if (!options.length) {
-
-                return match;
-
-            }
-
-
-            return options[
-                Math.floor(
-                    Math.random() *
-                    options.length
-                )
-            ];
-
-        }
-    );
-
-}
-
-
-// =========================================================
-// PREVIEW
-// =========================================================
-
-function previewSpintax() {
-
-    const body =
-        document
-            .getElementById(
-                "messageBody"
-            )
-            .value;
-
-
-    const preview =
-        document.getElementById(
-            "spintaxPreview"
-        );
-
-
-    if (!body.trim()) {
-
-        preview.textContent =
-            "Write a message first.";
-
-        preview.classList.add(
-            "show"
-        );
-
-        return;
-
-    }
-
-
-    preview.textContent =
-        expandSpintaxClient(
-            body
-        );
-
-
-    preview.classList.add(
-        "show"
-    );
-
-}
 
 
 // =========================================================
@@ -974,12 +819,11 @@ function setStatus(
 
     status.className =
         "status " + type;
-
 }
 
 
 // =========================================================
-// LIVE COUNTER
+// PROGRESS
 // =========================================================
 
 function updateProgress(
@@ -1049,7 +893,6 @@ function updateProgress(
         )
         .textContent =
         percent + "%";
-
 }
 
 
@@ -1060,9 +903,7 @@ function updateProgress(
 async function sendBatch() {
 
     if (sending) {
-
         return;
-
     }
 
 
@@ -1125,7 +966,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1136,7 +976,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1147,7 +986,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1158,7 +996,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1169,7 +1006,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1180,7 +1016,6 @@ async function sendBatch() {
         );
 
         return;
-
     }
 
 
@@ -1191,14 +1026,11 @@ async function sendBatch() {
             "error"
         );
 
-
         showToast(
             "Cloudflare verification is required."
         );
 
-
         return;
-
     }
 
 
@@ -1213,9 +1045,7 @@ async function sendBatch() {
 
 
     if (!confirmed) {
-
         return;
-
     }
 
 
@@ -1303,10 +1133,6 @@ async function sendBatch() {
             );
 
 
-        // =================================================
-        // HTTP ERROR
-        // =================================================
-
         if (!response.ok) {
 
             let errorText =
@@ -1329,7 +1155,6 @@ async function sendBatch() {
             throw new Error(
                 errorText
             );
-
         }
 
 
@@ -1338,13 +1163,8 @@ async function sendBatch() {
             throw new Error(
                 "Streaming is not supported."
             );
-
         }
 
-
-        // =================================================
-        // STREAM
-        // =================================================
 
         const reader =
             response.body.getReader();
@@ -1368,9 +1188,7 @@ async function sendBatch() {
 
 
             if (done) {
-
                 break;
-
             }
 
 
@@ -1397,9 +1215,7 @@ async function sendBatch() {
             ) {
 
                 if (!line.trim()) {
-
                     continue;
-
                 }
 
 
@@ -1416,7 +1232,6 @@ async function sendBatch() {
                 } catch (e) {
 
                     continue;
-
                 }
 
 
@@ -1441,12 +1256,11 @@ async function sendBatch() {
                         "Sending...",
                         "sending"
                     );
-
                 }
 
 
                 // =========================================
-                // EACH EMAIL
+                // PROGRESS
                 // =========================================
 
                 else if (
@@ -1480,7 +1294,6 @@ async function sendBatch() {
                         );
 
                     }
-
                 }
 
 
@@ -1526,7 +1339,6 @@ async function sendBatch() {
                         } catch (e) {}
 
                     }
-
                 }
 
 
@@ -1566,7 +1378,6 @@ async function sendBatch() {
                         event.message ||
                         "Sending failed."
                     );
-
                 }
 
             }
@@ -1591,17 +1402,11 @@ async function sendBatch() {
     }
 
 
-    // =====================================================
-    // FINISH
-    // =====================================================
-
     sending = false;
-
 
     sendButton.disabled = false;
 
     recipientsBox.disabled = false;
-
 }
 
 
@@ -1636,7 +1441,6 @@ function showToast(message) {
         },
         3500
     );
-
 }
 
 
