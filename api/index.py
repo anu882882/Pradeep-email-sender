@@ -29,14 +29,14 @@ def valid_email(value):
     return bool(EMAIL_RE.fullmatch(value.strip()))
 
 
-def is_authenticated():
+def authenticated():
     return session.get("authenticated") is True
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-    if is_authenticated():
+    if authenticated():
         return redirect(url_for("home"))
 
     error = None
@@ -47,22 +47,21 @@ def login():
             request.form.get("password", "")
         )
 
-        login_password = os.environ.get(
+        configured_password = os.environ.get(
             "LOGIN_PASSWORD",
             ""
         )
 
-        if not login_password:
-            error = "Login password is not configured."
+        if not configured_password:
+            error = "LOGIN_PASSWORD is not configured."
 
-        elif password == login_password:
+        elif password == configured_password:
 
             session["authenticated"] = True
 
             return redirect(url_for("home"))
 
         else:
-
             error = "Incorrect password."
 
     return render_template(
@@ -76,36 +75,28 @@ def logout():
 
     session.clear()
 
-    return redirect(
-        url_for("login")
-    )
+    return redirect(url_for("login"))
 
 
 @app.route("/")
 def home():
 
-    if not is_authenticated():
-        return redirect(
-            url_for("login")
-        )
+    if not authenticated():
+        return redirect(url_for("login"))
 
-    return render_template(
-        "index.html"
-    )
+    return render_template("index.html")
 
 
 @app.route("/send", methods=["POST"])
 def send_email():
 
-    if not is_authenticated():
+    if not authenticated():
         return jsonify({
             "success": False,
             "message": "Authentication required."
         }), 401
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    data = request.get_json(silent=True) or {}
 
     sender_name = str(
         data.get("sender_name", "")
@@ -152,7 +143,7 @@ def send_email():
     if not valid_email(recipient):
         return jsonify({
             "success": False,
-            "message": "Enter a valid recipient email."
+            "message": "Invalid recipient email."
         }), 400
 
     if not subject:
@@ -208,9 +199,7 @@ def send_email():
 
         return jsonify({
             "success": True,
-            "message": (
-                f"Email sent to {recipient}."
-            )
+            "message": f"Email sent to {recipient}."
         })
 
     except smtplib.SMTPAuthenticationError:
