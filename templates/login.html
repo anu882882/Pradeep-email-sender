@@ -10,7 +10,9 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Secure Mail Console - Login</title>
+    <title>
+        Secure Mail Console - Login
+    </title>
 
     <link
         rel="stylesheet"
@@ -24,117 +26,133 @@
 
 </head>
 
+
 <body class="login-page">
 
-    <div class="login-card">
 
-        <div class="login-logo">
-            <i class="fa-solid fa-shield-halved"></i>
-        </div>
+<div class="login-card">
 
-        <h1>
-            Secure Mail Console
-        </h1>
 
-        <p class="login-subtitle">
-            Sign in to continue
-        </p>
+    <div class="login-logo">
 
-        <form
-            method="post"
-            autocomplete="off"
-        >
-
-            <div class="login-field">
-
-                <label for="password">
-                    Password
-                </label>
-
-                <div class="login-password">
-
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Enter password"
-                        autofocus
-                        required
-                    >
-
-                    <button
-                        type="button"
-                        id="showPassword"
-                        class="login-eye"
-                    >
-                        <i class="fa-regular fa-eye"></i>
-                    </button>
-
-                </div>
-
-            </div>
-
-            {% if error %}
-
-            <div class="login-error">
-
-                <i class="fa-solid fa-circle-exclamation"></i>
-
-                <span>
-                    {{ error }}
-                </span>
-
-            </div>
-
-            {% endif %}
-
-            <button
-                type="submit"
-                class="login-button"
-            >
-
-                <i class="fa-solid fa-right-to-bracket"></i>
-
-                Login
-
-            </button>
-
-        </form>
-
-        <div class="login-footer">
-
-            <i class="fa-solid fa-shield-halved"></i>
-
-            Secure Mail Console
-
-        </div>
+        <i class="fa-solid fa-shield-halved"></i>
 
     </div>
 
 
+    <h1>
+        Secure Mail Console
+    </h1>
+
+
+    <p class="login-subtitle">
+        Sign in to continue
+    </p>
+
+
+    <form
+        method="post"
+        autocomplete="off"
+    >
+
+
+        <label>
+            Password
+        </label>
+
+
+        <div class="login-password">
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter password"
+                required
+                autofocus
+            >
+
+            <button
+                type="button"
+                id="showPassword"
+            >
+
+                <i class="fa-regular fa-eye"></i>
+
+            </button>
+
+        </div>
+
+
+        {% if error %}
+
+        <div class="login-error">
+
+            <i class="fa-solid fa-circle-exclamation"></i>
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+
+        <button
+            type="submit"
+            class="login-button"
+        >
+
+            <i class="fa-solid fa-right-to-bracket"></i>
+
+            Login
+
+        </button>
+
+
+    </form>
+
+
+    <div class="login-footer">
+
+        <i class="fa-solid fa-shield-halved"></i>
+
+        Secure Mail Console
+
+    </div>
+
+
+</div>
+
+
 <script>
 
-const passwordInput =
-    document.getElementById("password");
+const password =
+    document.getElementById(
+        "password"
+    );
 
-const showPassword =
-    document.getElementById("showPassword");
+const button =
+    document.getElementById(
+        "showPassword"
+    );
 
 
-showPassword.addEventListener(
+button.addEventListener(
     "click",
     function () {
 
-        if (passwordInput.type === "password") {
+        if (
+            password.type === "password"
+        ) {
 
-            passwordInput.type = "text";
+            password.type = "text";
 
             this.innerHTML =
                 '<i class="fa-regular fa-eye-slash"></i>';
 
         } else {
 
-            passwordInput.type = "password";
+            password.type = "password";
 
             this.innerHTML =
                 '<i class="fa-regular fa-eye"></i>';
@@ -146,5 +164,7 @@ showPassword.addEventListener(
 
 </script>
 
+
 </body>
+
 </html>
