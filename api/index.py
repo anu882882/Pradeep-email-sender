@@ -18,22 +18,15 @@ import json
 import urllib.request
 import urllib.parse
 import secrets
+import random
 
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from pathlib import Path
 
 
-# =========================================================
-# PATHS
-# =========================================================
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# =========================================================
-# APP
-# =========================================================
 
 app = Flask(
     __name__,
@@ -42,28 +35,20 @@ app = Flask(
     static_url_path="/static"
 )
 
-
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
     ""
 )
 
 
-# =========================================================
-# SETTINGS
-# =========================================================
-
 MAX_RECIPIENTS = 25
+
 
 TURNSTILE_SECRET_KEY = os.environ.get(
     "TURNSTILE_SECRET_KEY",
     ""
 )
 
-
-# =========================================================
-# EMAIL VALIDATION
-# =========================================================
 
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
@@ -79,14 +64,41 @@ def valid_email(value):
     )
 
 
-# =========================================================
-# AUTH
-# =========================================================
-
 def authenticated():
     return session.get(
         "authenticated"
     ) is True
+
+
+# =========================================================
+# SPINTAX
+# ALWAYS ON
+# =========================================================
+
+SPINTAX_RE = re.compile(
+    r"\{([^{}|]+(?:\|[^{}|]+)+)\}"
+)
+
+
+def expand_spintax(text):
+
+    def replace_match(match):
+
+        options = [
+            option.strip()
+            for option in match.group(1).split("|")
+            if option.strip()
+        ]
+
+        if not options:
+            return match.group(0)
+
+        return random.choice(options)
+
+    return SPINTAX_RE.sub(
+        replace_match,
+        text
+    )
 
 
 # =========================================================
@@ -99,36 +111,28 @@ def verify_turnstile(
 ):
 
     if not TURNSTILE_SECRET_KEY:
-
         return (
             False,
             "TURNSTILE_SECRET_KEY is not configured."
         )
 
-
     if not token:
-
         return (
             False,
             "Cloudflare verification is required."
         )
-
 
     payload = {
         "secret": TURNSTILE_SECRET_KEY,
         "response": token
     }
 
-
     if remote_ip:
-
         payload["remoteip"] = remote_ip
-
 
     encoded = urllib.parse.urlencode(
         payload
     ).encode("utf-8")
-
 
     req = urllib.request.Request(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
@@ -139,7 +143,6 @@ def verify_turnstile(
         },
         method="POST"
     )
-
 
     try:
 
@@ -152,17 +155,13 @@ def verify_turnstile(
                 response.read().decode("utf-8")
             )
 
-
         if result.get("success") is True:
-
             return True, None
-
 
         return (
             False,
             "Cloudflare verification failed."
         )
-
 
     except Exception:
 
@@ -183,14 +182,11 @@ def verify_turnstile(
 def login():
 
     if authenticated():
-
         return redirect(
             url_for("home")
         )
 
-
     error = None
-
 
     if request.method == "POST":
 
@@ -201,19 +197,16 @@ def login():
             )
         )
 
-
         configured_password = os.environ.get(
             "LOGIN_PASSWORD",
             ""
         )
-
 
         if not configured_password:
 
             error = (
                 "LOGIN_PASSWORD is not configured."
             )
-
 
         elif secrets.compare_digest(
             password,
@@ -226,11 +219,9 @@ def login():
                 url_for("home")
             )
 
-
         else:
 
             error = "Incorrect password."
-
 
     return render_template(
         "login.html",
@@ -265,7 +256,6 @@ def home():
             url_for("login")
         )
 
-
     return render_template(
         "index.html",
         turnstile_site_key=os.environ.get(
@@ -276,7 +266,7 @@ def home():
 
 
 # =========================================================
-# LIVE SMTP BATCH
+# SEND BATCH
 # =========================================================
 
 @app.route(
@@ -430,7 +420,6 @@ def send_batch():
 
 
         if not valid_email(email):
-
             continue
 
 
@@ -476,11 +465,7 @@ def send_batch():
 
 
     # =====================================================
-    # IMPORTANT
-    #
-    # The actual SMTP work is inside a generator.
-    # After EVERY sendmail(), one JSON line is returned
-    # to the browser.
+    # STREAMING SEND
     # =====================================================
 
     @stream_with_context
@@ -491,13 +476,9 @@ def send_batch():
         )
 
         sent_count = 0
-
         failed_count = 0
-
         remaining = total
 
-
-        # Initial progress
 
         yield (
             json.dumps({
@@ -515,11 +496,8 @@ def send_batch():
 
         try:
 
-            # =================================================
-            # ONE SMTP CONNECTION
-            # ONE LOGIN
-            # TIMEOUT = 15
-            # =================================================
+            # One Gmail SMTP connection.
+            # Messages are sent sequentially.
 
             with smtplib.SMTP_SSL(
                 "smtp.gmail.com",
@@ -528,21 +506,28 @@ def send_batch():
                 timeout=15
             ) as server:
 
-                # Login only once
-
                 server.login(
                     gmail,
                     app_password
                 )
 
 
-                # =================================================
-                # SEND ONE BY ONE
-                # =================================================
-
                 for recipient in clean_recipients:
 
                     try:
+
+                        # =================================
+                        # SPINTAX ALWAYS ON
+                        # =================================
+
+                        final_body = expand_spintax(
+                            body
+                        )
+
+                        final_subject = expand_spintax(
+                            subject
+                        )
+
 
                         content_type = (
                             "html"
@@ -552,13 +537,15 @@ def send_batch():
 
 
                         message = MIMEText(
-                            body,
+                            final_body,
                             content_type,
                             "utf-8"
                         )
 
 
-                        message["Subject"] = subject
+                        message["Subject"] = (
+                            final_subject
+                        )
 
 
                         message["From"] = formataddr(
@@ -572,10 +559,6 @@ def send_batch():
                         message["To"] = recipient
 
 
-                        # -----------------------------------------
-                        # SEND
-                        # -----------------------------------------
-
                         server.sendmail(
                             gmail,
                             [recipient],
@@ -583,12 +566,7 @@ def send_batch():
                         )
 
 
-                        # -----------------------------------------
-                        # SUCCESS
-                        # -----------------------------------------
-
                         sent_count += 1
-
                         remaining -= 1
 
 
@@ -607,12 +585,7 @@ def send_batch():
 
                     except Exception as exc:
 
-                        # -----------------------------------------
-                        # FAILED
-                        # -----------------------------------------
-
                         failed_count += 1
-
                         remaining -= 1
 
 
@@ -685,13 +658,10 @@ def send_batch():
             return
 
 
-        # =================================================
-        # COMPLETE
-        # =================================================
-
         yield (
             json.dumps({
                 "type": "complete",
+                "success": True,
                 "message": (
                     f"Batch completed: "
                     f"{sent_count} sent, "
@@ -707,10 +677,15 @@ def send_batch():
 
     return Response(
         generate(),
-        content_type="application/x-ndjson; charset=utf-8",
+        content_type=(
+            "application/x-ndjson; "
+            "charset=utf-8"
+        ),
         headers={
-            "Cache-Control": "no-cache, no-transform",
-            "X-Accel-Buffering": "no"
+            "Cache-Control":
+                "no-cache, no-transform",
+            "X-Accel-Buffering":
+                "no"
         }
     )
 
@@ -725,13 +700,10 @@ def health():
     return jsonify({
         "status": "ok",
         "service": "Secure Mail Console",
-        "mailer": "Gmail SMTP"
+        "mailer": "Gmail SMTP",
+        "spintax": "always_on"
     })
 
-
-# =========================================================
-# LOCAL
-# =========================================================
 
 if __name__ == "__main__":
 
