@@ -2,20 +2,12 @@
     box-sizing: border-box;
 }
 
-
 body {
     margin: 0;
-
-    font-family:
-        Inter,
-        Arial,
-        sans-serif;
-
+    font-family: Inter, Arial, sans-serif;
     background: #f5f8fc;
-
     color: #101a2d;
 }
-
 
 button,
 input,
@@ -24,46 +16,31 @@ textarea {
 }
 
 
-/* =====================================================
-   TOPBAR
-   ===================================================== */
+/* TOP */
 
 .topbar {
     max-width: 1000px;
-
-    margin: 0 auto;
-
+    margin: auto;
     height: 78px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 }
 
-
 .brand {
     display: flex;
-
     align-items: center;
-
     gap: 9px;
 }
 
-
 .brand-icon {
     color: #397ef6;
-
     font-size: 31px;
 }
 
-
 .brand-title {
     font-size: 29px;
-
-    line-height: 1;
-
     font-weight: 800;
 
     background:
@@ -74,97 +51,64 @@ textarea {
         );
 
     -webkit-background-clip: text;
-
     -webkit-text-fill-color: transparent;
 }
-
 
 .logout-button {
     text-decoration: none;
 
-    border:
-        1px solid #ffcaca;
-
-    background: #ffffff;
-
+    border: 1px solid #ffcaca;
+    background: #fff;
     color: #ff4040;
 
     border-radius: 7px;
-
     padding: 7px 13px;
 
     font-size: 11px;
-
     font-weight: 600;
 }
 
 
-/* =====================================================
-   CONTAINER
-   ===================================================== */
+/* MAIN */
 
 .container {
     max-width: 1000px;
-
     margin: auto;
-
-    padding:
-        10px 0 45px;
+    padding: 10px 0 45px;
 }
-
 
 .page-heading {
     margin-bottom: 23px;
 }
 
-
 .page-heading h1 {
     margin: 0;
-
     font-size: 22px;
-
-    font-weight: 800;
 }
-
 
 .page-heading h1 i {
     margin-right: 6px;
 }
 
-
 .dashboard-grid {
     display: grid;
-
-    grid-template-columns:
-        1.04fr
-        .96fr;
-
+    grid-template-columns: 1.04fr .96fr;
     gap: 20px;
-
-    align-items: start;
 }
-
 
 .right-column {
     display: flex;
-
     flex-direction: column;
-
     gap: 20px;
 }
 
 
-/* =====================================================
-   CARD
-   ===================================================== */
+/* CARD */
 
 .card {
-    background: #ffffff;
-
+    background: #fff;
     border-radius: 11px;
-
-    border:
-        1px solid #e7ebf1;
+    border: 1px solid #e7ebf1;
 
     box-shadow:
         0 5px 18px
@@ -173,214 +117,119 @@ textarea {
     padding: 29px;
 }
 
-
 .compose-card {
     min-height: 665px;
 }
 
-
 .section-title {
     display: flex;
-
     align-items: center;
-
     gap: 5px;
 
     font-size: 17px;
-
     font-weight: 800;
 }
 
 
-.section-title i {
-    font-size: 17px;
-}
-
-
-.recipients-card {
-    padding: 29px;
-}
-
-
-.count-badge {
-    margin-left: auto;
-
-    color: #4085ff;
-
-    background: #f0f6ff;
-
-    padding: 6px 9px;
-
-    border-radius: 20px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-}
-
-
-.recipient-subtitle {
-    color: #6f829d;
-
-    font-size: 11px;
-
-    margin-bottom: 10px;
-
-    margin-left: 22px;
-}
-
-
-/* =====================================================
-   FORM
-   ===================================================== */
+/* FORM */
 
 .two-column {
     display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
-
-    gap:
-        0 14px;
-
-    margin-top: 3px;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
 }
-
 
 .field {
     margin-bottom: 17px;
 }
 
-
 .field label {
     display: block;
 
     font-size: 11px;
-
     font-weight: 700;
 
     margin-bottom: 8px;
 }
 
-
 .field input {
     width: 100%;
-
     height: 42px;
 
-    border:
-        1px solid #dce3ed;
-
+    border: 1px solid #dce3ed;
     border-radius: 7px;
 
     padding: 0 13px;
 
     outline: none;
-
-    color: #182133;
-
     font-size: 13px;
 }
-
 
 .field input:focus,
 .field textarea:focus,
 .recipients-box:focus {
     border-color: #7da9ef;
-
-    box-shadow:
-        0 0 0 2px
-        rgba(65,126,230,.08);
 }
 
 
-/* =====================================================
-   PASSWORD
-   ===================================================== */
+/* PASSWORD */
 
 .password-field {
     position: relative;
 }
 
-
 .password-field input {
     padding-right: 42px;
 }
 
-
 .password-field button {
     position: absolute;
 
+    right: 4px;
     top: 3px;
 
-    right: 4px;
-
     width: 34px;
-
     height: 35px;
 
     border: 0;
-
     background: transparent;
 
     color: #76859b;
-
     cursor: pointer;
 }
 
 
-/* =====================================================
-   BODY
-   ===================================================== */
-
-.body-field {
-    margin-top: 2px;
-}
-
+/* BODY */
 
 .body-header {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 }
 
-
 .mode-buttons {
     display: flex;
-
     gap: 4px;
 }
 
-
 .mode {
-    border:
-        1px solid #dce3ed;
-
-    background: #ffffff;
+    border: 1px solid #dce3ed;
+    background: #fff;
 
     color: #78869a;
 
     border-radius: 5px;
-
     padding: 4px 7px;
 
     font-size: 9px;
-
     cursor: pointer;
 }
 
-
 .mode.active {
     background: #edf4ff;
-
     color: #347af1;
-
     border-color: #cfe1fc;
 }
-
 
 .field textarea {
     width: 100%;
@@ -391,9 +240,7 @@ textarea {
 
     margin-top: 8px;
 
-    border:
-        1px solid #dce3ed;
-
+    border: 1px solid #dce3ed;
     border-radius: 7px;
 
     padding: 13px;
@@ -401,31 +248,21 @@ textarea {
     outline: none;
 
     line-height: 1.55;
-
     font-size: 13px;
 }
 
 
-/* =====================================================
-   SPINTAX
-   ===================================================== */
+/* SPINTAX */
 
 .spintax-status {
     display: flex;
-
     align-items: center;
-
     gap: 10px;
 
-    margin-top: 1px;
-
     margin-bottom: 18px;
-
     padding: 10px 12px;
 
-    border:
-        1px solid #e0eaf7;
-
+    border: 1px solid #e0eaf7;
     border-radius: 8px;
 
     background: #f7fbff;
@@ -433,89 +270,78 @@ textarea {
     color: #2773c7;
 }
 
-
-.spintax-status > i {
-    font-size: 15px;
-}
-
-
 .spintax-status strong {
     display: block;
-
     font-size: 11px;
 }
 
-
 .spintax-status span {
     display: block;
-
     margin-top: 2px;
 
     color: #8491a3;
-
     font-size: 9px;
 }
 
 
-/* =====================================================
-   SECURITY
-   ===================================================== */
+/* SECURITY */
 
 .security-title {
     font-size: 12px;
-
     font-weight: 700;
-
     margin-bottom: 9px;
 }
-
-
-.security-title i {
-    margin-right: 3px;
-}
-
 
 .security-box {
     min-height: 91px;
 
     display: flex;
-
     align-items: center;
-
-    justify-content: flex-start;
 }
-
 
 .turnstile-warning {
     color: #c43d3d;
-
     background: #fff1f1;
 
-    border:
-        1px solid #ffd3d3;
+    border: 1px solid #ffd3d3;
 
     padding: 10px;
-
     border-radius: 7px;
 
     font-size: 10px;
 }
 
 
-/* =====================================================
-   RECIPIENTS
-   ===================================================== */
+/* RECIPIENTS */
+
+.count-badge {
+    margin-left: auto;
+
+    color: #4085ff;
+    background: #f0f6ff;
+
+    padding: 6px 9px;
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.recipient-subtitle {
+    color: #6f829d;
+
+    font-size: 11px;
+
+    margin: 0 0 10px 22px;
+}
 
 .recipients-box {
     width: 100%;
-
     height: 135px;
 
     resize: vertical;
 
-    border:
-        1px solid #dce3ed;
-
+    border: 1px solid #dce3ed;
     border-radius: 7px;
 
     outline: none;
@@ -523,117 +349,74 @@ textarea {
     padding: 10px 13px;
 
     font-size: 12px;
-
-    line-height: 1.55;
-
-    color: #111111;
 }
 
 
-/* =====================================================
-   PROGRESS
-   ===================================================== */
-
-.progress-card {
-    padding:
-        29px;
-}
-
+/* PROGRESS */
 
 .stats-grid {
     display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
+    grid-template-columns: 1fr 1fr;
     gap: 14px;
 
     margin-top: 4px;
 }
 
-
 .stat-box {
     height: 91px;
 
-    border:
-        1px solid #dce3ed;
-
+    border: 1px solid #dce3ed;
     border-radius: 7px;
 
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
 }
 
-
 .stat-box span {
     color: #657994;
-
     font-size: 10px;
-
     font-weight: 700;
 }
 
-
 .stat-box strong {
     margin-top: 6px;
-
     color: #397df3;
-
     font-size: 25px;
 }
-
 
 .stat-box strong.green {
     color: #08b979;
 }
 
-
 .stat-box strong.red {
     color: #f34444;
 }
-
 
 .stat-box strong.orange {
     color: #f09a00;
 }
 
-
 .progress-track {
     height: 7px;
-
     width: 100%;
 
     background: #e4eaf1;
-
     border-radius: 20px;
 
     overflow: hidden;
-
     margin-top: 21px;
 }
 
-
 .progress-fill {
     height: 100%;
-
     width: 0%;
 
-    background:
-        linear-gradient(
-            90deg,
-            #18b878,
-            #0fb67a
-        );
+    background: #0fb67a;
 
-    transition:
-        width .25s ease;
+    transition: width .25s ease;
 }
-
 
 .status {
     text-align: center;
@@ -643,142 +426,92 @@ textarea {
     min-height: 21px;
 
     font-size: 12px;
-
     font-weight: 600;
-
-    color: #202b3c;
 }
-
-
-.status.sending {
-    color: #202b3c;
-}
-
 
 .status.success {
     color: #0b9e69;
 }
-
 
 .status.error {
     color: #e13d3d;
 }
 
 
-/* =====================================================
-   SEND BUTTONS
-   ===================================================== */
+/* BUTTONS */
 
 .send-row {
     display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
-
+    grid-template-columns: 1fr 1fr;
     gap: 14px;
 
     margin-top: 18px;
 }
-
 
 .send-button,
 .stop-button {
     height: 40px;
 
     border: 0;
-
     border-radius: 7px;
 
-    color: #ffffff;
+    color: #fff;
 
     font-size: 12px;
-
     font-weight: 700;
 
     cursor: pointer;
 }
 
-
 .send-button {
     background: #0db27a;
 }
-
-
-.send-button:hover {
-    background: #0aa66f;
-}
-
 
 .stop-button {
     background: #f23c3c;
 }
 
-
-.stop-button:hover {
-    background: #df3232;
-}
-
-
-.stop-button:disabled,
-.send-button:disabled {
+.send-button:disabled,
+.stop-button:disabled {
     opacity: .55;
-
     cursor: not-allowed;
 }
 
 
-/* =====================================================
-   COMPLETE MODAL
-   ===================================================== */
+/* COMPLETE POPUP */
 
 .complete-modal {
     position: fixed;
-
     inset: 0;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     padding: 20px;
 
-    background:
-        rgba(10,22,40,.38);
-
-    backdrop-filter: blur(3px);
+    background: rgba(10,22,40,.38);
 
     opacity: 0;
-
     visibility: hidden;
-
     pointer-events: none;
 
-    transition:
-        opacity .2s ease,
-        visibility .2s ease;
+    transition: .2s;
 
     z-index: 1000;
 }
 
-
 .complete-modal.show {
     opacity: 1;
-
     visibility: visible;
-
     pointer-events: auto;
 }
 
-
 .complete-box {
     width: 100%;
-
     max-width: 370px;
 
-    background: #ffffff;
+    background: #fff;
 
     border-radius: 15px;
 
@@ -789,27 +522,10 @@ textarea {
     box-shadow:
         0 20px 70px
         rgba(15,35,65,.22);
-
-    transform:
-        translateY(10px)
-        scale(.97);
-
-    transition:
-        transform .2s ease;
 }
-
-
-.complete-modal.show
-.complete-box {
-    transform:
-        translateY(0)
-        scale(1);
-}
-
 
 .complete-icon {
     width: 62px;
-
     height: 62px;
 
     margin: 0 auto 15px;
@@ -817,76 +533,53 @@ textarea {
     border-radius: 50%;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     background: #e9fff6;
-
     color: #09b779;
 
     font-size: 31px;
 }
 
-
 .complete-title {
     font-size: 20px;
-
     font-weight: 800;
-
-    color: #172238;
 }
-
 
 .complete-details {
     margin-top: 8px;
 
     color: #75839a;
-
     font-size: 12px;
 }
 
-
 .complete-button {
     margin-top: 21px;
-
-    min-width: 105px;
 
     height: 38px;
 
     padding: 0 20px;
 
     border: 0;
-
     border-radius: 7px;
 
     background: #0db27a;
-
-    color: #ffffff;
+    color: #fff;
 
     font-size: 12px;
-
     font-weight: 700;
 
     cursor: pointer;
 }
 
 
-.complete-button:hover {
-    background: #0aa66f;
-}
-
-
-/* =====================================================
-   TOAST
-   ===================================================== */
+/* TOAST */
 
 .toast {
     position: fixed;
 
     right: 20px;
-
     bottom: 20px;
 
     max-width: 340px;
@@ -894,46 +587,35 @@ textarea {
     padding: 12px 15px;
 
     background: #172033;
-
-    color: #ffffff;
+    color: #fff;
 
     border-radius: 7px;
 
     font-size: 11px;
 
     opacity: 0;
-
-    transform:
-        translateY(8px);
+    transform: translateY(8px);
 
     pointer-events: none;
 
-    transition:
-        .2s ease;
+    transition: .2s;
 
     z-index: 1100;
 }
 
-
 .toast.show {
     opacity: 1;
-
-    transform:
-        translateY(0);
+    transform: translateY(0);
 }
 
 
-/* =====================================================
-   LOGIN
-   ===================================================== */
+/* LOGIN */
 
 .login-page {
     min-height: 100vh;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     padding: 20px;
@@ -946,17 +628,13 @@ textarea {
         );
 }
 
-
 .login-card {
     width: 100%;
-
     max-width: 410px;
 
-    background: #ffffff;
+    background: #fff;
 
-    border:
-        1px solid #e4e9f0;
-
+    border: 1px solid #e4e9f0;
     border-radius: 16px;
 
     padding: 34px;
@@ -968,52 +646,39 @@ textarea {
     text-align: center;
 }
 
-
 .login-logo {
     width: 60px;
-
     height: 60px;
 
-    margin:
-        0 auto 17px;
+    margin: 0 auto 17px;
 
     border-radius: 16px;
 
     background: #eaf3ff;
-
     color: #1677ff;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     font-size: 27px;
 }
 
-
 .login-card h1 {
     margin: 0;
-
     font-size: 23px;
 }
 
-
 .login-subtitle {
-    margin:
-        8px 0 26px;
+    margin: 8px 0 26px;
 
     color: #8791a1;
-
     font-size: 13px;
 }
-
 
 .login-card form {
     text-align: left;
 }
-
 
 .login-card label {
     display: block;
@@ -1023,27 +688,20 @@ textarea {
     color: #3b4657;
 
     font-size: 13px;
-
     font-weight: 650;
 }
-
 
 .login-password {
     position: relative;
 }
 
-
 .login-password input {
     width: 100%;
-
     height: 45px;
 
-    padding:
-        0 45px 0 13px;
+    padding: 0 45px 0 13px;
 
-    border:
-        1px solid #dfe5ed;
-
+    border: 1px solid #dfe5ed;
     border-radius: 9px;
 
     outline: none;
@@ -1051,27 +709,22 @@ textarea {
     font-size: 13px;
 }
 
-
 .login-password button {
     position: absolute;
 
     right: 5px;
-
     top: 5px;
 
     width: 35px;
-
     height: 35px;
 
     border: 0;
-
     background: transparent;
 
     color: #7b8695;
 
     cursor: pointer;
 }
-
 
 .login-error {
     margin-top: 12px;
@@ -1081,41 +734,34 @@ textarea {
     border-radius: 8px;
 
     background: #fff2f2;
-
     color: #c43e3e;
 
     font-size: 12px;
 }
 
-
 .login-button {
     width: 100%;
-
     height: 45px;
 
     margin-top: 15px;
 
     border: 0;
-
     border-radius: 9px;
 
     background: #1677ff;
-
-    color: #ffffff;
+    color: #fff;
 
     font-weight: 700;
 
     cursor: pointer;
 }
 
-
 .login-footer {
     margin-top: 25px;
 
     padding-top: 18px;
 
-    border-top:
-        1px solid #edf0f4;
+    border-top: 1px solid #edf0f4;
 
     color: #929baa;
 
@@ -1123,9 +769,7 @@ textarea {
 }
 
 
-/* =====================================================
-   RESPONSIVE
-   ===================================================== */
+/* MOBILE */
 
 @media (max-width: 1050px) {
 
@@ -1133,9 +777,7 @@ textarea {
     .container {
         max-width: 94%;
     }
-
 }
-
 
 @media (max-width: 850px) {
 
@@ -1143,48 +785,26 @@ textarea {
         grid-template-columns: 1fr;
     }
 
-
     .compose-card {
         min-height: auto;
     }
-
 }
 
-
 @media (max-width: 600px) {
-
-    .topbar {
-        height: 70px;
-    }
-
 
     .brand-title {
         font-size: 21px;
     }
 
-
-    .logout-button {
-        padding: 7px 9px;
-    }
-
-
-    .container {
-        padding-top: 8px;
-    }
-
-
     .two-column {
         grid-template-columns: 1fr;
     }
-
 
     .send-row {
         grid-template-columns: 1fr;
     }
 
-
     .card {
         padding: 20px;
     }
-
 }
