@@ -24,11 +24,13 @@
     >
 
     {% if turnstile_site_key %}
+
     <script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         async
         defer
     ></script>
+
     {% endif %}
 
 </head>
@@ -55,7 +57,6 @@
     <a
         href="{{ url_for('logout') }}"
         class="logout-button"
-        ondblclick="location.href='{{ url_for('logout') }}';"
     >
         <i class="fa-solid fa-right-from-bracket"></i>
         Logout
@@ -228,7 +229,9 @@
 
 
 
+            <!-- ================================================= -->
             <!-- SPINTAX -->
+            <!-- ================================================= -->
 
             <div class="spintax-status">
 
@@ -250,7 +253,9 @@
 
 
 
+            <!-- ================================================= -->
             <!-- SECURITY -->
+            <!-- ================================================= -->
 
             <div class="security-title">
 
@@ -478,6 +483,55 @@ another@example.com"
 
 
 
+<!-- ===================================================== -->
+<!-- COMPLETE POPUP -->
+<!-- ===================================================== -->
+
+<div
+    id="completeModal"
+    class="complete-modal"
+>
+
+    <div class="complete-box">
+
+        <div class="complete-icon">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+        </div>
+
+
+        <div class="complete-title">
+            sending compleate Babu❤️
+        </div>
+
+
+        <div
+            id="completeDetails"
+            class="complete-details"
+        >
+            All emails have been processed.
+        </div>
+
+
+        <button
+            type="button"
+            class="complete-button"
+            onclick="closeCompletePopup()"
+        >
+            OK
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- ===================================================== -->
+<!-- TOAST -->
+<!-- ===================================================== -->
+
 <div
     id="toast"
     class="toast"
@@ -589,7 +643,7 @@ function setMode(htmlMode) {
 
 
 // =========================================================
-// EMAIL
+// EMAIL VALIDATION
 // =========================================================
 
 function isValidEmail(email) {
@@ -804,6 +858,49 @@ function updateProgress(
 
 
 // =========================================================
+// COMPLETE POPUP
+// =========================================================
+
+function showCompletePopup(
+    sent,
+    failed
+) {
+
+    const details =
+        document.getElementById(
+            "completeDetails"
+        );
+
+
+    details.textContent =
+        `${sent} sent${failed ? ` • ${failed} failed` : ""}`;
+
+
+    document
+        .getElementById(
+            "completeModal"
+        )
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+function closeCompletePopup() {
+
+    document
+        .getElementById(
+            "completeModal"
+        )
+        .classList.remove(
+            "show"
+        );
+
+}
+
+
+// =========================================================
 // SEND
 // =========================================================
 
@@ -861,6 +958,11 @@ async function sendBatch() {
     const recipients =
         getRecipients();
 
+
+    // -----------------------------------------------------
+    // Validation only.
+    // NO CONFIRM / PERMISSION POPUP.
+    // -----------------------------------------------------
 
     if (!senderName) {
 
@@ -932,15 +1034,9 @@ async function sendBatch() {
     }
 
 
-    if (
-        !confirm(
-            `Send to ${recipients.length} recipient(s)?`
-        )
-    ) {
-
-        return;
-    }
-
+    // =====================================================
+    // DIRECT SEND
+    // =====================================================
 
     sending = true;
 
@@ -962,13 +1058,17 @@ async function sendBatch() {
 
 
     /*
-     * IMPORTANT:
-     * Inputs are intentionally NOT disabled.
-     * User can edit Gmail, App Password,
-     * recipients, subject, body, etc.
+     * Inputs are deliberately NOT disabled.
      *
-     * Current batch uses the values captured
-     * above. Edited values apply to next batch.
+     * Sender Name
+     * Gmail
+     * App Password
+     * Subject
+     * Message Body
+     * Recipients
+     *
+     * remain editable while the current batch
+     * is processing.
      */
 
 
@@ -1142,6 +1242,10 @@ async function sendBatch() {
                 }
 
 
+                // -----------------------------------------
+                // START
+                // -----------------------------------------
+
                 if (
                     event.type ===
                     "start"
@@ -1156,6 +1260,10 @@ async function sendBatch() {
 
                 }
 
+
+                // -----------------------------------------
+                // PROGRESS
+                // -----------------------------------------
 
                 else if (
                     event.type ===
@@ -1192,6 +1300,10 @@ async function sendBatch() {
                 }
 
 
+                // -----------------------------------------
+                // COMPLETE
+                // -----------------------------------------
+
                 else if (
                     event.type ===
                     "complete"
@@ -1211,12 +1323,22 @@ async function sendBatch() {
                     );
 
 
-                    showToast(
-                        event.message
+                    /*
+                     * The completion popup appears only
+                     * after the whole batch has finished.
+                     */
+
+                    showCompletePopup(
+                        event.sent,
+                        event.failed
                     );
 
                 }
 
+
+                // -----------------------------------------
+                // ERROR
+                // -----------------------------------------
 
                 else if (
                     event.type ===
