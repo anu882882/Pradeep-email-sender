@@ -289,7 +289,7 @@ def send_batch():
 
 
     # -----------------------------------------------------
-    # Snapshot values when this batch starts
+    # Take a snapshot when Send All is clicked.
     # -----------------------------------------------------
 
     sender_name = str(
@@ -448,7 +448,7 @@ def send_batch():
 
 
     # =====================================================
-    # TURNSTILE
+    # CLOUDFLARE TURNSTILE
     # =====================================================
 
     verified, verify_error = verify_turnstile(
@@ -469,7 +469,7 @@ def send_batch():
 
 
     # =====================================================
-    # STREAM
+    # STREAMING SENDER
     # =====================================================
 
     @stream_with_context
@@ -500,7 +500,7 @@ def send_batch():
 
         try:
 
-            # One SMTP connection for this batch.
+            # One SMTP connection for the entire batch.
             # Recipients are processed sequentially.
 
             with smtplib.SMTP_SSL(
@@ -527,6 +527,7 @@ def send_batch():
                         final_subject = expand_spintax(
                             subject
                         )
+
 
                         final_body = expand_spintax(
                             body
@@ -571,6 +572,7 @@ def send_batch():
 
 
                         sent_count += 1
+
                         remaining -= 1
 
 
@@ -590,6 +592,7 @@ def send_batch():
                     except Exception as exc:
 
                         failed_count += 1
+
                         remaining -= 1
 
 
@@ -661,6 +664,10 @@ def send_batch():
 
             return
 
+
+        # =================================================
+        # COMPLETE
+        # =================================================
 
         yield (
             json.dumps({
