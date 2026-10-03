@@ -25,7 +25,7 @@ textarea {
 
 
 /* =====================================================
-   TOP
+   TOPBAR
    ===================================================== */
 
 .topbar {
@@ -129,8 +129,6 @@ textarea {
 
 .page-heading h1 i {
     margin-right: 6px;
-
-    color: #101a2d;
 }
 
 
@@ -157,7 +155,7 @@ textarea {
 
 
 /* =====================================================
-   CARDS
+   CARD
    ===================================================== */
 
 .card {
@@ -200,12 +198,7 @@ textarea {
 
 
 .recipients-card {
-    padding: 29px 29px 28px;
-}
-
-
-.recipients-card .section-title {
-    margin-bottom: 2px;
+    padding: 29px;
 }
 
 
@@ -332,6 +325,8 @@ textarea {
     background: transparent;
 
     color: #76859b;
+
+    cursor: pointer;
 }
 
 
@@ -373,6 +368,8 @@ textarea {
     padding: 4px 7px;
 
     font-size: 9px;
+
+    cursor: pointer;
 }
 
 
@@ -539,7 +536,7 @@ textarea {
 
 .progress-card {
     padding:
-        29px 29px 28px;
+        29px;
 }
 
 
@@ -669,7 +666,7 @@ textarea {
 
 
 /* =====================================================
-   BUTTONS
+   SEND BUTTONS
    ===================================================== */
 
 .send-row {
@@ -698,6 +695,8 @@ textarea {
     font-size: 12px;
 
     font-weight: 700;
+
+    cursor: pointer;
 }
 
 
@@ -726,6 +725,156 @@ textarea {
     opacity: .55;
 
     cursor: not-allowed;
+}
+
+
+/* =====================================================
+   COMPLETE MODAL
+   ===================================================== */
+
+.complete-modal {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(10,22,40,.38);
+
+    backdrop-filter: blur(3px);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity .2s ease,
+        visibility .2s ease;
+
+    z-index: 1000;
+}
+
+
+.complete-modal.show {
+    opacity: 1;
+
+    visibility: visible;
+
+    pointer-events: auto;
+}
+
+
+.complete-box {
+    width: 100%;
+
+    max-width: 370px;
+
+    background: #ffffff;
+
+    border-radius: 15px;
+
+    padding: 31px 25px 25px;
+
+    text-align: center;
+
+    box-shadow:
+        0 20px 70px
+        rgba(15,35,65,.22);
+
+    transform:
+        translateY(10px)
+        scale(.97);
+
+    transition:
+        transform .2s ease;
+}
+
+
+.complete-modal.show
+.complete-box {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.complete-icon {
+    width: 62px;
+
+    height: 62px;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #e9fff6;
+
+    color: #09b779;
+
+    font-size: 31px;
+}
+
+
+.complete-title {
+    font-size: 20px;
+
+    font-weight: 800;
+
+    color: #172238;
+}
+
+
+.complete-details {
+    margin-top: 8px;
+
+    color: #75839a;
+
+    font-size: 12px;
+}
+
+
+.complete-button {
+    margin-top: 21px;
+
+    min-width: 105px;
+
+    height: 38px;
+
+    padding: 0 20px;
+
+    border: 0;
+
+    border-radius: 7px;
+
+    background: #0db27a;
+
+    color: #ffffff;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.complete-button:hover {
+    background: #0aa66f;
 }
 
 
@@ -762,7 +911,7 @@ textarea {
     transition:
         .2s ease;
 
-    z-index: 100;
+    z-index: 1100;
 }
 
 
@@ -919,6 +1068,8 @@ textarea {
     background: transparent;
 
     color: #7b8695;
+
+    cursor: pointer;
 }
 
 
@@ -953,6 +1104,8 @@ textarea {
     color: #ffffff;
 
     font-weight: 700;
+
+    cursor: pointer;
 }
 
 
