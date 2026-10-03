@@ -277,6 +277,7 @@ textarea {
 
 .spintax-status span {
     display: block;
+
     margin-top: 2px;
 
     color: #8491a3;
@@ -289,6 +290,7 @@ textarea {
 .security-title {
     font-size: 12px;
     font-weight: 700;
+
     margin-bottom: 9px;
 }
 
@@ -357,6 +359,7 @@ textarea {
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+
     gap: 14px;
 
     margin-top: 4px;
@@ -382,6 +385,7 @@ textarea {
 
 .stat-box strong {
     margin-top: 6px;
+
     color: #397df3;
     font-size: 25px;
 }
@@ -403,9 +407,11 @@ textarea {
     width: 100%;
 
     background: #e4eaf1;
+
     border-radius: 20px;
 
     overflow: hidden;
+
     margin-top: 21px;
 }
 
@@ -443,6 +449,7 @@ textarea {
 .send-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
+
     gap: 14px;
 
     margin-top: 18px;
@@ -478,7 +485,7 @@ textarea {
 }
 
 
-/* COMPLETE POPUP */
+/* POPUP */
 
 .complete-modal {
     position: fixed;
@@ -594,6 +601,7 @@ textarea {
     font-size: 11px;
 
     opacity: 0;
+
     transform: translateY(8px);
 
     pointer-events: none;
@@ -605,6 +613,7 @@ textarea {
 
 .toast.show {
     opacity: 1;
+
     transform: translateY(0);
 }
 
@@ -635,6 +644,7 @@ textarea {
     background: #fff;
 
     border: 1px solid #e4e9f0;
+
     border-radius: 16px;
 
     padding: 34px;
@@ -666,6 +676,7 @@ textarea {
 
 .login-card h1 {
     margin: 0;
+
     font-size: 23px;
 }
 
@@ -673,6 +684,7 @@ textarea {
     margin: 8px 0 26px;
 
     color: #8791a1;
+
     font-size: 13px;
 }
 
@@ -702,6 +714,7 @@ textarea {
     padding: 0 45px 0 13px;
 
     border: 1px solid #dfe5ed;
+
     border-radius: 9px;
 
     outline: none;
@@ -719,6 +732,7 @@ textarea {
     height: 35px;
 
     border: 0;
+
     background: transparent;
 
     color: #7b8695;
@@ -734,6 +748,7 @@ textarea {
     border-radius: 8px;
 
     background: #fff2f2;
+
     color: #c43e3e;
 
     font-size: 12px;
@@ -769,7 +784,7 @@ textarea {
 }
 
 
-/* MOBILE */
+/* RESPONSIVE */
 
 @media (max-width: 1050px) {
 
