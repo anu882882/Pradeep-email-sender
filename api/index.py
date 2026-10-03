@@ -12,11 +12,14 @@ import urllib.request
 import urllib.parse
 import secrets
 import random
+
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from pathlib import Path
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 app = Flask(
     __name__,
@@ -25,13 +28,20 @@ app = Flask(
     static_url_path="/static"
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET", "")
+
+app.secret_key = os.environ.get(
+    "SESSION_SECRET",
+    ""
+)
+
 
 MAX_RECIPIENTS = 25
 
 TURNSTILE_SECRET_KEY = os.environ.get(
-    "TURNSTILE_SECRET_KEY", ""
+    "TURNSTILE_SECRET_KEY",
+    ""
 )
+
 
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
@@ -41,12 +51,16 @@ EMAIL_RE = re.compile(
 
 def valid_email(value):
     return bool(
-        EMAIL_RE.fullmatch(value.strip())
+        EMAIL_RE.fullmatch(
+            value.strip()
+        )
     )
 
 
 def authenticated():
-    return session.get("authenticated") is True
+    return session.get(
+        "authenticated"
+    ) is True
 
 
 # =========================================================
@@ -120,6 +134,7 @@ def verify_turnstile(token, remote_ip=None):
     )
 
     try:
+
         with urllib.request.urlopen(
             req,
             timeout=10
@@ -138,6 +153,7 @@ def verify_turnstile(token, remote_ip=None):
         )
 
     except Exception:
+
         return (
             False,
             "Unable to verify Cloudflare."
@@ -148,11 +164,16 @@ def verify_turnstile(token, remote_ip=None):
 # LOGIN
 # =========================================================
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
 
     if authenticated():
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
 
     error = None
 
@@ -188,6 +209,7 @@ def login():
             )
 
         else:
+
             error = "Incorrect password."
 
     return render_template(
@@ -218,6 +240,7 @@ def logout():
 def home():
 
     if not authenticated():
+
         return redirect(
             url_for("login")
         )
@@ -235,7 +258,10 @@ def home():
 # SEND BATCH
 # =========================================================
 
-@app.route("/send-batch", methods=["POST"])
+@app.route(
+    "/send-batch",
+    methods=["POST"]
+)
 def send_batch():
 
     if not authenticated():
@@ -245,38 +271,65 @@ def send_batch():
             "message": "Authentication required."
         }), 401
 
+
     data = request.get_json(
         silent=True
     ) or {}
 
+
     sender_name = str(
-        data.get("sender_name", "")
+        data.get(
+            "sender_name",
+            ""
+        )
     ).strip()
+
 
     gmail = str(
-        data.get("gmail", "")
+        data.get(
+            "gmail",
+            ""
+        )
     ).strip()
+
 
     app_password = str(
-        data.get("app_password", "")
+        data.get(
+            "app_password",
+            ""
+        )
     ).strip()
+
 
     subject = str(
-        data.get("subject", "")
+        data.get(
+            "subject",
+            ""
+        )
     ).strip()
 
+
     body = str(
-        data.get("body", "")
+        data.get(
+            "body",
+            ""
+        )
     )
 
+
     is_html = bool(
-        data.get("is_html", False)
+        data.get(
+            "is_html",
+            False
+        )
     )
+
 
     recipients = data.get(
         "recipients",
         []
     )
+
 
     turnstile_token = str(
         data.get(
@@ -287,6 +340,7 @@ def send_batch():
 
 
     if not sender_name:
+
         return jsonify({
             "success": False,
             "message": "Sender Name is required."
@@ -294,6 +348,7 @@ def send_batch():
 
 
     if not valid_email(gmail):
+
         return jsonify({
             "success": False,
             "message": "Enter a valid Gmail address."
@@ -301,6 +356,7 @@ def send_batch():
 
 
     if not app_password:
+
         return jsonify({
             "success": False,
             "message": "Google App Password is required."
@@ -308,6 +364,7 @@ def send_batch():
 
 
     if not subject:
+
         return jsonify({
             "success": False,
             "message": "Email subject is required."
@@ -315,13 +372,18 @@ def send_batch():
 
 
     if not body.strip():
+
         return jsonify({
             "success": False,
             "message": "Message body is required."
         }), 400
 
 
-    if not isinstance(recipients, list):
+    if not isinstance(
+        recipients,
+        list
+    ):
+
         return jsonify({
             "success": False,
             "message": "Invalid recipient list."
@@ -330,17 +392,23 @@ def send_batch():
 
     clean_recipients = []
 
+
     for item in recipients:
 
         email = str(
             item
         ).strip().lower()
 
+
         if not valid_email(email):
             continue
 
+
         if email not in clean_recipients:
-            clean_recipients.append(email)
+
+            clean_recipients.append(
+                email
+            )
 
 
     clean_recipients = clean_recipients[
@@ -349,6 +417,7 @@ def send_batch():
 
 
     if not clean_recipients:
+
         return jsonify({
             "success": False,
             "message": "No valid recipients found."
@@ -407,6 +476,7 @@ def send_batch():
                 timeout=15
             ) as server:
 
+
                 server.login(
                     gmail,
                     app_password
@@ -417,7 +487,7 @@ def send_batch():
 
                     try:
 
-                        # Spintax is ALWAYS ON
+                        # Spintax permanently ON
                         final_subject = expand_spintax(
                             subject
                         )
@@ -445,12 +515,14 @@ def send_batch():
                             final_subject
                         )
 
+
                         message["From"] = formataddr(
                             (
                                 sender_name,
                                 gmail
                             )
                         )
+
 
                         message["To"] = recipient
 
@@ -555,7 +627,7 @@ def send_batch():
                 "type": "complete",
                 "success": True,
                 "message":
-                f"Batch completed: {sent_count} sent, {failed_count} failed.",
+                "sending compleate Babu❤️",
                 "total": total,
                 "sent": sent_count,
                 "failed": failed_count,
@@ -577,6 +649,10 @@ def send_batch():
         }
     )
 
+
+# =========================================================
+# HEALTH
+# =========================================================
 
 @app.route("/health")
 def health():
