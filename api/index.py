@@ -35,6 +35,7 @@ app = Flask(
     static_url_path="/static"
 )
 
+
 app.secret_key = os.environ.get(
     "SESSION_SECRET",
     ""
@@ -71,8 +72,7 @@ def authenticated():
 
 
 # =========================================================
-# SPINTAX
-# ALWAYS ON
+# SPINTAX - ALWAYS ON
 # =========================================================
 
 SPINTAX_RE = re.compile(
@@ -288,6 +288,10 @@ def send_batch():
     ) or {}
 
 
+    # -----------------------------------------------------
+    # Snapshot values when this batch starts
+    # -----------------------------------------------------
+
     sender_name = str(
         data.get(
             "sender_name",
@@ -465,7 +469,7 @@ def send_batch():
 
 
     # =====================================================
-    # STREAMING SEND
+    # STREAM
     # =====================================================
 
     @stream_with_context
@@ -496,8 +500,8 @@ def send_batch():
 
         try:
 
-            # One Gmail SMTP connection.
-            # Messages are sent sequentially.
+            # One SMTP connection for this batch.
+            # Recipients are processed sequentially.
 
             with smtplib.SMTP_SSL(
                 "smtp.gmail.com",
@@ -516,16 +520,16 @@ def send_batch():
 
                     try:
 
-                        # =================================
+                        # ---------------------------------
                         # SPINTAX ALWAYS ON
-                        # =================================
-
-                        final_body = expand_spintax(
-                            body
-                        )
+                        # ---------------------------------
 
                         final_subject = expand_spintax(
                             subject
+                        )
+
+                        final_body = expand_spintax(
+                            body
                         )
 
 
@@ -610,7 +614,7 @@ def send_batch():
                     "type": "error",
                     "message": (
                         "Gmail authentication failed. "
-                        "Use the correct Google App Password."
+                        "Check the Gmail address and App Password."
                     ),
                     "total": total,
                     "sent": sent_count,
