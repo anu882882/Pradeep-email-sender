@@ -6,167 +6,145 @@
 <meta charset="utf-8">
 
 <meta
-name="viewport"
-content="width=device-width, initial-scale=1"
+    name="viewport"
+    content="width=device-width, initial-scale=1"
 >
 
-<title>
-Secure Mail Console - Login
-</title>
+<title>Secure Mail Console - Login</title>
 
 <link
-rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}"
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
 >
 
 <link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 >
 
 </head>
 
 
-<body class="login-page">
+<body class="login-screen">
 
 
-<div class="login-card">
+<main class="login-wrapper">
+
+    <div class="login-symbol">
+        <i class="fa-solid fa-shield-halved"></i>
+    </div>
 
 
-<div class="login-logo">
-
-<i class="fa-solid fa-shield-halved"></i>
-
-</div>
+    <h1>
+        Secure Mail Console
+    </h1>
 
 
-<h1>
-Secure Mail Console
-</h1>
+    <p>
+        Sign in to continue
+    </p>
 
 
-<p class="login-subtitle">
-Sign in to continue
-</p>
+    <form
+        method="post"
+        autocomplete="off"
+    >
+
+        <label for="loginPassword">
+            Password
+        </label>
 
 
-<form
-method="post"
-autocomplete="off"
->
+        <div class="login-input">
+
+            <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Enter password"
+                required
+                autofocus
+            >
 
 
-<label>
-Password
-</label>
+            <button
+                type="button"
+                id="loginEye"
+            >
+                <i class="fa-regular fa-eye"></i>
+            </button>
+
+        </div>
 
 
-<div class="login-password">
+        {% if error %}
 
-<input
-id="password"
-name="password"
-type="password"
-placeholder="Enter password"
-autocomplete="new-password"
-required
-autofocus
->
+        <div class="login-alert">
 
+            <i class="fa-solid fa-circle-exclamation"></i>
 
-<button
-type="button"
-id="showPassword"
->
+            {{ error }}
 
-<i class="fa-regular fa-eye"></i>
+        </div>
 
-</button>
-
-</div>
+        {% endif %}
 
 
-{% if error %}
+        <button
+            class="login-submit"
+            type="submit"
+        >
 
-<div class="login-error">
+            <i class="fa-solid fa-right-to-bracket"></i>
 
-<i class="fa-solid fa-circle-exclamation"></i>
+            Login
 
-{{ error }}
+        </button>
 
-</div>
-
-{% endif %}
-
-
-<button
-type="submit"
-class="login-button"
->
-
-<i class="fa-solid fa-right-to-bracket"></i>
-
-Login
-
-</button>
+    </form>
 
 
-</form>
+    <footer>
+        <i class="fa-solid fa-shield-halved"></i>
+        Secure Mail Console
+    </footer>
 
-
-<div class="login-footer">
-
-<i class="fa-solid fa-shield-halved"></i>
-
-Secure Mail Console
-
-</div>
-
-
-</div>
+</main>
 
 
 <script>
 
-const password =
-document.getElementById(
-    "password"
-);
+const loginField =
+    document.getElementById(
+        "loginPassword"
+    );
 
 
-const button =
-document.getElementById(
-    "showPassword"
-);
+document
+    .getElementById("loginEye")
+    .addEventListener(
+        "click",
+        function() {
 
-
-button.addEventListener(
-    "click",
-    function() {
-
-        if (
-            password.type ===
-            "password"
-        ) {
-
-            password.type =
-                "text";
-
-            this.innerHTML =
-                '<i class="fa-regular fa-eye-slash"></i>';
-
-        } else {
-
-            password.type =
+            const show =
+                loginField.type ===
                 "password";
 
+
+            loginField.type =
+                show
+                    ? "text"
+                    : "password";
+
+
             this.innerHTML =
-                '<i class="fa-regular fa-eye"></i>';
+                show
+                    ? '<i class="fa-regular fa-eye-slash"></i>'
+                    : '<i class="fa-regular fa-eye"></i>';
 
         }
-
-    }
-);
+    );
 
 </script>
 
