@@ -1,151 +1,99 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-
 <meta charset="utf-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Secure Mail Console - Login</title>
-
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}"
->
-
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
->
-
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
+<body class="login-page">
 
-<body class="login-screen">
+<div class="login-card">
 
-
-<main class="login-wrapper">
-
-    <div class="login-symbol">
+    <div class="login-logo">
         <i class="fa-solid fa-shield-halved"></i>
     </div>
 
+    <h1>Secure Mail Console</h1>
 
-    <h1>
-        Secure Mail Console
-    </h1>
-
-
-    <p>
+    <p class="login-subtitle">
         Sign in to continue
     </p>
 
+    <form method="post" autocomplete="off">
 
-    <form
-        method="post"
-        autocomplete="off"
-    >
+        <label>Password</label>
 
-        <label for="loginPassword">
-            Password
-        </label>
-
-
-        <div class="login-input">
+        <div class="login-password">
 
             <input
-                id="loginPassword"
+                id="password"
                 name="password"
                 type="password"
-                autocomplete="new-password"
                 placeholder="Enter password"
                 required
                 autofocus
             >
 
-
             <button
                 type="button"
-                id="loginEye"
+                id="showLoginPassword"
             >
                 <i class="fa-regular fa-eye"></i>
             </button>
 
         </div>
 
-
         {% if error %}
-
-        <div class="login-alert">
-
+        <div class="login-error">
             <i class="fa-solid fa-circle-exclamation"></i>
-
             {{ error }}
-
         </div>
-
         {% endif %}
 
-
         <button
-            class="login-submit"
             type="submit"
+            class="login-button"
         >
-
             <i class="fa-solid fa-right-to-bracket"></i>
-
             Login
-
         </button>
 
     </form>
 
-
-    <footer>
+    <div class="login-footer">
         <i class="fa-solid fa-shield-halved"></i>
         Secure Mail Console
-    </footer>
+    </div>
 
-</main>
-
+</div>
 
 <script>
+const password =
+    document.getElementById("password");
 
-const loginField =
-    document.getElementById(
-        "loginPassword"
-    );
+const button =
+    document.getElementById("showLoginPassword");
 
+button.onclick = () => {
 
-document
-    .getElementById("loginEye")
-    .addEventListener(
-        "click",
-        function() {
+    if (password.type === "password") {
 
-            const show =
-                loginField.type ===
-                "password";
+        password.type = "text";
 
+        button.innerHTML =
+            '<i class="fa-regular fa-eye-slash"></i>';
 
-            loginField.type =
-                show
-                    ? "text"
-                    : "password";
+    } else {
 
+        password.type = "password";
 
-            this.innerHTML =
-                show
-                    ? '<i class="fa-regular fa-eye-slash"></i>'
-                    : '<i class="fa-regular fa-eye"></i>';
-
-        }
-    );
-
+        button.innerHTML =
+            '<i class="fa-regular fa-eye"></i>';
+    }
+};
 </script>
 
 </body>
