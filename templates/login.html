@@ -123,7 +123,6 @@ document.getElementById(
 "password"
 );
 
-
 const button =
 document.getElementById(
 "showLoginPassword"
@@ -133,12 +132,10 @@ document.getElementById(
 button.onclick = () => {
 
 if (
-password.type ===
-"password"
+password.type === "password"
 ) {
 
-password.type =
-"text";
+password.type = "text";
 
 button.innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
@@ -146,8 +143,7 @@ button.innerHTML =
 }
 else {
 
-password.type =
-"password";
+password.type = "password";
 
 button.innerHTML =
 '<i class="fa-regular fa-eye"></i>';
