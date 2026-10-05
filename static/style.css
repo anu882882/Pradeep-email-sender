@@ -79,7 +79,7 @@ font-size:21px;
 
 
 /* ==========================================
-   DASHBOARD
+   LAYOUT
 ========================================== */
 
 .dashboard {
@@ -206,7 +206,7 @@ margin:0;
 }
 
 
-.character-count {
+#characterCount {
 font-size:11px;
 color:#7a8799;
 }
@@ -219,24 +219,6 @@ padding:14px;
 line-height:1.55;
 font-family:Arial,Helvetica,sans-serif;
 font-size:15px;
-}
-
-
-/* ==========================================
-   HEALTH CHECK
-   FUNCTIONAL BUT COMPLETELY HIDDEN
-========================================== */
-
-.health-box {
-display:none !important;
-}
-
-
-.health-header,
-.health-grid,
-.health-item,
-.health-score {
-display:none !important;
 }
 
 
@@ -443,7 +425,7 @@ cursor:wait;
 
 
 /* ==========================================
-   COMPLETE TOAST
+   TOAST
 ========================================== */
 
 .toast {
@@ -608,7 +590,7 @@ font-size:11px;
 
 
 /* ==========================================
-   RESPONSIVE
+   MOBILE
 ========================================== */
 
 @media(max-width:850px) {
