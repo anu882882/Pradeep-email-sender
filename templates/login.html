@@ -23,7 +23,6 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 </head>
 
-
 <body class="login-page">
 
 
@@ -45,7 +44,6 @@ Secure Mail Console
 <p class="login-subtitle">
 Sign in to continue
 </p>
-
 
 
 <form
@@ -82,7 +80,6 @@ id="showLoginPassword">
 </div>
 
 
-
 {% if error %}
 
 <div class="login-error">
@@ -94,7 +91,6 @@ id="showLoginPassword">
 </div>
 
 {% endif %}
-
 
 
 <button
@@ -111,7 +107,6 @@ Login
 </form>
 
 
-
 <div class="login-footer">
 
 <i class="fa-solid fa-shield-halved"></i>
@@ -124,14 +119,12 @@ Secure Mail Console
 </div>
 
 
-
 <script>
 
 const password =
 document.getElementById(
 "password"
 );
-
 
 const button =
 document.getElementById(
@@ -141,29 +134,22 @@ document.getElementById(
 
 button.onclick = () => {
 
-
 if (
 password.type === "password"
 ) {
 
-
 password.type = "text";
-
 
 button.innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
-
 }
 else {
 
-
 password.type = "password";
-
 
 button.innerHTML =
 '<i class="fa-regular fa-eye"></i>';
-
 
 }
 
@@ -171,7 +157,5 @@ button.innerHTML =
 
 </script>
 
-
 </body>
-
 </html>
