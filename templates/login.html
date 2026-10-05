@@ -13,11 +13,9 @@ content="width=device-width,initial-scale=1">
 Secure Mail Console - Login
 </title>
 
-
 <link
 rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
-
 
 <link
 rel="stylesheet"
@@ -148,18 +146,24 @@ if (
 password.type === "password"
 ) {
 
+
 password.type = "text";
+
 
 button.innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
+
 }
 else {
 
+
 password.type = "password";
+
 
 button.innerHTML =
 '<i class="fa-regular fa-eye"></i>';
+
 
 }
 
