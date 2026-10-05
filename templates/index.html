@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="en">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
 <title>Secure Mail Console</title>
 
 <link rel="stylesheet"
@@ -17,137 +22,221 @@ src="https://challenges.cloudflare.com/turnstile/v0/api.js"
 async defer>
 </script>
 {% endif %}
+
 </head>
+
 
 <body>
 
 <div class="page">
 
+
 <header class="topbar">
 
 <div class="brand">
+
 <i class="fa-solid fa-shield-halved"></i>
+
 <span>Secure Mail Console</span>
+
 </div>
 
-<button class="logout-btn" id="logoutBtn">
+
+<button
+class="logout-btn"
+id="logoutBtn">
+
 <i class="fa-solid fa-right-from-bracket"></i>
+
 Logout
+
 </button>
 
 </header>
 
+
 <div class="title-row">
+
 <h2>
+
 <i class="fa-solid fa-paper-plane"></i>
+
 Bulk Email Sender
+
 </h2>
+
 </div>
+
 
 <main class="dashboard">
 
+
 <section class="card compose">
 
+
 <h3>
+
 <i class="fa-regular fa-pen-to-square"></i>
+
 Compose Message
+
 </h3>
+
 
 <div class="grid2">
 
+
 <div class="field">
+
 <label>Sender Name</label>
-<input id="senderName"
+
+<input
+id="senderName"
 type="text"
 placeholder="Sender name">
+
 </div>
 
+
 <div class="field">
+
 <label>Your Gmail</label>
-<input id="gmail"
+
+<input
+id="gmail"
 type="email"
 placeholder="yourname@gmail.com">
+
 </div>
 
+
 <div class="field">
+
 <label>App Password</label>
 
 <div class="password-wrap">
-<input id="appPassword"
+
+<input
+id="appPassword"
 type="password"
 placeholder="Google App Password">
 
-<button type="button"
+<button
+type="button"
 id="showPassword">
+
 <i class="fa-regular fa-eye"></i>
+
 </button>
-</div>
+
 </div>
 
+</div>
+
+
 <div class="field">
+
 <label>Email Subject</label>
-<input id="subject"
+
+<input
+id="subject"
 type="text"
 placeholder="Subject">
-</div>
 
 </div>
+
+
+</div>
+
 
 <div class="field">
+
 
 <div class="body-head">
 
 <label>Message Body</label>
 
-<div class="mode-buttons">
 
-<button type="button"
-class="mode active"
-id="plainBtn">
-Plain Text
-</button>
+<div class="font-control">
 
-<button type="button"
-class="mode"
-id="htmlBtn">
-HTML
-</button>
+<label for="fontSelect">
+Font
+</label>
+
+<select id="fontSelect">
+
+{% for font in fonts %}
+
+<option
+value="{{ font }}"
+style="font-family:'{{ font }}';">
+
+{{ font }}
+
+</option>
+
+{% endfor %}
+
+</select>
 
 </div>
 
+
 </div>
+
 
 <textarea
 id="messageBody"
 spellcheck="false"
 placeholder=""></textarea>
 
+
 </div>
+
+
+<div class="font-preview">
+
+<span>Preview:</span>
+
+<strong id="fontPreview">
+High Tower Text
+</strong>
+
+</div>
+
 
 <div class="spintax-box">
 
 <div class="spintax-title">
+
 <i class="fa-solid fa-shuffle"></i>
+
 Spintax Enabled
+
 </div>
+
 
 <div class="spintax-text">
+
 Spintax is always ON.
-Use {option 1|option 2|option 3}
+Use
+<code>{option 1|option 2|option 3}</code>
 for message variations.
-</div>
-
-<div class="spintax-example">
-Example:
-<code>{Hi|Hello|Hey} there</code>
-</div>
 
 </div>
+
+
+</div>
+
 
 <div class="security-title">
+
 <i class="fa-solid fa-shield-halved"></i>
+
 Security Verification
+
 </div>
+
 
 {% if turnstile_site_key %}
 
@@ -159,38 +248,59 @@ data-sitekey="{{ turnstile_site_key }}">
 {% else %}
 
 <div class="turnstile-warning">
+
 Turnstile is not configured.
+
 </div>
 
 {% endif %}
 
+
 </section>
+
 
 
 <section class="right-column">
 
+
 <div class="card recipients-card">
+
 
 <div class="card-title-line">
 
+
 <div>
+
 <h3>
+
 <i class="fa-solid fa-users"></i>
+
 Recipients
+
 </h3>
 
+
 <p>
+
 Paste emails separated by commas,
 spaces, new lines, or Excel copy.
+
 </p>
+
 </div>
 
-<span class="found"
+
+<span
+class="found"
 id="foundCount">
+
 0 found
+
 </span>
 
+
 </div>
+
 
 <textarea
 id="recipients"
@@ -198,51 +308,100 @@ class="recipient-area"
 spellcheck="false"
 placeholder=""></textarea>
 
+
 </div>
+
 
 
 <div class="card monitor">
 
+
 <h3>
+
 <i class="fa-solid fa-chart-pie"></i>
+
 Progress Monitor
+
 </h3>
+
 
 <div class="stats">
 
+
 <div class="stat">
+
 <span>TOTAL</span>
+
 <strong id="total">0</strong>
+
 </div>
 
+
 <div class="stat">
+
 <span>SENT</span>
-<strong class="green"
-id="sent">0</strong>
+
+<strong
+class="green"
+id="sent">
+
+0
+
+</strong>
+
 </div>
 
+
 <div class="stat">
+
 <span>FAILED</span>
-<strong class="red"
-id="failed">0</strong>
+
+<strong
+class="red"
+id="failed">
+
+0
+
+</strong>
+
 </div>
+
 
 <div class="stat">
+
 <span>REMAINING</span>
-<strong class="orange"
-id="remaining">0</strong>
-</div>
+
+<strong
+class="orange"
+id="remaining">
+
+0
+
+</strong>
 
 </div>
+
+
+</div>
+
 
 <div class="progress-track">
+
 <div id="progressBar"></div>
+
 </div>
 
-<div class="status" id="status">
+
+<div
+class="status"
+id="status">
+
 <i class="fa-regular fa-circle"></i>
+
 Ready
+
 </div>
+
 
 <button
 type="button"
@@ -250,89 +409,246 @@ class="send-btn"
 id="sendBtn">
 
 <i class="fa-solid fa-paper-plane"></i>
+
 Send All
 
 </button>
 
+
 </div>
+
 
 </section>
 
 </main>
+
 </div>
 
 
-<div class="toast" id="toast">
+
+<div
+class="toast"
+id="toast">
+
 
 <div class="toast-icon">
+
 <i class="fa-solid fa-check"></i>
+
 </div>
+
 
 <strong>
+
 sending compleate Babu❤️
+
 </strong>
 
+
 </div>
+
 
 
 <script>
 
+
 const senderName =
-document.getElementById("senderName");
+document.getElementById(
+"senderName"
+);
+
 
 const gmail =
-document.getElementById("gmail");
+document.getElementById(
+"gmail"
+);
+
 
 const appPassword =
-document.getElementById("appPassword");
+document.getElementById(
+"appPassword"
+);
+
 
 const subject =
-document.getElementById("subject");
+document.getElementById(
+"subject"
+);
+
 
 const messageBody =
-document.getElementById("messageBody");
+document.getElementById(
+"messageBody"
+);
+
 
 const recipientsBox =
-document.getElementById("recipients");
+document.getElementById(
+"recipients"
+);
+
+
+const fontSelect =
+document.getElementById(
+"fontSelect"
+);
+
+
+const fontPreview =
+document.getElementById(
+"fontPreview"
+);
+
 
 const totalEl =
-document.getElementById("total");
+document.getElementById(
+"total"
+);
+
 
 const sentEl =
-document.getElementById("sent");
+document.getElementById(
+"sent"
+);
+
 
 const failedEl =
-document.getElementById("failed");
+document.getElementById(
+"failed"
+);
+
 
 const remainingEl =
-document.getElementById("remaining");
+document.getElementById(
+"remaining"
+);
+
 
 const progressBar =
-document.getElementById("progressBar");
+document.getElementById(
+"progressBar"
+);
+
 
 const statusEl =
-document.getElementById("status");
+document.getElementById(
+"status"
+);
+
 
 const foundCount =
-document.getElementById("foundCount");
+document.getElementById(
+"foundCount"
+);
+
 
 const sendBtn =
-document.getElementById("sendBtn");
+document.getElementById(
+"sendBtn"
+);
+
 
 const toast =
-document.getElementById("toast");
+document.getElementById(
+"toast"
+);
 
-let htmlMode = false;
+
 let sending = false;
+
+
+
+const fontStacks = {
+
+"High Tower Text":
+'"High Tower Text","Book Antiqua",serif',
+
+"Book Antiqua":
+'"Book Antiqua",Palatino,serif',
+
+"Georgia":
+'Georgia,serif',
+
+"Garamond":
+'Garamond,"Times New Roman",serif',
+
+"Cambria":
+'Cambria,Georgia,serif',
+
+"Palatino Linotype":
+'"Palatino Linotype",Palatino,serif',
+
+"Times New Roman":
+'"Times New Roman",Times,serif',
+
+"Arial":
+'Arial,Helvetica,sans-serif',
+
+"Calibri":
+'Calibri,Arial,sans-serif',
+
+"Trebuchet MS":
+'"Trebuchet MS",Arial,sans-serif',
+
+"Verdana":
+'Verdana,Arial,sans-serif',
+
+"Courier New":
+'"Courier New",Courier,monospace'
+
+};
+
+
+
+function applyFont() {
+
+const selected =
+fontSelect.value;
+
+const stack =
+fontStacks[selected] ||
+fontStacks["Arial"];
+
+
+messageBody.style.fontFamily =
+stack;
+
+
+fontPreview.textContent =
+selected;
+
+
+fontPreview.style.fontFamily =
+stack;
+
+
+fontSelect.style.fontFamily =
+stack;
+
+}
+
+
+fontSelect.addEventListener(
+"change",
+applyFont
+);
+
+
+applyFont();
+
 
 
 document.getElementById(
 "showPassword"
 ).onclick = () => {
 
-if (appPassword.type === "password") {
+if (
+appPassword.type ===
+"password"
+) {
 
-appPassword.type = "text";
+appPassword.type =
+"text";
 
 document.getElementById(
 "showPassword"
@@ -341,7 +657,8 @@ document.getElementById(
 
 } else {
 
-appPassword.type = "password";
+appPassword.type =
+"password";
 
 document.getElementById(
 "showPassword"
@@ -353,54 +670,28 @@ document.getElementById(
 };
 
 
-document.getElementById(
-"plainBtn"
-).onclick = () => {
-
-htmlMode = false;
-
-document.getElementById(
-"plainBtn"
-).classList.add("active");
-
-document.getElementById(
-"htmlBtn"
-).classList.remove("active");
-
-};
-
-
-document.getElementById(
-"htmlBtn"
-).onclick = () => {
-
-htmlMode = true;
-
-document.getElementById(
-"htmlBtn"
-).classList.add("active");
-
-document.getElementById(
-"plainBtn"
-).classList.remove("active");
-
-};
-
 
 function getRecipients() {
 
 return [
 ...new Set(
+
 recipientsBox.value
 .split(/[\s,;]+/)
-.map(x => x.trim().toLowerCase())
-.filter(x =>
-/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)
+.map(
+x => x.trim().toLowerCase()
 )
+.filter(
+x =>
+/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+.test(x)
+)
+
 )
 ].slice(0,25);
 
 }
+
 
 
 function updateCount() {
@@ -419,13 +710,18 @@ list.length;
 
 }
 
+
 recipientsBox.addEventListener(
 "input",
 updateCount
 );
 
 
-function status(text, icon) {
+
+function status(
+text,
+icon
+) {
 
 statusEl.innerHTML =
 `<i class="${icon}"></i> ${text}`;
@@ -433,27 +729,45 @@ statusEl.innerHTML =
 }
 
 
+
 function showComplete() {
 
-toast.classList.add("show");
+toast.classList.add(
+"show"
+);
 
-setTimeout(() => {
-toast.classList.remove("show");
-}, 7000);
+setTimeout(
+() => {
+toast.classList.remove(
+"show"
+);
+},
+7000
+);
 
 }
+
 
 
 document.addEventListener(
 "keydown",
 () => {
 
-if (toast.classList.contains("show")) {
-toast.classList.remove("show");
+if (
+toast.classList.contains(
+"show"
+)
+) {
+
+toast.classList.remove(
+"show"
+);
+
 }
 
 }
 );
+
 
 
 document.addEventListener(
@@ -461,58 +775,112 @@ document.addEventListener(
 event => {
 
 if (
-toast.classList.contains("show") &&
-!toast.contains(event.target)
+toast.classList.contains(
+"show"
+) &&
+!toast.contains(
+event.target
+)
 ) {
-toast.classList.remove("show");
+
+toast.classList.remove(
+"show"
+);
+
 }
 
 }
 );
 
 
-sendBtn.onclick = async () => {
+
+sendBtn.onclick =
+async () => {
 
 if (sending) return;
+
 
 const recipients =
 getRecipients();
 
+
 if (!senderName.value.trim()) {
-alert("Enter Sender Name.");
+
+alert(
+"Enter Sender Name."
+);
+
 senderName.focus();
+
 return;
+
 }
+
 
 if (!gmail.value.trim()) {
-alert("Enter Gmail address.");
+
+alert(
+"Enter Gmail address."
+);
+
 gmail.focus();
+
 return;
+
 }
+
 
 if (!appPassword.value.trim()) {
-alert("Enter Google App Password.");
+
+alert(
+"Enter Google App Password."
+);
+
 appPassword.focus();
+
 return;
+
 }
+
 
 if (!subject.value.trim()) {
-alert("Enter Email Subject.");
+
+alert(
+"Enter Email Subject."
+);
+
 subject.focus();
+
 return;
+
 }
+
 
 if (!messageBody.value.trim()) {
-alert("Enter Message Body.");
+
+alert(
+"Enter Message Body."
+);
+
 messageBody.focus();
+
 return;
+
 }
 
+
 if (!recipients.length) {
-alert("Enter valid recipients.");
+
+alert(
+"Enter valid recipients."
+);
+
 recipientsBox.focus();
+
 return;
+
 }
+
 
 
 const tokenInput =
@@ -520,13 +888,18 @@ document.querySelector(
 'input[name="cf-turnstile-response"]'
 );
 
+
 const turnstileToken =
-tokenInput ? tokenInput.value : "";
+tokenInput
+? tokenInput.value
+: "";
+
 
 
 sending = true;
 
 sendBtn.disabled = true;
+
 
 sendBtn.innerHTML =
 '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
@@ -535,14 +908,18 @@ sendBtn.innerHTML =
 totalEl.textContent =
 recipients.length;
 
-sentEl.textContent = "0";
+sentEl.textContent =
+"0";
 
-failedEl.textContent = "0";
+failedEl.textContent =
+"0";
 
 remainingEl.textContent =
 recipients.length;
 
-progressBar.style.width = "0%";
+progressBar.style.width =
+"0%";
+
 
 status(
 "Sending emails...",
@@ -550,20 +927,25 @@ status(
 );
 
 
+
 try {
+
 
 const response =
 await fetch(
 "/send-batch",
 {
-method: "POST",
+
+method:
+"POST",
 
 headers: {
 "Content-Type":
 "application/json"
 },
 
-body: JSON.stringify({
+body:
+JSON.stringify({
 
 sender_name:
 senderName.value.trim(),
@@ -580,8 +962,8 @@ subject.value,
 body:
 messageBody.value,
 
-html_mode:
-htmlMode,
+font_name:
+fontSelect.value,
 
 recipients:
 recipients,
@@ -595,6 +977,7 @@ turnstileToken
 );
 
 
+
 if (!response.ok) {
 
 let message =
@@ -606,85 +989,125 @@ const data =
 await response.json();
 
 message =
-data.message || message;
+data.message ||
+message;
 
 } catch (_) {}
 
-throw new Error(message);
+throw new Error(
+message
+);
 
 }
+
 
 
 const reader =
 response.body.getReader();
 
+
 const decoder =
 new TextDecoder();
+
 
 let buffer = "";
 
 
+
 while (true) {
 
-const {value, done} =
+const {
+value,
+done
+} =
 await reader.read();
 
+
 if (done) break;
+
 
 buffer +=
 decoder.decode(
 value,
-{stream:true}
+{
+stream:true
+}
 );
+
 
 const lines =
 buffer.split("\n");
+
 
 buffer =
 lines.pop() || "";
 
 
-for (const line of lines) {
+for (
+const line of lines
+) {
 
-if (!line.trim()) continue;
+if (!line.trim())
+continue;
+
 
 let data;
 
+
 try {
-data = JSON.parse(line);
+
+data =
+JSON.parse(line);
+
 } catch (_) {
+
 continue;
+
 }
+
 
 
 totalEl.textContent =
 data.total ?? 0;
 
+
 sentEl.textContent =
 data.sent ?? 0;
 
+
 failedEl.textContent =
 data.failed ?? 0;
+
 
 remainingEl.textContent =
 data.remaining ?? 0;
 
 
-if (data.total > 0) {
+
+if (
+data.total > 0
+) {
 
 const completed =
 (data.sent || 0) +
 (data.failed || 0);
 
+
 progressBar.style.width =
 `${Math.round(
-completed / data.total * 100
+completed /
+data.total *
+100
 )}%`;
 
 }
 
 
-if (data.event === "sent") {
+
+if (
+data.event ===
+"sent"
+) {
 
 status(
 `Sent: ${data.email}`,
@@ -694,7 +1117,11 @@ status(
 }
 
 
-if (data.event === "failed") {
+
+if (
+data.event ===
+"failed"
+) {
 
 status(
 `Failed: ${data.email}`,
@@ -704,7 +1131,11 @@ status(
 }
 
 
-if (data.event === "error") {
+
+if (
+data.event ===
+"error"
+) {
 
 throw new Error(
 data.message ||
@@ -714,15 +1145,21 @@ data.message ||
 }
 
 
-if (data.event === "complete") {
+
+if (
+data.event ===
+"complete"
+) {
 
 progressBar.style.width =
 "100%";
+
 
 status(
 "Sending complete",
 "fa-solid fa-circle-check"
 );
+
 
 showComplete();
 
@@ -733,7 +1170,9 @@ showComplete();
 }
 
 
-} catch (error) {
+
+}
+catch (error) {
 
 status(
 error.message ||
@@ -741,16 +1180,19 @@ error.message ||
 "fa-solid fa-circle-exclamation"
 );
 
+
 alert(
 error.message ||
 "Something went wrong."
 );
 
-} finally {
+}
+finally {
 
 sending = false;
 
 sendBtn.disabled = false;
+
 
 sendBtn.innerHTML =
 '<i class="fa-solid fa-paper-plane"></i> Send All';
@@ -758,6 +1200,7 @@ sendBtn.innerHTML =
 }
 
 };
+
 
 
 document.getElementById(
@@ -768,6 +1211,7 @@ window.location.href =
 "/logout";
 
 };
+
 
 
 updateCount();
