@@ -189,7 +189,7 @@ color:#4b70f5;
 
 
 /* ==========================================
-   MESSAGE
+   MESSAGE BODY
 ========================================== */
 
 .body-head {
@@ -223,134 +223,20 @@ font-size:15px;
 
 
 /* ==========================================
-   PRE-SEND HEALTH CHECK
+   HEALTH CHECK
+   FUNCTIONAL BUT COMPLETELY HIDDEN
 ========================================== */
 
 .health-box {
-border:1px solid #dce4ef;
-border-radius:9px;
-background:#fbfcfe;
-margin:8px 0 20px;
-overflow:hidden;
+display:none !important;
 }
 
 
-.health-header {
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:12px 13px;
-border-bottom:1px solid #e5eaf1;
-}
-
-
-.health-header strong {
-display:block;
-font-size:13px;
-color:#263449;
-}
-
-
-.health-header strong i {
-color:#4b70f5;
-margin-right:6px;
-}
-
-
-.health-header span {
-display:block;
-margin-top:3px;
-font-size:10px;
-color:#7a8799;
-}
-
-
-.health-ready {
-color:#059669!important;
-}
-
-
-.health-warning {
-color:#d97706!important;
-}
-
-
+.health-header,
+.health-grid,
+.health-item,
 .health-score {
-min-width:42px;
-height:30px;
-display:flex;
-align-items:center;
-justify-content:center;
-border-radius:7px;
-background:#eef3ff;
-color:#4b70f5;
-font-size:12px;
-font-weight:800;
-}
-
-
-.health-grid {
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px;
-padding:10px;
-}
-
-
-.health-item {
-min-height:57px;
-border:1px solid #e2e8f0;
-border-radius:7px;
-background:#fff;
-padding:9px;
-display:grid;
-grid-template-columns:18px 1fr;
-grid-template-rows:auto auto;
-column-gap:7px;
-align-items:center;
-}
-
-
-.health-item > i {
-grid-row:1 / 3;
-font-size:14px;
-color:#94a3b8;
-}
-
-
-.health-item span {
-font-size:11px;
-font-weight:700;
-color:#334155;
-}
-
-
-.health-item small {
-font-size:9px;
-color:#8794a7;
-margin-top:2px;
-}
-
-
-.health-good {
-border-color:#bbf7d0;
-background:#f0fdf4;
-}
-
-
-.health-good > i {
-color:#10b981;
-}
-
-
-.health-warn {
-border-color:#fde68a;
-background:#fffbeb;
-}
-
-
-.health-warn > i {
-color:#f59e0b;
+display:none !important;
 }
 
 
@@ -759,10 +645,6 @@ flex-direction:column;
 
 .found {
 align-self:flex-start;
-}
-
-.health-grid {
-grid-template-columns:1fr;
 }
 
 .toast {
