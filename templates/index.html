@@ -20,11 +20,13 @@ rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 {% if turnstile_site_key %}
+
 <script
 src="https://challenges.cloudflare.com/turnstile/v0/api.js"
 async
 defer>
 </script>
+
 {% endif %}
 
 </head>
@@ -38,6 +40,7 @@ defer>
 
 <header class="topbar">
 
+
 <div class="brand">
 
 <i class="fa-solid fa-shield-halved"></i>
@@ -50,6 +53,7 @@ Secure Mail Console
 
 
 <button
+type="button"
 class="logout-btn"
 id="logoutBtn">
 
@@ -58,6 +62,7 @@ id="logoutBtn">
 Logout
 
 </button>
+
 
 </header>
 
@@ -81,7 +86,7 @@ Bulk Email Sender
 
 
 <!-- ======================================
-     COMPOSE MESSAGE
+     COMPOSE
 ====================================== -->
 
 <section class="card compose">
@@ -177,7 +182,9 @@ placeholder="Subject">
 
 
 
-<!-- MESSAGE BODY -->
+<!-- ======================================
+     MESSAGE
+====================================== -->
 
 <div class="field">
 
@@ -188,9 +195,7 @@ placeholder="Subject">
 Message Body
 </label>
 
-
 <span
-class="character-count"
 id="characterCount">
 
 0 characters
@@ -211,164 +216,11 @@ placeholder=""></textarea>
 
 
 <!-- ======================================
-     HIDDEN HEALTH CHECK
-     LOGIC REMAINS ACTIVE
-====================================== -->
-
-<div
-class="health-box"
-aria-hidden="true">
-
-<div class="health-header">
-
-<div>
-
-<strong>
-
-<i class="fa-solid fa-heart-pulse"></i>
-
-Pre-Send Health Check
-
-</strong>
-
-<span id="healthSummary">
-Checking...
-</span>
-
-</div>
-
-<div
-class="health-score"
-id="healthScore">
-
-0/6
-
-</div>
-
-</div>
-
-
-<div class="health-grid">
-
-
-<div
-class="health-item"
-id="healthRecipients">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Recipients
-</span>
-
-<small>
-Waiting...
-</small>
-
-</div>
-
-
-
-<div
-class="health-item"
-id="healthDuplicates">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Duplicates
-</span>
-
-<small>
-Checking...
-</small>
-
-</div>
-
-
-
-<div
-class="health-item"
-id="healthSubject">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Subject
-</span>
-
-<small>
-Waiting...
-</small>
-
-</div>
-
-
-
-<div
-class="health-item"
-id="healthMessage">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Message
-</span>
-
-<small>
-Waiting...
-</small>
-
-</div>
-
-
-
-<div
-class="health-item"
-id="healthSpintax">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Spintax
-</span>
-
-<small>
-Checking...
-</small>
-
-</div>
-
-
-
-<div
-class="health-item"
-id="healthSender">
-
-<i class="fa-solid fa-circle-notch fa-spin"></i>
-
-<span>
-Sender
-</span>
-
-<small>
-Waiting...
-</small>
-
-</div>
-
-
-</div>
-
-</div>
-
-
-
-<!-- ======================================
      SPINTAX
 ====================================== -->
 
 <div class="spintax-box">
+
 
 <div class="spintax-title">
 
@@ -384,9 +236,10 @@ Spintax Enabled
 Spintax is always ON.
 Use
 <code>{Hello|Hi|Hey}</code>
-for message variations.
+for simple message variations.
 
 </div>
+
 
 </div>
 
@@ -434,7 +287,9 @@ Turnstile is not configured.
 <section class="right-column">
 
 
-<!-- RECIPIENTS -->
+<!-- ======================================
+     RECIPIENTS
+====================================== -->
 
 <div class="card recipients-card">
 
@@ -475,7 +330,6 @@ id="foundCount">
 </div>
 
 
-
 <textarea
 id="recipients"
 class="recipient-area"
@@ -487,7 +341,9 @@ placeholder=""></textarea>
 
 
 
-<!-- PROGRESS MONITOR -->
+<!-- ======================================
+     PROGRESS MONITOR
+====================================== -->
 
 <div class="card monitor">
 
@@ -620,7 +476,9 @@ Send All
 
 
 
-<!-- COMPLETE TOAST -->
+<!-- ======================================
+     COMPLETE MESSAGE
+====================================== -->
 
 <div
 class="toast"
@@ -655,75 +513,90 @@ document.getElementById(
 "senderName"
 );
 
+
 const gmail =
 document.getElementById(
 "gmail"
 );
+
 
 const appPassword =
 document.getElementById(
 "appPassword"
 );
 
+
 const subject =
 document.getElementById(
 "subject"
 );
+
 
 const messageBody =
 document.getElementById(
 "messageBody"
 );
 
+
 const recipientsBox =
 document.getElementById(
 "recipients"
 );
+
 
 const characterCount =
 document.getElementById(
 "characterCount"
 );
 
+
 const totalEl =
 document.getElementById(
 "total"
 );
+
 
 const sentEl =
 document.getElementById(
 "sent"
 );
 
+
 const failedEl =
 document.getElementById(
 "failed"
 );
+
 
 const remainingEl =
 document.getElementById(
 "remaining"
 );
 
+
 const progressBar =
 document.getElementById(
 "progressBar"
 );
+
 
 const statusEl =
 document.getElementById(
 "status"
 );
 
+
 const foundCount =
 document.getElementById(
 "foundCount"
 );
 
+
 const sendBtn =
 document.getElementById(
 "sendBtn"
 );
+
 
 const toast =
 document.getElementById(
@@ -742,26 +615,35 @@ document.getElementById(
 "showPassword"
 ).onclick = () => {
 
+
 if (
 appPassword.type === "password"
 ) {
 
-appPassword.type = "text";
+
+appPassword.type =
+"text";
+
 
 document.getElementById(
 "showPassword"
 ).innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
+
 }
 else {
 
-appPassword.type = "password";
+
+appPassword.type =
+"password";
+
 
 document.getElementById(
 "showPassword"
 ).innerHTML =
 '<i class="fa-regular fa-eye"></i>';
+
 
 }
 
@@ -774,15 +656,21 @@ document.getElementById(
 
 function getRecipients() {
 
+
 return [
 
 ...new Set(
 
 recipientsBox.value
-.split(/[\s,;]+/)
+
+.split(
+/[\s,;]+/
+)
+
 .map(
 x => x.trim().toLowerCase()
 )
+
 .filter(
 x =>
 /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -791,13 +679,17 @@ x =>
 
 )
 
-].slice(0, 25);
+].slice(
+0,
+25
+);
 
 }
 
 
 
 function updateCount() {
+
 
 const list =
 getRecipients();
@@ -818,333 +710,28 @@ list.length;
 
 
 // ==========================================
-// MESSAGE COUNTER
+// CHARACTER COUNT
 // ==========================================
 
-function updateMessageCount() {
+function updateCharacterCount() {
 
-const length =
+
+const count =
 messageBody.value.length;
 
 
 characterCount.textContent =
-`${length} characters`;
+`${count} characters`;
 
 }
 
 
 // ==========================================
-// HIDDEN HEALTH CHECK
-// ==========================================
-// This continues working in the background.
-// Nothing from this section is displayed.
-
-function setHealth(
-id,
-ok,
-title,
-detail
-) {
-
-const box =
-document.getElementById(id);
-
-
-if (!box) {
-return;
-}
-
-
-box.classList.remove(
-"health-good",
-"health-warn"
-);
-
-
-box.classList.add(
-ok
-? "health-good"
-: "health-warn"
-);
-
-
-box.innerHTML = `
-
-<i class="fa-solid ${
-ok
-? "fa-circle-check"
-: "fa-circle-exclamation"
-}"></i>
-
-<span>
-${title}
-</span>
-
-<small>
-${detail}
-</small>
-
-`;
-
-}
-
-
-
-function updateHealthCheck() {
-
-
-const raw =
-recipientsBox.value
-.split(/[\s,;]+/)
-.map(
-x => x.trim().toLowerCase()
-)
-.filter(Boolean);
-
-
-const valid =
-raw.filter(
-x =>
-/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-.test(x)
-);
-
-
-const unique = [
-...new Set(valid)
-];
-
-
-const duplicates =
-valid.length -
-unique.length;
-
-
-const invalid =
-raw.length -
-valid.length;
-
-
-// RECIPIENT CHECK
-
-setHealth(
-"healthRecipients",
-unique.length > 0 &&
-invalid === 0,
-"Recipients",
-unique.length
-? `${unique.length} valid`
-: "Add recipients"
-);
-
-
-// DUPLICATE CHECK
-
-setHealth(
-"healthDuplicates",
-duplicates === 0,
-"Duplicates",
-duplicates === 0
-? "None detected"
-: `${duplicates} duplicate(s)`
-);
-
-
-// SUBJECT CHECK
-
-const subjectLength =
-subject.value.trim().length;
-
-
-setHealth(
-"healthSubject",
-subjectLength >= 5 &&
-subjectLength <= 120,
-"Subject",
-subjectLength === 0
-? "Add subject"
-: `${subjectLength} characters`
-);
-
-
-// MESSAGE CHECK
-
-const messageLength =
-messageBody.value.trim().length;
-
-
-setHealth(
-"healthMessage",
-messageLength >= 10,
-"Message",
-messageLength === 0
-? "Add message"
-: `${messageLength} characters`
-);
-
-
-// SPINTAX CHECK
-
-const openBraces =
-(
-messageBody.value.match(
-/\{/g
-) || []
-).length;
-
-
-const closeBraces =
-(
-messageBody.value.match(
-/\}/g
-) || []
-).length;
-
-
-const pipes =
-(
-messageBody.value.match(
-/\|/g
-) || []
-).length;
-
-
-const noSpintax =
-openBraces === 0 &&
-closeBraces === 0;
-
-
-const validSpintax =
-openBraces === closeBraces &&
-(
-noSpintax ||
-pipes > 0
-);
-
-
-setHealth(
-"healthSpintax",
-validSpintax,
-"Spintax",
-noSpintax
-? "No variations"
-: validSpintax
-? "Syntax looks valid"
-: "Check brackets"
-);
-
-
-// SENDER CHECK
-
-const senderOkay =
-senderName.value.trim().length > 0 &&
-/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-.test(
-gmail.value.trim()
-);
-
-
-setHealth(
-"healthSender",
-senderOkay,
-"Sender",
-senderOkay
-? "Ready"
-: "Name + Gmail required"
-);
-
-
-// INTERNAL SCORE
-
-const checks = [
-
-unique.length > 0 &&
-invalid === 0,
-
-duplicates === 0,
-
-subjectLength >= 5 &&
-subjectLength <= 120,
-
-messageLength >= 10,
-
-validSpintax,
-
-senderOkay
-
-];
-
-
-const passed =
-checks.filter(Boolean).length;
-
-
-// Stored internally only.
-// Nothing is shown on screen.
-
-const healthState = {
-score: passed,
-total: 6,
-ready: passed === 6
-};
-
-
-window.mailHealth =
-healthState;
-
-}
-
-
-// ==========================================
-// INPUT EVENTS
-// ==========================================
-
-[
-senderName,
-gmail,
-subject,
-messageBody,
-recipientsBox
-].forEach(
-element => {
-
-element.addEventListener(
-"input",
-() => {
-
-updateCount();
-
-updateMessageCount();
-
-updateHealthCheck();
-
-}
-);
-
-}
-);
-
-
-// ==========================================
-// STATUS
-// ==========================================
-
-function setStatus(
-text,
-icon
-) {
-
-statusEl.innerHTML =
-`<i class="${icon}"></i> ${text}`;
-
-}
-
-
-// ==========================================
-// COMPLETE TOAST
+// TOAST
 // ==========================================
 
 function showComplete() {
+
 
 toast.classList.add(
 "show"
@@ -1165,6 +752,7 @@ toast.classList.remove(
 }
 
 
+// Keyboard closes popup.
 
 document.addEventListener(
 "keydown",
@@ -1186,6 +774,7 @@ toast.classList.remove(
 );
 
 
+// Screen click closes popup.
 
 document.addEventListener(
 "click",
@@ -1211,6 +800,21 @@ toast.classList.remove(
 
 
 // ==========================================
+// STATUS
+// ==========================================
+
+function setStatus(
+text,
+icon
+) {
+
+statusEl.innerHTML =
+`<i class="${icon}"></i> ${text}`;
+
+}
+
+
+// ==========================================
 // SEND ALL
 // ==========================================
 
@@ -1226,6 +830,8 @@ return;
 const recipients =
 getRecipients();
 
+
+// Basic required-field checks only.
 
 if (!senderName.value.trim()) {
 
@@ -1305,10 +911,9 @@ return;
 }
 
 
-// Update hidden checks before sending.
-
-updateHealthCheck();
-
+// ========================================
+// TURNSTILE
+// ========================================
 
 const tokenInput =
 document.querySelector(
@@ -1322,10 +927,15 @@ tokenInput
 : "";
 
 
+// ========================================
+// START
+// ========================================
+
 sending = true;
 
 
-sendBtn.disabled = true;
+sendBtn.disabled =
+true;
 
 
 sendBtn.innerHTML =
@@ -1366,14 +976,17 @@ await fetch(
 "/send-batch",
 {
 
-method: "POST",
+method:
+"POST",
 
-headers: {
+headers:
+{
 "Content-Type":
 "application/json"
 },
 
-body: JSON.stringify({
+body:
+JSON.stringify({
 
 sender_name:
 senderName.value.trim(),
@@ -1497,6 +1110,10 @@ continue;
 }
 
 
+// ====================================
+// UPDATE COUNTERS
+// ====================================
+
 totalEl.textContent =
 data.total ?? 0;
 
@@ -1513,7 +1130,14 @@ remainingEl.textContent =
 data.remaining ?? 0;
 
 
-if (data.total > 0) {
+// ====================================
+// PROGRESS
+// ====================================
+
+if (
+data.total > 0
+) {
+
 
 const completed =
 (data.sent || 0) +
@@ -1530,9 +1154,14 @@ data.total *
 }
 
 
+// ====================================
+// SENT
+// ====================================
+
 if (
 data.event === "sent"
 ) {
+
 
 setStatus(
 `Sent: ${data.email}`,
@@ -1542,9 +1171,14 @@ setStatus(
 }
 
 
+// ====================================
+// FAILED
+// ====================================
+
 if (
 data.event === "failed"
 ) {
+
 
 setStatus(
 `Failed: ${data.email}`,
@@ -1554,9 +1188,14 @@ setStatus(
 }
 
 
+// ====================================
+// ERROR
+// ====================================
+
 if (
 data.event === "error"
 ) {
+
 
 throw new Error(
 data.message ||
@@ -1566,9 +1205,14 @@ data.message ||
 }
 
 
+// ====================================
+// COMPLETE
+// ====================================
+
 if (
 data.event === "complete"
 ) {
+
 
 progressBar.style.width =
 "100%";
@@ -1613,7 +1257,8 @@ finally {
 sending = false;
 
 
-sendBtn.disabled = false;
+sendBtn.disabled =
+false;
 
 
 sendBtn.innerHTML =
@@ -1639,14 +1284,24 @@ window.location.href =
 
 
 // ==========================================
-// INITIALIZE
+// INITIAL STATE
 // ==========================================
 
 updateCount();
 
-updateMessageCount();
+updateCharacterCount();
 
-updateHealthCheck();
+
+messageBody.addEventListener(
+"input",
+updateCharacterCount
+);
+
+
+recipientsBox.addEventListener(
+"input",
+updateCount
+);
 
 </script>
 
