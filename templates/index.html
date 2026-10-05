@@ -11,13 +11,16 @@ content="width=device-width,initial-scale=1">
 
 <title>Secure Mail Console</title>
 
+
 <link
 rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
 
+
 <link
 rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 
 {% if turnstile_site_key %}
 
@@ -84,9 +87,9 @@ Bulk Email Sender
 <main class="dashboard">
 
 
-<!-- =========================================
+<!-- ======================================
      COMPOSE
-========================================= -->
+====================================== -->
 
 <section class="card compose">
 
@@ -181,7 +184,9 @@ placeholder="Subject">
 
 
 
-<!-- MESSAGE -->
+<!-- ======================================
+     MESSAGE
+====================================== -->
 
 <div class="field">
 
@@ -201,7 +206,6 @@ id="characterCount">
 
 </span>
 
-
 </div>
 
 
@@ -215,47 +219,168 @@ placeholder=""></textarea>
 
 
 
-<!-- PREVIEW -->
+<!-- ======================================
+     HEALTH CHECK
+====================================== -->
 
-<div class="preview-box">
+<div class="health-box">
 
 
-<div class="preview-header">
+<div class="health-header">
 
-<span>
 
-<i class="fa-regular fa-eye"></i>
+<div>
 
-Message Preview
+<strong>
+
+<i class="fa-solid fa-heart-pulse"></i>
+
+Pre-Send Health Check
+
+</strong>
+
+
+<span id="healthSummary">
+
+Checking...
 
 </span>
-
-
-<button
-type="button"
-id="clearPreview">
-
-Clear
-
-</button>
 
 </div>
 
 
 <div
-class="preview-content"
-id="previewContent">
+class="health-score"
+id="healthScore">
 
-Your message preview will appear here.
+0/6
+
+</div>
+
+
+</div>
+
+
+
+<div class="health-grid">
+
+
+<div
+class="health-item"
+id="healthRecipients">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Recipients
+</span>
+
+<small>
+Waiting...
+</small>
+
+</div>
+
+
+
+<div
+class="health-item"
+id="healthDuplicates">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Duplicates
+</span>
+
+<small>
+Checking...
+</small>
+
+</div>
+
+
+
+<div
+class="health-item"
+id="healthSubject">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Subject
+</span>
+
+<small>
+Waiting...
+</small>
+
+</div>
+
+
+
+<div
+class="health-item"
+id="healthMessage">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Message
+</span>
+
+<small>
+Waiting...
+</small>
+
+</div>
+
+
+
+<div
+class="health-item"
+id="healthSpintax">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Spintax
+</span>
+
+<small>
+Checking...
+</small>
+
+</div>
+
+
+
+<div
+class="health-item"
+id="healthSender">
+
+<i class="fa-solid fa-circle-notch fa-spin"></i>
+
+<span>
+Sender
+</span>
+
+<small>
+Waiting...
+</small>
 
 </div>
 
 
 </div>
 
+</div>
 
 
-<!-- SPINTAX -->
+
+<!-- ======================================
+     SPINTAX
+====================================== -->
 
 <div class="spintax-box">
 
@@ -283,7 +408,9 @@ for message variations.
 
 
 
-<!-- SECURITY -->
+<!-- ======================================
+     SECURITY
+====================================== -->
 
 <div class="security-title">
 
@@ -292,7 +419,6 @@ for message variations.
 Security Verification
 
 </div>
-
 
 
 {% if turnstile_site_key %}
@@ -317,9 +443,9 @@ Turnstile is not configured.
 
 
 
-<!-- =========================================
-     RIGHT
-========================================= -->
+<!-- ======================================
+     RIGHT COLUMN
+====================================== -->
 
 <section class="right-column">
 
@@ -511,11 +637,14 @@ Send All
 
 
 
-<!-- COMPLETION -->
+<!-- ======================================
+     COMPLETE TOAST
+====================================== -->
 
 <div
 class="toast"
 id="toast">
+
 
 <div class="toast-icon">
 
@@ -525,10 +654,9 @@ id="toast">
 
 
 <strong>
-
 sending compleate Babu❤️
-
 </strong>
+
 
 </div>
 
@@ -537,101 +665,84 @@ sending compleate Babu❤️
 <script>
 
 
+// ==========================================
+// ELEMENTS
+// ==========================================
+
 const senderName =
 document.getElementById(
 "senderName"
 );
-
 
 const gmail =
 document.getElementById(
 "gmail"
 );
 
-
 const appPassword =
 document.getElementById(
 "appPassword"
 );
-
 
 const subject =
 document.getElementById(
 "subject"
 );
 
-
 const messageBody =
 document.getElementById(
 "messageBody"
 );
-
 
 const recipientsBox =
 document.getElementById(
 "recipients"
 );
 
-
 const characterCount =
 document.getElementById(
 "characterCount"
 );
-
-
-const previewContent =
-document.getElementById(
-"previewContent"
-);
-
 
 const totalEl =
 document.getElementById(
 "total"
 );
 
-
 const sentEl =
 document.getElementById(
 "sent"
 );
-
 
 const failedEl =
 document.getElementById(
 "failed"
 );
 
-
 const remainingEl =
 document.getElementById(
 "remaining"
 );
-
 
 const progressBar =
 document.getElementById(
 "progressBar"
 );
 
-
 const statusEl =
 document.getElementById(
 "status"
 );
-
 
 const foundCount =
 document.getElementById(
 "foundCount"
 );
 
-
 const sendBtn =
 document.getElementById(
 "sendBtn"
 );
-
 
 const toast =
 document.getElementById(
@@ -642,9 +753,8 @@ document.getElementById(
 let sending = false;
 
 
-
 // ==========================================
-// PASSWORD SHOW / HIDE
+// PASSWORD
 // ==========================================
 
 document.getElementById(
@@ -658,7 +768,6 @@ appPassword.type === "password"
 
 appPassword.type = "text";
 
-
 document.getElementById(
 "showPassword"
 ).innerHTML =
@@ -669,7 +778,6 @@ else {
 
 appPassword.type = "password";
 
-
 document.getElementById(
 "showPassword"
 ).innerHTML =
@@ -678,7 +786,6 @@ document.getElementById(
 }
 
 };
-
 
 
 // ==========================================
@@ -730,79 +837,352 @@ list.length;
 }
 
 
-recipientsBox.addEventListener(
-"input",
-updateCount
-);
-
-
-
 // ==========================================
 // MESSAGE COUNTER
 // ==========================================
 
-function updateMessageInfo() {
+function updateMessageCount() {
 
-const text =
-messageBody.value;
+const length =
+messageBody.value.length;
 
 
 characterCount.textContent =
-`${text.length} characters`;
-
-
-if (!text.trim()) {
-
-previewContent.textContent =
-"Your message preview will appear here.";
-
-return;
+`${length} characters`;
 
 }
 
 
-previewContent.textContent =
-text;
+// ==========================================
+// HEALTH
+// ==========================================
 
-}
+function setHealth(
+id,
+ok,
+title,
+detail
+) {
+
+const box =
+document.getElementById(id);
 
 
-messageBody.addEventListener(
-"input",
-updateMessageInfo
+box.classList.remove(
+"health-good",
+"health-warn"
 );
 
 
+box.classList.add(
+ok
+? "health-good"
+: "health-warn"
+);
+
+
+box.innerHTML = `
+
+<i class="fa-solid ${
+ok
+? "fa-circle-check"
+: "fa-circle-exclamation"
+}"></i>
+
+<span>
+${title}
+</span>
+
+<small>
+${detail}
+</small>
+
+`;
+
+}
+
+
+
+function updateHealthCheck() {
+
+
+const raw =
+recipientsBox.value
+.split(/[\s,;]+/)
+.map(
+x => x.trim().toLowerCase()
+)
+.filter(Boolean);
+
+
+const valid =
+raw.filter(
+x =>
+/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+.test(x)
+);
+
+
+const unique = [
+...new Set(valid)
+];
+
+
+const duplicates =
+valid.length -
+unique.length;
+
+
+const invalid =
+raw.length -
+valid.length;
+
+
+// ------------------------------------------
+// RECIPIENTS
+// ------------------------------------------
+
+setHealth(
+"healthRecipients",
+unique.length > 0 &&
+invalid === 0,
+"Recipients",
+unique.length
+? `${unique.length} valid`
+: "Add recipients"
+);
+
+
+// ------------------------------------------
+// DUPLICATES
+// ------------------------------------------
+
+setHealth(
+"healthDuplicates",
+duplicates === 0,
+"Duplicates",
+duplicates === 0
+? "None detected"
+: `${duplicates} duplicate(s)`
+);
+
+
+// ------------------------------------------
+// SUBJECT
+// ------------------------------------------
+
+const subjectLength =
+subject.value.trim().length;
+
+
+setHealth(
+"healthSubject",
+subjectLength >= 5 &&
+subjectLength <= 120,
+"Subject",
+subjectLength === 0
+? "Add subject"
+: `${subjectLength} characters`
+);
+
+
+// ------------------------------------------
+// MESSAGE
+// ------------------------------------------
+
+const messageLength =
+messageBody.value.trim().length;
+
+
+setHealth(
+"healthMessage",
+messageLength >= 10,
+"Message",
+messageLength === 0
+? "Add message"
+: `${messageLength} characters`
+);
+
+
+// ------------------------------------------
+// SPINTAX
+// ------------------------------------------
+
+const openBraces =
+(
+messageBody.value.match(
+/\{/g
+) || []
+).length;
+
+
+const closeBraces =
+(
+messageBody.value.match(
+/\}/g
+) || []
+).length;
+
+
+const pipes =
+(
+messageBody.value.match(
+/\|/g
+) || []
+).length;
+
+
+const noSpintax =
+openBraces === 0 &&
+closeBraces === 0;
+
+
+const validSpintax =
+openBraces === closeBraces &&
+(
+noSpintax ||
+pipes > 0
+);
+
+
+setHealth(
+"healthSpintax",
+validSpintax,
+"Spintax",
+noSpintax
+? "No variations"
+: validSpintax
+? "Syntax looks valid"
+: "Check brackets"
+);
+
+
+// ------------------------------------------
+// SENDER
+// ------------------------------------------
+
+const senderOkay =
+senderName.value.trim().length > 0 &&
+/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+.test(
+gmail.value.trim()
+);
+
+
+setHealth(
+"healthSender",
+senderOkay,
+"Sender",
+senderOkay
+? "Ready"
+: "Name + Gmail required"
+);
+
+
+// ------------------------------------------
+// SCORE
+// ------------------------------------------
+
+const checks = [
+
+unique.length > 0 &&
+invalid === 0,
+
+duplicates === 0,
+
+subjectLength >= 5 &&
+subjectLength <= 120,
+
+messageLength >= 10,
+
+validSpintax,
+
+senderOkay
+
+];
+
+
+const passed =
+checks.filter(Boolean).length;
+
+
+document.getElementById(
+"healthScore"
+).textContent =
+`${passed}/6`;
+
+
+const summary =
+document.getElementById(
+"healthSummary"
+);
+
+
+summary.className = "";
+
+
+if (passed === 6) {
+
+summary.textContent =
+"Everything looks ready";
+
+summary.classList.add(
+"health-ready"
+);
+
+}
+else if (passed >= 4) {
+
+summary.textContent =
+"A few checks need attention";
+
+summary.classList.add(
+"health-warning"
+);
+
+}
+else {
+
+summary.textContent =
+"Complete the required fields";
+
+summary.classList.add(
+"health-warning"
+);
+
+}
+
+}
+
 
 // ==========================================
-// SUBJECT PREVIEW
+// INPUT EVENTS
 // ==========================================
 
-subject.addEventListener(
+[
+senderName,
+gmail,
+subject,
+messageBody,
+recipientsBox
+].forEach(
+element => {
+
+element.addEventListener(
 "input",
 () => {
 
+updateCount();
+
+updateMessageCount();
+
+updateHealthCheck();
+
 }
 );
 
-
-
-// ==========================================
-// CLEAR PREVIEW
-// ==========================================
-
-document.getElementById(
-"clearPreview"
-).onclick = () => {
-
-messageBody.value = "";
-
-updateMessageInfo();
-
-messageBody.focus();
-
-};
-
+}
+);
 
 
 // ==========================================
@@ -820,9 +1200,8 @@ statusEl.innerHTML =
 }
 
 
-
 // ==========================================
-// COMPLETION TOAST
+// TOAST
 // ==========================================
 
 function showComplete() {
@@ -891,9 +1270,8 @@ toast.classList.remove(
 );
 
 
-
 // ==========================================
-// SEND
+// SEND ALL
 // ==========================================
 
 sendBtn.onclick =
@@ -909,7 +1287,6 @@ const recipients =
 getRecipients();
 
 
-
 if (!senderName.value.trim()) {
 
 alert(
@@ -921,7 +1298,6 @@ senderName.focus();
 return;
 
 }
-
 
 
 if (!gmail.value.trim()) {
@@ -937,7 +1313,6 @@ return;
 }
 
 
-
 if (!appPassword.value.trim()) {
 
 alert(
@@ -949,7 +1324,6 @@ appPassword.focus();
 return;
 
 }
-
 
 
 if (!subject.value.trim()) {
@@ -965,7 +1339,6 @@ return;
 }
 
 
-
 if (!messageBody.value.trim()) {
 
 alert(
@@ -977,7 +1350,6 @@ messageBody.focus();
 return;
 
 }
-
 
 
 if (!recipients.length) {
@@ -993,7 +1365,6 @@ return;
 }
 
 
-
 const tokenInput =
 document.querySelector(
 'input[name="cf-turnstile-response"]'
@@ -1006,7 +1377,6 @@ tokenInput
 : "";
 
 
-
 sending = true;
 
 
@@ -1015,7 +1385,6 @@ sendBtn.disabled = true;
 
 sendBtn.innerHTML =
 '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
-
 
 
 totalEl.textContent =
@@ -1038,12 +1407,10 @@ progressBar.style.width =
 "0%";
 
 
-
 setStatus(
 "Sending emails...",
 "fa-solid fa-circle-notch fa-spin"
 );
-
 
 
 try {
@@ -1090,7 +1457,6 @@ turnstileToken
 );
 
 
-
 if (!response.ok) {
 
 
@@ -1118,7 +1484,6 @@ message
 }
 
 
-
 const reader =
 response.body.getReader();
 
@@ -1128,7 +1493,6 @@ new TextDecoder();
 
 
 let buffer = "";
-
 
 
 while (true) {
@@ -1150,7 +1514,7 @@ buffer +=
 decoder.decode(
 value,
 {
-stream: true
+stream:true
 }
 );
 
@@ -1161,7 +1525,6 @@ buffer.split("\n");
 
 buffer =
 lines.pop() || "";
-
 
 
 for (
@@ -1186,9 +1549,7 @@ JSON.parse(line);
 catch (_) {
 
 continue;
-
 }
-
 
 
 totalEl.textContent =
@@ -1207,9 +1568,7 @@ remainingEl.textContent =
 data.remaining ?? 0;
 
 
-
 if (data.total > 0) {
-
 
 const completed =
 (data.sent || 0) +
@@ -1226,7 +1585,6 @@ data.total *
 }
 
 
-
 if (
 data.event === "sent"
 ) {
@@ -1237,7 +1595,6 @@ setStatus(
 );
 
 }
-
 
 
 if (
@@ -1252,7 +1609,6 @@ setStatus(
 }
 
 
-
 if (
 data.event === "error"
 ) {
@@ -1263,7 +1619,6 @@ data.message ||
 );
 
 }
-
 
 
 if (
@@ -1305,6 +1660,7 @@ error.message ||
 "Something went wrong."
 );
 
+
 }
 finally {
 
@@ -1323,7 +1679,6 @@ sendBtn.innerHTML =
 };
 
 
-
 // ==========================================
 // LOGOUT
 // ==========================================
@@ -1338,14 +1693,15 @@ window.location.href =
 };
 
 
-
 // ==========================================
 // INITIAL
 // ==========================================
 
 updateCount();
 
-updateMessageInfo();
+updateMessageCount();
+
+updateHealthCheck();
 
 </script>
 
