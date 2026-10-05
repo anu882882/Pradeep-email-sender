@@ -11,25 +11,20 @@ content="width=device-width,initial-scale=1">
 
 <title>Secure Mail Console</title>
 
-
 <link
 rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
-
 
 <link
 rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-
 {% if turnstile_site_key %}
-
 <script
 src="https://challenges.cloudflare.com/turnstile/v0/api.js"
 async
 defer>
 </script>
-
 {% endif %}
 
 </head>
@@ -42,7 +37,6 @@ defer>
 
 
 <header class="topbar">
-
 
 <div class="brand">
 
@@ -64,7 +58,6 @@ id="logoutBtn">
 Logout
 
 </button>
-
 
 </header>
 
@@ -88,7 +81,7 @@ Bulk Email Sender
 
 
 <!-- ======================================
-     COMPOSE
+     COMPOSE MESSAGE
 ====================================== -->
 
 <section class="card compose">
@@ -184,9 +177,7 @@ placeholder="Subject">
 
 
 
-<!-- ======================================
-     MESSAGE
-====================================== -->
+<!-- MESSAGE BODY -->
 
 <div class="field">
 
@@ -220,14 +211,15 @@ placeholder=""></textarea>
 
 
 <!-- ======================================
-     HEALTH CHECK
+     HIDDEN HEALTH CHECK
+     LOGIC REMAINS ACTIVE
 ====================================== -->
 
-<div class="health-box">
-
+<div
+class="health-box"
+aria-hidden="true">
 
 <div class="health-header">
-
 
 <div>
 
@@ -239,15 +231,11 @@ Pre-Send Health Check
 
 </strong>
 
-
 <span id="healthSummary">
-
 Checking...
-
 </span>
 
 </div>
-
 
 <div
 class="health-score"
@@ -257,9 +245,7 @@ id="healthScore">
 
 </div>
 
-
 </div>
-
 
 
 <div class="health-grid">
@@ -384,7 +370,6 @@ Waiting...
 
 <div class="spintax-box">
 
-
 <div class="spintax-title">
 
 <i class="fa-solid fa-shuffle"></i>
@@ -402,7 +387,6 @@ Use
 for message variations.
 
 </div>
-
 
 </div>
 
@@ -503,7 +487,7 @@ placeholder=""></textarea>
 
 
 
-<!-- MONITOR -->
+<!-- PROGRESS MONITOR -->
 
 <div class="card monitor">
 
@@ -632,14 +616,11 @@ Send All
 
 </main>
 
-
 </div>
 
 
 
-<!-- ======================================
-     COMPLETE TOAST
-====================================== -->
+<!-- COMPLETE TOAST -->
 
 <div
 class="toast"
@@ -754,13 +735,12 @@ let sending = false;
 
 
 // ==========================================
-// PASSWORD
+// PASSWORD SHOW / HIDE
 // ==========================================
 
 document.getElementById(
 "showPassword"
 ).onclick = () => {
-
 
 if (
 appPassword.type === "password"
@@ -854,8 +834,10 @@ characterCount.textContent =
 
 
 // ==========================================
-// HEALTH
+// HIDDEN HEALTH CHECK
 // ==========================================
+// This continues working in the background.
+// Nothing from this section is displayed.
 
 function setHealth(
 id,
@@ -866,6 +848,11 @@ detail
 
 const box =
 document.getElementById(id);
+
+
+if (!box) {
+return;
+}
 
 
 box.classList.remove(
@@ -938,9 +925,7 @@ raw.length -
 valid.length;
 
 
-// ------------------------------------------
-// RECIPIENTS
-// ------------------------------------------
+// RECIPIENT CHECK
 
 setHealth(
 "healthRecipients",
@@ -953,9 +938,7 @@ unique.length
 );
 
 
-// ------------------------------------------
-// DUPLICATES
-// ------------------------------------------
+// DUPLICATE CHECK
 
 setHealth(
 "healthDuplicates",
@@ -967,9 +950,7 @@ duplicates === 0
 );
 
 
-// ------------------------------------------
-// SUBJECT
-// ------------------------------------------
+// SUBJECT CHECK
 
 const subjectLength =
 subject.value.trim().length;
@@ -986,9 +967,7 @@ subjectLength === 0
 );
 
 
-// ------------------------------------------
-// MESSAGE
-// ------------------------------------------
+// MESSAGE CHECK
 
 const messageLength =
 messageBody.value.trim().length;
@@ -1004,9 +983,7 @@ messageLength === 0
 );
 
 
-// ------------------------------------------
-// SPINTAX
-// ------------------------------------------
+// SPINTAX CHECK
 
 const openBraces =
 (
@@ -1057,9 +1034,7 @@ noSpintax
 );
 
 
-// ------------------------------------------
-// SENDER
-// ------------------------------------------
+// SENDER CHECK
 
 const senderOkay =
 senderName.value.trim().length > 0 &&
@@ -1079,9 +1054,7 @@ senderOkay
 );
 
 
-// ------------------------------------------
-// SCORE
-// ------------------------------------------
+// INTERNAL SCORE
 
 const checks = [
 
@@ -1106,51 +1079,18 @@ const passed =
 checks.filter(Boolean).length;
 
 
-document.getElementById(
-"healthScore"
-).textContent =
-`${passed}/6`;
+// Stored internally only.
+// Nothing is shown on screen.
+
+const healthState = {
+score: passed,
+total: 6,
+ready: passed === 6
+};
 
 
-const summary =
-document.getElementById(
-"healthSummary"
-);
-
-
-summary.className = "";
-
-
-if (passed === 6) {
-
-summary.textContent =
-"Everything looks ready";
-
-summary.classList.add(
-"health-ready"
-);
-
-}
-else if (passed >= 4) {
-
-summary.textContent =
-"A few checks need attention";
-
-summary.classList.add(
-"health-warning"
-);
-
-}
-else {
-
-summary.textContent =
-"Complete the required fields";
-
-summary.classList.add(
-"health-warning"
-);
-
-}
+window.mailHealth =
+healthState;
 
 }
 
@@ -1201,7 +1141,7 @@ statusEl.innerHTML =
 
 
 // ==========================================
-// TOAST
+// COMPLETE TOAST
 // ==========================================
 
 function showComplete() {
@@ -1363,6 +1303,11 @@ recipientsBox.focus();
 return;
 
 }
+
+
+// Update hidden checks before sending.
+
+updateHealthCheck();
 
 
 const tokenInput =
@@ -1694,7 +1639,7 @@ window.location.href =
 
 
 // ==========================================
-// INITIAL
+// INITIALIZE
 // ==========================================
 
 updateCount();
