@@ -163,6 +163,7 @@ placeholder="Subject">
 Font
 </label>
 
+
 <select id="fontSelect">
 
 {% for font in fonts %}
@@ -196,7 +197,7 @@ placeholder=""></textarea>
 
 <div class="font-preview">
 
-<span>Preview:</span>
+<span>Selected:</span>
 
 <strong id="fontPreview">
 High Tower Text
@@ -224,7 +225,6 @@ Use
 for message variations.
 
 </div>
-
 
 </div>
 
@@ -430,20 +430,17 @@ Send All
 class="toast"
 id="toast">
 
-
 <div class="toast-icon">
 
 <i class="fa-solid fa-check"></i>
 
 </div>
 
-
 <strong>
 
 sending compleate Babu❤️
 
 </strong>
-
 
 </div>
 
@@ -457,96 +454,80 @@ document.getElementById(
 "senderName"
 );
 
-
 const gmail =
 document.getElementById(
 "gmail"
 );
-
 
 const appPassword =
 document.getElementById(
 "appPassword"
 );
 
-
 const subject =
 document.getElementById(
 "subject"
 );
-
 
 const messageBody =
 document.getElementById(
 "messageBody"
 );
 
-
 const recipientsBox =
 document.getElementById(
 "recipients"
 );
-
 
 const fontSelect =
 document.getElementById(
 "fontSelect"
 );
 
-
 const fontPreview =
 document.getElementById(
 "fontPreview"
 );
-
 
 const totalEl =
 document.getElementById(
 "total"
 );
 
-
 const sentEl =
 document.getElementById(
 "sent"
 );
-
 
 const failedEl =
 document.getElementById(
 "failed"
 );
 
-
 const remainingEl =
 document.getElementById(
 "remaining"
 );
-
 
 const progressBar =
 document.getElementById(
 "progressBar"
 );
 
-
 const statusEl =
 document.getElementById(
 "status"
 );
-
 
 const foundCount =
 document.getElementById(
 "foundCount"
 );
 
-
 const sendBtn =
 document.getElementById(
 "sendBtn"
 );
-
 
 const toast =
 document.getElementById(
@@ -555,7 +536,6 @@ document.getElementById(
 
 
 let sending = false;
-
 
 
 const fontStacks = {
@@ -599,7 +579,6 @@ const fontStacks = {
 };
 
 
-
 function applyFont() {
 
 const selected =
@@ -613,14 +592,11 @@ fontStacks["Arial"];
 messageBody.style.fontFamily =
 stack;
 
-
 fontPreview.textContent =
 selected;
 
-
 fontPreview.style.fontFamily =
 stack;
-
 
 fontSelect.style.fontFamily =
 stack;
@@ -643,12 +619,10 @@ document.getElementById(
 ).onclick = () => {
 
 if (
-appPassword.type ===
-"password"
+appPassword.type === "password"
 ) {
 
-appPassword.type =
-"text";
+appPassword.type = "text";
 
 document.getElementById(
 "showPassword"
@@ -657,8 +631,7 @@ document.getElementById(
 
 } else {
 
-appPassword.type =
-"password";
+appPassword.type = "password";
 
 document.getElementById(
 "showPassword"
@@ -688,7 +661,7 @@ x =>
 )
 
 )
-].slice(0,25);
+].slice(0, 25);
 
 }
 
@@ -718,7 +691,7 @@ updateCount
 
 
 
-function status(
+function setStatus(
 text,
 icon
 ) {
@@ -738,9 +711,11 @@ toast.classList.add(
 
 setTimeout(
 () => {
+
 toast.classList.remove(
 "show"
 );
+
 },
 7000
 );
@@ -797,7 +772,9 @@ toast.classList.remove(
 sendBtn.onclick =
 async () => {
 
-if (sending) return;
+if (sending) {
+return;
+}
 
 
 const recipients =
@@ -813,7 +790,6 @@ alert(
 senderName.focus();
 
 return;
-
 }
 
 
@@ -826,7 +802,6 @@ alert(
 gmail.focus();
 
 return;
-
 }
 
 
@@ -839,7 +814,6 @@ alert(
 appPassword.focus();
 
 return;
-
 }
 
 
@@ -852,7 +826,6 @@ alert(
 subject.focus();
 
 return;
-
 }
 
 
@@ -865,7 +838,6 @@ alert(
 messageBody.focus();
 
 return;
-
 }
 
 
@@ -878,7 +850,6 @@ alert(
 recipientsBox.focus();
 
 return;
-
 }
 
 
@@ -921,7 +892,7 @@ progressBar.style.width =
 "0%";
 
 
-status(
+setStatus(
 "Sending emails...",
 "fa-solid fa-circle-notch fa-spin"
 );
@@ -930,22 +901,19 @@ status(
 
 try {
 
-
 const response =
 await fetch(
 "/send-batch",
 {
 
-method:
-"POST",
+method: "POST",
 
 headers: {
 "Content-Type":
 "application/json"
 },
 
-body:
-JSON.stringify({
+body: JSON.stringify({
 
 sender_name:
 senderName.value.trim(),
@@ -992,7 +960,8 @@ message =
 data.message ||
 message;
 
-} catch (_) {}
+}
+catch (_) {}
 
 throw new Error(
 message
@@ -1005,10 +974,8 @@ message
 const reader =
 response.body.getReader();
 
-
 const decoder =
 new TextDecoder();
-
 
 let buffer = "";
 
@@ -1023,14 +990,16 @@ done
 await reader.read();
 
 
-if (done) break;
+if (done) {
+break;
+}
 
 
 buffer +=
 decoder.decode(
 value,
 {
-stream:true
+stream: true
 }
 );
 
@@ -1047,8 +1016,9 @@ for (
 const line of lines
 ) {
 
-if (!line.trim())
+if (!line.trim()) {
 continue;
+}
 
 
 let data;
@@ -1059,7 +1029,8 @@ try {
 data =
 JSON.parse(line);
 
-} catch (_) {
+}
+catch (_) {
 
 continue;
 
@@ -1070,23 +1041,18 @@ continue;
 totalEl.textContent =
 data.total ?? 0;
 
-
 sentEl.textContent =
 data.sent ?? 0;
 
-
 failedEl.textContent =
 data.failed ?? 0;
-
 
 remainingEl.textContent =
 data.remaining ?? 0;
 
 
 
-if (
-data.total > 0
-) {
+if (data.total > 0) {
 
 const completed =
 (data.sent || 0) +
@@ -1105,11 +1071,10 @@ data.total *
 
 
 if (
-data.event ===
-"sent"
+data.event === "sent"
 ) {
 
-status(
+setStatus(
 `Sent: ${data.email}`,
 "fa-solid fa-check"
 );
@@ -1119,11 +1084,10 @@ status(
 
 
 if (
-data.event ===
-"failed"
+data.event === "failed"
 ) {
 
-status(
+setStatus(
 `Failed: ${data.email}`,
 "fa-solid fa-circle-exclamation"
 );
@@ -1133,8 +1097,7 @@ status(
 
 
 if (
-data.event ===
-"error"
+data.event === "error"
 ) {
 
 throw new Error(
@@ -1147,15 +1110,14 @@ data.message ||
 
 
 if (
-data.event ===
-"complete"
+data.event === "complete"
 ) {
 
 progressBar.style.width =
 "100%";
 
 
-status(
+setStatus(
 "Sending complete",
 "fa-solid fa-circle-check"
 );
@@ -1170,11 +1132,10 @@ showComplete();
 }
 
 
-
 }
 catch (error) {
 
-status(
+setStatus(
 error.message ||
 "Sending failed.",
 "fa-solid fa-circle-exclamation"
@@ -1219,4 +1180,5 @@ updateCount();
 </script>
 
 </body>
+
 </html>
