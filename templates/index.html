@@ -31,26 +31,19 @@ defer>
 
 </head>
 
-
 <body>
-
 
 <div class="page">
 
-
 <header class="topbar">
-
 
 <div class="brand">
 
 <i class="fa-solid fa-shield-halved"></i>
 
-<span>
-Secure Mail Console
-</span>
+<span>Secure Mail Console</span>
 
 </div>
-
 
 <button
 type="button"
@@ -63,9 +56,7 @@ Logout
 
 </button>
 
-
 </header>
-
 
 
 <div class="title-row">
@@ -81,16 +72,10 @@ Bulk Email Sender
 </div>
 
 
-
 <main class="dashboard">
 
 
-<!-- ======================================
-     COMPOSE
-====================================== -->
-
 <section class="card compose">
-
 
 <h3>
 
@@ -101,15 +86,12 @@ Compose Message
 </h3>
 
 
-
 <div class="grid2">
 
 
 <div class="field">
 
-<label>
-Sender Name
-</label>
+<label>Sender Name</label>
 
 <input
 id="senderName"
@@ -119,12 +101,9 @@ placeholder="Sender name">
 </div>
 
 
-
 <div class="field">
 
-<label>
-Your Gmail
-</label>
+<label>Your Gmail</label>
 
 <input
 id="gmail"
@@ -134,13 +113,9 @@ placeholder="yourname@gmail.com">
 </div>
 
 
-
 <div class="field">
 
-<label>
-App Password
-</label>
-
+<label>App Password</label>
 
 <div class="password-wrap">
 
@@ -148,7 +123,6 @@ App Password
 id="appPassword"
 type="password"
 placeholder="Google App Password">
-
 
 <button
 type="button"
@@ -163,12 +137,9 @@ id="showPassword">
 </div>
 
 
-
 <div class="field">
 
-<label>
-Email Subject
-</label>
+<label>Email Subject</label>
 
 <input
 id="subject"
@@ -181,25 +152,14 @@ placeholder="Subject">
 </div>
 
 
-
-<!-- ======================================
-     MESSAGE
-====================================== -->
-
 <div class="field">
-
 
 <div class="body-head">
 
-<label>
-Message Body
-</label>
+<label>Message Body</label>
 
-<span
-id="characterCount">
-
+<span id="characterCount">
 0 characters
-
 </span>
 
 </div>
@@ -210,17 +170,10 @@ id="messageBody"
 spellcheck="false"
 placeholder=""></textarea>
 
-
 </div>
 
 
-
-<!-- ======================================
-     SPINTAX
-====================================== -->
-
 <div class="spintax-box">
-
 
 <div class="spintax-title">
 
@@ -240,14 +193,8 @@ for simple message variations.
 
 </div>
 
-
 </div>
 
-
-
-<!-- ======================================
-     SECURITY
-====================================== -->
 
 <div class="security-title">
 
@@ -261,8 +208,26 @@ Security Verification
 {% if turnstile_site_key %}
 
 <div
+class="turnstile-wrap">
+
+<div
 class="cf-turnstile"
 data-sitekey="{{ turnstile_site_key }}">
+</div>
+
+
+<!-- This is a local testing notice, not a Cloudflare-generated message. -->
+
+<div class="testing-notice">
+
+<i class="fa-solid fa-circle-info"></i>
+
+<span>
+For testing only. If seen, report to site owner.
+</span>
+
+</div>
+
 </div>
 
 {% else %}
@@ -279,17 +244,8 @@ Turnstile is not configured.
 </section>
 
 
-
-<!-- ======================================
-     RIGHT COLUMN
-====================================== -->
-
 <section class="right-column">
 
-
-<!-- ======================================
-     RECIPIENTS
-====================================== -->
 
 <div class="card recipients-card">
 
@@ -340,11 +296,6 @@ placeholder=""></textarea>
 </div>
 
 
-
-<!-- ======================================
-     PROGRESS MONITOR
-====================================== -->
-
 <div class="card monitor">
 
 
@@ -357,79 +308,52 @@ Progress Monitor
 </h3>
 
 
-
 <div class="stats">
 
 
 <div class="stat">
 
-<span>
-TOTAL
-</span>
+<span>TOTAL</span>
 
-<strong id="total">
-0
-</strong>
+<strong id="total">0</strong>
 
 </div>
 
 
-
 <div class="stat">
 
-<span>
-SENT
-</span>
+<span>SENT</span>
 
 <strong
 class="green"
-id="sent">
-
-0
-
-</strong>
+id="sent">0</strong>
 
 </div>
 
 
-
 <div class="stat">
 
-<span>
-FAILED
-</span>
+<span>FAILED</span>
 
 <strong
 class="red"
-id="failed">
-
-0
-
-</strong>
+id="failed">0</strong>
 
 </div>
-
 
 
 <div class="stat">
 
-<span>
-REMAINING
-</span>
+<span>REMAINING</span>
 
 <strong
 class="orange"
-id="remaining">
-
-0
-
-</strong>
+id="remaining">0</strong>
 
 </div>
 
 
 </div>
-
 
 
 <div class="progress-track">
@@ -437,7 +361,6 @@ id="remaining">
 <div id="progressBar"></div>
 
 </div>
-
 
 
 <div
@@ -449,7 +372,6 @@ id="status">
 Ready
 
 </div>
-
 
 
 <button
@@ -466,24 +388,16 @@ Send All
 
 </div>
 
-
 </section>
-
 
 </main>
 
 </div>
 
 
-
-<!-- ======================================
-     COMPLETE MESSAGE
-====================================== -->
-
 <div
 class="toast"
 id="toast">
-
 
 <div class="toast-icon">
 
@@ -496,166 +410,110 @@ id="toast">
 sending compleate Babu❤️
 </strong>
 
-
 </div>
-
 
 
 <script>
 
 
-// ==========================================
-// ELEMENTS
-// ==========================================
-
 const senderName =
-document.getElementById(
-"senderName"
-);
+document.getElementById("senderName");
 
 
 const gmail =
-document.getElementById(
-"gmail"
-);
+document.getElementById("gmail");
 
 
 const appPassword =
-document.getElementById(
-"appPassword"
-);
+document.getElementById("appPassword");
 
 
 const subject =
-document.getElementById(
-"subject"
-);
+document.getElementById("subject");
 
 
 const messageBody =
-document.getElementById(
-"messageBody"
-);
+document.getElementById("messageBody");
 
 
 const recipientsBox =
-document.getElementById(
-"recipients"
-);
+document.getElementById("recipients");
 
 
 const characterCount =
-document.getElementById(
-"characterCount"
-);
+document.getElementById("characterCount");
 
 
 const totalEl =
-document.getElementById(
-"total"
-);
+document.getElementById("total");
 
 
 const sentEl =
-document.getElementById(
-"sent"
-);
+document.getElementById("sent");
 
 
 const failedEl =
-document.getElementById(
-"failed"
-);
+document.getElementById("failed");
 
 
 const remainingEl =
-document.getElementById(
-"remaining"
-);
+document.getElementById("remaining");
 
 
 const progressBar =
-document.getElementById(
-"progressBar"
-);
+document.getElementById("progressBar");
 
 
 const statusEl =
-document.getElementById(
-"status"
-);
+document.getElementById("status");
 
 
 const foundCount =
-document.getElementById(
-"foundCount"
-);
+document.getElementById("foundCount");
 
 
 const sendBtn =
-document.getElementById(
-"sendBtn"
-);
+document.getElementById("sendBtn");
 
 
 const toast =
-document.getElementById(
-"toast"
-);
+document.getElementById("toast");
 
 
 let sending = false;
 
 
-// ==========================================
-// PASSWORD SHOW / HIDE
-// ==========================================
-
 document.getElementById(
 "showPassword"
 ).onclick = () => {
-
 
 if (
 appPassword.type === "password"
 ) {
 
-
-appPassword.type =
-"text";
-
+appPassword.type = "text";
 
 document.getElementById(
 "showPassword"
 ).innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
-
 }
 else {
 
-
-appPassword.type =
-"password";
-
+appPassword.type = "password";
 
 document.getElementById(
 "showPassword"
 ).innerHTML =
 '<i class="fa-regular fa-eye"></i>';
 
-
 }
 
 };
 
 
-// ==========================================
-// RECIPIENTS
-// ==========================================
-
 function getRecipients() {
-
 
 return [
 
@@ -663,9 +521,7 @@ return [
 
 recipientsBox.value
 
-.split(
-/[\s,;]+/
-)
+.split(/[\s,;]+/)
 
 .map(
 x => x.trim().toLowerCase()
@@ -673,35 +529,25 @@ x => x.trim().toLowerCase()
 
 .filter(
 x =>
-/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-.test(x)
+/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)
 )
 
 )
 
-].slice(
-0,
-25
-);
+].slice(0, 25);
 
 }
 
 
-
 function updateCount() {
 
-
-const list =
-getRecipients();
-
+const list = getRecipients();
 
 foundCount.textContent =
 `${list.length} found`;
 
-
 totalEl.textContent =
 list.length;
-
 
 remainingEl.textContent =
 list.length;
@@ -709,16 +555,10 @@ list.length;
 }
 
 
-// ==========================================
-// CHARACTER COUNT
-// ==========================================
-
 function updateCharacterCount() {
-
 
 const count =
 messageBody.value.length;
-
 
 characterCount.textContent =
 `${count} characters`;
@@ -726,25 +566,13 @@ characterCount.textContent =
 }
 
 
-// ==========================================
-// TOAST
-// ==========================================
-
 function showComplete() {
 
-
-toast.classList.add(
-"show"
-);
-
+toast.classList.add("show");
 
 setTimeout(
 () => {
-
-toast.classList.remove(
-"show"
-);
-
+toast.classList.remove("show");
 },
 7000
 );
@@ -752,56 +580,38 @@ toast.classList.remove(
 }
 
 
-// Keyboard closes popup.
-
 document.addEventListener(
 "keydown",
 () => {
 
 if (
-toast.classList.contains(
-"show"
-)
+toast.classList.contains("show")
 ) {
 
-toast.classList.remove(
-"show"
-);
+toast.classList.remove("show");
 
 }
 
 }
 );
 
-
-// Screen click closes popup.
 
 document.addEventListener(
 "click",
 event => {
 
 if (
-toast.classList.contains(
-"show"
-) &&
-!toast.contains(
-event.target
-)
+toast.classList.contains("show") &&
+!toast.contains(event.target)
 ) {
 
-toast.classList.remove(
-"show"
-);
+toast.classList.remove("show");
 
 }
 
 }
 );
 
-
-// ==========================================
-// STATUS
-// ==========================================
 
 function setStatus(
 text,
@@ -814,13 +624,8 @@ statusEl.innerHTML =
 }
 
 
-// ==========================================
-// SEND ALL
-// ==========================================
-
 sendBtn.onclick =
 async () => {
-
 
 if (sending) {
 return;
@@ -831,13 +636,9 @@ const recipients =
 getRecipients();
 
 
-// Basic required-field checks only.
-
 if (!senderName.value.trim()) {
 
-alert(
-"Enter Sender Name."
-);
+alert("Enter Sender Name.");
 
 senderName.focus();
 
@@ -848,9 +649,7 @@ return;
 
 if (!gmail.value.trim()) {
 
-alert(
-"Enter Gmail address."
-);
+alert("Enter Gmail address.");
 
 gmail.focus();
 
@@ -861,9 +660,7 @@ return;
 
 if (!appPassword.value.trim()) {
 
-alert(
-"Enter Google App Password."
-);
+alert("Enter Google App Password.");
 
 appPassword.focus();
 
@@ -874,9 +671,7 @@ return;
 
 if (!subject.value.trim()) {
 
-alert(
-"Enter Email Subject."
-);
+alert("Enter Email Subject.");
 
 subject.focus();
 
@@ -887,9 +682,7 @@ return;
 
 if (!messageBody.value.trim()) {
 
-alert(
-"Enter Message Body."
-);
+alert("Enter Message Body.");
 
 messageBody.focus();
 
@@ -900,9 +693,7 @@ return;
 
 if (!recipients.length) {
 
-alert(
-"Enter valid recipients."
-);
+alert("Enter valid recipients.");
 
 recipientsBox.focus();
 
@@ -910,10 +701,6 @@ return;
 
 }
 
-
-// ========================================
-// TURNSTILE
-// ========================================
 
 const tokenInput =
 document.querySelector(
@@ -927,15 +714,10 @@ tokenInput
 : "";
 
 
-// ========================================
-// START
-// ========================================
-
 sending = true;
 
 
-sendBtn.disabled =
-true;
+sendBtn.disabled = true;
 
 
 sendBtn.innerHTML =
@@ -945,18 +727,12 @@ sendBtn.innerHTML =
 totalEl.textContent =
 recipients.length;
 
+sentEl.textContent = "0";
 
-sentEl.textContent =
-"0";
-
-
-failedEl.textContent =
-"0";
-
+failedEl.textContent = "0";
 
 remainingEl.textContent =
 recipients.length;
-
 
 progressBar.style.width =
 "0%";
@@ -975,18 +751,14 @@ const response =
 await fetch(
 "/send-batch",
 {
+method: "POST",
 
-method:
-"POST",
-
-headers:
-{
+headers: {
 "Content-Type":
 "application/json"
 },
 
-body:
-JSON.stringify({
+body: JSON.stringify({
 
 sender_name:
 senderName.value.trim(),
@@ -1028,16 +800,13 @@ const data =
 await response.json();
 
 message =
-data.message ||
-message;
+data.message || message;
 
 }
 catch (_) {}
 
 
-throw new Error(
-message
-);
+throw new Error(message);
 
 }
 
@@ -1059,8 +828,7 @@ while (true) {
 const {
 value,
 done
-} =
-await reader.read();
+} = await reader.read();
 
 
 if (done) {
@@ -1072,7 +840,7 @@ buffer +=
 decoder.decode(
 value,
 {
-stream:true
+stream: true
 }
 );
 
@@ -1085,9 +853,7 @@ buffer =
 lines.pop() || "";
 
 
-for (
-const line of lines
-) {
+for (const line of lines) {
 
 
 if (!line.trim()) {
@@ -1100,19 +866,15 @@ let data;
 
 try {
 
-data =
-JSON.parse(line);
+data = JSON.parse(line);
 
 }
 catch (_) {
 
 continue;
+
 }
 
-
-// ====================================
-// UPDATE COUNTERS
-// ====================================
 
 totalEl.textContent =
 data.total ?? 0;
@@ -1130,13 +892,7 @@ remainingEl.textContent =
 data.remaining ?? 0;
 
 
-// ====================================
-// PROGRESS
-// ====================================
-
-if (
-data.total > 0
-) {
+if (data.total > 0) {
 
 
 const completed =
@@ -1154,13 +910,7 @@ data.total *
 }
 
 
-// ====================================
-// SENT
-// ====================================
-
-if (
-data.event === "sent"
-) {
+if (data.event === "sent") {
 
 
 setStatus(
@@ -1171,13 +921,7 @@ setStatus(
 }
 
 
-// ====================================
-// FAILED
-// ====================================
-
-if (
-data.event === "failed"
-) {
+if (data.event === "failed") {
 
 
 setStatus(
@@ -1188,14 +932,7 @@ setStatus(
 }
 
 
-// ====================================
-// ERROR
-// ====================================
-
-if (
-data.event === "error"
-) {
-
+if (data.event === "error") {
 
 throw new Error(
 data.message ||
@@ -1205,13 +942,7 @@ data.message ||
 }
 
 
-// ====================================
-// COMPLETE
-// ====================================
-
-if (
-data.event === "complete"
-) {
+if (data.event === "complete") {
 
 
 progressBar.style.width =
@@ -1232,7 +963,6 @@ showComplete();
 
 }
 
-
 }
 catch (error) {
 
@@ -1249,7 +979,6 @@ error.message ||
 "Something went wrong."
 );
 
-
 }
 finally {
 
@@ -1257,8 +986,7 @@ finally {
 sending = false;
 
 
-sendBtn.disabled =
-false;
+sendBtn.disabled = false;
 
 
 sendBtn.innerHTML =
@@ -1269,23 +997,14 @@ sendBtn.innerHTML =
 };
 
 
-// ==========================================
-// LOGOUT
-// ==========================================
-
 document.getElementById(
 "logoutBtn"
 ).onclick = () => {
 
-window.location.href =
-"/logout";
+window.location.href = "/logout";
 
 };
 
-
-// ==========================================
-// INITIAL STATE
-// ==========================================
 
 updateCount();
 
@@ -1305,7 +1024,5 @@ updateCount
 
 </script>
 
-
 </body>
-
 </html>
