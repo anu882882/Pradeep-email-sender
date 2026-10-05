@@ -13,8 +13,7 @@ font-family:Arial,Helvetica,sans-serif;
 
 button,
 input,
-textarea,
-select {
+textarea {
 font:inherit;
 }
 
@@ -30,6 +29,10 @@ margin:auto;
 padding:25px 0 50px;
 }
 
+
+/* =========================================
+   TOP
+========================================= */
 
 .topbar {
 display:flex;
@@ -56,11 +59,16 @@ font-size:32px;
 
 .logout-btn {
 border:1px solid #ffcaca;
-background:white;
+background:#fff;
 color:#ef4444;
 padding:8px 14px;
 border-radius:8px;
 font-size:13px;
+}
+
+
+.logout-btn:hover {
+background:#fff5f5;
 }
 
 
@@ -69,6 +77,10 @@ margin:0 0 25px;
 font-size:21px;
 }
 
+
+/* =========================================
+   DASHBOARD
+========================================= */
 
 .dashboard {
 display:grid;
@@ -95,10 +107,14 @@ padding:28px;
 
 
 .card h3 {
-margin:0 0 9px;
+margin:0 0 14px;
 font-size:17px;
 }
 
+
+/* =========================================
+   FORM
+========================================= */
 
 .grid2 {
 display:grid;
@@ -121,8 +137,7 @@ font-weight:600;
 
 
 input,
-textarea,
-select {
+textarea {
 width:100%;
 border:1px solid #d8e1ec;
 border-radius:7px;
@@ -139,8 +154,7 @@ padding:0 14px;
 
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
 border-color:#4b70f5;
 box-shadow:
 0 0 0 3px rgba(75,112,245,.08);
@@ -153,7 +167,7 @@ position:relative;
 
 
 .password-wrap input {
-padding-right:43px;
+padding-right:45px;
 }
 
 
@@ -169,68 +183,104 @@ color:#718096;
 }
 
 
+.password-wrap button:hover {
+color:#4b70f5;
+}
+
+
+/* =========================================
+   MESSAGE BODY
+========================================= */
+
 .body-head {
 display:flex;
 align-items:center;
 justify-content:space-between;
-gap:15px;
+gap:10px;
 margin-bottom:8px;
 }
 
 
-.body-head > label {
+.body-head label {
 margin:0;
 }
 
 
-.font-control {
-display:flex;
-align-items:center;
-gap:7px;
-}
-
-
-.font-control label {
-font-size:11px;
-font-weight:600;
-color:#6b7890;
-margin:0;
-}
-
-
-.font-control select {
-width:175px;
-height:33px;
-padding:0 9px;
-font-size:11px;
-cursor:pointer;
-}
-
-
-#messageBody {
-height:265px;
-resize:vertical;
-padding:14px;
-line-height:1.5;
-}
-
-
-.font-preview {
-display:flex;
-align-items:center;
-gap:7px;
-margin-top:-9px;
-margin-bottom:17px;
+.character-count {
 font-size:11px;
 color:#7a8799;
 }
 
 
-.font-preview strong {
-color:#39475b;
-font-size:13px;
+#messageBody {
+height:240px;
+resize:vertical;
+padding:14px;
+line-height:1.55;
+font-family:Arial,Helvetica,sans-serif;
+font-size:15px;
 }
 
+
+/* =========================================
+   PREVIEW
+========================================= */
+
+.preview-box {
+border:1px solid #dce4ef;
+border-radius:8px;
+overflow:hidden;
+margin-top:-3px;
+margin-bottom:18px;
+background:#fff;
+}
+
+
+.preview-header {
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:9px 12px;
+background:#f8fafc;
+border-bottom:1px solid #e5eaf1;
+font-size:11px;
+font-weight:700;
+color:#526176;
+}
+
+
+.preview-header i {
+margin-right:5px;
+color:#4b70f5;
+}
+
+
+.preview-header button {
+border:0;
+background:transparent;
+font-size:11px;
+color:#ef4444;
+padding:3px 5px;
+}
+
+
+.preview-content {
+min-height:65px;
+max-height:130px;
+overflow:auto;
+padding:12px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:14px;
+line-height:1.5;
+color:#202124;
+white-space:pre-wrap;
+word-break:break-word;
+}
+
+
+/* =========================================
+   SPINTAX
+========================================= */
 
 .spintax-box {
 border:1px solid #dce4ef;
@@ -267,6 +317,10 @@ border-radius:4px;
 }
 
 
+/* =========================================
+   SECURITY
+========================================= */
+
 .security-title {
 display:block;
 margin-bottom:8px;
@@ -284,10 +338,20 @@ font-size:12px;
 }
 
 
+/* =========================================
+   RECIPIENTS
+========================================= */
+
 .card-title-line {
 display:flex;
 align-items:flex-start;
 justify-content:space-between;
+gap:15px;
+}
+
+
+.card-title-line h3 {
+margin-bottom:5px;
 }
 
 
@@ -304,16 +368,22 @@ color:#3b82f6;
 border-radius:20px;
 padding:5px 9px;
 font-size:11px;
+white-space:nowrap;
 }
 
 
 .recipient-area {
-height:135px;
+height:145px;
 resize:vertical;
 padding:10px 12px;
 line-height:1.45;
+font-size:13px;
 }
 
+
+/* =========================================
+   MONITOR
+========================================= */
 
 .stats {
 display:grid;
@@ -363,6 +433,10 @@ color:#f59e0b!important;
 }
 
 
+/* =========================================
+   PROGRESS
+========================================= */
+
 .progress-track {
 height:7px;
 background:#e4eaf2;
@@ -388,13 +462,17 @@ color:#263449;
 }
 
 
+/* =========================================
+   SEND
+========================================= */
+
 .send-btn {
 width:100%;
-height:40px;
+height:42px;
 border:0;
 border-radius:7px;
 background:#10b981;
-color:white;
+color:#fff;
 font-weight:700;
 }
 
@@ -410,6 +488,10 @@ cursor:wait;
 }
 
 
+/* =========================================
+   TOAST
+========================================= */
+
 .toast {
 position:fixed;
 left:50%;
@@ -418,7 +500,7 @@ transform:translate(-50%,25px);
 opacity:0;
 pointer-events:none;
 background:#111827;
-color:white;
+color:#fff;
 border-radius:12px;
 padding:15px 20px;
 display:flex;
@@ -449,7 +531,9 @@ justify-content:center;
 }
 
 
-/* LOGIN */
+/* =========================================
+   LOGIN
+========================================= */
 
 .login-page {
 min-height:100vh;
@@ -552,8 +636,13 @@ margin-top:17px;
 border:0;
 border-radius:7px;
 background:#4b70f5;
-color:white;
+color:#fff;
 font-weight:700;
+}
+
+
+.login-button:hover {
+background:#3b5fe0;
 }
 
 
@@ -563,6 +652,10 @@ color:#8a97aa;
 font-size:11px;
 }
 
+
+/* =========================================
+   MOBILE
+========================================= */
 
 @media(max-width:850px) {
 
@@ -592,17 +685,12 @@ gap:0;
 padding:20px;
 }
 
-.body-head {
-align-items:flex-start;
+.card-title-line {
 flex-direction:column;
 }
 
-.font-control {
-width:100%;
-}
-
-.font-control select {
-width:100%;
+.found {
+align-self:flex-start;
 }
 
 .toast {
