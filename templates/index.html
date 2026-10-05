@@ -19,7 +19,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 {% if turnstile_site_key %}
 <script
 src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async defer>
+async
+defer>
 </script>
 {% endif %}
 
@@ -27,6 +28,7 @@ async defer>
 
 
 <body>
+
 
 <div class="page">
 
@@ -55,6 +57,7 @@ Logout
 </header>
 
 
+
 <div class="title-row">
 
 <h2>
@@ -66,6 +69,7 @@ Bulk Email Sender
 </h2>
 
 </div>
+
 
 
 <main class="dashboard">
@@ -83,12 +87,15 @@ Compose Message
 </h3>
 
 
+
 <div class="grid2">
 
 
 <div class="field">
 
-<label>Sender Name</label>
+<label>
+Sender Name
+</label>
 
 <input
 id="senderName"
@@ -98,9 +105,12 @@ placeholder="Sender name">
 </div>
 
 
+
 <div class="field">
 
-<label>Your Gmail</label>
+<label>
+Your Gmail
+</label>
 
 <input
 id="gmail"
@@ -110,9 +120,13 @@ placeholder="yourname@gmail.com">
 </div>
 
 
+
 <div class="field">
 
-<label>App Password</label>
+<label>
+App Password
+</label>
+
 
 <div class="password-wrap">
 
@@ -120,6 +134,7 @@ placeholder="yourname@gmail.com">
 id="appPassword"
 type="password"
 placeholder="Google App Password">
+
 
 <button
 type="button"
@@ -134,9 +149,12 @@ id="showPassword">
 </div>
 
 
+
 <div class="field">
 
-<label>Email Subject</label>
+<label>
+Email Subject
+</label>
 
 <input
 id="subject"
@@ -149,12 +167,15 @@ placeholder="Subject">
 </div>
 
 
+
 <div class="field">
 
 
 <div class="body-head">
 
-<label>Message Body</label>
+<label>
+Message Body
+</label>
 
 
 <div class="font-control">
@@ -182,28 +203,33 @@ style="font-family:'{{ font }}';">
 
 </div>
 
-
 </div>
+
 
 
 <textarea
 id="messageBody"
 spellcheck="false"
-placeholder=""></textarea>
+placeholder="">
+</textarea>
 
 
 </div>
+
 
 
 <div class="font-preview">
 
-<span>Selected:</span>
+<span>
+Selected:
+</span>
 
 <strong id="fontPreview">
-High Tower Text
+Arial
 </strong>
 
 </div>
+
 
 
 <div class="spintax-box">
@@ -229,6 +255,7 @@ for message variations.
 </div>
 
 
+
 <div class="security-title">
 
 <i class="fa-solid fa-shield-halved"></i>
@@ -236,6 +263,7 @@ for message variations.
 Security Verification
 
 </div>
+
 
 
 {% if turnstile_site_key %}
@@ -302,11 +330,13 @@ id="foundCount">
 </div>
 
 
+
 <textarea
 id="recipients"
 class="recipient-area"
 spellcheck="false"
-placeholder=""></textarea>
+placeholder="">
+</textarea>
 
 
 </div>
@@ -325,21 +355,29 @@ Progress Monitor
 </h3>
 
 
+
 <div class="stats">
 
 
 <div class="stat">
 
-<span>TOTAL</span>
+<span>
+TOTAL
+</span>
 
-<strong id="total">0</strong>
+<strong id="total">
+0
+</strong>
 
 </div>
 
 
+
 <div class="stat">
 
-<span>SENT</span>
+<span>
+SENT
+</span>
 
 <strong
 class="green"
@@ -352,9 +390,12 @@ id="sent">
 </div>
 
 
+
 <div class="stat">
 
-<span>FAILED</span>
+<span>
+FAILED
+</span>
 
 <strong
 class="red"
@@ -367,9 +408,12 @@ id="failed">
 </div>
 
 
+
 <div class="stat">
 
-<span>REMAINING</span>
+<span>
+REMAINING
+</span>
 
 <strong
 class="orange"
@@ -385,11 +429,13 @@ id="remaining">
 </div>
 
 
+
 <div class="progress-track">
 
 <div id="progressBar"></div>
 
 </div>
+
 
 
 <div
@@ -401,6 +447,7 @@ id="status">
 Ready
 
 </div>
+
 
 
 <button
@@ -420,6 +467,7 @@ Send All
 
 </section>
 
+
 </main>
 
 </div>
@@ -437,9 +485,7 @@ id="toast">
 </div>
 
 <strong>
-
 sending compleate Babu❤️
-
 </strong>
 
 </div>
@@ -538,45 +584,35 @@ document.getElementById(
 let sending = false;
 
 
+
 const fontStacks = {
 
-"High Tower Text":
-'"High Tower Text","Book Antiqua",serif',
-
-"Book Antiqua":
-'"Book Antiqua",Palatino,serif',
-
-"Georgia":
-'Georgia,serif',
-
-"Garamond":
-'Garamond,"Times New Roman",serif',
-
-"Cambria":
-'Cambria,Georgia,serif',
-
-"Palatino Linotype":
-'"Palatino Linotype",Palatino,serif',
-
-"Times New Roman":
-'"Times New Roman",Times,serif',
-
 "Arial":
-'Arial,Helvetica,sans-serif',
+"Arial, Helvetica, sans-serif",
 
-"Calibri":
-'Calibri,Arial,sans-serif',
-
-"Trebuchet MS":
-'"Trebuchet MS",Arial,sans-serif',
+"Helvetica":
+"Helvetica, Arial, sans-serif",
 
 "Verdana":
-'Verdana,Arial,sans-serif',
+"Verdana, Arial, sans-serif",
+
+"Tahoma":
+"Tahoma, Arial, sans-serif",
+
+"Trebuchet MS":
+'"Trebuchet MS", Arial, sans-serif',
+
+"Georgia":
+"Georgia, serif",
+
+"Times New Roman":
+'"Times New Roman", Times, serif',
 
 "Courier New":
-'"Courier New",Courier,monospace'
+'"Courier New", Courier, monospace'
 
 };
+
 
 
 function applyFont() {
@@ -592,11 +628,14 @@ fontStacks["Arial"];
 messageBody.style.fontFamily =
 stack;
 
+
 fontPreview.textContent =
 selected;
 
+
 fontPreview.style.fontFamily =
 stack;
+
 
 fontSelect.style.fontFamily =
 stack;
@@ -629,7 +668,8 @@ document.getElementById(
 ).innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
-} else {
+}
+else {
 
 appPassword.type = "password";
 
@@ -647,6 +687,7 @@ document.getElementById(
 function getRecipients() {
 
 return [
+
 ...new Set(
 
 recipientsBox.value
@@ -661,6 +702,7 @@ x =>
 )
 
 )
+
 ].slice(0, 25);
 
 }
@@ -672,11 +714,14 @@ function updateCount() {
 const list =
 getRecipients();
 
+
 foundCount.textContent =
 `${list.length} found`;
 
+
 totalEl.textContent =
 list.length;
+
 
 remainingEl.textContent =
 list.length;
@@ -708,6 +753,7 @@ function showComplete() {
 toast.classList.add(
 "show"
 );
+
 
 setTimeout(
 () => {
@@ -869,6 +915,7 @@ tokenInput
 
 sending = true;
 
+
 sendBtn.disabled = true;
 
 
@@ -879,14 +926,18 @@ sendBtn.innerHTML =
 totalEl.textContent =
 recipients.length;
 
+
 sentEl.textContent =
 "0";
+
 
 failedEl.textContent =
 "0";
 
+
 remainingEl.textContent =
 recipients.length;
+
 
 progressBar.style.width =
 "0%";
@@ -974,8 +1025,10 @@ message
 const reader =
 response.body.getReader();
 
+
 const decoder =
 new TextDecoder();
+
 
 let buffer = "";
 
@@ -1033,7 +1086,6 @@ JSON.parse(line);
 catch (_) {
 
 continue;
-
 }
 
 
@@ -1041,11 +1093,14 @@ continue;
 totalEl.textContent =
 data.total ?? 0;
 
+
 sentEl.textContent =
 data.sent ?? 0;
 
+
 failedEl.textContent =
 data.failed ?? 0;
+
 
 remainingEl.textContent =
 data.remaining ?? 0;
@@ -1152,6 +1207,7 @@ finally {
 
 sending = false;
 
+
 sendBtn.disabled = false;
 
 
@@ -1178,6 +1234,7 @@ window.location.href =
 updateCount();
 
 </script>
+
 
 </body>
 
