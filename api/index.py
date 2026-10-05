@@ -30,6 +30,7 @@ import time
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 app = Flask(
     __name__,
     template_folder=str(BASE_DIR / "templates"),
@@ -37,7 +38,14 @@ app = Flask(
     static_url_path="/static"
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET", "")
+
+SESSION_SECRET = os.environ.get(
+    "SESSION_SECRET",
+    ""
+)
+
+app.secret_key = SESSION_SECRET
+
 
 MAX_RECIPIENTS = 25
 
@@ -65,9 +73,11 @@ EMAIL_RE = re.compile(
     r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
 )
 
+
 SPINTAX_RE = re.compile(
     r"\{([^{}]+)\}"
 )
+
 
 TURNSTILE_SECRET_KEY = os.environ.get(
     "TURNSTILE_SECRET_KEY",
@@ -76,41 +86,11 @@ TURNSTILE_SECRET_KEY = os.environ.get(
 
 
 # ==================================================
-# EMAIL-SAFE / COMMON FONTS
-# ==================================================
-
-ALLOWED_FONTS = {
-    "Arial":
-        "Arial, Helvetica, sans-serif",
-
-    "Helvetica":
-        "Helvetica, Arial, sans-serif",
-
-    "Verdana":
-        "Verdana, Arial, sans-serif",
-
-    "Tahoma":
-        "Tahoma, Arial, sans-serif",
-
-    "Trebuchet MS":
-        '"Trebuchet MS", Arial, sans-serif',
-
-    "Georgia":
-        "Georgia, serif",
-
-    "Times New Roman":
-        '"Times New Roman", Times, serif",
-
-    "Courier New":
-        '"Courier New", Courier, monospace"
-}
-
-
-# ==================================================
-# HELPERS
+# EMAIL VALIDATION
 # ==================================================
 
 def valid_email(value):
+
     return bool(
         EMAIL_RE.fullmatch(
             str(value or "").strip()
@@ -118,16 +98,27 @@ def valid_email(value):
     )
 
 
+# ==================================================
+# AUTH
+# ==================================================
+
 def authenticated():
+
     return session.get(
         "authenticated"
     ) is True
 
 
+# ==================================================
+# SPINTAX
+# ==================================================
+
 def expand_spintax(text):
+
     text = str(text or "")
 
     def replace(match):
+
         choices = [
             item.strip()
             for item in match.group(1).split("|")
@@ -137,7 +128,9 @@ def expand_spintax(text):
         if len(choices) < 2:
             return match.group(0)
 
-        return random.choice(choices)
+        return random.choice(
+            choices
+        )
 
     for _ in range(10):
 
@@ -153,6 +146,10 @@ def expand_spintax(text):
 
     return text
 
+
+# ==================================================
+# RECIPIENT CLEANUP
+# ==================================================
 
 def clean_recipients(raw):
 
@@ -175,20 +172,17 @@ def clean_recipients(raw):
             continue
 
         seen.add(email)
+
         result.append(email)
 
     return result[:MAX_RECIPIENTS]
 
 
-def get_font_stack(font_name):
+# ==================================================
+# SIMPLE HTML EMAIL
+# ==================================================
 
-    return ALLOWED_FONTS.get(
-        font_name,
-        ALLOWED_FONTS["Arial"]
-    )
-
-
-def text_to_html(text, font_stack):
+def text_to_html(text):
 
     escaped = html.escape(
         str(text or "")
@@ -197,7 +191,9 @@ def text_to_html(text, font_stack):
     escaped = escaped.replace(
         "\r\n",
         "\n"
-    ).replace(
+    )
+
+    escaped = escaped.replace(
         "\r",
         "\n"
     )
@@ -207,12 +203,9 @@ def text_to_html(text, font_stack):
         "<br>"
     )
 
-    # Simple email-safe HTML.
-    # No external fonts, scripts, images,
-    # unnecessary classes, or complicated markup.
     return (
         '<div style="'
-        f'font-family:{font_stack};'
+        'font-family:Arial,Helvetica,sans-serif;'
         'font-size:16px;'
         'line-height:1.5;'
         'color:#202124;'
@@ -223,7 +216,7 @@ def text_to_html(text, font_stack):
 
 
 # ==================================================
-# CLOUDFLARE TURNSTILE
+# TURNSTILE
 # ==================================================
 
 def verify_turnstile(
@@ -274,10 +267,13 @@ def verify_turnstile(
         ) as response:
 
             result = json.loads(
-                response.read().decode("utf-8")
+                response.read().decode(
+                    "utf-8"
+                )
             )
 
         if result.get("success") is True:
+
             return True, None
 
         return False, (
@@ -302,6 +298,7 @@ def verify_turnstile(
 def login():
 
     if authenticated():
+
         return redirect(
             url_for("home")
         )
@@ -334,6 +331,7 @@ def login():
         ):
 
             session.clear()
+
             session["authenticated"] = True
 
             return redirect(
@@ -350,6 +348,10 @@ def login():
     )
 
 
+# ==================================================
+# LOGOUT
+# ==================================================
+
 @app.route("/logout")
 def logout():
 
@@ -361,7 +363,7 @@ def logout():
 
 
 # ==================================================
-# DASHBOARD
+# HOME
 # ==================================================
 
 @app.route("/")
@@ -378,9 +380,6 @@ def home():
         turnstile_site_key=os.environ.get(
             "TURNSTILE_SITE_KEY",
             ""
-        ),
-        fonts=list(
-            ALLOWED_FONTS.keys()
         )
     )
 
@@ -402,6 +401,7 @@ def send_batch():
             "message":
                 "Authentication required."
         }), 401
+
 
     data = request.get_json(
         silent=True
@@ -446,14 +446,6 @@ def send_batch():
             ""
         )
     )
-
-
-    font_name = str(
-        data.get(
-            "font_name",
-            "Arial"
-        )
-    ).strip()
 
 
     recipients = clean_recipients(
@@ -530,10 +522,6 @@ def send_batch():
         }), 400
 
 
-    if font_name not in ALLOWED_FONTS:
-        font_name = "Arial"
-
-
     # ----------------------------------------------
     # TURNSTILE
     # ----------------------------------------------
@@ -550,6 +538,7 @@ def send_batch():
         )
     )
 
+
     if not verified:
 
         return jsonify({
@@ -560,22 +549,20 @@ def send_batch():
 
 
     # ----------------------------------------------
-    # STREAMING MAIL PROCESS
+    # STREAM
     # ----------------------------------------------
 
     @stream_with_context
     def generate():
 
-        total = len(recipients)
+        total = len(
+            recipients
+        )
 
         sent = 0
         failed = 0
 
         smtp = None
-
-        font_stack = get_font_stack(
-            font_name
-        )
 
 
         def emit(
@@ -598,11 +585,14 @@ def send_batch():
                 json.dumps(
                     payload,
                     ensure_ascii=False
-                ) + "\n"
+                )
+                + "\n"
             )
 
 
-        yield emit("started")
+        yield emit(
+            "started"
+        )
 
 
         try:
@@ -629,7 +619,9 @@ def send_batch():
             )
 
 
-            yield emit("connected")
+            yield emit(
+                "connected"
+            )
 
 
             for recipient in recipients:
@@ -637,7 +629,7 @@ def send_batch():
                 try:
 
                     # --------------------------------
-                    # SPINTAX ALWAYS ENABLED
+                    # SPINTAX
                     # --------------------------------
 
                     final_subject = (
@@ -654,14 +646,15 @@ def send_batch():
 
 
                     # --------------------------------
-                    # CLEAN TEXT + HTML ALTERNATIVES
+                    # CLEAN MESSAGE
                     # --------------------------------
 
                     plain_body = final_body
 
-                    html_body = text_to_html(
-                        final_body,
-                        font_stack
+                    html_body = (
+                        text_to_html(
+                            final_body
+                        )
                     )
 
 
@@ -675,10 +668,12 @@ def send_batch():
                     )
 
 
-                    message["From"] = formataddr(
-                        (
-                            sender_name,
-                            gmail
+                    message["From"] = (
+                        formataddr(
+                            (
+                                sender_name,
+                                gmail
+                            )
                         )
                     )
 
@@ -747,8 +742,7 @@ def send_batch():
                 "error",
                 message=(
                     "Gmail authentication failed. "
-                    "Check the Gmail address and "
-                    "App Password."
+                    "Check Gmail and App Password."
                 )
             )
 
@@ -806,7 +800,7 @@ def send_batch():
 
 
 # ==================================================
-# HEALTH CHECK
+# HEALTH
 # ==================================================
 
 @app.route("/health")
@@ -814,13 +808,20 @@ def health():
 
     return jsonify({
         "status": "ok",
-        "mailer": "Gmail SMTP SSL",
-        "spintax": "always-on",
-        "font_mode": "email-safe",
+        "mailer":
+            "Gmail SMTP SSL",
+        "spintax":
+            "always-on",
+        "font_system":
+            "removed",
         "max_recipients":
             MAX_RECIPIENTS
     })
 
+
+# ==================================================
+# LOCAL RUN
+# ==================================================
 
 if __name__ == "__main__":
 
