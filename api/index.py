@@ -22,10 +22,9 @@ import json
 import random
 import smtplib
 import secrets
-import html
 import urllib.request
 import urllib.parse
-import time
+import html
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -96,13 +95,15 @@ def valid_email(value):
 
 
 # ==========================================
-# AUTH
+# LOGIN
 # ==========================================
 
 def authenticated():
-    return session.get(
-        "authenticated"
-    ) is True
+    return (
+        session.get(
+            "authenticated"
+        ) is True
+    )
 
 
 # ==========================================
@@ -110,11 +111,9 @@ def authenticated():
 # ==========================================
 
 def expand_spintax(text):
-
     text = str(text or "")
 
     def replace(match):
-
         choices = [
             item.strip()
             for item in match.group(1).split("|")
@@ -150,7 +149,7 @@ def clean_recipients(raw):
     if not isinstance(raw, list):
         return []
 
-    result = []
+    output = []
     seen = set()
 
     for item in raw:
@@ -166,16 +165,16 @@ def clean_recipients(raw):
             continue
 
         seen.add(email)
-        result.append(email)
+        output.append(email)
 
-    return result[:MAX_RECIPIENTS]
+    return output[:MAX_RECIPIENTS]
 
 
 # ==========================================
 # SIMPLE EMAIL HTML
 # ==========================================
 
-def text_to_html(text):
+def text_to_simple_html(text):
 
     escaped = html.escape(
         str(text or "")
@@ -184,32 +183,44 @@ def text_to_html(text):
     escaped = escaped.replace(
         "\r\n",
         "\n"
-    )
-
-    escaped = escaped.replace(
+    ).replace(
         "\r",
         "\n"
     )
 
     escaped = escaped.replace(
         "\n",
-        "<br>"
+        "<br>\n"
     )
 
-    return (
-        '<div style="'
-        'font-family:Arial,Helvetica,sans-serif;'
-        'font-size:16px;'
-        'line-height:1.5;'
-        'color:#202124;'
-        '">'
-        f'{escaped}'
-        '</div>'
-    )
+    return f"""
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body style="
+margin:0;
+padding:0;
+background:#ffffff;
+color:#202124;
+font-family:Arial,Helvetica,sans-serif;
+font-size:15px;
+line-height:1.55;
+">
+<div style="
+margin:0;
+padding:0;
+">
+{escaped}
+</div>
+</body>
+</html>
+"""
 
 
 # ==========================================
-# TURNSTILE
+# CLOUDFLARE TURNSTILE
 # ==========================================
 
 def verify_turnstile(
@@ -218,11 +229,13 @@ def verify_turnstile(
 ):
 
     if not TURNSTILE_SECRET_KEY:
+
         return False, (
             "Turnstile is not configured."
         )
 
     if not token:
+
         return False, (
             "Please complete the security verification."
         )
@@ -264,6 +277,7 @@ def verify_turnstile(
             )
 
         if result.get("success") is True:
+
             return True, None
 
         return False, (
@@ -288,6 +302,7 @@ def verify_turnstile(
 def login():
 
     if authenticated():
+
         return redirect(
             url_for("home")
         )
@@ -296,30 +311,31 @@ def login():
 
     if request.method == "POST":
 
-        entered_password = str(
+        password = str(
             request.form.get(
                 "password",
                 ""
             )
         )
 
-        configured_password = os.environ.get(
+        configured = os.environ.get(
             "LOGIN_PASSWORD",
             ""
         )
 
-        if not configured_password:
+        if not configured:
 
             error = (
                 "LOGIN_PASSWORD is not configured."
             )
 
         elif secrets.compare_digest(
-            entered_password,
-            configured_password
+            password,
+            configured
         ):
 
             session.clear()
+
             session["authenticated"] = True
 
             return redirect(
@@ -453,7 +469,7 @@ def send_batch():
 
 
     # --------------------------------------
-    # VALIDATION
+    # REQUIRED FIELDS
     # --------------------------------------
 
     if not sender_name:
@@ -519,6 +535,7 @@ def send_batch():
         request.remote_addr
     )
 
+
     verified, verification_error = (
         verify_turnstile(
             turnstile_token,
@@ -537,7 +554,7 @@ def send_batch():
 
 
     # --------------------------------------
-    # STREAMING QUEUE
+    # STREAMING SENDER
     # --------------------------------------
 
     @stream_with_context
@@ -546,6 +563,7 @@ def send_batch():
         total = len(recipients)
 
         sent = 0
+
         failed = 0
 
         smtp = None
@@ -557,12 +575,22 @@ def send_batch():
         ):
 
             payload = {
-                "event": event,
-                "total": total,
-                "sent": sent,
-                "failed": failed,
+
+                "event":
+                    event,
+
+                "total":
+                    total,
+
+                "sent":
+                    sent,
+
+                "failed":
+                    failed,
+
                 "remaining":
                     total - sent - failed
+
             }
 
             payload.update(extra)
@@ -583,7 +611,11 @@ def send_batch():
 
         try:
 
-            ssl_context = (
+            # ----------------------------------
+            # ONE SMTP CONNECTION
+            # ----------------------------------
+
+            context = (
                 ssl.create_default_context()
             )
 
@@ -591,7 +623,7 @@ def send_batch():
             smtp = smtplib.SMTP_SSL(
                 SMTP_HOST,
                 SMTP_PORT,
-                context=ssl_context,
+                context=context,
                 timeout=SMTP_TIMEOUT
             )
 
@@ -610,13 +642,16 @@ def send_batch():
             )
 
 
+            # ----------------------------------
+            # SEND ONE BY ONE
+            # ----------------------------------
+
             for recipient in recipients:
 
                 try:
 
-                    # --------------------------
-                    # SPINTAX
-                    # --------------------------
+                    # New Spintax variation
+                    # for every recipient.
 
                     final_subject = (
                         expand_spintax(
@@ -632,18 +667,19 @@ def send_batch():
                     )
 
 
-                    # --------------------------
-                    # PLAIN + SIMPLE HTML
-                    # --------------------------
+                    plain_text = (
+                        final_body
+                    )
 
-                    plain_body = final_body
 
                     html_body = (
-                        text_to_html(
+                        text_to_simple_html(
                             final_body
                         )
                     )
 
+
+                    # Simple multipart email.
 
                     message = MIMEMultipart(
                         "alternative"
@@ -665,12 +701,14 @@ def send_batch():
                     )
 
 
-                    message["To"] = recipient
+                    message["To"] = (
+                        recipient
+                    )
 
 
                     message.attach(
                         MIMEText(
-                            plain_body,
+                            plain_text,
                             "plain",
                             "utf-8"
                         )
@@ -702,19 +740,10 @@ def send_batch():
                     )
 
 
-                    if (
-                        MAIL_GAP_SECONDS > 0
-                        and sent + failed < total
-                    ):
-
-                        time.sleep(
-                            MAIL_GAP_SECONDS
-                        )
-
-
                 except Exception as exc:
 
                     failed += 1
+
 
                     yield emit(
                         "failed",
@@ -729,7 +758,8 @@ def send_batch():
                 "error",
                 message=(
                     "Gmail authentication failed. "
-                    "Check Gmail and App Password."
+                    "Check the Gmail address and "
+                    "App Password."
                 )
             )
 
@@ -761,8 +791,11 @@ def send_batch():
             if smtp is not None:
 
                 try:
+
                     smtp.quit()
+
                 except Exception:
+
                     pass
 
 
@@ -775,11 +808,13 @@ def send_batch():
     return Response(
         generate(),
         content_type=(
-            "application/x-ndjson; charset=utf-8"
+            "application/x-ndjson; "
+            "charset=utf-8"
         ),
         headers={
             "Cache-Control":
                 "no-cache, no-transform",
+
             "X-Accel-Buffering":
                 "no"
         }
@@ -794,19 +829,27 @@ def send_batch():
 def health():
 
     return jsonify({
-        "status": "ok",
-        "mailer": "Gmail SMTP SSL",
-        "spintax": "always-on",
-        "font_system": "removed",
-        "preview": "removed",
-        "health_check": "enabled",
+
+        "status":
+            "ok",
+
+        "mailer":
+            "Gmail SMTP SSL",
+
+        "spintax":
+            "always-on",
+
+        "email_format":
+            "plain-text + simple-html",
+
         "max_recipients":
             MAX_RECIPIENTS
+
     })
 
 
 # ==========================================
-# LOCAL
+# LOCAL RUN
 # ==========================================
 
 if __name__ == "__main__":
