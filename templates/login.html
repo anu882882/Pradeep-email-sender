@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
 
 <meta charset="utf-8">
@@ -17,26 +18,42 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 </head>
 
+
 <body class="login-page">
+
 
 <div class="login-card">
 
+
 <div class="login-logo">
+
 <i class="fa-solid fa-shield-halved"></i>
+
 </div>
 
-<h1>Secure Mail Console</h1>
+
+<h1>
+Secure Mail Console
+</h1>
+
 
 <p class="login-subtitle">
 Sign in to continue
 </p>
 
-<form method="post"
+
+<form
+method="post"
 autocomplete="off">
 
-<label>Password</label>
+
+<label>
+Password
+</label>
+
 
 <div class="login-password">
+
 
 <input
 id="password"
@@ -46,6 +63,7 @@ placeholder="Enter password"
 required
 autofocus>
 
+
 <button
 type="button"
 id="showLoginPassword">
@@ -54,7 +72,9 @@ id="showLoginPassword">
 
 </button>
 
+
 </div>
+
 
 {% if error %}
 
@@ -68,6 +88,7 @@ id="showLoginPassword">
 
 {% endif %}
 
+
 <button
 type="submit"
 class="login-button">
@@ -78,7 +99,9 @@ Login
 
 </button>
 
+
 </form>
+
 
 <div class="login-footer">
 
@@ -88,31 +111,43 @@ Secure Mail Console
 
 </div>
 
+
 </div>
+
 
 
 <script>
 
 const password =
-document.getElementById("password");
+document.getElementById(
+"password"
+);
+
 
 const button =
 document.getElementById(
 "showLoginPassword"
 );
 
+
 button.onclick = () => {
 
-if (password.type === "password") {
+if (
+password.type ===
+"password"
+) {
 
-password.type = "text";
+password.type =
+"text";
 
 button.innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
-} else {
+}
+else {
 
-password.type = "password";
+password.type =
+"password";
 
 button.innerHTML =
 '<i class="fa-regular fa-eye"></i>';
@@ -122,6 +157,7 @@ button.innerHTML =
 };
 
 </script>
+
 
 </body>
 </html>
