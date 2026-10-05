@@ -39,12 +39,10 @@ app = Flask(
 )
 
 
-SESSION_SECRET = os.environ.get(
+app.secret_key = os.environ.get(
     "SESSION_SECRET",
     ""
 )
-
-app.secret_key = SESSION_SECRET
 
 
 MAX_RECIPIENTS = 25
@@ -85,12 +83,11 @@ TURNSTILE_SECRET_KEY = os.environ.get(
 )
 
 
-# ==================================================
+# ==========================================
 # EMAIL VALIDATION
-# ==================================================
+# ==========================================
 
 def valid_email(value):
-
     return bool(
         EMAIL_RE.fullmatch(
             str(value or "").strip()
@@ -98,20 +95,19 @@ def valid_email(value):
     )
 
 
-# ==================================================
+# ==========================================
 # AUTH
-# ==================================================
+# ==========================================
 
 def authenticated():
-
     return session.get(
         "authenticated"
     ) is True
 
 
-# ==================================================
+# ==========================================
 # SPINTAX
-# ==================================================
+# ==========================================
 
 def expand_spintax(text):
 
@@ -128,9 +124,7 @@ def expand_spintax(text):
         if len(choices) < 2:
             return match.group(0)
 
-        return random.choice(
-            choices
-        )
+        return random.choice(choices)
 
     for _ in range(10):
 
@@ -147,9 +141,9 @@ def expand_spintax(text):
     return text
 
 
-# ==================================================
+# ==========================================
 # RECIPIENT CLEANUP
-# ==================================================
+# ==========================================
 
 def clean_recipients(raw):
 
@@ -172,15 +166,14 @@ def clean_recipients(raw):
             continue
 
         seen.add(email)
-
         result.append(email)
 
     return result[:MAX_RECIPIENTS]
 
 
-# ==================================================
-# SIMPLE HTML EMAIL
-# ==================================================
+# ==========================================
+# SIMPLE EMAIL HTML
+# ==========================================
 
 def text_to_html(text):
 
@@ -215,9 +208,9 @@ def text_to_html(text):
     )
 
 
-# ==================================================
+# ==========================================
 # TURNSTILE
-# ==================================================
+# ==========================================
 
 def verify_turnstile(
     token,
@@ -225,13 +218,11 @@ def verify_turnstile(
 ):
 
     if not TURNSTILE_SECRET_KEY:
-
         return False, (
             "Turnstile is not configured."
         )
 
     if not token:
-
         return False, (
             "Please complete the security verification."
         )
@@ -273,7 +264,6 @@ def verify_turnstile(
             )
 
         if result.get("success") is True:
-
             return True, None
 
         return False, (
@@ -287,9 +277,9 @@ def verify_turnstile(
         )
 
 
-# ==================================================
+# ==========================================
 # LOGIN
-# ==================================================
+# ==========================================
 
 @app.route(
     "/login",
@@ -298,7 +288,6 @@ def verify_turnstile(
 def login():
 
     if authenticated():
-
         return redirect(
             url_for("home")
         )
@@ -331,7 +320,6 @@ def login():
         ):
 
             session.clear()
-
             session["authenticated"] = True
 
             return redirect(
@@ -348,9 +336,9 @@ def login():
     )
 
 
-# ==================================================
+# ==========================================
 # LOGOUT
-# ==================================================
+# ==========================================
 
 @app.route("/logout")
 def logout():
@@ -362,9 +350,9 @@ def logout():
     )
 
 
-# ==================================================
+# ==========================================
 # HOME
-# ==================================================
+# ==========================================
 
 @app.route("/")
 def home():
@@ -384,9 +372,9 @@ def home():
     )
 
 
-# ==================================================
+# ==========================================
 # SEND BATCH
-# ==================================================
+# ==========================================
 
 @app.route(
     "/send-batch",
@@ -464,9 +452,9 @@ def send_batch():
     ).strip()
 
 
-    # ----------------------------------------------
+    # --------------------------------------
     # VALIDATION
-    # ----------------------------------------------
+    # --------------------------------------
 
     if not sender_name:
 
@@ -522,9 +510,9 @@ def send_batch():
         }), 400
 
 
-    # ----------------------------------------------
+    # --------------------------------------
     # TURNSTILE
-    # ----------------------------------------------
+    # --------------------------------------
 
     remote_ip = request.headers.get(
         "X-Forwarded-For",
@@ -548,16 +536,14 @@ def send_batch():
         }), 403
 
 
-    # ----------------------------------------------
-    # STREAM
-    # ----------------------------------------------
+    # --------------------------------------
+    # STREAMING QUEUE
+    # --------------------------------------
 
     @stream_with_context
     def generate():
 
-        total = len(
-            recipients
-        )
+        total = len(recipients)
 
         sent = 0
         failed = 0
@@ -628,15 +614,16 @@ def send_batch():
 
                 try:
 
-                    # --------------------------------
+                    # --------------------------
                     # SPINTAX
-                    # --------------------------------
+                    # --------------------------
 
                     final_subject = (
                         expand_spintax(
                             subject
                         )
                     )
+
 
                     final_body = (
                         expand_spintax(
@@ -645,9 +632,9 @@ def send_batch():
                     )
 
 
-                    # --------------------------------
-                    # CLEAN MESSAGE
-                    # --------------------------------
+                    # --------------------------
+                    # PLAIN + SIMPLE HTML
+                    # --------------------------
 
                     plain_body = final_body
 
@@ -799,29 +786,28 @@ def send_batch():
     )
 
 
-# ==================================================
+# ==========================================
 # HEALTH
-# ==================================================
+# ==========================================
 
 @app.route("/health")
 def health():
 
     return jsonify({
         "status": "ok",
-        "mailer":
-            "Gmail SMTP SSL",
-        "spintax":
-            "always-on",
-        "font_system":
-            "removed",
+        "mailer": "Gmail SMTP SSL",
+        "spintax": "always-on",
+        "font_system": "removed",
+        "preview": "removed",
+        "health_check": "enabled",
         "max_recipients":
             MAX_RECIPIENTS
     })
 
 
-# ==================================================
-# LOCAL RUN
-# ==================================================
+# ==========================================
+# LOCAL
+# ==========================================
 
 if __name__ == "__main__":
 
