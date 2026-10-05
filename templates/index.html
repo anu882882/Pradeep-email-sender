@@ -5,23 +5,28 @@
 
 <meta charset="utf-8">
 
-<meta name="viewport"
+<meta
+name="viewport"
 content="width=device-width,initial-scale=1">
 
 <title>Secure Mail Console</title>
 
-<link rel="stylesheet"
+<link
+rel="stylesheet"
 href="{{ url_for('static', filename='style.css') }}">
 
-<link rel="stylesheet"
+<link
+rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 {% if turnstile_site_key %}
+
 <script
 src="https://challenges.cloudflare.com/turnstile/v0/api.js"
 async
 defer>
 </script>
+
 {% endif %}
 
 </head>
@@ -35,11 +40,14 @@ defer>
 
 <header class="topbar">
 
+
 <div class="brand">
 
 <i class="fa-solid fa-shield-halved"></i>
 
-<span>Secure Mail Console</span>
+<span>
+Secure Mail Console
+</span>
 
 </div>
 
@@ -53,6 +61,7 @@ id="logoutBtn">
 Logout
 
 </button>
+
 
 </header>
 
@@ -74,6 +83,10 @@ Bulk Email Sender
 
 <main class="dashboard">
 
+
+<!-- =========================================
+     COMPOSE
+========================================= -->
 
 <section class="card compose">
 
@@ -168,6 +181,8 @@ placeholder="Subject">
 
 
 
+<!-- MESSAGE -->
+
 <div class="field">
 
 
@@ -178,61 +193,72 @@ Message Body
 </label>
 
 
-<div class="font-control">
+<span
+class="character-count"
+id="characterCount">
 
-<label for="fontSelect">
-Font
-</label>
+0 characters
 
+</span>
 
-<select id="fontSelect">
-
-{% for font in fonts %}
-
-<option
-value="{{ font }}"
-style="font-family:'{{ font }}';">
-
-{{ font }}
-
-</option>
-
-{% endfor %}
-
-</select>
 
 </div>
-
-</div>
-
 
 
 <textarea
 id="messageBody"
 spellcheck="false"
-placeholder="">
-</textarea>
+placeholder=""></textarea>
 
 
 </div>
 
 
 
-<div class="font-preview">
+<!-- PREVIEW -->
+
+<div class="preview-box">
+
+
+<div class="preview-header">
 
 <span>
-Selected:
+
+<i class="fa-regular fa-eye"></i>
+
+Message Preview
+
 </span>
 
-<strong id="fontPreview">
-Arial
-</strong>
+
+<button
+type="button"
+id="clearPreview">
+
+Clear
+
+</button>
+
+</div>
+
+
+<div
+class="preview-content"
+id="previewContent">
+
+Your message preview will appear here.
+
+</div>
+
 
 </div>
 
 
 
+<!-- SPINTAX -->
+
 <div class="spintax-box">
+
 
 <div class="spintax-title">
 
@@ -247,14 +273,17 @@ Spintax Enabled
 
 Spintax is always ON.
 Use
-<code>{option 1|option 2|option 3}</code>
+<code>{Hello|Hi|Hey}</code>
 for message variations.
 
 </div>
 
+
 </div>
 
 
+
+<!-- SECURITY -->
 
 <div class="security-title">
 
@@ -288,8 +317,14 @@ Turnstile is not configured.
 
 
 
+<!-- =========================================
+     RIGHT
+========================================= -->
+
 <section class="right-column">
 
+
+<!-- RECIPIENTS -->
 
 <div class="card recipients-card">
 
@@ -335,13 +370,14 @@ id="foundCount">
 id="recipients"
 class="recipient-area"
 spellcheck="false"
-placeholder="">
-</textarea>
+placeholder=""></textarea>
 
 
 </div>
 
 
+
+<!-- MONITOR -->
 
 <div class="card monitor">
 
@@ -470,9 +506,12 @@ Send All
 
 </main>
 
+
 </div>
 
 
+
+<!-- COMPLETION -->
 
 <div
 class="toast"
@@ -484,8 +523,11 @@ id="toast">
 
 </div>
 
+
 <strong>
+
 sending compleate Babu❤️
+
 </strong>
 
 </div>
@@ -500,80 +542,96 @@ document.getElementById(
 "senderName"
 );
 
+
 const gmail =
 document.getElementById(
 "gmail"
 );
+
 
 const appPassword =
 document.getElementById(
 "appPassword"
 );
 
+
 const subject =
 document.getElementById(
 "subject"
 );
+
 
 const messageBody =
 document.getElementById(
 "messageBody"
 );
 
+
 const recipientsBox =
 document.getElementById(
 "recipients"
 );
 
-const fontSelect =
+
+const characterCount =
 document.getElementById(
-"fontSelect"
+"characterCount"
 );
 
-const fontPreview =
+
+const previewContent =
 document.getElementById(
-"fontPreview"
+"previewContent"
 );
+
 
 const totalEl =
 document.getElementById(
 "total"
 );
 
+
 const sentEl =
 document.getElementById(
 "sent"
 );
+
 
 const failedEl =
 document.getElementById(
 "failed"
 );
 
+
 const remainingEl =
 document.getElementById(
 "remaining"
 );
+
 
 const progressBar =
 document.getElementById(
 "progressBar"
 );
 
+
 const statusEl =
 document.getElementById(
 "status"
 );
+
 
 const foundCount =
 document.getElementById(
 "foundCount"
 );
 
+
 const sendBtn =
 document.getElementById(
 "sendBtn"
 );
+
 
 const toast =
 document.getElementById(
@@ -585,83 +643,21 @@ let sending = false;
 
 
 
-const fontStacks = {
-
-"Arial":
-"Arial, Helvetica, sans-serif",
-
-"Helvetica":
-"Helvetica, Arial, sans-serif",
-
-"Verdana":
-"Verdana, Arial, sans-serif",
-
-"Tahoma":
-"Tahoma, Arial, sans-serif",
-
-"Trebuchet MS":
-'"Trebuchet MS", Arial, sans-serif',
-
-"Georgia":
-"Georgia, serif",
-
-"Times New Roman":
-'"Times New Roman", Times, serif',
-
-"Courier New":
-'"Courier New", Courier, monospace'
-
-};
-
-
-
-function applyFont() {
-
-const selected =
-fontSelect.value;
-
-const stack =
-fontStacks[selected] ||
-fontStacks["Arial"];
-
-
-messageBody.style.fontFamily =
-stack;
-
-
-fontPreview.textContent =
-selected;
-
-
-fontPreview.style.fontFamily =
-stack;
-
-
-fontSelect.style.fontFamily =
-stack;
-
-}
-
-
-fontSelect.addEventListener(
-"change",
-applyFont
-);
-
-
-applyFont();
-
-
+// ==========================================
+// PASSWORD SHOW / HIDE
+// ==========================================
 
 document.getElementById(
 "showPassword"
 ).onclick = () => {
+
 
 if (
 appPassword.type === "password"
 ) {
 
 appPassword.type = "text";
+
 
 document.getElementById(
 "showPassword"
@@ -673,6 +669,7 @@ else {
 
 appPassword.type = "password";
 
+
 document.getElementById(
 "showPassword"
 ).innerHTML =
@@ -683,6 +680,10 @@ document.getElementById(
 };
 
 
+
+// ==========================================
+// RECIPIENTS
+// ==========================================
 
 function getRecipients() {
 
@@ -736,6 +737,78 @@ updateCount
 
 
 
+// ==========================================
+// MESSAGE COUNTER
+// ==========================================
+
+function updateMessageInfo() {
+
+const text =
+messageBody.value;
+
+
+characterCount.textContent =
+`${text.length} characters`;
+
+
+if (!text.trim()) {
+
+previewContent.textContent =
+"Your message preview will appear here.";
+
+return;
+
+}
+
+
+previewContent.textContent =
+text;
+
+}
+
+
+messageBody.addEventListener(
+"input",
+updateMessageInfo
+);
+
+
+
+// ==========================================
+// SUBJECT PREVIEW
+// ==========================================
+
+subject.addEventListener(
+"input",
+() => {
+
+}
+);
+
+
+
+// ==========================================
+// CLEAR PREVIEW
+// ==========================================
+
+document.getElementById(
+"clearPreview"
+).onclick = () => {
+
+messageBody.value = "";
+
+updateMessageInfo();
+
+messageBody.focus();
+
+};
+
+
+
+// ==========================================
+// STATUS
+// ==========================================
+
 function setStatus(
 text,
 icon
@@ -747,6 +820,10 @@ statusEl.innerHTML =
 }
 
 
+
+// ==========================================
+// COMPLETION TOAST
+// ==========================================
 
 function showComplete() {
 
@@ -815,8 +892,13 @@ toast.classList.remove(
 
 
 
+// ==========================================
+// SEND
+// ==========================================
+
 sendBtn.onclick =
 async () => {
+
 
 if (sending) {
 return;
@@ -825,6 +907,7 @@ return;
 
 const recipients =
 getRecipients();
+
 
 
 if (!senderName.value.trim()) {
@@ -836,7 +919,9 @@ alert(
 senderName.focus();
 
 return;
+
 }
+
 
 
 if (!gmail.value.trim()) {
@@ -848,7 +933,9 @@ alert(
 gmail.focus();
 
 return;
+
 }
+
 
 
 if (!appPassword.value.trim()) {
@@ -860,7 +947,9 @@ alert(
 appPassword.focus();
 
 return;
+
 }
+
 
 
 if (!subject.value.trim()) {
@@ -872,7 +961,9 @@ alert(
 subject.focus();
 
 return;
+
 }
+
 
 
 if (!messageBody.value.trim()) {
@@ -884,7 +975,9 @@ alert(
 messageBody.focus();
 
 return;
+
 }
+
 
 
 if (!recipients.length) {
@@ -896,6 +989,7 @@ alert(
 recipientsBox.focus();
 
 return;
+
 }
 
 
@@ -923,6 +1017,7 @@ sendBtn.innerHTML =
 '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
 
 
+
 totalEl.textContent =
 recipients.length;
 
@@ -943,6 +1038,7 @@ progressBar.style.width =
 "0%";
 
 
+
 setStatus(
 "Sending emails...",
 "fa-solid fa-circle-notch fa-spin"
@@ -951,6 +1047,7 @@ setStatus(
 
 
 try {
+
 
 const response =
 await fetch(
@@ -981,9 +1078,6 @@ subject.value,
 body:
 messageBody.value,
 
-font_name:
-fontSelect.value,
-
 recipients:
 recipients,
 
@@ -999,8 +1093,10 @@ turnstileToken
 
 if (!response.ok) {
 
+
 let message =
 "Unable to start sending.";
+
 
 try {
 
@@ -1013,6 +1109,7 @@ message;
 
 }
 catch (_) {}
+
 
 throw new Error(
 message
@@ -1035,6 +1132,7 @@ let buffer = "";
 
 
 while (true) {
+
 
 const {
 value,
@@ -1065,9 +1163,11 @@ buffer =
 lines.pop() || "";
 
 
+
 for (
 const line of lines
 ) {
+
 
 if (!line.trim()) {
 continue;
@@ -1086,6 +1186,7 @@ JSON.parse(line);
 catch (_) {
 
 continue;
+
 }
 
 
@@ -1108,6 +1209,7 @@ data.remaining ?? 0;
 
 
 if (data.total > 0) {
+
 
 const completed =
 (data.sent || 0) +
@@ -1190,6 +1292,7 @@ showComplete();
 }
 catch (error) {
 
+
 setStatus(
 error.message ||
 "Sending failed.",
@@ -1204,6 +1307,7 @@ error.message ||
 
 }
 finally {
+
 
 sending = false;
 
@@ -1220,6 +1324,10 @@ sendBtn.innerHTML =
 
 
 
+// ==========================================
+// LOGOUT
+// ==========================================
+
 document.getElementById(
 "logoutBtn"
 ).onclick = () => {
@@ -1231,7 +1339,13 @@ window.location.href =
 
 
 
+// ==========================================
+// INITIAL
+// ==========================================
+
 updateCount();
+
+updateMessageInfo();
 
 </script>
 
