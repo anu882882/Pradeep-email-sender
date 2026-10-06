@@ -1,13 +1,6 @@
 from flask import (
-    Flask,
-    request,
-    jsonify,
-    render_template,
-    redirect,
-    url_for,
-    Response,
-    stream_with_context,
-    session,
+    Flask, request, jsonify, render_template,
+    redirect, url_for, session, Response, stream_with_context
 )
 from pathlib import Path
 from email.mime.multipart import MIMEMultipart
@@ -31,9 +24,8 @@ app = Flask(
     __name__,
     template_folder=str(BASE_DIR / "templates"),
     static_folder=str(BASE_DIR / "static"),
-    static_url_path="/static",
+    static_url_path="/static"
 )
-
 
 # =========================================================
 # CONFIG
@@ -43,21 +35,20 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 
 app.secret_key = SESSION_SECRET
 
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,
-)
-
 MAX_RECIPIENTS = 25
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
-SMTP_TIMEOUT = 20
+SMTP_TIMEOUT = 25
+
+LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
+
+TURNSTILE_SITE_KEY = os.environ.get(
+    "TURNSTILE_SITE_KEY", ""
+)
 
 TURNSTILE_SECRET_KEY = os.environ.get(
-    "TURNSTILE_SECRET_KEY",
-    ""
+    "TURNSTILE_SECRET_KEY", ""
 )
 
 
@@ -87,10 +78,19 @@ def authenticated():
     return session.get("authenticated") is True
 
 
+@app.before_request
+def security_check():
+
+    if not SESSION_SECRET:
+
+        return jsonify({
+            "success": False,
+            "message": "SESSION_SECRET is not configured."
+        }), 500
+
+
 # =========================================================
 # SPINTAX
-# Example:
-# {Hello|Hi|Hey}
 # =========================================================
 
 SPINTAX_RE = re.compile(
@@ -99,18 +99,21 @@ SPINTAX_RE = re.compile(
 
 
 def expand_spintax(text):
+
     text = str(text or "")
 
     for _ in range(10):
+
         changed = False
 
         def replace(match):
+
             nonlocal changed
 
             choices = [
-                item.strip()
-                for item in match.group(1).split("|")
-                if item.strip()
+                x.strip()
+                for x in match.group(1).split("|")
+                if x.strip()
             ]
 
             if len(choices) < 2:
@@ -138,6 +141,7 @@ def expand_spintax(text):
 # =========================================================
 
 def clean_recipients(raw):
+
     if not isinstance(raw, list):
         return []
 
@@ -145,6 +149,7 @@ def clean_recipients(raw):
     seen = set()
 
     for item in raw:
+
         email = str(
             item or ""
         ).strip().lower()
@@ -162,15 +167,16 @@ def clean_recipients(raw):
 
 
 # =========================================================
-# TEXT -> HTML
+# HTML EMAIL
 # =========================================================
 
 def text_to_html(text):
-    escaped = html.escape(
+
+    text = html.escape(
         str(text or "")
     )
 
-    escaped = escaped.replace(
+    text = text.replace(
         "\r\n",
         "\n"
     ).replace(
@@ -178,12 +184,13 @@ def text_to_html(text):
         "\n"
     )
 
-    escaped = escaped.replace(
+    text = text.replace(
         "\n",
         "<br>\n"
     )
 
-    return f"""<!doctype html>
+    return f"""
+<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -200,36 +207,33 @@ line-height:1.55;
 ">
 
 <div>
-{escaped}
+{text}
 </div>
 
 </body>
-</html>"""
+</html>
+"""
 
 
 # =========================================================
-# CLOUDFLARE TURNSTILE
+# TURNSTILE
 # =========================================================
 
-def verify_turnstile(
-    token,
-    remote_ip=None
-):
+def verify_turnstile(token, remote_ip=None):
+
+    # If Turnstile isn't configured, don't block local/testing use.
+    # For production, configure both Turnstile environment variables.
     if not TURNSTILE_SECRET_KEY:
-        return (
-            False,
-            "Turnstile is not configured."
-        )
+        return True, None
 
     if not token:
-        return (
-            False,
+        return False, (
             "Please complete the security verification."
         )
 
     payload = {
         "secret": TURNSTILE_SECRET_KEY,
-        "response": token,
+        "response": token
     }
 
     if remote_ip:
@@ -240,55 +244,42 @@ def verify_turnstile(
     ).encode("utf-8")
 
     req = urllib.request.Request(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        "https://challenges.cloudflare.com/"
+        "turnstile/v0/siteverify",
+
         data=data,
+
         headers={
             "Content-Type":
                 "application/x-www-form-urlencoded"
         },
-        method="POST",
+
+        method="POST"
     )
 
     try:
+
         with urllib.request.urlopen(
             req,
             timeout=10
         ) as response:
 
             result = json.loads(
-                response.read().decode(
-                    "utf-8"
-                )
+                response.read().decode("utf-8")
             )
 
         if result.get("success") is True:
             return True, None
 
-        return (
-            False,
+        return False, (
             "Security verification failed."
         )
 
     except Exception:
-        return (
-            False,
+
+        return False, (
             "Unable to verify security challenge."
         )
-
-
-# =========================================================
-# GLOBAL SECURITY CHECK
-# =========================================================
-
-@app.before_request
-def security_check():
-
-    if not SESSION_SECRET:
-        return jsonify({
-            "success": False,
-            "message":
-                "SESSION_SECRET is not configured."
-        }), 500
 
 
 # =========================================================
@@ -317,12 +308,7 @@ def login():
             )
         )
 
-        configured = os.environ.get(
-            "LOGIN_PASSWORD",
-            ""
-        )
-
-        if not configured:
+        if not LOGIN_PASSWORD:
 
             error = (
                 "LOGIN_PASSWORD is not configured."
@@ -330,7 +316,7 @@ def login():
 
         elif secrets.compare_digest(
             password,
-            configured
+            LOGIN_PASSWORD
         ):
 
             session.clear()
@@ -375,6 +361,7 @@ def logout():
 def home():
 
     if not authenticated():
+
         return redirect(
             url_for("login")
         )
@@ -383,10 +370,7 @@ def home():
         "index.html",
         page="home",
         error=None,
-        turnstile_site_key=os.environ.get(
-            "TURNSTILE_SITE_KEY",
-            ""
-        )
+        turnstile_site_key=TURNSTILE_SITE_KEY
     )
 
 
@@ -404,16 +388,12 @@ def send_batch():
 
         return jsonify({
             "success": False,
-            "message":
-                "Authentication required."
+            "message": "Authentication required."
         }), 401
 
-    data = (
-        request.get_json(
-            silent=True
-        )
-        or {}
-    )
+    data = request.get_json(
+        silent=True
+    ) or {}
 
     sender_name = str(
         data.get(
@@ -464,10 +444,9 @@ def send_batch():
         )
     ).strip()
 
-
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
+    # -------------------------
+    # Validation
+    # -------------------------
 
     if not sender_name:
 
@@ -477,7 +456,6 @@ def send_batch():
                 "Sender Name is required."
         }), 400
 
-
     if not valid_email(gmail):
 
         return jsonify({
@@ -485,7 +463,6 @@ def send_batch():
             "message":
                 "Enter a valid Gmail address."
         }), 400
-
 
     if not app_password:
 
@@ -495,7 +472,6 @@ def send_batch():
                 "Google App Password is required."
         }), 400
 
-
     if not subject:
 
         return jsonify({
@@ -503,7 +479,6 @@ def send_batch():
             "message":
                 "Email Subject is required."
         }), 400
-
 
     if not body.strip():
 
@@ -513,7 +488,6 @@ def send_batch():
                 "Message Body is required."
         }), 400
 
-
     if not recipients:
 
         return jsonify({
@@ -522,10 +496,9 @@ def send_batch():
                 "No valid recipients found."
         }), 400
 
-
-    # -----------------------------------------------------
-    # TURNSTILE
-    # -----------------------------------------------------
+    # -------------------------
+    # Turnstile
+    # -------------------------
 
     remote_ip = request.headers.get(
         "X-Forwarded-For",
@@ -547,28 +520,21 @@ def send_batch():
                 verification_error
         }), 403
 
-
-    # -----------------------------------------------------
-    # STREAMING QUEUE
-    # -----------------------------------------------------
+    # -------------------------
+    # Streaming sender
+    # -------------------------
 
     @stream_with_context
     def generate():
 
-        total = len(
-            recipients
-        )
+        total = len(recipients)
 
         sent = 0
         failed = 0
 
         smtp = None
 
-
-        def emit(
-            event,
-            **extra
-        ):
+        def emit(event, **extra):
 
             payload = {
                 "event": event,
@@ -576,7 +542,7 @@ def send_batch():
                 "sent": sent,
                 "failed": failed,
                 "remaining":
-                    total - sent - failed,
+                    total - sent - failed
             }
 
             payload.update(extra)
@@ -589,19 +555,14 @@ def send_batch():
                 + "\n"
             )
 
-
         yield emit(
             "started"
         )
 
-
         try:
 
-            # One SMTP connection for
-            # the entire queue.
-            context = (
-                ssl.create_default_context()
-            )
+            # One authenticated SMTP connection
+            context = ssl.create_default_context()
 
             smtp = smtplib.SMTP_SSL(
                 SMTP_HOST,
@@ -621,11 +582,7 @@ def send_batch():
                 "connected"
             )
 
-
-            # -------------------------------------------------
-            # SEQUENTIAL SEND
-            # -------------------------------------------------
-
+            # Sequential sending
             for recipient in recipients:
 
                 try:
@@ -642,11 +599,8 @@ def send_batch():
                         )
                     )
 
-
-                    message = (
-                        MIMEMultipart(
-                            "alternative"
-                        )
+                    message = MIMEMultipart(
+                        "alternative"
                     )
 
                     message["Subject"] = (
@@ -662,11 +616,9 @@ def send_batch():
                         )
                     )
 
-                    message["To"] = (
-                        recipient
-                    )
+                    message["To"] = recipient
 
-
+                    # Plain text
                     message.attach(
                         MIMEText(
                             final_body,
@@ -675,6 +627,7 @@ def send_batch():
                         )
                     )
 
+                    # HTML
                     message.attach(
                         MIMEText(
                             text_to_html(
@@ -685,13 +638,11 @@ def send_batch():
                         )
                     )
 
-
                     smtp.sendmail(
                         gmail,
                         [recipient],
                         message.as_string()
                     )
-
 
                     sent += 1
 
@@ -699,7 +650,6 @@ def send_batch():
                         "sent",
                         email=recipient
                     )
-
 
                 except Exception as exc:
 
@@ -710,7 +660,6 @@ def send_batch():
                         email=recipient,
                         error=str(exc)
                     )
-
 
         except smtplib.SMTPAuthenticationError:
 
@@ -725,7 +674,6 @@ def send_batch():
 
             return
 
-
         except smtplib.SMTPException as exc:
 
             yield emit(
@@ -734,7 +682,6 @@ def send_batch():
             )
 
             return
-
 
         except Exception as exc:
 
@@ -745,36 +692,34 @@ def send_batch():
 
             return
 
-
         finally:
 
             if smtp is not None:
 
                 try:
                     smtp.quit()
-
                 except Exception:
                     pass
 
-
         yield emit(
             "complete",
-            message=
-                "sending compleate Babu❤️"
+            message="sending compleate Babu❤️"
         )
-
 
     return Response(
         generate(),
+
         content_type=(
             "application/x-ndjson; "
             "charset=utf-8"
         ),
+
         headers={
             "Cache-Control":
                 "no-cache, no-transform",
+
             "X-Accel-Buffering":
-                "no",
+                "no"
         }
     )
 
@@ -788,17 +733,15 @@ def health():
 
     return jsonify({
         "status": "ok",
-        "mailer":
-            "Gmail SMTP SSL",
-        "spintax":
-            "always-on",
+        "mailer": "Gmail SMTP SSL",
+        "spintax": "always-on",
         "max_recipients":
-            MAX_RECIPIENTS,
+            MAX_RECIPIENTS
     })
 
 
 # =========================================================
-# LOCAL DEVELOPMENT
+# LOCAL
 # =========================================================
 
 if __name__ == "__main__":
