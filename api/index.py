@@ -45,8 +45,6 @@ app = Flask(
     static_url_path="/static"
 )
 
-# Explicit WSGI handler.
-# This also makes the application object unambiguous.
 handler = app
 
 
@@ -376,7 +374,6 @@ def send_one_email(
 
     message["MIME-Version"] = "1.0"
 
-    # Each worker owns its own SMTP connection.
     with smtplib.SMTP_SSL(
         "smtp.gmail.com",
         465,
@@ -780,7 +777,7 @@ def send_batch():
                 "type": "complete",
                 "success": True,
                 "message":
-                "YATENDRA ❤️",
+                "PRADEEP ❤️",
                 "total": total,
                 "sent": sent_count,
                 "failed": failed_count,
