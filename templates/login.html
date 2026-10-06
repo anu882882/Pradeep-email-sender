@@ -2,160 +2,140 @@
 <html lang="en">
 
 <head>
+    <meta charset="utf-8">
 
-<meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
 
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
+    <title>Secure Mail Console - Login</title>
 
-<title>
-Secure Mail Console - Login
-</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
-<link
-rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
-
-<link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 </head>
 
 <body class="login-page">
 
+    <div class="login-card">
 
-<div class="login-card">
+        <div class="login-logo">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
 
+        <h1>Secure Mail Console</h1>
 
-<div class="login-logo">
+        <p class="login-subtitle">
+            Sign in to continue
+        </p>
 
-<i class="fa-solid fa-shield-halved"></i>
+        <form
+            method="post"
+            autocomplete="off"
+        >
 
-</div>
+            <label for="password">
+                Password
+            </label>
 
+            <div class="login-password">
 
-<h1>
-Secure Mail Console
-</h1>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter password"
+                    required
+                    autofocus
+                >
 
+                <button
+                    type="button"
+                    id="showLoginPassword"
+                    aria-label="Show password"
+                >
+                    <i class="fa-regular fa-eye"></i>
+                </button>
 
-<p class="login-subtitle">
-Sign in to continue
-</p>
+            </div>
 
+            {% if error %}
 
-<form
-method="post"
-autocomplete="off">
+            <div class="login-error">
 
+                <i class="fa-solid fa-circle-exclamation"></i>
 
-<label>
-Password
-</label>
+                {{ error }}
 
+            </div>
 
-<div class="login-password">
+            {% endif %}
 
+            <button
+                type="submit"
+                class="login-button"
+            >
 
-<input
-id="password"
-name="password"
-type="password"
-placeholder="Enter password"
-required
-autofocus>
+                <i class="fa-solid fa-right-to-bracket"></i>
 
+                Login
 
-<button
-type="button"
-id="showLoginPassword">
+            </button>
 
-<i class="fa-regular fa-eye"></i>
+        </form>
 
-</button>
+        <div class="login-footer">
 
+            <i class="fa-solid fa-shield-halved"></i>
 
-</div>
+            Secure Mail Console
 
+        </div>
 
-{% if error %}
-
-<div class="login-error">
-
-<i class="fa-solid fa-circle-exclamation"></i>
-
-{{ error }}
-
-</div>
-
-{% endif %}
-
-
-<button
-type="submit"
-class="login-button">
-
-<i class="fa-solid fa-right-to-bracket"></i>
-
-Login
-
-</button>
-
-
-</form>
+    </div>
 
 
-<div class="login-footer">
+    <script>
 
-<i class="fa-solid fa-shield-halved"></i>
+        const loginPassword =
+            document.getElementById("password");
 
-Secure Mail Console
+        const loginPasswordButton =
+            document.getElementById("showLoginPassword");
 
-</div>
+        loginPasswordButton.addEventListener(
+            "click",
+            function () {
 
+                if (
+                    loginPassword.type === "password"
+                ) {
 
-</div>
+                    loginPassword.type = "text";
 
+                    this.innerHTML =
+                        '<i class="fa-regular fa-eye-slash"></i>';
 
-<script>
+                } else {
 
-const password =
-document.getElementById(
-"password"
-);
+                    loginPassword.type = "password";
 
-const button =
-document.getElementById(
-"showLoginPassword"
-);
+                    this.innerHTML =
+                        '<i class="fa-regular fa-eye"></i>';
 
+                }
 
-button.onclick = () => {
+            }
+        );
 
-if (
-password.type === "password"
-) {
-
-password.type = "text";
-
-button.innerHTML =
-'<i class="fa-regular fa-eye-slash"></i>';
-
-}
-else {
-
-password.type = "password";
-
-button.innerHTML =
-'<i class="fa-regular fa-eye"></i>';
-
-}
-
-};
-
-</script>
+    </script>
 
 </body>
 </html>
