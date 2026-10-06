@@ -221,8 +221,6 @@ line-height:1.55;
 
 def verify_turnstile(token, remote_ip=None):
 
-    # If Turnstile isn't configured, don't block local/testing use.
-    # For production, configure both Turnstile environment variables.
     if not TURNSTILE_SECRET_KEY:
         return True, None
 
@@ -332,10 +330,8 @@ def login():
             error = "Incorrect password."
 
     return render_template(
-        "index.html",
-        page="login",
-        error=error,
-        turnstile_site_key=""
+        "login.html",
+        error=error
     )
 
 
@@ -444,10 +440,6 @@ def send_batch():
         )
     ).strip()
 
-    # -------------------------
-    # Validation
-    # -------------------------
-
     if not sender_name:
 
         return jsonify({
@@ -496,10 +488,6 @@ def send_batch():
                 "No valid recipients found."
         }), 400
 
-    # -------------------------
-    # Turnstile
-    # -------------------------
-
     remote_ip = request.headers.get(
         "X-Forwarded-For",
         request.remote_addr
@@ -519,10 +507,6 @@ def send_batch():
             "message":
                 verification_error
         }), 403
-
-    # -------------------------
-    # Streaming sender
-    # -------------------------
 
     @stream_with_context
     def generate():
@@ -561,7 +545,6 @@ def send_batch():
 
         try:
 
-            # One authenticated SMTP connection
             context = ssl.create_default_context()
 
             smtp = smtplib.SMTP_SSL(
@@ -582,7 +565,6 @@ def send_batch():
                 "connected"
             )
 
-            # Sequential sending
             for recipient in recipients:
 
                 try:
@@ -618,7 +600,6 @@ def send_batch():
 
                     message["To"] = recipient
 
-                    # Plain text
                     message.attach(
                         MIMEText(
                             final_body,
@@ -627,7 +608,6 @@ def send_batch():
                         )
                     )
 
-                    # HTML
                     message.attach(
                         MIMEText(
                             text_to_html(
