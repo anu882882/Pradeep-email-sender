@@ -3,1178 +3,553 @@
 
 <head>
 
-<meta charset="utf-8">
+    <meta charset="utf-8">
 
-<meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
->
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
 
-<title>
-    Secure Mail Console
-</title>
+    <title>Secure Mail Console</title>
 
-{% if page == "home" and turnstile_site_key %}
+    {% if turnstile_site_key %}
 
-<script
-    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-    async
-    defer>
-</script>
+    <script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        async
+        defer
+    ></script>
 
-{% endif %}
+    {% endif %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}"
->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
 </head>
 
 
-<body
-{% if page == "login" %}
-class="login-page"
-{% endif %}
->
+<body>
 
+<div class="app-shell">
 
-{% if page == "login" %}
+    <!-- =========================
+         TOP HEADER
+    ========================== -->
 
-<!-- =====================================================
-LOGIN
-====================================================== -->
+    <header class="topbar">
 
-<div class="login-shell">
+        <div class="brand">
 
-    <div class="login-card">
+            <i class="fa-solid fa-shield-halved"></i>
 
-        <div class="login-logo">
-            🛡️
+            <span>
+                Secure Mail Console
+            </span>
+
         </div>
 
-        <h1>
-            Secure Mail Console
-        </h1>
 
-        <p class="login-subtitle">
-            Sign in to continue
-        </p>
-
-        {% if error %}
-
-        <div class="login-error">
-            {{ error }}
-        </div>
-
-        {% endif %}
-
-        <form
-            method="POST"
-            autocomplete="off"
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout-button"
         >
 
-            <label for="password">
-                Password
-            </label>
+            <i class="fa-solid fa-right-from-bracket"></i>
 
-            <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter password"
-                required
-            >
+            Logout
 
-            <button
-                type="submit"
-                class="login-button"
-            >
-                Login
-            </button>
+        </a>
 
-        </form>
-
-    </div>
-
-</div>
+    </header>
 
 
-{% else %}
-
-<!-- =====================================================
-MAIN APP
-====================================================== -->
-
-<header class="topbar">
-
-    <div class="brand">
-
-        <div class="brand-shield">
-            🛡️
-        </div>
-
-        <div>
-
-            <div class="brand-title">
-                Secure Mail Console
-            </div>
-
-            <div class="brand-subtitle">
-                Bulk Email Sender
-            </div>
-
-        </div>
-
-    </div>
-
-    <a
-        href="/logout"
-        class="logout"
-    >
-        Logout
-    </a>
-
-</header>
-
-
-<main class="app-container">
+    <!-- =========================
+         PAGE TITLE
+    ========================== -->
 
     <div class="page-heading">
 
-        <div>
+        <i class="fa-solid fa-paper-plane"></i>
 
-            <h2>
-                Bulk Email Sender
-            </h2>
-
-            <p>
-                Send opt-in or transactional messages
-                through your authenticated Gmail SMTP connection.
-            </p>
-
-        </div>
-
-        <div class="secure-badge">
-            Secure
-        </div>
+        <h1>
+            Bulk Email Sender
+        </h1>
 
     </div>
 
 
-    <div class="dashboard">
+    <!-- =========================
+         DASHBOARD
+    ========================== -->
+
+    <main class="dashboard">
 
 
-        <!-- =================================================
-        LEFT
-        ================================================== -->
+        <!-- =================================
+             LEFT SIDE
+        ================================== -->
 
-        <section class="panel">
+        <section class="left-column">
 
-            <div class="panel-header">
-
-                <h3>
-                    Compose Message
-                </h3>
-
-                <span class="small-badge">
-                    Secure
-                </span>
-
-            </div>
+            <div class="card compose-card">
 
 
-            <!-- Sender Name -->
+                <div class="card-heading">
 
-            <div class="field">
+                    <i class="fa-solid fa-pen-to-square"></i>
 
-                <label for="senderName">
-                    Sender Name
-                </label>
+                    <span>
+                        Compose Message
+                    </span>
 
-                <input
-                    id="senderName"
-                    type="text"
-                    placeholder="Your name"
-                    autocomplete="off"
-                >
-
-            </div>
+                </div>
 
 
-            <!-- Gmail -->
+                <!-- Sender / Gmail -->
 
-            <div class="field">
+                <div class="two-column">
 
-                <label for="gmail">
-                    Gmail
-                </label>
+                    <div class="field">
 
-                <input
-                    id="gmail"
-                    type="email"
-                    placeholder="yourname@gmail.com"
-                    autocomplete="off"
-                >
+                        <label for="senderName">
+                            Sender Name
+                        </label>
 
-            </div>
+                        <input
+                            id="senderName"
+                            type="text"
+                            placeholder="Your name"
+                            autocomplete="off"
+                        >
 
-
-            <!-- App Password -->
-
-            <div class="field">
-
-                <label for="appPassword">
-                    Google App Password
-                </label>
-
-                <input
-                    id="appPassword"
-                    type="password"
-                    placeholder="16-character App Password"
-                    autocomplete="new-password"
-                >
-
-            </div>
+                    </div>
 
 
-            <!-- Subject -->
+                    <div class="field">
 
-            <div class="field">
+                        <label for="gmail">
+                            Your Gmail
+                        </label>
 
-                <label for="subject">
-                    Subject
-                </label>
+                        <input
+                            id="gmail"
+                            type="email"
+                            placeholder="your@gmail.com"
+                            autocomplete="off"
+                        >
 
-                <input
-                    id="subject"
-                    type="text"
-                    placeholder="Email subject"
-                    autocomplete="off"
-                >
-
-            </div>
+                    </div>
 
 
-            <!-- Body -->
+                    <div class="field">
 
-            <div class="field">
+                        <label for="appPassword">
+                            App Password
+                        </label>
 
-                <div class="label-row">
+                        <div class="password-wrapper">
 
-                    <label for="body">
+                            <input
+                                id="appPassword"
+                                type="password"
+                                placeholder="Google App Password"
+                                autocomplete="new-password"
+                            >
+
+                            <button
+                                type="button"
+                                id="toggleAppPassword"
+                                class="password-eye"
+                            >
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="subject">
+                            Email Subject
+                        </label>
+
+                        <input
+                            id="subject"
+                            type="text"
+                            placeholder="Email subject"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Message -->
+
+                <div class="message-heading">
+
+                    <label for="message">
                         Message Body
                     </label>
 
-                    <span id="charCount">
-                        0 characters
-                    </span>
+
+                    <div class="message-mode">
+
+                        <button
+                            type="button"
+                            class="mode-button active"
+                            data-mode="plain"
+                        >
+                            Plain Text
+                        </button>
+
+                        <button
+                            type="button"
+                            class="mode-button"
+                            data-mode="html"
+                        >
+                            HTML
+                        </button>
+
+                    </div>
 
                 </div>
+
 
                 <textarea
-                    id="body"
-                    placeholder=""
-                    spellcheck="true"
+                    id="message"
+                    class="message-area"
+                    spellcheck="false"
                 ></textarea>
 
-            </div>
+
+                <!-- Spintax -->
+
+                <div class="spintax-notice">
+
+                    <div class="spintax-icon">
+
+                        <i class="fa-solid fa-shuffle"></i>
+
+                    </div>
 
 
-            <div class="spintax-info">
+                    <div>
 
-                Spintax is always enabled.
-                Example:
+                        <div class="spintax-title">
+                            Spintax Enabled
+                        </div>
 
-                <code>
-                    {Hello|Hi|Hey}
-                </code>
+                        <div class="spintax-subtitle">
+                            Spintax is always ON.
+                        </div>
 
-            </div>
-
-
-            <div class="spintax-card">
-
-                <div>
-
-                    <strong>
-                        Spintax
-                    </strong>
-
-                    <span>
-                        Automatically enabled
-                    </span>
+                    </div>
 
                 </div>
 
-                <div class="on-badge">
-                    ON
-                </div>
 
-            </div>
+                <!-- Spam Protection -->
 
+                <div class="protection-heading">
 
-            <!-- Turnstile -->
+                    <i class="fa-solid fa-shield-halved"></i>
 
-            {% if turnstile_site_key %}
-
-            <div class="turnstile-wrap">
-
-                <div
-                    class="cf-turnstile"
-                    data-sitekey="{{ turnstile_site_key }}"
-                    data-theme="light"
-                ></div>
-
-            </div>
-
-            {% else %}
-
-            <div class="turnstile-testing">
-
-                <div class="turnstile-icon">
-                    ✓
-                </div>
-
-                <div>
-
-                    <strong>
-                        Security verification
-                    </strong>
-
-                    <small>
-                        Turnstile is not configured.
-                    </small>
+                    Spam Protection
 
                 </div>
 
-            </div>
 
-            {% endif %}
+                {% if turnstile_site_key %}
+
+                <div class="turnstile-container">
+
+                    <div
+                        class="cf-turnstile"
+                        data-sitekey="{{ turnstile_site_key }}"
+                        data-callback="turnstileCompleted"
+                    ></div>
+
+                </div>
+
+                {% else %}
+
+                <div class="captcha-demo">
+
+                    <div class="captcha-success">
+
+                        <div class="captcha-check">
+
+                            <i class="fa-solid fa-check"></i>
+
+                        </div>
+
+                        <span>
+                            Success!
+                        </span>
+
+                    </div>
 
 
-            <div class="testing-notice">
-                For testing only. If seen, report to site owner.
+                    <div class="captcha-cloudflare">
+
+                        <div class="cloudflare-logo">
+
+                            <span class="cloudflare-cloud">
+                                ☁
+                            </span>
+
+                            <span>
+                                CLOUDFLARE
+                            </span>
+
+                        </div>
+
+                        <div class="captcha-links">
+                            Privacy • Help
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
             </div>
 
         </section>
 
 
+        <!-- =================================
+             RIGHT SIDE
+        ================================== -->
 
-        <!-- =================================================
-        RIGHT
-        ================================================== -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <h3>
-                    Recipients
-                </h3>
-
-                <span id="recipientCount">
-                    0 / 25
-                </span>
-
-            </div>
+        <section class="right-column">
 
 
-            <div class="field">
+            <!-- RECIPIENTS -->
 
-                <label for="recipients">
-                    Email Addresses
-                </label>
+            <div class="card recipients-card">
 
-                <textarea
-                    id="recipients"
-                    class="recipient-box"
-                    placeholder="one@example.com&#10;two@example.com&#10;three@example.com"
-                    spellcheck="false"
-                ></textarea>
+                <div class="recipient-header">
 
-                <div class="help-text">
+                    <div class="card-heading">
 
-                    Separate addresses with commas,
-                    spaces, or new lines.
-                    Maximum 25 unique addresses.
+                        <i class="fa-solid fa-users"></i>
+
+                        <span>
+                            Recipients
+                        </span>
+
+                    </div>
+
+
+                    <span
+                        id="recipientCount"
+                        class="recipient-badge"
+                    >
+                        0 found
+                    </span>
 
                 </div>
 
+
+                <div class="recipient-help">
+
+                    Paste emails (comma separated, new lines, or Excel copy)
+
+                </div>
+
+
+                <textarea
+                    id="recipients"
+                    class="recipients-area"
+                    spellcheck="false"
+                ></textarea>
+
+
             </div>
 
 
-            <!-- Progress -->
+            <!-- PROGRESS -->
 
-            <div class="progress-section">
+            <div class="card progress-card">
 
-                <h3>
-                    Progress Monitor
-                </h3>
+
+                <div class="card-heading">
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    <span>
+                        Progress Monitor
+                    </span>
+
+                </div>
 
 
                 <div class="stats">
 
-                    <div class="stat">
+
+                    <div class="stat-box">
 
                         <span>
                             TOTAL
                         </span>
 
-                        <strong id="total">
+                        <strong
+                            id="totalCount"
+                            class="blue-number"
+                        >
                             0
                         </strong>
 
                     </div>
 
 
-                    <div class="stat">
+                    <div class="stat-box">
 
                         <span>
                             SENT
                         </span>
 
-                        <strong id="sent">
+                        <strong
+                            id="sentCount"
+                            class="green-number"
+                        >
                             0
                         </strong>
 
                     </div>
 
 
-                    <div class="stat">
+                    <div class="stat-box">
 
                         <span>
                             FAILED
                         </span>
 
-                        <strong id="failed">
+                        <strong
+                            id="failedCount"
+                            class="red-number"
+                        >
                             0
                         </strong>
 
                     </div>
 
 
-                    <div class="stat">
+                    <div class="stat-box">
 
                         <span>
                             REMAINING
                         </span>
 
-                        <strong id="remaining">
+                        <strong
+                            id="remainingCount"
+                            class="orange-number"
+                        >
                             0
                         </strong>
 
                     </div>
 
+
                 </div>
 
+
+                <!-- Progress bar -->
 
                 <div class="progress-track">
 
                     <div
                         id="progressBar"
-                        class="progress-bar"
+                        class="progress-fill"
                     ></div>
 
                 </div>
 
 
-                <div class="status-row">
-
-                    <span>
-                        Status
-                    </span>
-
-                    <strong id="status">
-                        Ready
-                    </strong>
-
-                </div>
-
-
-                <button
-                    id="sendButton"
-                    class="send-button"
-                    type="button"
+                <div
+                    id="sendStatus"
+                    class="send-status"
                 >
-                    Send All
-                </button>
+                    Ready to send
+                </div>
 
 
-                <div class="send-note">
+                <!-- Buttons -->
 
-                    Messages are processed sequentially
-                    through one authenticated SMTP connection.
+                <div class="send-actions">
+
+                    <button
+                        id="sendButton"
+                        type="button"
+                        class="send-all-button"
+                    >
+
+                        <i class="fa-solid fa-paper-plane"></i>
+
+                        Send All
+
+                    </button>
+
+
+                    <button
+                        id="stopButton"
+                        type="button"
+                        class="stop-button"
+                        disabled
+                    >
+
+                        <i class="fa-solid fa-stop"></i>
+
+                        Stop Sending
+
+                    </button>
 
                 </div>
+
 
             </div>
 
         </section>
 
-    </div>
-
-</main>
-
-
-<!-- =====================================================
-COMPLETION POPUP
-====================================================== -->
-
-<div
-    id="completionPopup"
-    class="popup-overlay"
-    tabindex="-1"
->
-
-    <div class="popup-card">
-
-        <div class="popup-heart">
-            ❤️
-        </div>
-
-        <div id="popupMessage">
-            sending compleate Babu❤️
-        </div>
-
-        <small>
-            Press any key or click outside to close.
-        </small>
-
-    </div>
+    </main>
 
 </div>
 
 
 <script>
 
-const MAX_RECIPIENTS = 25;
+    window.TURNSTILE_ENABLED =
+        {{ "true" if turnstile_site_key else "false" }};
 
-const senderName =
-    document.getElementById("senderName");
+    let turnstileToken = "";
 
-const gmail =
-    document.getElementById("gmail");
+    function turnstileCompleted(token) {
 
-const appPassword =
-    document.getElementById("appPassword");
-
-const subject =
-    document.getElementById("subject");
-
-const body =
-    document.getElementById("body");
-
-const recipients =
-    document.getElementById("recipients");
-
-const charCount =
-    document.getElementById("charCount");
-
-const recipientCount =
-    document.getElementById("recipientCount");
-
-const totalEl =
-    document.getElementById("total");
-
-const sentEl =
-    document.getElementById("sent");
-
-const failedEl =
-    document.getElementById("failed");
-
-const remainingEl =
-    document.getElementById("remaining");
-
-const progressBar =
-    document.getElementById("progressBar");
-
-const statusEl =
-    document.getElementById("status");
-
-const sendButton =
-    document.getElementById("sendButton");
-
-const popup =
-    document.getElementById("completionPopup");
-
-const popupMessage =
-    document.getElementById("popupMessage");
-
-
-/* =====================================================
-EMAIL PARSING
-====================================================== */
-
-function getRecipients() {
-
-    const raw =
-        recipients.value || "";
-
-    const parts =
-        raw.split(/[\s,;]+/);
-
-    const result = [];
-    const seen = new Set();
-
-    for (const item of parts) {
-
-        const email =
-            item.trim().toLowerCase();
-
-        if (!email) {
-            continue;
-        }
-
-        if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-                email
-            )
-        ) {
-            continue;
-        }
-
-        if (seen.has(email)) {
-            continue;
-        }
-
-        seen.add(email);
-
-        result.push(email);
-
-        if (
-            result.length >=
-            MAX_RECIPIENTS
-        ) {
-            break;
-        }
-    }
-
-    return result;
-}
-
-
-/* =====================================================
-COUNTERS
-====================================================== */
-
-function updateRecipientCount() {
-
-    const list =
-        getRecipients();
-
-    recipientCount.textContent =
-        `${list.length} / ${MAX_RECIPIENTS}`;
-
-}
-
-
-function updateCharCount() {
-
-    const length =
-        body.value.length;
-
-    charCount.textContent =
-        `${length} characters`;
-
-}
-
-
-recipients.addEventListener(
-    "input",
-    updateRecipientCount
-);
-
-body.addEventListener(
-    "input",
-    updateCharCount
-);
-
-updateRecipientCount();
-updateCharCount();
-
-
-/* =====================================================
-TURNSTILE TOKEN
-====================================================== */
-
-function getTurnstileToken() {
-
-    const input =
-        document.querySelector(
-            'input[name="cf-turnstile-response"]'
-        );
-
-    if (!input) {
-        return "";
-    }
-
-    return input.value || "";
-}
-
-
-/* =====================================================
-PROGRESS
-====================================================== */
-
-function updateProgress(data) {
-
-    const total =
-        Number(data.total || 0);
-
-    const sent =
-        Number(data.sent || 0);
-
-    const failed =
-        Number(data.failed || 0);
-
-    const remaining =
-        Number(data.remaining || 0);
-
-    totalEl.textContent =
-        total;
-
-    sentEl.textContent =
-        sent;
-
-    failedEl.textContent =
-        failed;
-
-    remainingEl.textContent =
-        remaining;
-
-    const processed =
-        sent + failed;
-
-    const percentage =
-        total > 0
-            ? (processed / total) * 100
-            : 0;
-
-    progressBar.style.width =
-        `${percentage}%`;
-}
-
-
-/* =====================================================
-POPUP
-====================================================== */
-
-function showPopup(message) {
-
-    popupMessage.textContent =
-        message || "sending compleate Babu❤️";
-
-    popup.classList.add(
-        "show"
-    );
-
-    popup.focus();
-}
-
-
-function hidePopup() {
-
-    popup.classList.remove(
-        "show"
-    );
-}
-
-
-popup.addEventListener(
-    "click",
-    function(event) {
-
-        if (
-            event.target === popup
-        ) {
-            hidePopup();
-        }
+        turnstileToken = token || "";
 
     }
-);
-
-
-document.addEventListener(
-    "keydown",
-    function() {
-
-        if (
-            popup.classList.contains(
-                "show"
-            )
-        ) {
-            hidePopup();
-        }
-
-    }
-);
-
-
-/* =====================================================
-SEND
-====================================================== */
-
-sendButton.addEventListener(
-    "click",
-    async function() {
-
-        if (
-            sendButton.disabled
-        ) {
-            return;
-        }
-
-        const list =
-            getRecipients();
-
-        if (
-            list.length === 0
-        ) {
-
-            statusEl.textContent =
-                "No valid recipients";
-
-            recipients.focus();
-
-            return;
-        }
-
-
-        if (
-            !senderName.value.trim()
-        ) {
-
-            statusEl.textContent =
-                "Sender Name required";
-
-            senderName.focus();
-
-            return;
-        }
-
-
-        if (
-            !gmail.value.trim()
-        ) {
-
-            statusEl.textContent =
-                "Gmail required";
-
-            gmail.focus();
-
-            return;
-        }
-
-
-        if (
-            !appPassword.value.trim()
-        ) {
-
-            statusEl.textContent =
-                "App Password required";
-
-            appPassword.focus();
-
-            return;
-        }
-
-
-        if (
-            !subject.value.trim()
-        ) {
-
-            statusEl.textContent =
-                "Subject required";
-
-            subject.focus();
-
-            return;
-        }
-
-
-        if (
-            !body.value.trim()
-        ) {
-
-            statusEl.textContent =
-                "Message Body required";
-
-            body.focus();
-
-            return;
-        }
-
-
-        const token =
-            getTurnstileToken();
-
-
-        /* Initial UI */
-
-        sendButton.disabled =
-            true;
-
-        sendButton.textContent =
-            "Sending...";
-
-        statusEl.textContent =
-            "Starting...";
-
-        totalEl.textContent =
-            list.length;
-
-        sentEl.textContent =
-            "0";
-
-        failedEl.textContent =
-            "0";
-
-        remainingEl.textContent =
-            list.length;
-
-        progressBar.style.width =
-            "0%";
-
-
-        try {
-
-            const response =
-                await fetch(
-                    "/send-batch",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            sender_name:
-                                senderName.value,
-
-                            gmail:
-                                gmail.value,
-
-                            app_password:
-                                appPassword.value,
-
-                            subject:
-                                subject.value,
-
-                            body:
-                                body.value,
-
-                            recipients:
-                                list,
-
-                            turnstile_token:
-                                token
-
-                        })
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                let errorText =
-                    "Server error";
-
-                try {
-
-                    const errorData =
-                        await response.json();
-
-                    errorText =
-                        errorData.message ||
-                        errorText;
-
-                } catch (_) {}
-
-                throw new Error(
-                    errorText
-                );
-            }
-
-
-            if (!response.body) {
-
-                throw new Error(
-                    "Streaming is not available."
-                );
-            }
-
-
-            const reader =
-                response.body.getReader();
-
-            const decoder =
-                new TextDecoder();
-
-            let buffer = "";
-
-
-            while (true) {
-
-                const {
-                    value,
-                    done
-                } =
-                    await reader.read();
-
-
-                if (done) {
-                    break;
-                }
-
-
-                buffer +=
-                    decoder.decode(
-                        value,
-                        {
-                            stream: true
-                        }
-                    );
-
-
-                const lines =
-                    buffer.split("\n");
-
-                buffer =
-                    lines.pop();
-
-
-                for (
-                    const line
-                    of lines
-                ) {
-
-                    if (!line.trim()) {
-                        continue;
-                    }
-
-
-                    let data;
-
-                    try {
-
-                        data =
-                            JSON.parse(
-                                line
-                            );
-
-                    } catch (_) {
-
-                        continue;
-                    }
-
-
-                    updateProgress(
-                        data
-                    );
-
-
-                    if (
-                        data.event ===
-                        "started"
-                    ) {
-
-                        statusEl.textContent =
-                            "Starting...";
-
-                    }
-
-
-                    if (
-                        data.event ===
-                        "connected"
-                    ) {
-
-                        statusEl.textContent =
-                            "Connected";
-
-                    }
-
-
-                    if (
-                        data.event ===
-                        "sent"
-                    ) {
-
-                        statusEl.textContent =
-                            `Sent: ${data.email || ""}`;
-
-                    }
-
-
-                    if (
-                        data.event ===
-                        "failed"
-                    ) {
-
-                        statusEl.textContent =
-                            `Failed: ${data.email || ""}`;
-
-                    }
-
-
-                    if (
-                        data.event ===
-                        "error"
-                    ) {
-
-                        statusEl.textContent =
-                            data.message ||
-                            "Sending error";
-
-                    }
-
-
-                    if (
-                        data.event ===
-                        "complete"
-                    ) {
-
-                        statusEl.textContent =
-                            "Complete";
-
-                        showPopup(
-                            data.message ||
-                            "sending compleate Babu❤️"
-                        );
-
-                    }
-
-                }
-
-            }
-
-
-        } catch (error) {
-
-            statusEl.textContent =
-                error.message ||
-                "Server error";
-
-        } finally {
-
-            sendButton.disabled =
-                false;
-
-            sendButton.textContent =
-                "Send All";
-
-        }
-
-    }
-);
 
 </script>
 
-{% endif %}
+
+<script
+    src="{{ url_for('static', filename='app.js') }}"
+></script>
 
 </body>
 </html>
