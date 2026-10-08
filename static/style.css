@@ -30,35 +30,46 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    PAGE
-========================================== */
+========================================= */
 
 .page {
     width: 100%;
     max-width: 1120px;
+
     margin: 0 auto;
-    padding: 16px 20px 55px;
+
+    padding:
+        16px
+        20px
+        55px;
 }
 
 
-/* ==========================================
+/* =========================================
    HEADER
-========================================== */
+========================================= */
 
 .top-header {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
+
     margin-bottom: 28px;
 }
 
 .brand {
     display: flex;
+
     align-items: center;
+
     gap: 10px;
 
     font-size: 31px;
+
     font-weight: 800;
 
     background:
@@ -69,21 +80,27 @@ button {
         );
 
     -webkit-background-clip: text;
+
     background-clip: text;
+
     color: transparent;
 }
 
 .brand-shield {
     width: 30px;
+
     height: 34px;
 
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
 
     color: #347cff;
 
     font-size: 37px;
+
     font-weight: bold;
 }
 
@@ -92,14 +109,19 @@ button {
 
     color: #ff535b;
 
-    border: 1px solid #ffb5b8;
+    border:
+        1px solid #ffb5b8;
+
     background: #fff;
 
     border-radius: 7px;
 
-    padding: 6px 13px;
+    padding:
+        6px
+        13px;
 
     font-size: 12px;
+
     font-weight: 600;
 }
 
@@ -108,13 +130,15 @@ button {
 }
 
 
-/* ==========================================
-   PAGE TITLE
-========================================== */
+/* =========================================
+   TITLE
+========================================= */
 
 .page-title {
     display: flex;
+
     align-items: center;
+
     gap: 13px;
 
     margin-bottom: 22px;
@@ -122,6 +146,7 @@ button {
 
 .page-title span {
     font-size: 25px;
+
     color: #0b1425;
 }
 
@@ -129,13 +154,14 @@ button {
     margin: 0;
 
     font-size: 23px;
+
     font-weight: 800;
 }
 
 
-/* ==========================================
-   MAIN GRID
-========================================== */
+/* =========================================
+   GRID
+========================================= */
 
 .dashboard-grid {
     display: grid;
@@ -150,19 +176,21 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    CARD
-========================================== */
+========================================= */
 
 .card {
-    background: #ffffff;
+    background: #fff;
 
-    border: 1px solid #e1e6ef;
+    border:
+        1px solid #e1e6ef;
 
     border-radius: 11px;
 
     box-shadow:
-        0 7px 22px rgba(
+        0 7px 22px
+        rgba(
             31,
             52,
             82,
@@ -171,9 +199,9 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    COMPOSE
-========================================== */
+========================================= */
 
 .compose-card {
     padding: 29px;
@@ -181,7 +209,9 @@ button {
 
 .section-title {
     display: flex;
+
     align-items: center;
+
     gap: 7px;
 
     margin-bottom: 5px;
@@ -189,6 +219,7 @@ button {
 
 .section-title span {
     font-size: 18px;
+
     color: #07152d;
 }
 
@@ -196,13 +227,14 @@ button {
     margin: 0;
 
     font-size: 18px;
+
     font-weight: 800;
 }
 
 
-/* ==========================================
-   FORM GRID
-========================================== */
+/* =========================================
+   FORM
+========================================= */
 
 .form-grid {
     display: grid;
@@ -210,15 +242,16 @@ button {
     grid-template-columns:
         1fr 1fr;
 
-    gap: 17px 14px;
-
-    margin-top: 0;
+    gap:
+        17px
+        14px;
 }
 
 .field label {
     display: block;
 
     font-size: 11px;
+
     font-weight: 700;
 
     margin-bottom: 8px;
@@ -226,9 +259,12 @@ button {
 
 .field input {
     width: 100%;
+
     height: 43px;
 
-    padding: 0 13px;
+    padding:
+        0
+        13px;
 
     border:
         1px solid #d5ddea;
@@ -238,6 +274,7 @@ button {
     outline: none;
 
     color: #27364c;
+
     background: #fff;
 
     font-size: 13px;
@@ -250,13 +287,18 @@ button {
 
     box-shadow:
         0 0 0 3px
-        rgba(72, 119, 255, 0.08);
+        rgba(
+            72,
+            119,
+            255,
+            0.08
+        );
 }
 
 
-/* ==========================================
+/* =========================================
    PASSWORD
-========================================== */
+========================================= */
 
 .password-wrap {
     position: relative;
@@ -270,11 +312,14 @@ button {
     position: absolute;
 
     right: 8px;
+
     top: 50%;
 
-    transform: translateY(-50%);
+    transform:
+        translateY(-50%);
 
     border: 0;
+
     background: transparent;
 
     color: #74839a;
@@ -283,31 +328,37 @@ button {
 }
 
 
-/* ==========================================
-   MESSAGE BODY
-========================================== */
+/* =========================================
+   MESSAGE
+========================================= */
 
 .body-header {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     margin-top: 17px;
+
     margin-bottom: 8px;
 }
 
 .body-header label {
     font-size: 11px;
+
     font-weight: 700;
 }
 
 .mode-buttons {
     display: flex;
+
     gap: 5px;
 }
 
 .mode-btn {
-    border: 1px solid #d5ddea;
+    border:
+        1px solid #d5ddea;
 
     background: #fff;
 
@@ -317,12 +368,16 @@ button {
 
     font-size: 10px;
 
-    padding: 4px 9px;
+    padding:
+        4px
+        9px;
 }
 
 .mode-btn.active {
     background: #edf4ff;
+
     border-color: #bcd5ff;
+
     color: #3f78ed;
 }
 
@@ -330,6 +385,7 @@ button {
     display: block;
 
     width: 100%;
+
     height: 264px;
 
     resize: vertical;
@@ -346,6 +402,7 @@ button {
     padding: 12px;
 
     font-size: 13px;
+
     line-height: 1.55;
 
     color: #26364e;
@@ -354,18 +411,22 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    SPINTAX
-========================================== */
+========================================= */
 
 .spintax-box {
     display: flex;
+
     align-items: center;
+
     gap: 11px;
 
     margin-top: 21px;
 
-    padding: 11px 13px;
+    padding:
+        11px
+        13px;
 
     border:
         1px solid #d7e5fa;
@@ -377,6 +438,7 @@ button {
 
 .spintax-icon {
     color: #317cf4;
+
     font-size: 19px;
 }
 
@@ -399,19 +461,23 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    TURNSTILE
-========================================== */
+========================================= */
 
 .protection-title {
     display: flex;
+
     align-items: center;
+
     gap: 5px;
 
     margin-top: 17px;
+
     margin-bottom: 14px;
 
     font-size: 12px;
+
     font-weight: 700;
 }
 
@@ -423,11 +489,13 @@ button {
     min-height: 65px;
 
     display: flex;
+
     align-items: center;
 }
 
 .turnstile-missing {
-    border: 1px solid #e2e5ea;
+    border:
+        1px solid #e2e5ea;
 
     background: #fafafa;
 
@@ -439,28 +507,35 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    RIGHT COLUMN
-========================================== */
+========================================= */
 
 .right-column {
     display: flex;
+
     flex-direction: column;
+
     gap: 20px;
 }
 
 
-/* ==========================================
+/* =========================================
    RECIPIENTS
-========================================== */
+========================================= */
 
 .recipients-card {
-    padding: 27px 29px 29px;
+    padding:
+        27px
+        29px
+        29px;
 }
 
 .recipients-header {
     display: flex;
+
     align-items: flex-start;
+
     justify-content: space-between;
 }
 
@@ -469,7 +544,11 @@ button {
 }
 
 .helper-text {
-    margin: 0 0 10px 21px;
+    margin:
+        0
+        0
+        10px
+        21px;
 
     color: #6e82a7;
 
@@ -478,18 +557,23 @@ button {
 
 .recipient-badge {
     background: #edf5ff;
+
     color: #3478ed;
 
     border-radius: 20px;
 
-    padding: 5px 10px;
+    padding:
+        5px
+        10px;
 
     font-size: 9px;
+
     font-weight: 600;
 }
 
 .recipients-input {
     width: 100%;
+
     height: 135px;
 
     resize: vertical;
@@ -508,8 +592,6 @@ button {
     font-size: 12px;
 
     color: #27364c;
-
-    margin-top: 0;
 }
 
 .recipient-limit {
@@ -521,9 +603,9 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    PROGRESS
-========================================== */
+========================================= */
 
 .progress-card {
     padding: 29px;
@@ -549,14 +631,17 @@ button {
     border-radius: 7px;
 
     display: flex;
+
     flex-direction: column;
 
     align-items: center;
+
     justify-content: center;
 }
 
 .stat-label {
     font-size: 9px;
+
     color: #516582;
 
     margin-bottom: 5px;
@@ -564,6 +649,7 @@ button {
 
 .stat-box strong {
     font-size: 25px;
+
     line-height: 1;
 }
 
@@ -584,12 +670,13 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    PROGRESS BAR
-========================================== */
+========================================= */
 
 .progress-track {
     width: 100%;
+
     height: 7px;
 
     background: #e4e9f0;
@@ -623,15 +710,16 @@ button {
     margin-top: 13px;
 
     font-size: 12px;
+
     font-weight: 600;
 
     color: #10213a;
 }
 
 
-/* ==========================================
+/* =========================================
    TIMING
-========================================== */
+========================================= */
 
 .timing-grid {
     display: grid;
@@ -676,9 +764,9 @@ button {
 }
 
 
-/* ==========================================
+/* =========================================
    CURRENT EMAIL
-========================================== */
+========================================= */
 
 .current-email {
     min-height: 18px;
@@ -692,14 +780,16 @@ button {
     margin-top: 11px;
 
     overflow: hidden;
+
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
 
-/* ==========================================
+/* =========================================
    BUTTONS
-========================================== */
+========================================= */
 
 .button-row {
     display: grid;
@@ -723,67 +813,69 @@ button {
     color: #fff;
 
     font-size: 12px;
-    font-weight: 700;
 
-    transition:
-        transform 0.15s,
-        opacity 0.15s;
+    font-weight: 700;
 }
 
 .send-btn {
     background: #0db37b;
 }
 
-.send-btn:hover:not(:disabled) {
-    background: #0aa36f;
-}
-
 .stop-btn {
     background: #fa858b;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: #0aa36f;
 }
 
 .stop-btn:hover:not(:disabled) {
     background: #f56f76;
 }
 
-.send-btn:active:not(:disabled),
-.stop-btn:active:not(:disabled) {
-    transform: translateY(1px);
-}
-
 .send-btn:disabled,
 .stop-btn:disabled {
     cursor: not-allowed;
+
     opacity: 0.55;
 }
 
 
-/* ==========================================
-   ERROR TOAST
-========================================== */
+/* =========================================
+   ERROR
+========================================= */
 
 .toast {
     position: fixed;
 
     right: 22px;
+
     bottom: 22px;
 
     z-index: 1000;
 
     max-width: 360px;
 
-    padding: 13px 17px;
+    padding:
+        13px
+        17px;
 
     border-radius: 8px;
 
     color: #fff;
 
     font-size: 12px;
+
     font-weight: 600;
 
     box-shadow:
         0 10px 30px
-        rgba(0, 0, 0, 0.15);
+        rgba(
+            0,
+            0,
+            0,
+            0.15
+        );
 
     transform:
         translateY(20px);
@@ -808,9 +900,9 @@ button {
 }
 
 
-/* ==========================================
-   MODAL
-========================================== */
+/* =========================================
+   COMPLETE POPUP
+========================================= */
 
 .modal-overlay {
     position: fixed;
@@ -822,6 +914,7 @@ button {
     display: flex;
 
     align-items: center;
+
     justify-content: center;
 
     background:
@@ -833,6 +926,7 @@ button {
         );
 
     opacity: 0;
+
     visibility: hidden;
 
     transition:
@@ -842,6 +936,7 @@ button {
 
 .modal-overlay.show {
     opacity: 1;
+
     visibility: visible;
 }
 
@@ -897,7 +992,10 @@ button {
 
     font-size: 13px;
 
-    margin: 8px 0 22px;
+    margin:
+        8px
+        0
+        22px;
 }
 
 .complete-modal button {
@@ -909,24 +1007,22 @@ button {
 
     border-radius: 7px;
 
-    padding: 9px 25px;
+    padding:
+        9px
+        25px;
 
     font-weight: 700;
 }
 
 
-/* ==========================================
+/* =========================================
    RESPONSIVE
-========================================== */
+========================================= */
 
 @media (max-width: 850px) {
 
     .dashboard-grid {
         grid-template-columns: 1fr;
-    }
-
-    .right-column {
-        gap: 18px;
     }
 
 }
@@ -941,10 +1037,6 @@ button {
             35px;
     }
 
-    .top-header {
-        margin-bottom: 22px;
-    }
-
     .brand {
         font-size: 23px;
     }
@@ -955,7 +1047,10 @@ button {
 
     .logout-btn {
         font-size: 10px;
-        padding: 6px 9px;
+
+        padding:
+            6px
+            9px;
     }
 
     .page-title h1 {
@@ -970,6 +1065,7 @@ button {
 
     .form-grid {
         grid-template-columns: 1fr;
+
         gap: 14px;
     }
 
@@ -987,10 +1083,6 @@ button {
 
     .stat-box {
         height: 80px;
-    }
-
-    .helper-text {
-        line-height: 1.4;
     }
 
 }
