@@ -32,14 +32,17 @@
             <span>Secure Mail Console</span>
         </div>
 
-        <a href="{{ url_for('logout') }}" class="logout-btn">
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout-btn"
+        >
             ↪ Logout
         </a>
 
     </header>
 
 
-    <!-- TITLE -->
+    <!-- PAGE TITLE -->
     <div class="page-title">
         <span>➤</span>
         <h1>Bulk Email Sender</h1>
@@ -50,9 +53,10 @@
     <main class="dashboard-grid">
 
 
-        <!-- ==========================================
-             LEFT CARD - COMPOSE
-        =========================================== -->
+        <!-- =========================================
+             COMPOSE
+        ========================================== -->
+
         <section class="card compose-card">
 
             <div class="section-title">
@@ -63,7 +67,6 @@
 
             <div class="form-grid">
 
-                <!-- SENDER NAME -->
                 <div class="field">
 
                     <label for="senderName">
@@ -80,7 +83,6 @@
                 </div>
 
 
-                <!-- GMAIL -->
                 <div class="field">
 
                     <label for="gmail">
@@ -97,7 +99,6 @@
                 </div>
 
 
-                <!-- APP PASSWORD -->
                 <div class="field">
 
                     <label for="appPassword">
@@ -117,7 +118,6 @@
                             type="button"
                             id="togglePassword"
                             class="eye-btn"
-                            aria-label="Show password"
                         >
                             ◉
                         </button>
@@ -127,7 +127,6 @@
                 </div>
 
 
-                <!-- SUBJECT -->
                 <div class="field">
 
                     <label for="subject">
@@ -147,6 +146,7 @@
 
 
             <!-- MESSAGE BODY -->
+
             <div class="body-header">
 
                 <label for="messageBody">
@@ -184,6 +184,7 @@
 
 
             <!-- SPINTAX -->
+
             <div class="spintax-box">
 
                 <div class="spintax-icon">
@@ -191,17 +192,22 @@
                 </div>
 
                 <div>
-                    <strong>Spintax Enabled</strong>
+
+                    <strong>
+                        Spintax Enabled
+                    </strong>
 
                     <span>
                         Spintax is always ON.
                     </span>
+
                 </div>
 
             </div>
 
 
             <!-- TURNSTILE -->
+
             <div class="protection-title">
                 <span>◐</span>
                 Spam Protection
@@ -231,15 +237,15 @@
 
 
 
-        <!-- ==========================================
-             RIGHT SIDE
-        =========================================== -->
+        <!-- =========================================
+             RIGHT COLUMN
+        ========================================== -->
+
         <div class="right-column">
 
 
-            <!-- ======================================
-                 RECIPIENTS
-            ======================================= -->
+            <!-- RECIPIENTS -->
+
             <section class="card recipients-card">
 
                 <div class="recipients-header">
@@ -247,8 +253,13 @@
                     <div>
 
                         <div class="section-title recipient-title">
+
                             <span>♣</span>
-                            <h2>Recipients</h2>
+
+                            <h2>
+                                Recipients
+                            </h2>
+
                         </div>
 
                         <p class="helper-text">
@@ -270,32 +281,41 @@
                 <textarea
                     id="recipients"
                     class="recipients-input"
-                    placeholder=""
                     spellcheck="false"
                 ></textarea>
 
 
                 <div class="recipient-limit">
-                    <span id="recipientCount">0</span>
+
+                    <span id="recipientCount">
+                        0
+                    </span>
+
                     / 25
+
                 </div>
 
             </section>
 
 
 
-            <!-- ======================================
-                 PROGRESS MONITOR
-            ======================================= -->
+            <!-- PROGRESS -->
+
             <section class="card progress-card">
 
                 <div class="section-title">
+
                     <span>◕</span>
-                    <h2>Progress Monitor</h2>
+
+                    <h2>
+                        Progress Monitor
+                    </h2>
+
                 </div>
 
 
                 <!-- STATS -->
+
                 <div class="stats-grid">
 
                     <div class="stat-box total-box">
@@ -353,6 +373,7 @@
 
 
                 <!-- PROGRESS BAR -->
+
                 <div class="progress-track">
 
                     <div
@@ -373,31 +394,39 @@
 
 
                 <!-- TIMING -->
+
                 <div class="timing-grid">
 
                     <div>
                         <span>Elapsed</span>
+
                         <strong id="elapsedTime">
                             00:00.00
                         </strong>
                     </div>
 
+
                     <div>
                         <span>Speed</span>
+
                         <strong id="speedText">
                             0.00 emails/sec
                         </strong>
                     </div>
 
+
                     <div>
                         <span>ETA</span>
+
                         <strong id="etaText">
                             00:00.00
                         </strong>
                     </div>
 
+
                     <div>
                         <span>Total Time</span>
+
                         <strong id="totalTime">
                             —
                         </strong>
@@ -415,6 +444,7 @@
 
 
                 <!-- BUTTONS -->
+
                 <div class="button-row">
 
                     <button
@@ -424,6 +454,7 @@
                     >
                         ✈ Send All
                     </button>
+
 
                     <button
                         id="stopBtn"
@@ -446,9 +477,7 @@
 
 
 
-<!-- ==============================================
-     ERROR MESSAGE
-=============================================== -->
+<!-- ERROR -->
 
 <div
     id="errorBox"
@@ -459,9 +488,9 @@
 
 
 
-<!-- ==============================================
-     COMPLETION MODAL
-=============================================== -->
+<!-- =========================================
+     COMPLETE POPUP
+========================================== -->
 
 <div
     id="completeModal"
@@ -497,26 +526,51 @@
 
 <script>
 
-const senderName = document.getElementById("senderName");
-const gmail = document.getElementById("gmail");
-const appPassword = document.getElementById("appPassword");
-const subject = document.getElementById("subject");
-const messageBody = document.getElementById("messageBody");
-const recipients = document.getElementById("recipients");
+const senderName =
+    document.getElementById("senderName");
 
-const sendBtn = document.getElementById("sendBtn");
-const stopBtn = document.getElementById("stopBtn");
+const gmail =
+    document.getElementById("gmail");
 
-const totalCount = document.getElementById("totalCount");
-const sentCount = document.getElementById("sentCount");
-const failedCount = document.getElementById("failedCount");
-const remainingCount = document.getElementById("remainingCount");
+const appPassword =
+    document.getElementById("appPassword");
+
+const subject =
+    document.getElementById("subject");
+
+const messageBody =
+    document.getElementById("messageBody");
+
+const recipients =
+    document.getElementById("recipients");
+
+
+const sendBtn =
+    document.getElementById("sendBtn");
+
+const stopBtn =
+    document.getElementById("stopBtn");
+
+
+const totalCount =
+    document.getElementById("totalCount");
+
+const sentCount =
+    document.getElementById("sentCount");
+
+const failedCount =
+    document.getElementById("failedCount");
+
+const remainingCount =
+    document.getElementById("remainingCount");
+
 
 const recipientCount =
     document.getElementById("recipientCount");
 
 const recipientBadge =
     document.getElementById("recipientBadge");
+
 
 const progressBar =
     document.getElementById("progressBar");
@@ -526,6 +580,7 @@ const statusText =
 
 const currentEmail =
     document.getElementById("currentEmail");
+
 
 const elapsedTime =
     document.getElementById("elapsedTime");
@@ -539,11 +594,13 @@ const etaText =
 const totalTime =
     document.getElementById("totalTime");
 
+
 const errorBox =
     document.getElementById("errorBox");
 
 const errorText =
     document.getElementById("errorText");
+
 
 const completeModal =
     document.getElementById("completeModal");
@@ -551,8 +608,10 @@ const completeModal =
 const closeModal =
     document.getElementById("closeModal");
 
+
 const togglePassword =
     document.getElementById("togglePassword");
+
 
 const plainMode =
     document.getElementById("plainMode");
@@ -562,13 +621,14 @@ const htmlMode =
 
 
 let isHtml = false;
+
 let stopRequested = false;
 
 
 
-/* ==========================================
-   PASSWORD TOGGLE
-========================================== */
+/* =========================================
+   PASSWORD
+========================================= */
 
 togglePassword.addEventListener(
     "click",
@@ -580,13 +640,10 @@ togglePassword.addEventListener(
 
             appPassword.type = "text";
 
-            togglePassword.textContent = "◉";
-
         } else {
 
             appPassword.type = "password";
 
-            togglePassword.textContent = "◉";
         }
 
     }
@@ -594,9 +651,9 @@ togglePassword.addEventListener(
 
 
 
-/* ==========================================
-   TEXT / HTML MODE
-========================================== */
+/* =========================================
+   PLAIN / HTML
+========================================= */
 
 plainMode.addEventListener(
     "click",
@@ -605,6 +662,7 @@ plainMode.addEventListener(
         isHtml = false;
 
         plainMode.classList.add("active");
+
         htmlMode.classList.remove("active");
 
     }
@@ -618,6 +676,7 @@ htmlMode.addEventListener(
         isHtml = true;
 
         htmlMode.classList.add("active");
+
         plainMode.classList.remove("active");
 
     }
@@ -625,53 +684,75 @@ htmlMode.addEventListener(
 
 
 
-/* ==========================================
-   RECIPIENT PARSER
-========================================== */
+/* =========================================
+   RECIPIENTS
+========================================= */
 
 function getRecipients() {
 
-    const text = recipients.value || "";
+    const text =
+        recipients.value || "";
 
-    const parts = text
-        .split(/[\s,;]+/)
-        .map(x => x.trim().toLowerCase())
-        .filter(Boolean);
+    const parts =
+        text
+            .split(/[\s,;]+/)
+            .map(
+                x => x.trim().toLowerCase()
+            )
+            .filter(Boolean);
+
 
     const seen = new Set();
+
     const result = [];
 
-    for (const email of parts) {
 
-        if (!seen.has(email)) {
+    for (
+        const email of parts
+    ) {
+
+        if (
+            !seen.has(email)
+        ) {
 
             seen.add(email);
+
             result.push(email);
 
         }
 
-        if (result.length >= 25) {
+
+        if (
+            result.length >= 25
+        ) {
+
             break;
+
         }
+
     }
 
+
     return result;
+
 }
 
 
 
 function updateRecipientCount() {
 
-    const list = getRecipients();
+    const list =
+        getRecipients();
+
 
     recipientCount.textContent =
         list.length;
+
 
     recipientBadge.textContent =
         `${list.length} found`;
 
 }
-
 
 
 recipients.addEventListener(
@@ -681,61 +762,84 @@ recipients.addEventListener(
 
 
 
-/* ==========================================
-   TIME FORMAT
-========================================== */
+/* =========================================
+   TIME
+========================================= */
 
 function formatTime(seconds) {
 
-    seconds = Number(seconds) || 0;
+    seconds =
+        Number(seconds) || 0;
+
 
     const minutes =
-        Math.floor(seconds / 60);
+        Math.floor(
+            seconds / 60
+        );
+
 
     const remaining =
-        seconds - minutes * 60;
+        seconds -
+        minutes * 60;
+
 
     return (
         String(minutes).padStart(2, "0")
-        + ":"
-        + remaining.toFixed(2).padStart(5, "0")
+        +
+        ":"
+        +
+        remaining
+            .toFixed(2)
+            .padStart(5, "0")
     );
 
 }
 
 
 
-/* ==========================================
+/* =========================================
    ERROR
-========================================== */
+========================================= */
 
 function showError(message) {
 
     errorText.textContent =
-        message || "Something went wrong.";
+        message ||
+        "Something went wrong.";
 
-    errorBox.classList.add("show");
 
-    setTimeout(() => {
+    errorBox.classList.add(
+        "show"
+    );
 
-        errorBox.classList.remove("show");
 
-    }, 6000);
+    setTimeout(
+        () => {
+
+            errorBox.classList.remove(
+                "show"
+            );
+
+        },
+        6000
+    );
 
 }
 
 
 function hideError() {
 
-    errorBox.classList.remove("show");
+    errorBox.classList.remove(
+        "show"
+    );
 
 }
 
 
 
-/* ==========================================
-   UPDATE PROGRESS
-========================================== */
+/* =========================================
+   PROGRESS
+========================================= */
 
 function updateProgress(data) {
 
@@ -753,6 +857,7 @@ function updateProgress(data) {
 
     const completed =
         Number(data.completed || 0);
+
 
     totalCount.textContent =
         total;
@@ -772,7 +877,7 @@ function updateProgress(data) {
             ? Math.min(
                 100,
                 (completed / total) * 100
-              )
+            )
             : 0;
 
 
@@ -792,7 +897,9 @@ function updateProgress(data) {
     }
 
 
-    if (data.speed_display) {
+    if (
+        data.speed_display
+    ) {
 
         speedText.textContent =
             data.speed_display;
@@ -800,7 +907,9 @@ function updateProgress(data) {
     }
 
 
-    if (data.eta_seconds !== undefined) {
+    if (
+        data.eta_seconds !== undefined
+    ) {
 
         etaText.textContent =
             formatTime(
@@ -810,7 +919,9 @@ function updateProgress(data) {
     }
 
 
-    if (data.email) {
+    if (
+        data.email
+    ) {
 
         currentEmail.textContent =
             data.email;
@@ -821,9 +932,9 @@ function updateProgress(data) {
 
 
 
-/* ==========================================
-   SEND
-========================================== */
+/* =========================================
+   SEND ALL
+========================================= */
 
 sendBtn.addEventListener(
     "click",
@@ -831,11 +942,14 @@ sendBtn.addEventListener(
 
         hideError();
 
+
         const recipientList =
             getRecipients();
 
 
-        if (!senderName.value.trim()) {
+        if (
+            !senderName.value.trim()
+        ) {
 
             showError(
                 "Sender Name is required."
@@ -847,7 +961,9 @@ sendBtn.addEventListener(
         }
 
 
-        if (!gmail.value.trim()) {
+        if (
+            !gmail.value.trim()
+        ) {
 
             showError(
                 "Gmail address is required."
@@ -859,7 +975,9 @@ sendBtn.addEventListener(
         }
 
 
-        if (!appPassword.value.trim()) {
+        if (
+            !appPassword.value.trim()
+        ) {
 
             showError(
                 "Google App Password is required."
@@ -871,7 +989,9 @@ sendBtn.addEventListener(
         }
 
 
-        if (!subject.value.trim()) {
+        if (
+            !subject.value.trim()
+        ) {
 
             showError(
                 "Email Subject is required."
@@ -883,7 +1003,9 @@ sendBtn.addEventListener(
         }
 
 
-        if (!messageBody.value.trim()) {
+        if (
+            !messageBody.value.trim()
+        ) {
 
             showError(
                 "Message Body is required."
@@ -895,7 +1017,9 @@ sendBtn.addEventListener(
         }
 
 
-        if (!recipientList.length) {
+        if (
+            !recipientList.length
+        ) {
 
             showError(
                 "Add at least one recipient."
@@ -924,13 +1048,16 @@ sendBtn.addEventListener(
                 '[name="cf-turnstile-response"]'
             );
 
+
         const turnstileToken =
             turnstileInput
                 ? turnstileInput.value
                 : "";
 
 
-        if (!turnstileToken) {
+        if (
+            !turnstileToken
+        ) {
 
             showError(
                 "Please complete the Cloudflare verification."
@@ -942,15 +1069,22 @@ sendBtn.addEventListener(
 
         stopRequested = false;
 
+
         sendBtn.disabled = true;
 
         stopBtn.disabled = false;
 
+
         statusText.textContent =
             "Connecting...";
 
+
         currentEmail.textContent =
             "Starting...";
+
+
+        totalTime.textContent =
+            "—";
 
 
         const payload = {
@@ -1003,15 +1137,19 @@ sendBtn.addEventListener(
                 );
 
 
-            if (!response.ok) {
+            if (
+                !response.ok
+            ) {
 
                 let errorMessage =
                     "Unable to start sending.";
+
 
                 try {
 
                     const errorData =
                         await response.json();
+
 
                     errorMessage =
                         errorData.message ||
@@ -1019,24 +1157,35 @@ sendBtn.addEventListener(
 
                 } catch (_) {}
 
+
                 throw new Error(
                     errorMessage
                 );
+
             }
 
 
             const reader =
                 response.body.getReader();
 
+
             const decoder =
                 new TextDecoder();
+
 
             let buffer = "";
 
 
             while (true) {
 
-                if (stopRequested) {
+                if (
+                    stopRequested
+                ) {
+
+                    try {
+                        await reader.cancel();
+                    } catch (_) {}
+
                     break;
                 }
 
@@ -1044,11 +1193,16 @@ sendBtn.addEventListener(
                 const {
                     value,
                     done
-                } = await reader.read();
+                } =
+                    await reader.read();
 
 
-                if (done) {
+                if (
+                    done
+                ) {
+
                     break;
+
                 }
 
 
@@ -1073,12 +1227,17 @@ sendBtn.addEventListener(
                     const line of lines
                 ) {
 
-                    if (!line.trim()) {
+                    if (
+                        !line.trim()
+                    ) {
+
                         continue;
+
                     }
 
 
                     let data;
+
 
                     try {
 
@@ -1090,10 +1249,13 @@ sendBtn.addEventListener(
                     } catch (_) {
 
                         continue;
+
                     }
 
 
-                    updateProgress(data);
+                    updateProgress(
+                        data
+                    );
 
 
                     if (
@@ -1123,15 +1285,8 @@ sendBtn.addEventListener(
                         "progress"
                     ) {
 
-                        if (
-                            data.result ===
-                            "sent"
-                        ) {
-
-                            statusText.textContent =
-                                "Sending...";
-
-                        }
+                        statusText.textContent =
+                            "Sending...";
 
                     }
 
@@ -1143,6 +1298,7 @@ sendBtn.addEventListener(
 
                         statusText.textContent =
                             "Sending stopped";
+
 
                         showError(
                             data.message
@@ -1159,17 +1315,25 @@ sendBtn.addEventListener(
                         statusText.textContent =
                             "Sending complete";
 
+
                         totalTime.textContent =
                             data.total_time_display ||
                             formatTime(
                                 data.total_time_seconds
                             );
 
+
                         progressBar.style.width =
                             "100%";
 
+
                         currentEmail.textContent =
                             "Completed";
+
+
+                        /*
+                         * SHOW COMPLETION POPUP
+                         */
 
                         completeModal.classList.add(
                             "show"
@@ -1184,13 +1348,18 @@ sendBtn.addEventListener(
 
         } catch (error) {
 
-            showError(
-                error.message
-            );
+            if (
+                !stopRequested
+            ) {
 
-            statusText.textContent =
-                "Unable to send";
+                showError(
+                    error.message
+                );
 
+                statusText.textContent =
+                    "Unable to send";
+
+            }
 
         } finally {
 
@@ -1205,9 +1374,9 @@ sendBtn.addEventListener(
 
 
 
-/* ==========================================
-   STOP BUTTON
-========================================== */
+/* =========================================
+   STOP
+========================================= */
 
 stopBtn.addEventListener(
     "click",
@@ -1225,52 +1394,84 @@ stopBtn.addEventListener(
 
 
 
-/* ==========================================
-   CLOSE MODAL
-========================================== */
+/* =========================================
+   POPUP CLOSE FUNCTION
+========================================= */
+
+function closeCompletePopup() {
+
+    completeModal.classList.remove(
+        "show"
+    );
+
+}
+
+
+
+/* =========================================
+   CLOSE BUTTON
+========================================= */
 
 closeModal.addEventListener(
     "click",
-    () => {
+    (event) => {
 
-        completeModal.classList.remove(
-            "show"
-        );
+        event.stopPropagation();
+
+        closeCompletePopup();
 
     }
 );
 
 
-completeModal.addEventListener(
+
+/* =========================================
+   CLICK ANYWHERE ON SCREEN
+========================================= */
+
+document.addEventListener(
     "click",
-    (event) => {
+    () => {
 
         if (
-            event.target ===
-            completeModal
+            completeModal.classList.contains(
+                "show"
+            )
         ) {
 
-            completeModal.classList.remove(
-                "show"
-            );
+            closeCompletePopup();
 
         }
 
     }
 );
 
+
+
+/* =========================================
+   ENTER / ESCAPE
+========================================= */
 
 document.addEventListener(
     "keydown",
     (event) => {
 
         if (
+            event.key === "Enter" ||
             event.key === "Escape"
         ) {
 
-            completeModal.classList.remove(
-                "show"
-            );
+            if (
+                completeModal.classList.contains(
+                    "show"
+                )
+            ) {
+
+                event.preventDefault();
+
+                closeCompletePopup();
+
+            }
 
         }
 
@@ -1279,9 +1480,9 @@ document.addEventListener(
 
 
 
-/* ==========================================
+/* =========================================
    INITIAL
-========================================== */
+========================================= */
 
 updateRecipientCount();
 
