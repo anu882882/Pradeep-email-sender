@@ -1,18 +1,10 @@
 from flask import (
-    Flask,
-    Response,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    stream_with_context,
-    url_for,
+    Flask, Response, jsonify, redirect, render_template,
+    request, session, stream_with_context, url_for
 )
 
 from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate, make_msgid
-
 from pathlib import Path
 
 import json
@@ -28,45 +20,32 @@ import urllib.request
 
 
 # ============================================================
-# PROJECT
+# APP
 # ============================================================
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 app = Flask(
     __name__,
-    template_folder=str(PROJECT_ROOT / "templates"),
-    static_folder=str(PROJECT_ROOT / "static"),
+    template_folder=str(BASE_DIR / "templates"),
+    static_folder=str(BASE_DIR / "static"),
     static_url_path="/static",
 )
 
-# Vercel WSGI entry point
 handler = app
 
 
 # ============================================================
-# ENVIRONMENT
+# ENV
 # ============================================================
 
-app.secret_key = os.getenv(
-    "SESSION_SECRET",
-    ""
-)
-
-LOGIN_PASSWORD = os.getenv(
-    "LOGIN_PASSWORD",
-    ""
-)
+app.secret_key = os.getenv("SESSION_SECRET", "")
+LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "")
 
 TURNSTILE_SECRET_KEY = os.getenv(
     "TURNSTILE_SECRET_KEY",
     ""
 )
-
-
-# ============================================================
-# MAIL SETTINGS
-# ============================================================
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
@@ -75,21 +54,17 @@ SMTP_TIMEOUT = 20
 MAX_RECIPIENTS = 25
 
 
-def read_gap():
-    raw = os.getenv(
-        "MAIL_GAP_SECONDS",
-        "0"
-    )
-
+def get_mail_gap():
     try:
-        value = float(raw)
+        return max(
+            0.0,
+            float(os.getenv("MAIL_GAP_SECONDS", "0"))
+        )
     except (TypeError, ValueError):
         return 0.0
 
-    return max(0.0, value)
 
-
-MAIL_GAP_SECONDS = read_gap()
+MAIL_GAP_SECONDS = get_mail_gap()
 
 
 # ============================================================
@@ -102,37 +77,26 @@ EMAIL_RE = re.compile(
     r"(?:\.[A-Za-z0-9-]+)+$"
 )
 
-SPINTAX_RE = re.compile(
-    r"\{([^{}]+)\}"
-)
+SPINTAX_RE = re.compile(r"\{([^{}]+)\}")
 
 
 # ============================================================
-# BASIC HELPERS
+# HELPERS
 # ============================================================
 
 def authenticated():
-    return session.get(
-        "authenticated"
-    ) is True
+    return session.get("authenticated") is True
 
 
 def valid_email(value):
-    address = str(
-        value or ""
-    ).strip()
-
     return bool(
-        EMAIL_RE.fullmatch(address)
+        EMAIL_RE.fullmatch(
+            str(value or "").strip()
+        )
     )
 
 
 def safe_header(value):
-    """
-    Removes CR/LF so user-controlled values
-    cannot create additional email headers.
-    """
-
     return (
         str(value or "")
         .replace("\r", " ")
@@ -141,67 +105,65 @@ def safe_header(value):
     )
 
 
-def ndjson(payload):
+def ndjson(data):
     return (
         json.dumps(
-            payload,
+            data,
             ensure_ascii=False
-        )
-        + "\n"
+        ) + "\n"
     )
+
+
+def format_seconds(seconds):
+    seconds = max(0.0, float(seconds))
+
+    minutes = int(seconds // 60)
+    remaining = seconds % 60
+
+    return f"{minutes:02d}:{remaining:05.2f}"
 
 
 # ============================================================
 # SPINTAX
 # ============================================================
 
-def render_spintax(value):
-    """
-    Example:
-
-        {Hi|Hello|Hey} {there|friend}
-
-    produces one variation for each email.
-    """
-
-    text = str(value or "")
+def render_spintax(text):
+    text = str(text or "")
 
     for _ in range(10):
 
-        found = False
+        changed = False
 
-        def replacement(match):
-
-            nonlocal found
+        def replace(match):
+            nonlocal changed
 
             options = [
-                part.strip()
-                for part in match.group(1).split("|")
-                if part.strip()
+                item.strip()
+                for item in match.group(1).split("|")
+                if item.strip()
             ]
 
             if len(options) < 2:
                 return match.group(0)
 
-            found = True
-
+            changed = True
             return random.choice(options)
 
         updated = SPINTAX_RE.sub(
-            replacement,
+            replace,
             text
         )
 
         text = updated
 
-        if not found:
+        if not changed:
             break
 
     return text
 
 
 # ============================================================
-# RECIPIENT QUEUE
+# RECIPIENTS
 # ============================================================
 
 def build_recipient_queue(raw):
@@ -209,77 +171,122 @@ def build_recipient_queue(raw):
     if not isinstance(raw, list):
         return []
 
-    queue = []
-    known = set()
+    result = []
+    seen = set()
 
     for item in raw:
 
-        address = (
+        email = (
             str(item or "")
             .strip()
             .lower()
         )
 
-        if not valid_email(address):
+        if not valid_email(email):
             continue
 
-        if address in known:
+        if email in seen:
             continue
 
-        known.add(address)
-        queue.append(address)
+        seen.add(email)
+        result.append(email)
 
-        if len(queue) >= MAX_RECIPIENTS:
+        if len(result) >= MAX_RECIPIENTS:
             break
 
-    return queue
+    return result
 
 
 # ============================================================
-# PROGRESS
+# PROGRESS EVENT
 # ============================================================
 
-def progress_event(
+def make_progress(
     event,
     total,
     sent,
     failed,
+    elapsed=0.0,
+    started_at=None,
     **extra
 ):
 
-    payload = {
+    completed = sent + failed
+
+    speed = (
+        completed / elapsed
+        if elapsed > 0
+        else 0.0
+    )
+
+    remaining = max(
+        0,
+        total - completed
+    )
+
+    eta = (
+        remaining / speed
+        if speed > 0
+        else 0.0
+    )
+
+    data = {
         "type": event,
         "total": total,
         "sent": sent,
         "failed": failed,
-        "remaining": (
-            total - sent - failed
+        "completed": completed,
+        "remaining": remaining,
+
+        "elapsed_seconds": round(
+            elapsed,
+            2
+        ),
+
+        "elapsed_display": format_seconds(
+            elapsed
+        ),
+
+        "speed": round(
+            speed,
+            2
+        ),
+
+        "speed_display": (
+            f"{speed:.2f} emails/sec"
+        ),
+
+        "eta_seconds": round(
+            eta,
+            2
+        ),
+
+        "eta_display": format_seconds(
+            eta
         ),
     }
 
-    payload.update(extra)
+    if started_at is not None:
+        data["started_at"] = started_at
 
-    return ndjson(payload)
+    data.update(extra)
+
+    return ndjson(data)
 
 
 # ============================================================
 # TURNSTILE
 # ============================================================
 
-def validate_turnstile(
-    token,
-    remote_ip=None
-):
+def verify_turnstile(token, remote_ip=None):
 
     if not TURNSTILE_SECRET_KEY:
-
         return (
             False,
             "TURNSTILE_SECRET_KEY is not configured."
         )
 
     if not token:
-
         return (
             False,
             "Cloudflare verification is required."
@@ -297,7 +304,7 @@ def validate_turnstile(
         values
     ).encode("utf-8")
 
-    request_object = urllib.request.Request(
+    req = urllib.request.Request(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         data=encoded,
         headers={
@@ -310,18 +317,15 @@ def validate_turnstile(
     try:
 
         with urllib.request.urlopen(
-            request_object,
+            req,
             timeout=10
         ) as response:
 
             result = json.loads(
-                response.read().decode(
-                    "utf-8"
-                )
+                response.read().decode("utf-8")
             )
 
         if result.get("success"):
-
             return True, None
 
         return (
@@ -330,7 +334,6 @@ def validate_turnstile(
         )
 
     except Exception:
-
         return (
             False,
             "Unable to verify Cloudflare."
@@ -338,10 +341,10 @@ def validate_turnstile(
 
 
 # ============================================================
-# EMAIL FACTORY
+# EMAIL
 # ============================================================
 
-def make_email(
+def create_message(
     sender_name,
     sender_email,
     recipient,
@@ -350,8 +353,6 @@ def make_email(
     html_mode
 ):
 
-    # Generate a different Spintax result
-    # for every recipient.
     final_subject = render_spintax(
         subject
     )
@@ -366,9 +367,7 @@ def make_email(
         "utf-8"
     )
 
-    message["Subject"] = (
-        final_subject
-    )
+    message["Subject"] = final_subject
 
     message["From"] = formataddr(
         (
@@ -389,20 +388,17 @@ def make_email(
 
 
 # ============================================================
-# SMTP SESSION
+# SMTP
 # ============================================================
 
-def create_smtp_session(
-    gmail,
-    app_password
-):
+def create_smtp(gmail, app_password):
 
-    tls = ssl.create_default_context()
+    context = ssl.create_default_context()
 
     smtp = smtplib.SMTP_SSL(
         SMTP_HOST,
         SMTP_PORT,
-        context=tls,
+        context=context,
         timeout=SMTP_TIMEOUT
     )
 
@@ -428,7 +424,7 @@ def create_smtp_session(
 
 
 # ============================================================
-# LOGIN ROUTE
+# LOGIN
 # ============================================================
 
 @app.route(
@@ -438,7 +434,6 @@ def create_smtp_session(
 def login():
 
     if authenticated():
-
         return redirect(
             url_for("home")
         )
@@ -466,7 +461,6 @@ def login():
         ):
 
             session.clear()
-
             session["authenticated"] = True
 
             return redirect(
@@ -474,7 +468,6 @@ def login():
             )
 
         else:
-
             error = "Incorrect password."
 
     return render_template(
@@ -505,7 +498,6 @@ def logout():
 def home():
 
     if not authenticated():
-
         return redirect(
             url_for("login")
         )
@@ -517,122 +509,6 @@ def home():
             ""
         )
     )
-
-
-# ============================================================
-# REQUEST PARSER
-# ============================================================
-
-def parse_mail_request():
-
-    data = request.get_json(
-        silent=True
-    )
-
-    if not isinstance(data, dict):
-
-        return None, (
-            "Invalid JSON request."
-        )
-
-    sender_name = safe_header(
-        data.get(
-            "sender_name",
-            ""
-        )
-    )
-
-    gmail = safe_header(
-        data.get(
-            "gmail",
-            ""
-        )
-    ).lower()
-
-    app_password = str(
-        data.get(
-            "app_password",
-            ""
-        )
-    ).strip()
-
-    subject = safe_header(
-        data.get(
-            "subject",
-            ""
-        )
-    )
-
-    body = str(
-        data.get(
-            "body",
-            ""
-        )
-    )
-
-    html_mode = (
-        data.get(
-            "is_html",
-            False
-        )
-        is True
-    )
-
-    recipients = build_recipient_queue(
-        data.get(
-            "recipients",
-            []
-        )
-    )
-
-    token = str(
-        data.get(
-            "turnstile_token",
-            ""
-        )
-    ).strip()
-
-    return {
-        "sender_name": sender_name,
-        "gmail": gmail,
-        "app_password": app_password,
-        "subject": subject,
-        "body": body,
-        "is_html": html_mode,
-        "recipients": recipients,
-        "turnstile_token": token,
-    }, None
-
-
-# ============================================================
-# REQUEST VALIDATION
-# ============================================================
-
-def validate_mail_request(data):
-
-    if not data["sender_name"]:
-        return "Sender Name is required."
-
-    if not valid_email(
-        data["gmail"]
-    ):
-        return "Enter a valid Gmail address."
-
-    if not data["app_password"]:
-        return (
-            "Google App Password is required."
-        )
-
-    if not data["subject"]:
-        return "Email subject is required."
-
-    if not data["body"].strip():
-        return "Message body is required."
-
-    if not data["recipients"]:
-        return "No valid recipients found."
-
-    return None
 
 
 # ============================================================
@@ -649,37 +525,95 @@ def send_batch():
 
         return jsonify({
             "success": False,
-            "message":
-                "Authentication required."
+            "message": "Authentication required."
         }), 401
 
-
-    mail_data, parse_error = (
-        parse_mail_request()
+    data = request.get_json(
+        silent=True
     )
 
-    if parse_error:
+    if not isinstance(data, dict):
 
         return jsonify({
             "success": False,
-            "message": parse_error
+            "message": "Invalid JSON request."
         }), 400
 
+    sender_name = safe_header(
+        data.get("sender_name", "")
+    )
 
-    validation_error = (
-        validate_mail_request(
-            mail_data
+    gmail = safe_header(
+        data.get("gmail", "")
+    ).lower()
+
+    app_password = str(
+        data.get("app_password", "")
+    ).strip()
+
+    subject = safe_header(
+        data.get("subject", "")
+    )
+
+    body = str(
+        data.get("body", "")
+    )
+
+    html_mode = (
+        data.get("is_html", False)
+        is True
+    )
+
+    recipients = build_recipient_queue(
+        data.get("recipients", [])
+    )
+
+    turnstile_token = str(
+        data.get(
+            "turnstile_token",
+            ""
         )
-    )
+    ).strip()
 
-    if validation_error:
+    # --------------------------------------------------------
+    # VALIDATION
+    # --------------------------------------------------------
 
+    if not sender_name:
         return jsonify({
             "success": False,
-            "message":
-                validation_error
+            "message": "Sender Name is required."
         }), 400
 
+    if not valid_email(gmail):
+        return jsonify({
+            "success": False,
+            "message": "Enter a valid Gmail address."
+        }), 400
+
+    if not app_password:
+        return jsonify({
+            "success": False,
+            "message": "Google App Password is required."
+        }), 400
+
+    if not subject:
+        return jsonify({
+            "success": False,
+            "message": "Email subject is required."
+        }), 400
+
+    if not body.strip():
+        return jsonify({
+            "success": False,
+            "message": "Message body is required."
+        }), 400
+
+    if not recipients:
+        return jsonify({
+            "success": False,
+            "message": "No valid recipients found."
+        }), 400
 
     # --------------------------------------------------------
     # TURNSTILE
@@ -695,32 +629,24 @@ def send_batch():
         else request.remote_addr
     )
 
-    passed, turnstile_error = (
-        validate_turnstile(
-            mail_data["turnstile_token"],
-            remote_ip
-        )
+    passed, error = verify_turnstile(
+        turnstile_token,
+        remote_ip
     )
 
     if not passed:
 
         return jsonify({
             "success": False,
-            "message":
-                turnstile_error
+            "message": error
         }), 403
 
-
-    # ========================================================
-    # STREAM GENERATOR
-    # ========================================================
+    # --------------------------------------------------------
+    # STREAM
+    # --------------------------------------------------------
 
     @stream_with_context
     def generate():
-
-        recipients = mail_data[
-            "recipients"
-        ]
 
         total = len(recipients)
 
@@ -729,172 +655,178 @@ def send_batch():
 
         smtp = None
 
+        start_time = time.perf_counter()
 
-        # ----------------------------------------------------
-        # INITIAL STATE
-        # ----------------------------------------------------
+        started_at = time.strftime(
+            "%H:%M:%S"
+        )
 
-        yield progress_event(
+        yield make_progress(
             "start",
             total,
             sent,
-            failed
+            failed,
+            elapsed=0,
+            started_at=started_at
         )
-
 
         try:
 
-            # ------------------------------------------------
-            # CONNECT + AUTHENTICATE
-            # ------------------------------------------------
-
-            smtp = create_smtp_session(
-                mail_data["gmail"],
-                mail_data["app_password"]
+            smtp = create_smtp(
+                gmail,
+                app_password
             )
 
-            yield progress_event(
+            elapsed = (
+                time.perf_counter()
+                - start_time
+            )
+
+            yield make_progress(
                 "connected",
                 total,
                 sent,
-                failed
+                failed,
+                elapsed=elapsed,
+                started_at=started_at
             )
 
-
             # ------------------------------------------------
-            # QUEUE
+            # SEND
             # ------------------------------------------------
 
-            for number, recipient in enumerate(
+            for position, recipient in enumerate(
                 recipients,
                 start=1
             ):
 
                 try:
 
-                    message = make_email(
-                        sender_name=(
-                            mail_data[
-                                "sender_name"
-                            ]
-                        ),
-                        sender_email=(
-                            mail_data[
-                                "gmail"
-                            ]
-                        ),
-                        recipient=recipient,
-                        subject=(
-                            mail_data[
-                                "subject"
-                            ]
-                        ),
-                        body=(
-                            mail_data[
-                                "body"
-                            ]
-                        ),
-                        html_mode=(
-                            mail_data[
-                                "is_html"
-                            ]
-                        ),
+                    message = create_message(
+                        sender_name,
+                        gmail,
+                        recipient,
+                        subject,
+                        body,
+                        html_mode
                     )
 
                     smtp.sendmail(
-                        mail_data["gmail"],
+                        gmail,
                         [recipient],
                         message.as_string()
                     )
 
                     sent += 1
 
-                    yield progress_event(
+                    elapsed = (
+                        time.perf_counter()
+                        - start_time
+                    )
+
+                    yield make_progress(
                         "progress",
                         total,
                         sent,
                         failed,
+                        elapsed=elapsed,
+                        started_at=started_at,
                         email=recipient,
                         result="sent",
-                        position=number
+                        position=position
                     )
-
 
                 except smtplib.SMTPAuthenticationError:
 
                     failed += 1
 
-                    yield progress_event(
+                    elapsed = (
+                        time.perf_counter()
+                        - start_time
+                    )
+
+                    yield make_progress(
                         "progress",
                         total,
                         sent,
                         failed,
+                        elapsed=elapsed,
+                        started_at=started_at,
                         email=recipient,
                         result="failed",
+                        position=position,
                         error=(
-                            "Gmail authentication "
-                            "failed. Check Gmail "
-                            "and App Password."
-                        ),
-                        position=number
+                            "Gmail authentication failed. "
+                            "Check Gmail and App Password."
+                        )
                     )
-
 
                 except smtplib.SMTPException as exc:
 
                     failed += 1
 
-                    yield progress_event(
+                    elapsed = (
+                        time.perf_counter()
+                        - start_time
+                    )
+
+                    yield make_progress(
                         "progress",
                         total,
                         sent,
                         failed,
+                        elapsed=elapsed,
+                        started_at=started_at,
                         email=recipient,
                         result="failed",
-                        error=(
-                            f"SMTP error: {exc}"
-                        ),
-                        position=number
+                        position=position,
+                        error=f"SMTP error: {exc}"
                     )
-
 
                 except Exception as exc:
 
                     failed += 1
 
-                    yield progress_event(
+                    elapsed = (
+                        time.perf_counter()
+                        - start_time
+                    )
+
+                    yield make_progress(
                         "progress",
                         total,
                         sent,
                         failed,
+                        elapsed=elapsed,
+                        started_at=started_at,
                         email=recipient,
                         result="failed",
-                        error=str(exc),
-                        position=number
+                        position=position,
+                        error=str(exc)
                     )
-
-
-                # ------------------------------------------------
-                # OPTIONAL PACING
-                # ------------------------------------------------
 
                 if (
                     MAIL_GAP_SECONDS > 0
-                    and number < total
+                    and position < total
                 ):
-
                     time.sleep(
                         MAIL_GAP_SECONDS
                     )
 
-
         except smtplib.SMTPAuthenticationError:
 
-            yield progress_event(
+            elapsed = (
+                time.perf_counter()
+                - start_time
+            )
+
+            yield make_progress(
                 "error",
                 total,
                 sent,
                 failed,
+                elapsed=elapsed,
+                started_at=started_at,
                 message=(
                     "Gmail authentication failed. "
                     "Check Gmail address and "
@@ -904,36 +836,43 @@ def send_batch():
 
             return
 
-
         except smtplib.SMTPException as exc:
 
-            yield progress_event(
+            elapsed = (
+                time.perf_counter()
+                - start_time
+            )
+
+            yield make_progress(
                 "error",
                 total,
                 sent,
                 failed,
-                message=(
-                    f"SMTP error: {exc}"
-                )
+                elapsed=elapsed,
+                started_at=started_at,
+                message=f"SMTP error: {exc}"
             )
 
             return
-
 
         except Exception as exc:
 
-            yield progress_event(
+            elapsed = (
+                time.perf_counter()
+                - start_time
+            )
+
+            yield make_progress(
                 "error",
                 total,
                 sent,
                 failed,
-                message=(
-                    f"Server error: {exc}"
-                )
+                elapsed=elapsed,
+                started_at=started_at,
+                message=f"Server error: {exc}"
             )
 
             return
-
 
         finally:
 
@@ -944,24 +883,45 @@ def send_batch():
                 except Exception:
                     pass
 
-
         # ----------------------------------------------------
-        # FINAL EVENT
+        # COMPLETE
         # ----------------------------------------------------
 
-        yield progress_event(
+        total_time = (
+            time.perf_counter()
+            - start_time
+        )
+
+        average_speed = (
+            total / total_time
+            if total_time > 0
+            else 0
+        )
+
+        yield make_progress(
             "complete",
             total,
             sent,
             failed,
+            elapsed=total_time,
+            started_at=started_at,
             success=True,
-            message="PRADEEP ❤️"
+            message="PRADEEP ❤️",
+            total_time_seconds=round(
+                total_time,
+                2
+            ),
+            total_time_display=format_seconds(
+                total_time
+            ),
+            average_speed=round(
+                average_speed,
+                2
+            ),
+            average_speed_display=(
+                f"{average_speed:.2f} emails/sec"
+            )
         )
-
-
-    # ========================================================
-    # NDJSON RESPONSE
-    # ========================================================
 
     return Response(
         generate(),
@@ -973,13 +933,13 @@ def send_batch():
             "Cache-Control":
                 "no-cache, no-transform",
             "X-Accel-Buffering":
-                "no",
+                "no-cache"
         }
     )
 
 
 # ============================================================
-# HEALTH CHECK
+# HEALTH
 # ============================================================
 
 @app.route("/health")
@@ -987,21 +947,16 @@ def health():
 
     return jsonify({
         "status": "ok",
-        "service":
-            "Secure Mail Console",
-        "mailer":
-            "Gmail SMTP SSL",
-        "spintax":
-            "always_on",
-        "max_recipients":
-            MAX_RECIPIENTS,
-        "mail_gap_seconds":
-            MAIL_GAP_SECONDS,
+        "service": "Secure Mail Console",
+        "mailer": "Gmail SMTP SSL",
+        "spintax": "always_on",
+        "max_recipients": MAX_RECIPIENTS,
+        "mail_gap_seconds": MAIL_GAP_SECONDS
     })
 
 
 # ============================================================
-# LOCAL DEVELOPMENT
+# LOCAL
 # ============================================================
 
 if __name__ == "__main__":
