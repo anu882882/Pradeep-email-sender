@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Secure Mail Console</title>
 
@@ -26,70 +22,123 @@
 
 <body>
 
-<div class="app-shell">
+<div class="page">
 
-    <header class="topbar">
+    <!-- HEADER -->
+    <header class="top-header">
 
-        <div>
-            <div class="brand">
-                🛡 Secure Mail Console
-            </div>
-
-            <div class="brand-subtitle">
-                Gmail SMTP Sender
-            </div>
+        <div class="brand">
+            <span class="brand-shield">♢</span>
+            <span>Secure Mail Console</span>
         </div>
 
-        <a href="/logout" class="logout-btn">
-            Logout
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            ↪ Logout
         </a>
 
     </header>
 
 
-    <main class="dashboard">
+    <!-- TITLE -->
+    <div class="page-title">
+        <span>➤</span>
+        <h1>Bulk Email Sender</h1>
+    </div>
 
-        <!-- ==================================================
-             COMPOSE
-        =================================================== -->
 
+    <!-- MAIN GRID -->
+    <main class="dashboard-grid">
+
+
+        <!-- ==========================================
+             LEFT CARD - COMPOSE
+        =========================================== -->
         <section class="card compose-card">
 
-            <div class="card-title">
-                <div>
-                    <h2>Compose</h2>
-                    <p>Prepare your email</p>
-                </div>
-
-                <span class="secure-badge">
-                    Secure
-                </span>
+            <div class="section-title">
+                <span>🖉</span>
+                <h2>Compose Message</h2>
             </div>
 
 
-            <div class="field-row">
+            <div class="form-grid">
 
+                <!-- SENDER NAME -->
                 <div class="field">
 
-                    <label>Sender Name</label>
+                    <label for="senderName">
+                        Sender Name
+                    </label>
 
                     <input
                         id="senderName"
                         type="text"
                         placeholder="Your name"
+                        autocomplete="off"
                     >
 
                 </div>
 
 
+                <!-- GMAIL -->
                 <div class="field">
 
-                    <label>Gmail</label>
+                    <label for="gmail">
+                        Your Gmail
+                    </label>
 
                     <input
                         id="gmail"
                         type="email"
-                        placeholder="yourname@gmail.com"
+                        placeholder="your@gmail.com"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- APP PASSWORD -->
+                <div class="field">
+
+                    <label for="appPassword">
+                        App Password
+                    </label>
+
+                    <div class="password-wrap">
+
+                        <input
+                            id="appPassword"
+                            type="password"
+                            placeholder="Google App Password"
+                            autocomplete="new-password"
+                        >
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="eye-btn"
+                            aria-label="Show password"
+                        >
+                            ◉
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUBJECT -->
+                <div class="field">
+
+                    <label for="subject">
+                        Email Subject
+                    </label>
+
+                    <input
+                        id="subject"
+                        type="text"
+                        placeholder="Email subject"
+                        autocomplete="off"
                     >
 
                 </div>
@@ -97,210 +146,257 @@
             </div>
 
 
-            <div class="field">
+            <!-- MESSAGE BODY -->
+            <div class="body-header">
 
-                <label>Google App Password</label>
+                <label for="messageBody">
+                    Message Body
+                </label>
 
-                <input
-                    id="appPassword"
-                    type="password"
-                    placeholder="Google App Password"
-                    autocomplete="off"
-                >
+                <div class="mode-buttons">
 
-            </div>
+                    <button
+                        type="button"
+                        id="plainMode"
+                        class="mode-btn active"
+                    >
+                        Plain Text
+                    </button>
 
+                    <button
+                        type="button"
+                        id="htmlMode"
+                        class="mode-btn"
+                    >
+                        HTML
+                    </button>
 
-            <div class="field">
-
-                <label>Subject</label>
-
-                <input
-                    id="subject"
-                    type="text"
-                    placeholder="Email subject"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <div class="label-line">
-                    <label>Message Body</label>
-                    <span id="charCount">0 characters</span>
                 </div>
 
-                <textarea
-                    id="body"
-                    placeholder=""
-                ></textarea>
-
             </div>
 
 
+            <textarea
+                id="messageBody"
+                class="message-body"
+                spellcheck="false"
+            ></textarea>
+
+
+            <!-- SPINTAX -->
             <div class="spintax-box">
 
+                <div class="spintax-icon">
+                    ⤨
+                </div>
+
                 <div>
-                    <strong>Spintax</strong>
-                    <span class="always-on">
-                        Always ON
+                    <strong>Spintax Enabled</strong>
+
+                    <span>
+                        Spintax is always ON.
                     </span>
                 </div>
 
-                <div class="spintax-example">
-                    Example:
-                    {Hello|Hi|Hey}
-                </div>
-
             </div>
 
 
-            {% if turnstile_site_key %}
+            <!-- TURNSTILE -->
+            <div class="protection-title">
+                <span>◐</span>
+                Spam Protection
+            </div>
 
             <div class="turnstile-wrap">
 
-                <div
-                    class="cf-turnstile"
-                    data-sitekey="{{ turnstile_site_key }}"
-                ></div>
+                {% if turnstile_site_key %}
 
-            </div>
+                    <div
+                        class="cf-turnstile"
+                        data-sitekey="{{ turnstile_site_key }}"
+                        data-theme="light"
+                    ></div>
 
-            {% endif %}
+                {% else %}
 
+                    <div class="turnstile-missing">
+                        Turnstile is not configured.
+                    </div>
 
-            <div
-                id="errorBox"
-                class="error-box hidden">
+                {% endif %}
+
             </div>
 
         </section>
 
 
-        <!-- ==================================================
-             RECIPIENTS + PROGRESS
-        =================================================== -->
 
-        <section class="right-column">
-
-
-            <div class="card">
-
-                <div class="card-title">
-
-                    <div>
-                        <h2>Recipients</h2>
-                        <p>Maximum 25 recipients</p>
-                    </div>
-
-                    <span
-                        id="recipientCount"
-                        class="count-badge">
-                        0 / 25
-                    </span>
-
-                </div>
+        <!-- ==========================================
+             RIGHT SIDE
+        =========================================== -->
+        <div class="right-column">
 
 
-                <div class="field">
+            <!-- ======================================
+                 RECIPIENTS
+            ======================================= -->
+            <section class="card recipients-card">
 
-                    <textarea
-                        id="recipients"
-                        class="recipients"
-                        placeholder="one@email.com&#10;two@email.com&#10;three@email.com"
-                    ></textarea>
-
-                </div>
-
-            </div>
-
-
-            <!-- ==================================================
-                 PROGRESS
-            =================================================== -->
-
-            <div class="card progress-card">
-
-                <div class="card-title">
+                <div class="recipients-header">
 
                     <div>
-                        <h2>Progress Monitor</h2>
-                        <p id="statusText">
-                            Ready to send
+
+                        <div class="section-title recipient-title">
+                            <span>♣</span>
+                            <h2>Recipients</h2>
+                        </div>
+
+                        <p class="helper-text">
+                            Paste emails comma separated, new lines, or Excel copy
                         </p>
+
                     </div>
 
                     <span
-                        id="progressPercent"
-                        class="count-badge">
-                        0%
+                        id="recipientBadge"
+                        class="recipient-badge"
+                    >
+                        0 found
                     </span>
 
                 </div>
 
 
+                <textarea
+                    id="recipients"
+                    class="recipients-input"
+                    placeholder=""
+                    spellcheck="false"
+                ></textarea>
+
+
+                <div class="recipient-limit">
+                    <span id="recipientCount">0</span>
+                    / 25
+                </div>
+
+            </section>
+
+
+
+            <!-- ======================================
+                 PROGRESS MONITOR
+            ======================================= -->
+            <section class="card progress-card">
+
+                <div class="section-title">
+                    <span>◕</span>
+                    <h2>Progress Monitor</h2>
+                </div>
+
+
+                <!-- STATS -->
+                <div class="stats-grid">
+
+                    <div class="stat-box total-box">
+
+                        <span class="stat-label">
+                            TOTAL
+                        </span>
+
+                        <strong id="totalCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box sent-box">
+
+                        <span class="stat-label">
+                            SENT
+                        </span>
+
+                        <strong id="sentCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box failed-box">
+
+                        <span class="stat-label">
+                            FAILED
+                        </span>
+
+                        <strong id="failedCount">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-box remaining-box">
+
+                        <span class="stat-label">
+                            REMAINING
+                        </span>
+
+                        <strong id="remainingCount">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PROGRESS BAR -->
                 <div class="progress-track">
 
                     <div
                         id="progressBar"
-                        class="progress-bar">
-                    </div>
+                        class="progress-bar"
+                        style="width: 0%;"
+                    ></div>
 
                 </div>
 
 
-                <div class="stats-grid">
-
-                    <div class="stat">
-                        <span>Total</span>
-                        <strong id="totalCount">0</strong>
-                    </div>
-
-                    <div class="stat">
-                        <span>Sent</span>
-                        <strong id="sentCount">0</strong>
-                    </div>
-
-                    <div class="stat">
-                        <span>Failed</span>
-                        <strong id="failedCount">0</strong>
-                    </div>
-
-                    <div class="stat">
-                        <span>Remaining</span>
-                        <strong id="remainingCount">0</strong>
-                    </div>
-
+                <div
+                    id="statusText"
+                    class="status-text"
+                >
+                    Ready to send
                 </div>
 
 
                 <!-- TIMING -->
-
                 <div class="timing-grid">
 
-                    <div class="timing-item">
+                    <div>
                         <span>Elapsed</span>
                         <strong id="elapsedTime">
                             00:00.00
                         </strong>
                     </div>
 
-                    <div class="timing-item">
+                    <div>
                         <span>Speed</span>
-                        <strong id="sendSpeed">
+                        <strong id="speedText">
                             0.00 emails/sec
                         </strong>
                     </div>
 
-                    <div class="timing-item">
+                    <div>
                         <span>ETA</span>
-                        <strong id="etaTime">
+                        <strong id="etaText">
                             00:00.00
                         </strong>
                     </div>
 
-                    <div class="timing-item">
+                    <div>
                         <span>Total Time</span>
                         <strong id="totalTime">
                             —
@@ -312,52 +408,84 @@
 
                 <div
                     id="currentEmail"
-                    class="current-email">
+                    class="current-email"
+                >
                     Waiting...
                 </div>
 
 
-                <button
-                    id="sendBtn"
-                    class="send-btn"
-                    type="button">
+                <!-- BUTTONS -->
+                <div class="button-row">
 
-                    Send All
+                    <button
+                        id="sendBtn"
+                        type="button"
+                        class="send-btn"
+                    >
+                        ✈ Send All
+                    </button>
 
-                </button>
+                    <button
+                        id="stopBtn"
+                        type="button"
+                        class="stop-btn"
+                        disabled
+                    >
+                        ■ Stop Sending
+                    </button>
 
-            </div>
+                </div>
 
-        </section>
+            </section>
+
+        </div>
 
     </main>
 
 </div>
 
 
-<!-- ========================================================
-     COMPLETE POPUP
-========================================================= -->
+
+<!-- ==============================================
+     ERROR MESSAGE
+=============================================== -->
+
+<div
+    id="errorBox"
+    class="toast error-toast"
+>
+    <span id="errorText"></span>
+</div>
+
+
+
+<!-- ==============================================
+     COMPLETION MODAL
+=============================================== -->
 
 <div
     id="completeModal"
-    class="modal hidden">
+    class="modal-overlay"
+>
 
-    <div class="modal-card">
+    <div class="complete-modal">
 
-        <div class="modal-heart">
+        <div class="heart">
             ❤️
         </div>
 
-        <h2>PRADEEP ❤️</h2>
+        <h2>
+            PRADEEP ❤️
+        </h2>
 
-        <p id="completeSummary">
+        <p>
             Sending complete
         </p>
 
         <button
             id="closeModal"
-            class="primary-btn">
+            type="button"
+        >
             Close
         </button>
 
@@ -366,79 +494,200 @@
 </div>
 
 
+
 <script>
 
 const senderName = document.getElementById("senderName");
 const gmail = document.getElementById("gmail");
 const appPassword = document.getElementById("appPassword");
 const subject = document.getElementById("subject");
-const body = document.getElementById("body");
+const messageBody = document.getElementById("messageBody");
 const recipients = document.getElementById("recipients");
 
 const sendBtn = document.getElementById("sendBtn");
+const stopBtn = document.getElementById("stopBtn");
+
+const totalCount = document.getElementById("totalCount");
+const sentCount = document.getElementById("sentCount");
+const failedCount = document.getElementById("failedCount");
+const remainingCount = document.getElementById("remainingCount");
 
 const recipientCount =
     document.getElementById("recipientCount");
 
-const charCount =
-    document.getElementById("charCount");
-
-const errorBox =
-    document.getElementById("errorBox");
-
-const totalCount =
-    document.getElementById("totalCount");
-
-const sentCount =
-    document.getElementById("sentCount");
-
-const failedCount =
-    document.getElementById("failedCount");
-
-const remainingCount =
-    document.getElementById("remainingCount");
+const recipientBadge =
+    document.getElementById("recipientBadge");
 
 const progressBar =
     document.getElementById("progressBar");
 
-const progressPercent =
-    document.getElementById("progressPercent");
-
 const statusText =
     document.getElementById("statusText");
-
-const elapsedTime =
-    document.getElementById("elapsedTime");
-
-const sendSpeed =
-    document.getElementById("sendSpeed");
-
-const etaTime =
-    document.getElementById("etaTime");
-
-const totalTime =
-    document.getElementById("totalTime");
 
 const currentEmail =
     document.getElementById("currentEmail");
 
+const elapsedTime =
+    document.getElementById("elapsedTime");
+
+const speedText =
+    document.getElementById("speedText");
+
+const etaText =
+    document.getElementById("etaText");
+
+const totalTime =
+    document.getElementById("totalTime");
+
+const errorBox =
+    document.getElementById("errorBox");
+
+const errorText =
+    document.getElementById("errorText");
+
 const completeModal =
     document.getElementById("completeModal");
-
-const completeSummary =
-    document.getElementById("completeSummary");
 
 const closeModal =
     document.getElementById("closeModal");
 
+const togglePassword =
+    document.getElementById("togglePassword");
 
-/* ==========================================================
-   HELPERS
-========================================================== */
+const plainMode =
+    document.getElementById("plainMode");
+
+const htmlMode =
+    document.getElementById("htmlMode");
+
+
+let isHtml = false;
+let stopRequested = false;
+
+
+
+/* ==========================================
+   PASSWORD TOGGLE
+========================================== */
+
+togglePassword.addEventListener(
+    "click",
+    () => {
+
+        if (
+            appPassword.type === "password"
+        ) {
+
+            appPassword.type = "text";
+
+            togglePassword.textContent = "◉";
+
+        } else {
+
+            appPassword.type = "password";
+
+            togglePassword.textContent = "◉";
+        }
+
+    }
+);
+
+
+
+/* ==========================================
+   TEXT / HTML MODE
+========================================== */
+
+plainMode.addEventListener(
+    "click",
+    () => {
+
+        isHtml = false;
+
+        plainMode.classList.add("active");
+        htmlMode.classList.remove("active");
+
+    }
+);
+
+
+htmlMode.addEventListener(
+    "click",
+    () => {
+
+        isHtml = true;
+
+        htmlMode.classList.add("active");
+        plainMode.classList.remove("active");
+
+    }
+);
+
+
+
+/* ==========================================
+   RECIPIENT PARSER
+========================================== */
+
+function getRecipients() {
+
+    const text = recipients.value || "";
+
+    const parts = text
+        .split(/[\s,;]+/)
+        .map(x => x.trim().toLowerCase())
+        .filter(Boolean);
+
+    const seen = new Set();
+    const result = [];
+
+    for (const email of parts) {
+
+        if (!seen.has(email)) {
+
+            seen.add(email);
+            result.push(email);
+
+        }
+
+        if (result.length >= 25) {
+            break;
+        }
+    }
+
+    return result;
+}
+
+
+
+function updateRecipientCount() {
+
+    const list = getRecipients();
+
+    recipientCount.textContent =
+        list.length;
+
+    recipientBadge.textContent =
+        `${list.length} found`;
+
+}
+
+
+
+recipients.addEventListener(
+    "input",
+    updateRecipientCount
+);
+
+
+
+/* ==========================================
+   TIME FORMAT
+========================================== */
 
 function formatTime(seconds) {
 
-    seconds = Number(seconds || 0);
+    seconds = Number(seconds) || 0;
 
     const minutes =
         Math.floor(seconds / 60);
@@ -451,77 +700,47 @@ function formatTime(seconds) {
         + ":"
         + remaining.toFixed(2).padStart(5, "0")
     );
+
 }
 
 
+
+/* ==========================================
+   ERROR
+========================================== */
+
 function showError(message) {
 
-    errorBox.textContent = message;
-    errorBox.classList.remove("hidden");
+    errorText.textContent =
+        message || "Something went wrong.";
+
+    errorBox.classList.add("show");
+
+    setTimeout(() => {
+
+        errorBox.classList.remove("show");
+
+    }, 6000);
+
 }
 
 
 function hideError() {
 
-    errorBox.textContent = "";
-    errorBox.classList.add("hidden");
+    errorBox.classList.remove("show");
+
 }
 
 
-function getRecipients() {
 
-    return recipients.value
-        .split(/[\n,;]+/)
-        .map(value => value.trim())
-        .filter(Boolean);
-}
-
-
-function updateRecipientCount() {
-
-    const list = getRecipients();
-
-    recipientCount.textContent =
-        `${Math.min(list.length, 25)} / 25`;
-}
-
-
-function updateCharCount() {
-
-    charCount.textContent =
-        `${body.value.length} characters`;
-}
-
-
-/* ==========================================================
-   INPUT EVENTS
-========================================================== */
-
-recipients.addEventListener(
-    "input",
-    updateRecipientCount
-);
-
-body.addEventListener(
-    "input",
-    updateCharCount
-);
-
-updateRecipientCount();
-updateCharCount();
-
-
-/* ==========================================================
-   PROGRESS UPDATE
-========================================================== */
+/* ==========================================
+   UPDATE PROGRESS
+========================================== */
 
 function updateProgress(data) {
 
     const total =
         Number(data.total || 0);
-
-    const completed =
-        Number(data.completed || 0);
 
     const sent =
         Number(data.sent || 0);
@@ -532,21 +751,30 @@ function updateProgress(data) {
     const remaining =
         Number(data.remaining || 0);
 
+    const completed =
+        Number(data.completed || 0);
+
+    totalCount.textContent =
+        total;
+
+    sentCount.textContent =
+        sent;
+
+    failedCount.textContent =
+        failed;
+
+    remainingCount.textContent =
+        remaining;
+
+
     const percentage =
         total > 0
-            ? Math.round(
+            ? Math.min(
+                100,
                 (completed / total) * 100
               )
             : 0;
 
-
-    totalCount.textContent = total;
-    sentCount.textContent = sent;
-    failedCount.textContent = failed;
-    remainingCount.textContent = remaining;
-
-    progressPercent.textContent =
-        `${percentage}%`;
 
     progressBar.style.width =
         `${percentage}%`;
@@ -557,116 +785,172 @@ function updateProgress(data) {
     ) {
 
         elapsedTime.textContent =
-            data.elapsed_display
-            || formatTime(
+            formatTime(
                 data.elapsed_seconds
             );
+
     }
 
 
-    if (
-        data.speed !== undefined
-    ) {
+    if (data.speed_display) {
 
-        sendSpeed.textContent =
-            data.speed_display
-            || `${Number(data.speed).toFixed(2)} emails/sec`;
+        speedText.textContent =
+            data.speed_display;
+
     }
 
 
-    if (
-        data.eta_seconds !== undefined
-    ) {
+    if (data.eta_seconds !== undefined) {
 
-        etaTime.textContent =
-            data.eta_display
-            || formatTime(
+        etaText.textContent =
+            formatTime(
                 data.eta_seconds
             );
+
     }
 
 
     if (data.email) {
 
         currentEmail.textContent =
-            `${data.result === "sent" ? "✓" : "✕"} ${data.email}`;
+            data.email;
 
     }
 
 }
 
 
-/* ==========================================================
+
+/* ==========================================
    SEND
-========================================================== */
+========================================== */
 
 sendBtn.addEventListener(
     "click",
-    async function () {
+    async () => {
 
         hideError();
 
-        const list = getRecipients();
+        const recipientList =
+            getRecipients();
+
 
         if (!senderName.value.trim()) {
-            showError("Sender Name is required.");
+
+            showError(
+                "Sender Name is required."
+            );
+
+            senderName.focus();
+
             return;
         }
+
 
         if (!gmail.value.trim()) {
-            showError("Gmail address is required.");
+
+            showError(
+                "Gmail address is required."
+            );
+
+            gmail.focus();
+
             return;
         }
+
 
         if (!appPassword.value.trim()) {
-            showError("Google App Password is required.");
+
+            showError(
+                "Google App Password is required."
+            );
+
+            appPassword.focus();
+
             return;
         }
+
 
         if (!subject.value.trim()) {
-            showError("Email subject is required.");
+
+            showError(
+                "Email Subject is required."
+            );
+
+            subject.focus();
+
             return;
         }
 
-        if (!body.value.trim()) {
-            showError("Message body is required.");
+
+        if (!messageBody.value.trim()) {
+
+            showError(
+                "Message Body is required."
+            );
+
+            messageBody.focus();
+
             return;
         }
 
-        if (!list.length) {
-            showError("Add at least one recipient.");
+
+        if (!recipientList.length) {
+
+            showError(
+                "Add at least one recipient."
+            );
+
+            recipients.focus();
+
             return;
         }
 
-        if (list.length > 25) {
+
+        if (
+            recipientList.length > 25
+        ) {
+
             showError(
                 "Maximum 25 recipients are allowed."
             );
+
             return;
         }
 
 
-        let turnstileToken = "";
-
-        const turnstileResponse =
+        const turnstileInput =
             document.querySelector(
                 '[name="cf-turnstile-response"]'
             );
 
-        if (turnstileResponse) {
-            turnstileToken =
-                turnstileResponse.value;
+        const turnstileToken =
+            turnstileInput
+                ? turnstileInput.value
+                : "";
+
+
+        if (!turnstileToken) {
+
+            showError(
+                "Please complete the Cloudflare verification."
+            );
+
+            return;
         }
 
 
+        stopRequested = false;
+
         sendBtn.disabled = true;
-        sendBtn.textContent = "Sending...";
+
+        stopBtn.disabled = false;
 
         statusText.textContent =
-            "Sending in progress...";
+            "Connecting...";
 
         currentEmail.textContent =
-            "Connecting...";
+            "Starting...";
 
 
         const payload = {
@@ -684,15 +968,17 @@ sendBtn.addEventListener(
                 subject.value.trim(),
 
             body:
-                body.value,
+                messageBody.value,
 
-            is_html: false,
+            is_html:
+                isHtml,
 
             recipients:
-                list,
+                recipientList,
 
             turnstile_token:
                 turnstileToken
+
         };
 
 
@@ -700,7 +986,7 @@ sendBtn.addEventListener(
 
             const response =
                 await fetch(
-                    "/send-batch",
+                    "{{ url_for('send_batch') }}",
                     {
                         method: "POST",
 
@@ -710,30 +996,31 @@ sendBtn.addEventListener(
                         },
 
                         body:
-                            JSON.stringify(payload)
+                            JSON.stringify(
+                                payload
+                            )
                     }
                 );
 
 
             if (!response.ok) {
 
-                let errorData = {};
+                let errorMessage =
+                    "Unable to start sending.";
 
                 try {
-                    errorData =
+
+                    const errorData =
                         await response.json();
+
+                    errorMessage =
+                        errorData.message ||
+                        errorMessage;
+
                 } catch (_) {}
 
                 throw new Error(
-                    errorData.message
-                    || "Unable to start sending."
-                );
-            }
-
-
-            if (!response.body) {
-                throw new Error(
-                    "Streaming is not supported by this browser."
+                    errorMessage
                 );
             }
 
@@ -749,6 +1036,11 @@ sendBtn.addEventListener(
 
             while (true) {
 
+                if (stopRequested) {
+                    break;
+                }
+
+
                 const {
                     value,
                     done
@@ -763,12 +1055,15 @@ sendBtn.addEventListener(
                 buffer +=
                     decoder.decode(
                         value,
-                        { stream: true }
+                        {
+                            stream: true
+                        }
                     );
 
 
                 const lines =
                     buffer.split("\n");
+
 
                 buffer =
                     lines.pop();
@@ -788,7 +1083,9 @@ sendBtn.addEventListener(
                     try {
 
                         data =
-                            JSON.parse(line);
+                            JSON.parse(
+                                line
+                            );
 
                     } catch (_) {
 
@@ -800,63 +1097,88 @@ sendBtn.addEventListener(
 
 
                     if (
-                        data.type === "connected"
+                        data.type ===
+                        "start"
+                    ) {
+
+                        statusText.textContent =
+                            "Starting...";
+
+                    }
+
+
+                    if (
+                        data.type ===
+                        "connected"
                     ) {
 
                         statusText.textContent =
                             "Sending...";
+
                     }
 
 
                     if (
-                        data.type === "progress"
+                        data.type ===
+                        "progress"
+                    ) {
+
+                        if (
+                            data.result ===
+                            "sent"
+                        ) {
+
+                            statusText.textContent =
+                                "Sending...";
+
+                        }
+
+                    }
+
+
+                    if (
+                        data.type ===
+                        "error"
                     ) {
 
                         statusText.textContent =
-                            `Sending ${data.completed} of ${data.total}...`;
-                    }
+                            "Sending stopped";
 
-
-                    if (
-                        data.type === "error"
-                    ) {
-
-                        throw new Error(
+                        showError(
                             data.message
-                            || "Sending failed."
                         );
+
                     }
 
 
                     if (
-                        data.type === "complete"
+                        data.type ===
+                        "complete"
                     ) {
 
                         statusText.textContent =
                             "Sending complete";
 
-                        currentEmail.textContent =
-                            "All recipients processed";
-
                         totalTime.textContent =
-                            data.total_time_display
-                            || formatTime(
+                            data.total_time_display ||
+                            formatTime(
                                 data.total_time_seconds
                             );
 
-                        sendSpeed.textContent =
-                            data.average_speed_display
-                            || "0.00 emails/sec";
+                        progressBar.style.width =
+                            "100%";
 
+                        currentEmail.textContent =
+                            "Completed";
 
-                        completeSummary.textContent =
-                            `${data.sent} sent, ${data.failed} failed • Total time: ${data.total_time_display}`;
-
-                        completeModal.classList.remove(
-                            "hidden"
+                        completeModal.classList.add(
+                            "show"
                         );
+
                     }
+
                 }
+
             }
 
 
@@ -864,69 +1186,104 @@ sendBtn.addEventListener(
 
             showError(
                 error.message
-                || "Something went wrong."
             );
 
             statusText.textContent =
-                "Sending stopped.";
+                "Unable to send";
+
 
         } finally {
 
             sendBtn.disabled = false;
-            sendBtn.textContent = "Send All";
+
+            stopBtn.disabled = true;
+
         }
 
     }
 );
 
 
-/* ==========================================================
-   POPUP
-========================================================== */
+
+/* ==========================================
+   STOP BUTTON
+========================================== */
+
+stopBtn.addEventListener(
+    "click",
+    () => {
+
+        stopRequested = true;
+
+        statusText.textContent =
+            "Stopping...";
+
+        stopBtn.disabled = true;
+
+    }
+);
+
+
+
+/* ==========================================
+   CLOSE MODAL
+========================================== */
 
 closeModal.addEventListener(
     "click",
-    function () {
+    () => {
 
-        completeModal.classList.add(
-            "hidden"
+        completeModal.classList.remove(
+            "show"
         );
+
     }
 );
 
 
 completeModal.addEventListener(
     "click",
-    function (event) {
+    (event) => {
 
         if (
-            event.target === completeModal
+            event.target ===
+            completeModal
         ) {
 
-            completeModal.classList.add(
-                "hidden"
+            completeModal.classList.remove(
+                "show"
             );
+
         }
+
     }
 );
 
 
 document.addEventListener(
     "keydown",
-    function (event) {
+    (event) => {
 
         if (
-            !completeModal.classList.contains(
-                "hidden"
-            )
+            event.key === "Escape"
         ) {
 
-            completeModal.classList.add(
-                "hidden"
+            completeModal.classList.remove(
+                "show"
             );
+
         }
+
     }
 );
+
+
+
+/* ==========================================
+   INITIAL
+========================================== */
+
+updateRecipientCount();
 
 </script>
 
