@@ -10,11 +10,7 @@ body {
 }
 
 body {
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
+    font-family: Arial, Helvetica, sans-serif;
     background: #f4f7fb;
     color: #08152d;
 }
@@ -30,46 +26,31 @@ button {
 }
 
 
-/* =========================================
-   PAGE
-========================================= */
+/* PAGE */
 
 .page {
     width: 100%;
     max-width: 1120px;
-
     margin: 0 auto;
-
-    padding:
-        16px
-        20px
-        55px;
+    padding: 16px 20px 55px;
 }
 
 
-/* =========================================
-   HEADER
-========================================= */
+/* HEADER */
 
 .top-header {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     margin-bottom: 28px;
 }
 
 .brand {
     display: flex;
-
     align-items: center;
-
     gap: 10px;
 
     font-size: 31px;
-
     font-weight: 800;
 
     background:
@@ -80,27 +61,20 @@ button {
         );
 
     -webkit-background-clip: text;
-
     background-clip: text;
-
     color: transparent;
 }
 
 .brand-shield {
     width: 30px;
-
     height: 34px;
 
     display: inline-flex;
-
     align-items: center;
-
     justify-content: center;
 
     color: #347cff;
-
     font-size: 37px;
-
     font-weight: bold;
 }
 
@@ -109,19 +83,15 @@ button {
 
     color: #ff535b;
 
-    border:
-        1px solid #ffb5b8;
+    border: 1px solid #ffb5b8;
 
     background: #fff;
 
     border-radius: 7px;
 
-    padding:
-        6px
-        13px;
+    padding: 6px 13px;
 
     font-size: 12px;
-
     font-weight: 600;
 }
 
@@ -130,15 +100,11 @@ button {
 }
 
 
-/* =========================================
-   TITLE
-========================================= */
+/* TITLE */
 
 .page-title {
     display: flex;
-
     align-items: center;
-
     gap: 13px;
 
     margin-bottom: 22px;
@@ -146,22 +112,17 @@ button {
 
 .page-title span {
     font-size: 25px;
-
     color: #0b1425;
 }
 
 .page-title h1 {
     margin: 0;
-
     font-size: 23px;
-
     font-weight: 800;
 }
 
 
-/* =========================================
-   GRID
-========================================= */
+/* GRID */
 
 .dashboard-grid {
     display: grid;
@@ -176,32 +137,22 @@ button {
 }
 
 
-/* =========================================
-   CARD
-========================================= */
+/* CARD */
 
 .card {
     background: #fff;
 
-    border:
-        1px solid #e1e6ef;
+    border: 1px solid #e1e6ef;
 
     border-radius: 11px;
 
     box-shadow:
         0 7px 22px
-        rgba(
-            31,
-            52,
-            82,
-            0.07
-        );
+        rgba(31, 52, 82, 0.07);
 }
 
 
-/* =========================================
-   COMPOSE
-========================================= */
+/* COMPOSE */
 
 .compose-card {
     padding: 29px;
@@ -209,9 +160,7 @@ button {
 
 .section-title {
     display: flex;
-
     align-items: center;
-
     gap: 7px;
 
     margin-bottom: 5px;
@@ -219,39 +168,29 @@ button {
 
 .section-title span {
     font-size: 18px;
-
     color: #07152d;
 }
 
 .section-title h2 {
     margin: 0;
-
     font-size: 18px;
-
     font-weight: 800;
 }
 
 
-/* =========================================
-   FORM
-========================================= */
+/* FORM */
 
 .form-grid {
     display: grid;
+    grid-template-columns: 1fr 1fr;
 
-    grid-template-columns:
-        1fr 1fr;
-
-    gap:
-        17px
-        14px;
+    gap: 17px 14px;
 }
 
 .field label {
     display: block;
 
     font-size: 11px;
-
     font-weight: 700;
 
     margin-bottom: 8px;
@@ -259,22 +198,17 @@ button {
 
 .field input {
     width: 100%;
-
     height: 43px;
 
-    padding:
-        0
-        13px;
+    padding: 0 13px;
 
-    border:
-        1px solid #d5ddea;
+    border: 1px solid #d5ddea;
 
     border-radius: 7px;
 
     outline: none;
 
     color: #27364c;
-
     background: #fff;
 
     font-size: 13px;
@@ -287,18 +221,11 @@ button {
 
     box-shadow:
         0 0 0 3px
-        rgba(
-            72,
-            119,
-            255,
-            0.08
-        );
+        rgba(72, 119, 255, 0.08);
 }
 
 
-/* =========================================
-   PASSWORD
-========================================= */
+/* PASSWORD */
 
 .password-wrap {
     position: relative;
@@ -312,14 +239,11 @@ button {
     position: absolute;
 
     right: 8px;
-
     top: 50%;
 
-    transform:
-        translateY(-50%);
+    transform: translateY(-50%);
 
     border: 0;
-
     background: transparent;
 
     color: #74839a;
@@ -328,37 +252,29 @@ button {
 }
 
 
-/* =========================================
-   MESSAGE
-========================================= */
+/* MESSAGE */
 
 .body-header {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
     margin-top: 17px;
-
     margin-bottom: 8px;
 }
 
 .body-header label {
     font-size: 11px;
-
     font-weight: 700;
 }
 
 .mode-buttons {
     display: flex;
-
     gap: 5px;
 }
 
 .mode-btn {
-    border:
-        1px solid #d5ddea;
+    border: 1px solid #d5ddea;
 
     background: #fff;
 
@@ -368,9 +284,7 @@ button {
 
     font-size: 10px;
 
-    padding:
-        4px
-        9px;
+    padding: 4px 9px;
 }
 
 .mode-btn.active {
@@ -385,15 +299,12 @@ button {
     display: block;
 
     width: 100%;
-
     height: 264px;
 
     resize: vertical;
-
     min-height: 150px;
 
-    border:
-        1px solid #d5ddea;
+    border: 1px solid #d5ddea;
 
     border-radius: 7px;
 
@@ -402,34 +313,25 @@ button {
     padding: 12px;
 
     font-size: 13px;
-
     line-height: 1.55;
 
     color: #26364e;
-
     background: #fff;
 }
 
 
-/* =========================================
-   SPINTAX
-========================================= */
+/* SPINTAX */
 
 .spintax-box {
     display: flex;
-
     align-items: center;
-
     gap: 11px;
 
     margin-top: 21px;
 
-    padding:
-        11px
-        13px;
+    padding: 11px 13px;
 
-    border:
-        1px solid #d7e5fa;
+    border: 1px solid #d7e5fa;
 
     border-radius: 7px;
 
@@ -438,7 +340,6 @@ button {
 
 .spintax-icon {
     color: #317cf4;
-
     font-size: 19px;
 }
 
@@ -461,23 +362,17 @@ button {
 }
 
 
-/* =========================================
-   TURNSTILE
-========================================= */
+/* TURNSTILE */
 
 .protection-title {
     display: flex;
-
     align-items: center;
-
     gap: 5px;
 
     margin-top: 17px;
-
     margin-bottom: 14px;
 
     font-size: 12px;
-
     font-weight: 700;
 }
 
@@ -489,13 +384,11 @@ button {
     min-height: 65px;
 
     display: flex;
-
     align-items: center;
 }
 
 .turnstile-missing {
-    border:
-        1px solid #e2e5ea;
+    border: 1px solid #e2e5ea;
 
     background: #fafafa;
 
@@ -507,35 +400,24 @@ button {
 }
 
 
-/* =========================================
-   RIGHT COLUMN
-========================================= */
+/* RIGHT */
 
 .right-column {
     display: flex;
-
     flex-direction: column;
-
     gap: 20px;
 }
 
 
-/* =========================================
-   RECIPIENTS
-========================================= */
+/* RECIPIENTS */
 
 .recipients-card {
-    padding:
-        27px
-        29px
-        29px;
+    padding: 27px 29px 29px;
 }
 
 .recipients-header {
     display: flex;
-
     align-items: flex-start;
-
     justify-content: space-between;
 }
 
@@ -544,11 +426,7 @@ button {
 }
 
 .helper-text {
-    margin:
-        0
-        0
-        10px
-        21px;
+    margin: 0 0 10px 21px;
 
     color: #6e82a7;
 
@@ -562,26 +440,20 @@ button {
 
     border-radius: 20px;
 
-    padding:
-        5px
-        10px;
+    padding: 5px 10px;
 
     font-size: 9px;
-
     font-weight: 600;
 }
 
 .recipients-input {
     width: 100%;
-
     height: 135px;
 
     resize: vertical;
-
     min-height: 100px;
 
-    border:
-        1px solid #d5ddea;
+    border: 1px solid #d5ddea;
 
     border-radius: 7px;
 
@@ -603,9 +475,7 @@ button {
 }
 
 
-/* =========================================
-   PROGRESS
-========================================= */
+/* PROGRESS */
 
 .progress-card {
     padding: 29px;
@@ -614,8 +484,7 @@ button {
 .stats-grid {
     display: grid;
 
-    grid-template-columns:
-        1fr 1fr;
+    grid-template-columns: 1fr 1fr;
 
     gap: 14px;
 
@@ -625,17 +494,14 @@ button {
 .stat-box {
     height: 91px;
 
-    border:
-        1px solid #d5ddea;
+    border: 1px solid #d5ddea;
 
     border-radius: 7px;
 
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
-
     justify-content: center;
 }
 
@@ -649,7 +515,6 @@ button {
 
 .stat-box strong {
     font-size: 25px;
-
     line-height: 1;
 }
 
@@ -670,13 +535,10 @@ button {
 }
 
 
-/* =========================================
-   PROGRESS BAR
-========================================= */
+/* PROGRESS BAR */
 
 .progress-track {
     width: 100%;
-
     height: 7px;
 
     background: #e4e9f0;
@@ -700,8 +562,7 @@ button {
 
     border-radius: 20px;
 
-    transition:
-        width 0.25s ease;
+    transition: width 0.25s ease;
 }
 
 .status-text {
@@ -710,22 +571,18 @@ button {
     margin-top: 13px;
 
     font-size: 12px;
-
     font-weight: 600;
 
     color: #10213a;
 }
 
 
-/* =========================================
-   TIMING
-========================================= */
+/* TIMING */
 
 .timing-grid {
     display: grid;
 
-    grid-template-columns:
-        1fr 1fr;
+    grid-template-columns: 1fr 1fr;
 
     gap: 8px;
 
@@ -735,8 +592,7 @@ button {
 .timing-grid div {
     background: #f8faff;
 
-    border:
-        1px solid #e6ebf3;
+    border: 1px solid #e6ebf3;
 
     border-radius: 6px;
 
@@ -764,9 +620,7 @@ button {
 }
 
 
-/* =========================================
-   CURRENT EMAIL
-========================================= */
+/* CURRENT */
 
 .current-email {
     min-height: 18px;
@@ -787,15 +641,12 @@ button {
 }
 
 
-/* =========================================
-   BUTTONS
-========================================= */
+/* BUTTONS */
 
 .button-row {
     display: grid;
 
-    grid-template-columns:
-        1fr 1fr;
+    grid-template-columns: 1fr 1fr;
 
     gap: 14px;
 
@@ -813,7 +664,6 @@ button {
     color: #fff;
 
     font-size: 12px;
-
     font-weight: 700;
 }
 
@@ -836,49 +686,36 @@ button {
 .send-btn:disabled,
 .stop-btn:disabled {
     cursor: not-allowed;
-
     opacity: 0.55;
 }
 
 
-/* =========================================
-   ERROR
-========================================= */
+/* ERROR */
 
 .toast {
     position: fixed;
 
     right: 22px;
-
     bottom: 22px;
 
     z-index: 1000;
 
     max-width: 360px;
 
-    padding:
-        13px
-        17px;
+    padding: 13px 17px;
 
     border-radius: 8px;
 
     color: #fff;
 
     font-size: 12px;
-
     font-weight: 600;
 
     box-shadow:
         0 10px 30px
-        rgba(
-            0,
-            0,
-            0,
-            0.15
-        );
+        rgba(0, 0, 0, 0.15);
 
-    transform:
-        translateY(20px);
+    transform: translateY(20px);
 
     opacity: 0;
 
@@ -893,9 +730,7 @@ button {
 }
 
 .toast.show {
-    transform:
-        translateY(0);
-
+    transform: translateY(0);
     opacity: 1;
 }
 
@@ -918,12 +753,7 @@ button {
     justify-content: center;
 
     background:
-        rgba(
-            8,
-            20,
-            40,
-            0.45
-        );
+        rgba(8, 20, 40, 0.45);
 
     opacity: 0;
 
@@ -936,7 +766,6 @@ button {
 
 .modal-overlay.show {
     opacity: 1;
-
     visibility: visible;
 }
 
@@ -953,24 +782,16 @@ button {
 
     box-shadow:
         0 20px 60px
-        rgba(
-            0,
-            0,
-            0,
-            0.2
-        );
+        rgba(0, 0, 0, 0.2);
 
-    transform:
-        scale(0.95);
+    transform: scale(0.95);
 
     transition:
         transform 0.2s ease;
 }
 
-.modal-overlay.show
-.complete-modal {
-    transform:
-        scale(1);
+.modal-overlay.show .complete-modal {
+    transform: scale(1);
 }
 
 .heart {
@@ -992,10 +813,7 @@ button {
 
     font-size: 13px;
 
-    margin:
-        8px
-        0
-        22px;
+    margin: 8px 0 22px;
 }
 
 .complete-modal button {
@@ -1007,17 +825,13 @@ button {
 
     border-radius: 7px;
 
-    padding:
-        9px
-        25px;
+    padding: 9px 25px;
 
     font-weight: 700;
 }
 
 
-/* =========================================
-   RESPONSIVE
-========================================= */
+/* RESPONSIVE */
 
 @media (max-width: 850px) {
 
@@ -1031,10 +845,7 @@ button {
 @media (max-width: 600px) {
 
     .page {
-        padding:
-            15px
-            12px
-            35px;
+        padding: 15px 12px 35px;
     }
 
     .brand {
@@ -1047,10 +858,7 @@ button {
 
     .logout-btn {
         font-size: 10px;
-
-        padding:
-            6px
-            9px;
+        padding: 6px 9px;
     }
 
     .page-title h1 {
@@ -1065,7 +873,6 @@ button {
 
     .form-grid {
         grid-template-columns: 1fr;
-
         gap: 14px;
     }
 
