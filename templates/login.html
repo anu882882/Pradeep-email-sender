@@ -3,63 +3,87 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>Sign in · Secure Mail Console</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    .login-page {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 22px;
-      background: linear-gradient(135deg, #f4f7fb, #eaf0fb);
-    }
-    .login-card {
-      width: 100%;
-      max-width: 390px;
-      background: #fff;
-      border: 1px solid #e1e7f0;
-      border-radius: 15px;
-      padding: 32px;
-      box-shadow: 0 12px 40px rgba(35,55,90,.09);
-    }
-    .login-logo { font-size: 34px; text-align: center; margin-bottom: 10px; }
-    .login-card h1 { text-align: center; font-size: 22px; margin: 0 0 8px; }
-    .login-subtitle { text-align: center; color: #7b8798; margin: 0 0 25px; font-size: 13px; }
-    .login-card label { display: block; font-size: 13px; font-weight: 600; color: #3a465a; }
-    .login-card input {
-      display: block; width: 100%; margin-top: 8px;
-      border: 1px solid #d6deea; border-radius: 7px; padding: 12px;
-      font: 14px Arial, Helvetica, sans-serif; outline: none;
-    }
-    .login-card input:focus {
-      border-color: #678ee8;
-      box-shadow: 0 0 0 3px rgba(74,117,220,.1);
-    }
-    .login-card button { width: 100%; margin-top: 18px; }
-    .login-error {
-      border-radius: 7px; padding: 10px 12px;
-      background: #fff0f0; color: #b42318;
-      font-size: 12px; margin-bottom: 15px;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
+
 <body class="login-page">
   <main class="login-card">
-    <div class="login-logo">🛡️</div>
+    <div class="login-logo">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+
     <h1>Secure Mail Console</h1>
-    <p class="login-subtitle">Sign in to continue</p>
+    <p class="login-subtitle">Sign in to access your email workspace.</p>
 
     {% if error %}
-      <div class="login-error">{{ error }}</div>
+    <div class="login-error" role="alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ error }}
+    </div>
     {% endif %}
 
-    <form method="post">
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter your password"
-             autocomplete="current-password" required autofocus>
-      <button class="primary-button" type="submit">Sign In</button>
+    <form method="post" autocomplete="on">
+      <label for="password">Access password</label>
+
+      <div class="login-password">
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+          autofocus
+        >
+
+        <button
+          type="button"
+          id="showPassword"
+          aria-label="Show password"
+          title="Show password"
+        >
+          <i class="fa-regular fa-eye" id="passwordIcon"></i>
+        </button>
+      </div>
+
+      <button class="primary-button" type="submit">
+        <i class="fa-solid fa-lock-open"></i>
+        Sign in securely
+      </button>
     </form>
+
+    <p class="login-footer">
+      <i class="fa-solid fa-shield-halved"></i>
+      Private workspace · Protected sign-in
+    </p>
   </main>
+
+  <script>
+    const passwordInput = document.getElementById("password");
+    const showPasswordButton = document.getElementById("showPassword");
+    const passwordIcon = document.getElementById("passwordIcon");
+
+    showPasswordButton.addEventListener("click", () => {
+      const reveal = passwordInput.type === "password";
+
+      passwordInput.type = reveal ? "text" : "password";
+      passwordIcon.className = reveal
+        ? "fa-regular fa-eye-slash"
+        : "fa-regular fa-eye";
+
+      showPasswordButton.setAttribute(
+        "aria-label",
+        reveal ? "Hide password" : "Show password"
+      );
+
+      showPasswordButton.title = reveal
+        ? "Hide password"
+        : "Show password";
+    });
+  </script>
 </body>
 </html>
