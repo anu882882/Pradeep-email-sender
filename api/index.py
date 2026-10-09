@@ -21,7 +21,6 @@ app = Flask(
     static_folder=str(BASE_DIR / "static"),
     static_url_path="/static"
 )
-
 handler = app
 
 app.secret_key = os.environ.get(
@@ -72,27 +71,6 @@ def clean_header(value):
     )
 
 
-def expand_spintax(text):
-    pattern = re.compile(r"\{([^{}]+)\}")
-
-    def replace_match(match):
-        options = [
-            option.strip()
-            for option in match.group(1).split("|")
-            if option.strip()
-        ]
-        if len(options) < 2:
-            return match.group(0)
-        return secrets.choice(options)
-
-    previous = None
-    while previous != text:
-        previous = text
-        text = pattern.sub(replace_match, text)
-
-    return text
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if authenticated():
@@ -106,12 +84,10 @@ def login():
 
         if not configured_password:
             error = "LOGIN_PASSWORD is not configured."
-
         elif secrets.compare_digest(password, configured_password):
             session.clear()
             session["authenticated"] = True
             return redirect(url_for("home"))
-
         else:
             error = "Incorrect password."
 
@@ -143,15 +119,12 @@ def send_one_email(
 ):
     context = ssl.create_default_context()
 
-    final_subject = expand_spintax(subject)
-    final_body = expand_spintax(body)
-
     message = MIMEText(
-        final_body,
+        body,
         "html" if is_html else "plain",
         "utf-8"
     )
-    message["Subject"] = final_subject
+    message["Subject"] = subject
     message["From"] = formataddr((sender_name, gmail))
     message["To"] = recipient
     message["Date"] = formatdate(localtime=True)
@@ -224,6 +197,7 @@ def send_batch():
         }), 400
 
     clean_recipients = []
+
     for item in recipients:
         email = str(item).strip().lower()
 
@@ -332,7 +306,6 @@ def health():
         "status": "ok",
         "service": "Secure Mail Console",
         "mailer": "Gmail SMTP",
-        "spintax": "enabled",
         "parallel_sends": MAX_PARALLEL_SENDS
     })
 
