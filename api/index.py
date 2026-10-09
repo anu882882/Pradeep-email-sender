@@ -1,1176 +1,135 @@
-from flask import (
-    Flask,
-    Response,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    stream_with_context,
-    url_for,
-)
 
-from email.mime.text import MIMEText
-from email.utils import formataddr, formatdate, make_msgid
 from pathlib import Path
+import zipfile
 
-import json
-import os
-import random
-import re
-import secrets
-import smtplib
-import ssl
-import time
-import urllib.parse
-import urllib.request
-
-
-# =========================================================
-# APP CONFIG
-# =========================================================
+project = Path("secure_mail_console_updated")
+files = {
+    "requirements.txt": "Flask==3.1.2\n",
+    "vercel.json": '''{
+  "version": 2,
+  "builds": [{"src": "api/index.py", "use": "@vercel/python"}],
+  "routes": [
+    {"src": "/static/(.*)", "dest": "/static/$1"},
+    {"src": "/(.*)", "dest": "api/index.py"}
+  ]
+}''',
+    ".env.example": """LOGIN_PASSWORD=your_strong_password
+SESSION_SECRET=your_long_random_secret
+TURNSTILE_SITE_KEY=your_turnstile_site_key
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key
+MAIL_GAP_SECONDS=0
+""",
+    "api/index.py": '''from flask import Flask, Response, jsonify, redirect, render_template, request, session, url_for
+from pathlib import Path
+import os, secrets
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-app = Flask(
-    __name__,
-    template_folder=str(BASE_DIR / "templates"),
-    static_folder=str(BASE_DIR / "static"),
-    static_url_path="/static",
-)
-
-# Vercel Python entry point
+app = Flask(__name__, template_folder=str(BASE_DIR / "templates"),
+            static_folder=str(BASE_DIR / "static"))
 handler = app
-
-
-# =========================================================
-# ENVIRONMENT VARIABLES
-# =========================================================
-
 app.secret_key = os.getenv("SESSION_SECRET", "")
+LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "")
 
-LOGIN_PASSWORD = os.getenv(
-    "LOGIN_PASSWORD",
-    ""
-)
-
-TURNSTILE_SECRET_KEY = os.getenv(
-    "TURNSTILE_SECRET_KEY",
-    ""
-)
-
-
-# =========================================================
-# SMTP SETTINGS
-# =========================================================
-
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 465
-SMTP_TIMEOUT = 20
-
-MAX_RECIPIENTS = 25
-
-
-def get_mail_gap():
-    try:
-        return max(
-            0.0,
-            float(
-                os.getenv(
-                    "MAIL_GAP_SECONDS",
-                    "0"
-                )
-            )
-        )
-    except (TypeError, ValueError):
-        return 0.0
-
-
-MAIL_GAP_SECONDS = get_mail_gap()
-
-
-# =========================================================
-# VALIDATION
-# =========================================================
-
-EMAIL_RE = re.compile(
-    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
-    r"[A-Za-z0-9-]+"
-    r"(?:\.[A-Za-z0-9-]+)+$"
-)
-
-SPINTAX_RE = re.compile(
-    r"\{([^{}]+)\}"
-)
-
-
-def authenticated():
-    return (
-        session.get("authenticated")
-        is True
-    )
-
-
-def valid_email(value):
-    return bool(
-        EMAIL_RE.fullmatch(
-            str(value or "").strip()
-        )
-    )
-
-
-def safe_header(value):
-    return (
-        str(value or "")
-        .replace("\r", " ")
-        .replace("\n", " ")
-        .strip()
-    )
-
-
-# =========================================================
-# RESPONSE HELPERS
-# =========================================================
-
-def ndjson(data):
-    return (
-        json.dumps(
-            data,
-            ensure_ascii=False
-        )
-        + "\n"
-    )
-
-
-def format_seconds(seconds):
-    seconds = max(
-        0.0,
-        float(seconds)
-    )
-
-    minutes = int(
-        seconds // 60
-    )
-
-    remaining = (
-        seconds
-        - (minutes * 60)
-    )
-
-    return (
-        f"{minutes:02d}:"
-        f"{remaining:05.2f}"
-    )
-
-
-# =========================================================
-# SPINTAX
-# =========================================================
-
-def render_spintax(text):
-    """
-    Example:
-
-    {Hello|Hi|Hey} {there|friend}
-
-    becomes one random version.
-    """
-
-    text = str(text or "")
-
-    for _ in range(10):
-
-        changed = False
-
-        def replace(match):
-
-            nonlocal changed
-
-            options = [
-                item.strip()
-                for item in match.group(1).split("|")
-                if item.strip()
-            ]
-
-            if len(options) < 2:
-                return match.group(0)
-
-            changed = True
-
-            return random.choice(
-                options
-            )
-
-        updated = SPINTAX_RE.sub(
-            replace,
-            text
-        )
-
-        text = updated
-
-        if not changed:
-            break
-
-    return text
-
-
-# =========================================================
-# RECIPIENT QUEUE
-# =========================================================
-
-def build_recipient_queue(raw):
-
-    if not isinstance(raw, list):
-        return []
-
-    recipients = []
-    seen = set()
-
-    for item in raw:
-
-        email = (
-            str(item or "")
-            .strip()
-            .lower()
-        )
-
-        if not valid_email(email):
-            continue
-
-        if email in seen:
-            continue
-
-        seen.add(email)
-        recipients.append(email)
-
-        if len(recipients) >= MAX_RECIPIENTS:
-            break
-
-    return recipients
-
-
-# =========================================================
-# PROGRESS
-# =========================================================
-
-def make_progress(
-    event,
-    total,
-    sent,
-    failed,
-    elapsed=0.0,
-    started_at=None,
-    **extra
-):
-
-    completed = sent + failed
-
-    remaining = max(
-        0,
-        total - completed
-    )
-
-    speed = (
-        completed / elapsed
-        if elapsed > 0
-        else 0.0
-    )
-
-    eta = (
-        remaining / speed
-        if speed > 0
-        else 0.0
-    )
-
-    data = {
-        "type": event,
-
-        "total": total,
-
-        "sent": sent,
-
-        "failed": failed,
-
-        "completed": completed,
-
-        "remaining": remaining,
-
-        "elapsed_seconds": round(
-            elapsed,
-            2
-        ),
-
-        "elapsed_display":
-            format_seconds(elapsed),
-
-        "speed": round(
-            speed,
-            2
-        ),
-
-        "speed_display":
-            f"{speed:.2f} emails/sec",
-
-        "eta_seconds": round(
-            eta,
-            2
-        ),
-
-        "eta_display":
-            format_seconds(eta),
-    }
-
-    if started_at:
-        data["started_at"] = started_at
-
-    data.update(extra)
-
-    return ndjson(data)
-
-
-# =========================================================
-# CLOUDFLARE TURNSTILE
-# =========================================================
-
-def verify_turnstile(
-    token,
-    remote_ip=None
-):
-
-    if not TURNSTILE_SECRET_KEY:
-
-        return (
-            False,
-            "TURNSTILE_SECRET_KEY is not configured."
-        )
-
-    if not token:
-
-        return (
-            False,
-            "Cloudflare verification is required."
-        )
-
-    values = {
-        "secret":
-            TURNSTILE_SECRET_KEY,
-
-        "response":
-            token,
-    }
-
-    if remote_ip:
-        values["remoteip"] = remote_ip
-
-    encoded = urllib.parse.urlencode(
-        values
-    ).encode("utf-8")
-
-    req = urllib.request.Request(
-        (
-            "https://challenges.cloudflare.com/"
-            "turnstile/v0/siteverify"
-        ),
-        data=encoded,
-        headers={
-            "Content-Type":
-                "application/x-www-form-urlencoded"
-        },
-        method="POST",
-    )
-
-    try:
-
-        with urllib.request.urlopen(
-            req,
-            timeout=10
-        ) as response:
-
-            result = json.loads(
-                response
-                .read()
-                .decode("utf-8")
-            )
-
-        if result.get("success"):
-
-            return (
-                True,
-                None
-            )
-
-        return (
-            False,
-            "Cloudflare verification failed."
-        )
-
-    except Exception:
-
-        return (
-            False,
-            "Unable to verify Cloudflare."
-        )
-
-
-# =========================================================
-# EMAIL CREATION
-# =========================================================
-
-def create_message(
-    sender_name,
-    sender_email,
-    recipient,
-    subject,
-    body,
-    html_mode
-):
-
-    # Spintax is always enabled
-    final_subject = render_spintax(
-        subject
-    )
-
-    final_body = render_spintax(
-        body
-    )
-
-    message = MIMEText(
-        final_body,
-        "html" if html_mode else "plain",
-        "utf-8"
-    )
-
-    message["Subject"] = (
-        final_subject
-    )
-
-    message["From"] = formataddr(
-        (
-            sender_name,
-            sender_email
-        )
-    )
-
-    message["To"] = recipient
-
-    message["Date"] = formatdate(
-        localtime=True
-    )
-
-    message["Message-ID"] = make_msgid()
-
-    return message
-
-
-# =========================================================
-# SMTP CONNECTION
-# =========================================================
-
-def create_smtp(
-    gmail,
-    app_password
-):
-
-    context = (
-        ssl.create_default_context()
-    )
-
-    smtp = smtplib.SMTP_SSL(
-        SMTP_HOST,
-        SMTP_PORT,
-        context=context,
-        timeout=SMTP_TIMEOUT
-    )
-
-    try:
-
-        smtp.ehlo()
-
-        smtp.login(
-            gmail,
-            app_password
-        )
-
-        return smtp
-
-    except Exception:
-
-        try:
-            smtp.quit()
-        except Exception:
-            pass
-
-        raise
-
-
-# =========================================================
-# LOGIN
-# =========================================================
-
-@app.route(
-    "/login",
-    methods=["GET", "POST"]
-)
+@app.route("/login", methods=["GET", "POST"])
 def login():
-
-    if authenticated():
-
-        return redirect(
-            url_for("home")
-        )
-
-    error = None
-
     if request.method == "POST":
-
-        password = str(
-            request.form.get(
-                "password",
-                ""
-            )
-        )
-
-        if not LOGIN_PASSWORD:
-
-            error = (
-                "LOGIN_PASSWORD is not configured."
-            )
-
-        elif secrets.compare_digest(
-            password,
-            LOGIN_PASSWORD
-        ):
-
-            session.clear()
-
+        password = request.form.get("password", "")
+        if LOGIN_PASSWORD and secrets.compare_digest(password, LOGIN_PASSWORD):
             session["authenticated"] = True
-
-            return redirect(
-                url_for("home")
-            )
-
-        else:
-
-            error = (
-                "Incorrect password."
-            )
-
-    return render_template(
-        "login.html",
-        error=error
-    )
-
-
-# =========================================================
-# LOGOUT
-# =========================================================
+            return redirect(url_for("home"))
+        return render_template("login.html", error="Incorrect password.")
+    return render_template("login.html", error=None)
 
 @app.route("/logout")
 def logout():
-
     session.clear()
-
-    return redirect(
-        url_for("login")
-    )
-
-
-# =========================================================
-# HOME
-# =========================================================
+    return redirect(url_for("login"))
 
 @app.route("/")
 def home():
-
-    if not authenticated():
-
-        return redirect(
-            url_for("login")
-        )
-
-    return render_template(
-        "index.html",
-        turnstile_site_key=os.getenv(
-            "TURNSTILE_SITE_KEY",
-            ""
-        )
-    )
-
-
-# =========================================================
-# SEND BATCH
-# =========================================================
-
-@app.route(
-    "/send-batch",
-    methods=["POST"]
-)
-def send_batch():
-
-    if not authenticated():
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Authentication required."
-        }), 401
-
-    data = request.get_json(
-        silent=True
-    )
-
-    if not isinstance(data, dict):
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Invalid JSON request."
-        }), 400
-
-
-    # -----------------------------------------------------
-    # INPUTS
-    # -----------------------------------------------------
-
-    sender_name = safe_header(
-        data.get(
-            "sender_name",
-            ""
-        )
-    )
-
-    gmail = safe_header(
-        data.get(
-            "gmail",
-            ""
-        )
-    ).lower()
-
-    app_password = str(
-        data.get(
-            "app_password",
-            ""
-        )
-    ).strip()
-
-    subject = safe_header(
-        data.get(
-            "subject",
-            ""
-        )
-    )
-
-    body = str(
-        data.get(
-            "body",
-            ""
-        )
-    )
-
-    html_mode = (
-        data.get(
-            "is_html",
-            False
-        )
-        is True
-    )
-
-    recipients = build_recipient_queue(
-        data.get(
-            "recipients",
-            []
-        )
-    )
-
-    turnstile_token = str(
-        data.get(
-            "turnstile_token",
-            ""
-        )
-    ).strip()
-
-
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
-
-    if not sender_name:
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Sender Name is required."
-        }), 400
-
-
-    if not valid_email(gmail):
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Enter a valid Gmail address."
-        }), 400
-
-
-    if not app_password:
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Google App Password is required."
-        }), 400
-
-
-    if not subject:
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Email subject is required."
-        }), 400
-
-
-    if not body.strip():
-
-        return jsonify({
-            "success": False,
-            "message":
-                "Message body is required."
-        }), 400
-
-
-    if not recipients:
-
-        return jsonify({
-            "success": False,
-            "message":
-                "No valid recipients found."
-        }), 400
-
-
-    # -----------------------------------------------------
-    # TURNSTILE
-    # -----------------------------------------------------
-
-    forwarded = request.headers.get(
-        "X-Forwarded-For"
-    )
-
-    remote_ip = (
-        forwarded.split(",")[0].strip()
-        if forwarded
-        else request.remote_addr
-    )
-
-    passed, error = verify_turnstile(
-        turnstile_token,
-        remote_ip
-    )
-
-    if not passed:
-
-        return jsonify({
-            "success": False,
-            "message": error
-        }), 403
-
-
-    # =====================================================
-    # STREAMING GENERATOR
-    # =====================================================
-
-    @stream_with_context
-    def generate():
-
-        total = len(
-            recipients
-        )
-
-        sent = 0
-        failed = 0
-
-        smtp = None
-
-        start_time = (
-            time.perf_counter()
-        )
-
-        started_at = time.strftime(
-            "%H:%M:%S"
-        )
-
-
-        # -------------------------------------------------
-        # START
-        # -------------------------------------------------
-
-        yield make_progress(
-            "start",
-            total,
-            sent,
-            failed,
-            elapsed=0,
-            started_at=started_at
-        )
-
-
-        try:
-
-            # ---------------------------------------------
-            # CONNECT TO GMAIL
-            # ---------------------------------------------
-
-            smtp = create_smtp(
-                gmail,
-                app_password
-            )
-
-            elapsed = (
-                time.perf_counter()
-                - start_time
-            )
-
-            yield make_progress(
-                "connected",
-                total,
-                sent,
-                failed,
-                elapsed=elapsed,
-                started_at=started_at
-            )
-
-
-            # ---------------------------------------------
-            # SEND SEQUENTIALLY
-            # ---------------------------------------------
-
-            for position, recipient in enumerate(
-                recipients,
-                start=1
-            ):
-
-                try:
-
-                    message = create_message(
-                        sender_name,
-                        gmail,
-                        recipient,
-                        subject,
-                        body,
-                        html_mode
-                    )
-
-                    smtp.sendmail(
-                        gmail,
-                        [recipient],
-                        message.as_string()
-                    )
-
-                    sent += 1
-
-                    elapsed = (
-                        time.perf_counter()
-                        - start_time
-                    )
-
-                    yield make_progress(
-                        "progress",
-                        total,
-                        sent,
-                        failed,
-                        elapsed=elapsed,
-                        started_at=started_at,
-                        email=recipient,
-                        result="sent",
-                        position=position
-                    )
-
-
-                except smtplib.SMTPAuthenticationError:
-
-                    failed += 1
-
-                    elapsed = (
-                        time.perf_counter()
-                        - start_time
-                    )
-
-                    yield make_progress(
-                        "progress",
-                        total,
-                        sent,
-                        failed,
-                        elapsed=elapsed,
-                        started_at=started_at,
-                        email=recipient,
-                        result="failed",
-                        position=position,
-                        error=(
-                            "Gmail authentication failed. "
-                            "Check Gmail and App Password."
-                        )
-                    )
-
-
-                except smtplib.SMTPException as exc:
-
-                    failed += 1
-
-                    elapsed = (
-                        time.perf_counter()
-                        - start_time
-                    )
-
-                    yield make_progress(
-                        "progress",
-                        total,
-                        sent,
-                        failed,
-                        elapsed=elapsed,
-                        started_at=started_at,
-                        email=recipient,
-                        result="failed",
-                        position=position,
-                        error=f"SMTP error: {exc}"
-                    )
-
-
-                except Exception as exc:
-
-                    failed += 1
-
-                    elapsed = (
-                        time.perf_counter()
-                        - start_time
-                    )
-
-                    yield make_progress(
-                        "progress",
-                        total,
-                        sent,
-                        failed,
-                        elapsed=elapsed,
-                        started_at=started_at,
-                        email=recipient,
-                        result="failed",
-                        position=position,
-                        error=str(exc)
-                    )
-
-
-                # -----------------------------------------
-                # OPTIONAL GAP
-                # -----------------------------------------
-
-                if (
-                    MAIL_GAP_SECONDS > 0
-                    and position < total
-                ):
-
-                    time.sleep(
-                        MAIL_GAP_SECONDS
-                    )
-
-
-        # =================================================
-        # SMTP AUTH ERROR
-        # =================================================
-
-        except smtplib.SMTPAuthenticationError:
-
-            elapsed = (
-                time.perf_counter()
-                - start_time
-            )
-
-            yield make_progress(
-                "error",
-                total,
-                sent,
-                failed,
-                elapsed=elapsed,
-                started_at=started_at,
-                message=(
-                    "Gmail authentication failed. "
-                    "Check Gmail address and "
-                    "Google App Password."
-                )
-            )
-
-            return
-
-
-        # =================================================
-        # SMTP ERROR
-        # =================================================
-
-        except smtplib.SMTPException as exc:
-
-            elapsed = (
-                time.perf_counter()
-                - start_time
-            )
-
-            yield make_progress(
-                "error",
-                total,
-                sent,
-                failed,
-                elapsed=elapsed,
-                started_at=started_at,
-                message=(
-                    f"SMTP error: {exc}"
-                )
-            )
-
-            return
-
-
-        # =================================================
-        # GENERAL ERROR
-        # =================================================
-
-        except Exception as exc:
-
-            elapsed = (
-                time.perf_counter()
-                - start_time
-            )
-
-            yield make_progress(
-                "error",
-                total,
-                sent,
-                failed,
-                elapsed=elapsed,
-                started_at=started_at,
-                message=(
-                    f"Server error: {exc}"
-                )
-            )
-
-            return
-
-
-        # =================================================
-        # CLOSE SMTP
-        # =================================================
-
-        finally:
-
-            if smtp is not None:
-
-                try:
-                    smtp.quit()
-                except Exception:
-                    pass
-
-
-        # =================================================
-        # FINAL TIMING
-        # =================================================
-
-        total_time = (
-            time.perf_counter()
-            - start_time
-        )
-
-        average_speed = (
-            total / total_time
-            if total_time > 0
-            else 0
-        )
-
-
-        # =================================================
-        # COMPLETE
-        # =================================================
-
-        yield make_progress(
-            "complete",
-            total,
-            sent,
-            failed,
-            elapsed=total_time,
-            started_at=started_at,
-            success=True,
-
-            message="PRADEEP ❤️",
-
-            total_time_seconds=round(
-                total_time,
-                2
-            ),
-
-            total_time_display=
-                format_seconds(
-                    total_time
-                ),
-
-            average_speed=round(
-                average_speed,
-                2
-            ),
-
-            average_speed_display=(
-                f"{average_speed:.2f} "
-                "emails/sec"
-            )
-        )
-
-
-    # =====================================================
-    # NDJSON STREAM
-    # =====================================================
-
-    return Response(
-        generate(),
-
-        content_type=(
-            "application/x-ndjson; "
-            "charset=utf-8"
-        ),
-
-        headers={
-            "Cache-Control":
-                "no-cache, no-transform",
-
-            "X-Accel-Buffering":
-                "no-cache"
-        }
-    )
-
-
-# =========================================================
-# HEALTH
-# =========================================================
+    if not session.get("authenticated"):
+        return redirect(url_for("login"))
+    return render_template("index.html",
+        turnstile_site_key=os.getenv("TURNSTILE_SITE_KEY", ""))
 
 @app.route("/health")
 def health():
-
-    return jsonify({
-        "status": "ok",
-        "service":
-            "Secure Mail Console",
-        "mailer":
-            "Gmail SMTP SSL",
-        "spintax":
-            "always_on",
-        "max_recipients":
-            MAX_RECIPIENTS,
-        "mail_gap_seconds":
-            MAIL_GAP_SECONDS
-    })
-
-
-# =========================================================
-# LOCAL DEVELOPMENT
-# =========================================================
+    return jsonify({"status": "ok", "service": "Secure Mail Console"})
 
 if __name__ == "__main__":
+    app.run(debug=True)
+''',
+    "templates/login.html": '''<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Mail Console</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body class="login-page"><main class="login-card">
+<div class="logo">🛡️</div><h1>Secure Mail Console</h1>
+<p>Sign in to continue</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post"><label>Password</label>
+<input name="password" type="password" required>
+<button type="submit">Sign In</button></form>
+</main></body></html>
+''',
+    "templates/index.html": '''<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Mail Console</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body><header><b>🛡 Secure Mail Console</b><a href="/logout">Logout</a></header>
+<main><h1>Bulk Email Sender</h1>
+<section><h2>Compose Message</h2>
+<label>Sender Name<input id="senderName"></label>
+<label>Gmail Address<input id="gmail" type="email"></label>
+<label>Google App Password<input id="appPassword" type="password"></label>
+<label>Subject<input id="subject"></label>
+<label>Message Body<textarea id="body" rows="8"></textarea></label>
+<p>Spintax enabled: {Hi|Hello}</p>
+<label>Recipients — one email per line, maximum 25
+<textarea id="recipients" rows="5"></textarea></label>
+<button id="send">Send All</button>
+</section>
+<section><h2>Progress Monitor</h2>
+<div class="stats"><p>Total <b id="total">0</b></p>
+<p>Sent <b id="sent">0</b></p><p>Failed <b id="failed">0</b></p>
+<p>Remaining <b id="remaining">0</b></p></div>
+<div class="track"><div id="bar"></div></div>
+<p id="progress">0%</p><p id="status">Ready</p></section>
+</main>
+<div id="popup" class="popup"><div class="popup-card">
+<h2>Sending complete</h2><p>PRADEEP ❤️</p><button id="close">Close</button>
+</div></div>
+<script>
+const popup=document.getElementById("popup");
+function closePopup(){popup.classList.remove("show")}
+document.getElementById("close").onclick=closePopup;
+document.addEventListener("click",()=>{if(popup.classList.contains("show"))closePopup()});
+document.addEventListener("keydown",e=>{
+ if(popup.classList.contains("show")&&(e.code==="Space"||e.key==="Escape")){
+ e.preventDefault();closePopup()
+ }
+});
+document.getElementById("send").onclick=()=>{
+ document.getElementById("status").textContent=
+ "This starter interface needs the email-sending backend connected.";
+};
+</script></body></html>
+''',
+    "static/style.css": '''*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font:14px Arial,sans-serif}header{display:flex;justify-content:space-between;padding:22px;background:white;border-bottom:1px solid #ddd}a{color:#315fd4;text-decoration:none}main{max-width:850px;margin:28px auto;padding:0 16px}section,.login-card{background:white;border:1px solid #e1e7f0;border-radius:12px;padding:22px;margin:18px 0}h1{font-size:25px}label{display:block;margin:14px 0;font-weight:bold}input,textarea{display:block;width:100%;padding:11px;margin-top:7px;border:1px solid #d6deea;border-radius:7px;font:14px Arial}button{border:0;border-radius:7px;background:#315fd4;color:white;padding:12px 20px;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stats p{padding:12px;background:#f7f9fd;border-radius:7px}.track{height:9px;background:#e9eef6;border-radius:20px;overflow:hidden}.track div{height:100%;width:0;background:#4777e5}.login-page{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card{width:100%;max-width:390px}.login-card .logo{text-align:center;font-size:34px}.login-card h1,.login-card>p{text-align:center}.error{color:#b42318}.popup{display:none;position:fixed;inset:0;background:#17203377;align-items:center;justify-content:center}.popup.show{display:flex}.popup-card{background:white;border-radius:14px;padding:30px;text-align:center}@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+'''
+}
 
-    app.run(
-        host="0.0.0.0",
-        port=5000,
-        debug=True
-    )
+for name, content in files.items():
+    path = project / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+with zipfile.ZipFile("secure_mail_console_updated.zip", "w", zipfile.ZIP_DEFLATED) as z:
+    for path in project.rglob("*"):
+        if path.is_file():
+            z.write(path, path)
+
+print("Project files created in secure_mail_console_updated/")
+print("Note: this compact one-block setup is a starter UI; it does not include the complete SMTP sending implementation.")
