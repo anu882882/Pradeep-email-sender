@@ -84,16 +84,8 @@
           <textarea id="messageBody" placeholder="Write your message here..." spellcheck="false"></textarea>
 
           <div class="body-meta">
-            <span>Use {option one|option two} for a wording choice.</span>
+            <span>Write your email message above.</span>
             <span id="bodyCount">0 characters</span>
-          </div>
-        </div>
-
-        <div class="spintax-status">
-          <i class="fa-solid fa-shuffle"></i>
-          <div>
-            <strong>Spintax Enabled</strong>
-            <span>Text options in braces are selected randomly.</span>
           </div>
         </div>
       </section>
@@ -303,7 +295,7 @@
         return;
       }
 
-      // No confirmation popup: start sending immediately.
+      // Sending starts immediately, without a confirmation prompt.
       sending = true;
       currentController = new AbortController();
 
