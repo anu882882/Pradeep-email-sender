@@ -344,42 +344,6 @@ textarea:focus-visible {
   font-size: 11px;
 }
 
-.spintax-status {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 8px 0 0;
-  padding: 13px 14px;
-  border: 1px solid #d9f1e6;
-  border-radius: 14px;
-  background: linear-gradient(100deg, #effbf6, #f7fffb);
-  color: #187856;
-}
-
-.spintax-status > i {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: #d8f5e8;
-}
-
-.spintax-status strong,
-.spintax-status span {
-  display: block;
-}
-
-.spintax-status strong {
-  font-size: 12px;
-}
-
-.spintax-status span {
-  margin-top: 3px;
-  font-size: 11px;
-  opacity: .85;
-}
-
 .recipient-subtitle {
   margin: -10px 0 12px;
   color: var(--muted);
@@ -633,7 +597,7 @@ button:disabled {
   transform: translateY(0);
 }
 
-/* Login */
+/* Login page */
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -777,16 +741,6 @@ body.dark-mode {
     radial-gradient(circle at 8% 4%, rgba(112,126,255,.13), transparent 28rem),
     radial-gradient(circle at 92% 12%, rgba(104,213,220,.08), transparent 26rem),
     var(--bg);
-}
-
-.dark-mode .spintax-status {
-  border-color: #245845;
-  background: #142f2a;
-  color: #a3e8ca;
-}
-
-.dark-mode .spintax-status > i {
-  background: #214b3e;
 }
 
 .dark-mode .progress-track {
