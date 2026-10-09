@@ -5,22 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Secure Mail Console</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
   {% if turnstile_site_key %}
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   {% endif %}
 </head>
+
 <body>
 <header class="topbar">
   <div class="brand">
-    <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="brand-icon">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
     <div class="brand-title">Secure Mail Console</div>
   </div>
+
   <div class="header-actions">
     <button type="button" class="theme-button" id="themeToggle">
       <i class="fa-solid fa-moon" id="themeIcon"></i> Theme
     </button>
+
     <a href="{{ url_for('logout') }}" class="logout-button">
       <i class="fa-solid fa-right-from-bracket"></i> Logout
     </a>
@@ -36,119 +43,210 @@
   </div>
 
   <div class="dashboard-grid">
+
+    <!-- Compose Message -->
     <section class="card compose-card">
-      <div class="section-title"><i class="fa-solid fa-pen-to-square"></i> Compose Message</div>
+      <div class="section-title">
+        <i class="fa-solid fa-pen-to-square"></i>
+        Compose Message
+      </div>
 
       <div class="two-column">
         <div class="field">
           <label for="senderName">Sender Name</label>
-          <input id="senderName" autocomplete="off" placeholder="Your name">
+          <input
+            id="senderName"
+            autocomplete="off"
+            placeholder="Your name"
+          >
         </div>
+
         <div class="field">
           <label for="gmail">Your Gmail</label>
-          <input id="gmail" type="email" autocomplete="off" placeholder="your@gmail.com">
+          <input
+            id="gmail"
+            type="email"
+            autocomplete="off"
+            placeholder="your@gmail.com"
+          >
         </div>
+
         <div class="field">
           <label for="appPassword">Google App Password</label>
+
           <div class="password-field">
-            <input id="appPassword" type="password" autocomplete="new-password" placeholder="Google App Password">
-            <button type="button" id="togglePassword" aria-label="Show password">
+            <input
+              id="appPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Google App Password"
+            >
+
+            <button
+              type="button"
+              id="togglePassword"
+              aria-label="Show password"
+            >
               <i class="fa-regular fa-eye" id="passwordIcon"></i>
             </button>
           </div>
         </div>
+
         <div class="field">
           <label for="subject">Email Subject</label>
-          <input id="subject" autocomplete="off" placeholder="Email subject">
+          <input
+            id="subject"
+            autocomplete="off"
+            placeholder="Email subject"
+          >
         </div>
       </div>
 
+      <!-- Message Body -->
       <div class="field body-field">
         <div class="body-header">
           <label for="messageBody">Message Body</label>
+
           <div class="mode-buttons">
-            <button id="plainButton" class="mode active" type="button">Plain Text</button>
-            <button id="htmlButton" class="mode" type="button">HTML</button>
+            <button
+              id="plainButton"
+              class="mode active"
+              type="button"
+            >
+              Plain Text
+            </button>
+
+            <button
+              id="htmlButton"
+              class="mode"
+              type="button"
+            >
+              HTML
+            </button>
           </div>
         </div>
 
-        <div class="editor-tools">
-          <label for="fontSelect">Font style</label>
-          <select id="fontSelect">
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="Verdana, sans-serif">Verdana</option>
-            <option value="Tahoma, sans-serif">Tahoma</option>
-            <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="Times New Roman, serif">Times New Roman</option>
-            <option value="Courier New, monospace">Courier New</option>
-            <option value="Lucida Console, monospace">Lucida Console</option>
-            <option value="Impact, sans-serif">Impact</option>
-            <option value="Palatino Linotype, serif">Palatino Linotype</option>
-            <option value="Garamond, serif">Garamond</option>
-            <option value="Comic Sans MS, cursive">Comic Sans MS</option>
-            <option value="Arial Black, sans-serif">Arial Black</option>
-            <option value="Lucida Sans Unicode, sans-serif">Lucida Sans</option>
-            <option value="system-ui, sans-serif">System UI</option>
-          </select>
-          <label for="bodySize">Editor size</label>
-          <input id="bodySize" type="range" min="120" max="500" step="10" value="220">
-          <span id="bodySizeLabel">220px</span>
-        </div>
+        <!-- Font style and Editor size controls removed -->
+        <textarea
+          id="messageBody"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Write your message here..."
+        ></textarea>
 
-        <textarea id="messageBody" autocomplete="off" spellcheck="false" placeholder="Write your message here..."></textarea>
         <div class="body-meta">
-          <span>Resize the message area as needed.</span>
+          <span>Enter the message you want to send.</span>
           <span id="bodyCount">0 characters</span>
         </div>
       </div>
 
-      <div class="security-title"><i class="fa-solid fa-shield-halved"></i> Cloudflare Verification</div>
+      <!-- Cloudflare Verification -->
+      <div class="security-title">
+        <i class="fa-solid fa-shield-halved"></i>
+        Cloudflare Verification
+      </div>
+
       <div class="security-box">
         {% if turnstile_site_key %}
-        <div class="cf-turnstile"
-             data-sitekey="{{ turnstile_site_key }}"
-             data-theme="light"
-             data-callback="turnstileCompleted"
-             data-expired-callback="turnstileExpired"
-             data-error-callback="turnstileError"></div>
+        <div
+          class="cf-turnstile"
+          data-sitekey="{{ turnstile_site_key }}"
+          data-theme="light"
+          data-callback="turnstileCompleted"
+          data-expired-callback="turnstileExpired"
+          data-error-callback="turnstileError"
+        ></div>
         {% else %}
-        <div class="turnstile-warning">Turnstile Site Key is not configured.</div>
+        <div class="turnstile-warning">
+          Turnstile Site Key is not configured.
+        </div>
         {% endif %}
       </div>
     </section>
 
+    <!-- Right Column -->
     <section class="right-column">
+
+      <!-- Recipients -->
       <div class="card recipients-card">
         <div class="section-title">
-          <i class="fa-solid fa-users"></i> Recipients
+          <i class="fa-solid fa-users"></i>
+          Recipients
           <span id="recipientCount" class="count-badge">0 found</span>
         </div>
-        <p class="recipient-subtitle">Paste email addresses separated by commas, semicolons, spaces or new lines. Duplicates are ignored.</p>
+
+        <p class="recipient-subtitle">
+          Paste email addresses separated by commas, semicolons,
+          spaces or new lines. Duplicates are ignored.
+        </p>
+
         <div class="recipient-tools">
           <small>Up to 25 unique valid addresses per run</small>
-          <button type="button" class="clear-recipients" id="clearRecipients">
+
+          <button
+            type="button"
+            class="clear-recipients"
+            id="clearRecipients"
+          >
             <i class="fa-solid fa-eraser"></i> Clear list
           </button>
         </div>
-        <textarea id="recipients" class="recipients-box" autocomplete="off" spellcheck="false" placeholder="email@example.com&#10;another@example.com"></textarea>
+
+        <textarea
+          id="recipients"
+          class="recipients-box"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="email@example.com&#10;another@example.com"
+        ></textarea>
       </div>
 
+      <!-- Progress Monitor -->
       <div class="card progress-card">
-        <div class="section-title"><i class="fa-solid fa-chart-pie"></i> Progress Monitor</div>
-        <div class="stats-grid">
-          <div class="stat-box"><span>TOTAL</span><strong id="totalCount">0</strong></div>
-          <div class="stat-box"><span>SENT</span><strong id="sentCount" class="green">0</strong></div>
-          <div class="stat-box"><span>FAILED</span><strong id="failedCount" class="red">0</strong></div>
-          <div class="stat-box"><span>REMAINING</span><strong id="remainingCount" class="orange">0</strong></div>
+        <div class="section-title">
+          <i class="fa-solid fa-chart-pie"></i>
+          Progress Monitor
         </div>
-        <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span>TOTAL</span>
+            <strong id="totalCount">0</strong>
+          </div>
+
+          <div class="stat-box">
+            <span>SENT</span>
+            <strong id="sentCount" class="green">0</strong>
+          </div>
+
+          <div class="stat-box">
+            <span>FAILED</span>
+            <strong id="failedCount" class="red">0</strong>
+          </div>
+
+          <div class="stat-box">
+            <span>REMAINING</span>
+            <strong id="remainingCount" class="orange">0</strong>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div id="progressBar" class="progress-fill"></div>
+        </div>
+
         <div id="status" class="status">Ready to send</div>
+
         <div class="send-row">
           <button id="sendButton" class="send-button" type="button">
             <i class="fa-solid fa-paper-plane"></i> Send All
           </button>
-          <button id="stopButton" class="stop-button" type="button" disabled>
+
+          <button
+            id="stopButton"
+            class="stop-button"
+            type="button"
+            disabled
+          >
             <i class="fa-solid fa-stop"></i> Stop Sending
           </button>
         </div>
@@ -157,17 +255,37 @@
   </div>
 </main>
 
-<div id="completeModal" class="complete-modal" role="dialog" aria-modal="true">
+<!-- Completion Popup -->
+<div
+  id="completeModal"
+  class="complete-modal"
+  role="dialog"
+  aria-modal="true"
+>
   <div class="complete-box">
-    <div class="complete-icon"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="complete-icon">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+
     <div class="complete-title">Sending complete ❤️</div>
+
     <div id="completeDetails" class="complete-details"></div>
-    <button type="button" id="completeClose" class="complete-button">OK</button>
+
+    <button
+      type="button"
+      id="completeClose"
+      class="complete-button"
+    >
+      OK
+    </button>
   </div>
 </div>
+
 <div id="toast" class="toast" role="status"></div>
 
 <script>
+"use strict";
+
 let isHTML = false;
 let sending = false;
 let turnstileToken = "";
@@ -175,15 +293,26 @@ let currentController = null;
 
 const $ = id => document.getElementById(id);
 
-function turnstileCompleted(token) { turnstileToken = token || ""; }
-function turnstileExpired() { turnstileToken = ""; }
-function turnstileError() { turnstileToken = ""; }
+function turnstileCompleted(token) {
+  turnstileToken = token || "";
+}
+
+function turnstileExpired() {
+  turnstileToken = "";
+}
+
+function turnstileError() {
+  turnstileToken = "";
+}
 
 function showToast(message) {
   const toast = $("toast");
   toast.textContent = message;
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3500);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3500);
 }
 
 function setStatus(message, type = "") {
@@ -194,12 +323,17 @@ function setStatus(message, type = "") {
 function togglePassword() {
   const input = $("appPassword");
   const reveal = input.type === "password";
+
   input.type = reveal ? "text" : "password";
-  $("passwordIcon").className = reveal ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+
+  $("passwordIcon").className = reveal
+    ? "fa-regular fa-eye-slash"
+    : "fa-regular fa-eye";
 }
 
 function setMode(htmlMode) {
   isHTML = htmlMode;
+
   $("plainButton").classList.toggle("active", !htmlMode);
   $("htmlButton").classList.toggle("active", htmlMode);
 }
@@ -211,16 +345,27 @@ function isValidEmail(email) {
 function getRecipients() {
   const pieces = $("recipients").value.split(/[\s,;]+/);
   const unique = [];
+
   for (const piece of pieces) {
     const email = piece.trim().toLowerCase();
-    if (email && isValidEmail(email) && !unique.includes(email)) unique.push(email);
+
+    if (
+      email &&
+      isValidEmail(email) &&
+      !unique.includes(email)
+    ) {
+      unique.push(email);
+    }
   }
+
   return unique.slice(0, 25);
 }
 
 function updateRecipientCount() {
   const count = getRecipients().length;
+
   $("recipientCount").textContent = count + " found";
+
   if (!sending) {
     $("totalCount").textContent = count;
     $("remainingCount").textContent = count;
@@ -232,12 +377,17 @@ function updateProgress(total, sent, failed, remaining) {
   $("sentCount").textContent = sent;
   $("failedCount").textContent = failed;
   $("remainingCount").textContent = remaining;
+
   const processed = sent + failed;
-  $("progressBar").style.width = (total ? processed / total * 100 : 0) + "%";
+  const percentage = total ? (processed / total) * 100 : 0;
+
+  $("progressBar").style.width = percentage + "%";
 }
 
 function showCompletePopup(sent, failed) {
-  $("completeDetails").textContent = `Sent: ${sent} · Failed: ${failed}`;
+  $("completeDetails").textContent =
+    `Sent: ${sent} · Failed: ${failed}`;
+
   $("completeModal").classList.add("show");
 }
 
@@ -255,140 +405,241 @@ async function sendBatch() {
   const body = $("messageBody").value;
   const recipients = getRecipients();
 
-  if (!senderName) return showToast("Enter Sender Name.");
-  if (!isValidEmail(gmail)) return showToast("Enter a valid Gmail address.");
-  if (!appPassword) return showToast("Enter Google App Password.");
-  if (!subject) return showToast("Enter email subject.");
-  if (!body.trim()) return showToast("Enter message body.");
-  if (!recipients.length) return showToast("Add at least one valid recipient.");
-  if (!turnstileToken) return showToast("Complete Cloudflare verification.");
+  if (!senderName) {
+    showToast("Enter Sender Name.");
+    return;
+  }
+
+  if (!isValidEmail(gmail)) {
+    showToast("Enter a valid Gmail address.");
+    return;
+  }
+
+  if (!appPassword) {
+    showToast("Enter Google App Password.");
+    return;
+  }
+
+  if (!subject) {
+    showToast("Enter email subject.");
+    return;
+  }
+
+  if (!body.trim()) {
+    showToast("Enter message body.");
+    return;
+  }
+
+  if (!recipients.length) {
+    showToast("Add at least one valid recipient.");
+    return;
+  }
+
+  if (!turnstileToken) {
+    showToast("Complete Cloudflare verification.");
+    return;
+  }
 
   sending = true;
   currentController = new AbortController();
+
   $("sendButton").disabled = true;
   $("stopButton").disabled = false;
+
   updateProgress(recipients.length, 0, 0, recipients.length);
   setStatus("Sending emails...", "sending");
 
   try {
     const response = await fetch("/send-batch", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       signal: currentController.signal,
       body: JSON.stringify({
         sender_name: senderName,
-        gmail,
+        gmail: gmail,
         app_password: appPassword,
-        subject,
-        body,
+        subject: subject,
+        body: body,
         is_html: isHTML,
-        recipients,
+        recipients: recipients,
         turnstile_token: turnstileToken
       })
     });
 
     if (!response.ok) {
       let message = "Sending request failed.";
+
       try {
         const data = await response.json();
         message = data.message || message;
       } catch (_) {}
+
       throw new Error(message);
+    }
+
+    if (!response.body) {
+      throw new Error("No response stream received from server.");
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
+
     let buffer = "";
 
     while (true) {
       const { value, done } = await reader.read();
+
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
+
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
 
       for (const line of lines) {
         if (!line.trim()) continue;
+
         let event;
-        try { event = JSON.parse(line); } catch (_) { continue; }
+
+        try {
+          event = JSON.parse(line);
+        } catch (_) {
+          continue;
+        }
 
         if (event.type === "start" || event.type === "progress") {
-          updateProgress(event.total, event.sent, event.failed, event.remaining);
+          updateProgress(
+            event.total,
+            event.sent,
+            event.failed,
+            event.remaining
+          );
+
           if (event.type === "progress" && event.result === "failed") {
-            setStatus(`${event.email}: ${event.error || "Failed"}`, "error");
+            setStatus(
+              `${event.email}: ${event.error || "Failed"}`,
+              "error"
+            );
           } else {
-            setStatus(`Sending emails... ${event.sent}/${event.total}`, "sending");
+            setStatus(
+              `Sending emails... ${event.sent}/${event.total}`,
+              "sending"
+            );
           }
         }
 
         if (event.type === "complete") {
-          updateProgress(event.total, event.sent, event.failed, event.remaining);
-          setStatus(`Complete: ${event.sent} sent, ${event.failed} failed.`, "success");
+          updateProgress(
+            event.total,
+            event.sent,
+            event.failed,
+            event.remaining
+          );
+
+          setStatus(
+            `Complete: ${event.sent} sent, ${event.failed} failed.`,
+            "success"
+          );
+
           showCompletePopup(event.sent, event.failed);
+
           if (window.turnstile) {
-            try { window.turnstile.reset(); } catch (_) {}
+            try {
+              window.turnstile.reset();
+            } catch (_) {}
           }
+
           turnstileToken = "";
         }
       }
     }
+
   } catch (error) {
     if (error.name === "AbortError") {
-      setStatus("Stop requested. Some emails may already have been sent.", "error");
-      showToast("Sending stopped. Some emails may already have been sent.");
+      setStatus(
+        "Sending stopped. Some emails may already have been sent.",
+        "error"
+      );
+
+      showToast("Sending stopped.");
     } else {
       setStatus(error.message || "Connection error.", "error");
       showToast(error.message || "Unable to contact server.");
     }
+
   } finally {
     sending = false;
     currentController = null;
+
     $("sendButton").disabled = false;
     $("stopButton").disabled = true;
+
     updateRecipientCount();
   }
 }
 
 function stopSending() {
-  if (sending && currentController) currentController.abort();
+  if (sending && currentController) {
+    currentController.abort();
+  }
 }
 
+/* Event handlers */
+
 $("togglePassword").addEventListener("click", togglePassword);
-$("plainButton").addEventListener("click", () => setMode(false));
-$("htmlButton").addEventListener("click", () => setMode(true));
+
+$("plainButton").addEventListener("click", () => {
+  setMode(false);
+});
+
+$("htmlButton").addEventListener("click", () => {
+  setMode(true);
+});
+
 $("sendButton").addEventListener("click", sendBatch);
+
 $("stopButton").addEventListener("click", stopSending);
+
 $("completeClose").addEventListener("click", closeCompletePopup);
+
 $("recipients").addEventListener("input", updateRecipientCount);
 
 $("clearRecipients").addEventListener("click", () => {
-  if (sending) return showToast("Stop the current send before editing recipients.");
+  if (sending) {
+    showToast("Stop the current send before editing recipients.");
+    return;
+  }
+
   $("recipients").value = "";
   updateRecipientCount();
+
   showToast("Recipient list cleared.");
 });
 
 $("messageBody").addEventListener("input", () => {
   const length = $("messageBody").value.length;
-  $("bodyCount").textContent = `${length.toLocaleString()} character${length === 1 ? "" : "s"}`;
-});
 
-$("fontSelect").addEventListener("change", () => {
-  $("messageBody").style.fontFamily = $("fontSelect").value;
-});
-
-$("bodySize").addEventListener("input", () => {
-  const size = $("bodySize").value;
-  $("messageBody").style.minHeight = size + "px";
-  $("bodySizeLabel").textContent = size + "px";
+  $("bodyCount").textContent =
+    `${length.toLocaleString()} character${length === 1 ? "" : "s"}`;
 });
 
 $("themeToggle").addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
+
   const dark = document.body.classList.contains("dark-mode");
-  $("themeIcon").className = dark ? "fa-solid fa-sun" : "fa-solid fa-moon";
-  try { localStorage.setItem("smc-theme", dark ? "dark" : "light"); } catch (_) {}
+
+  $("themeIcon").className = dark
+    ? "fa-solid fa-sun"
+    : "fa-solid fa-moon";
+
+  try {
+    localStorage.setItem("smc-theme", dark ? "dark" : "light");
+  } catch (_) {}
 });
+
+/* Restore theme */
 
 try {
   if (localStorage.getItem("smc-theme") === "dark") {
