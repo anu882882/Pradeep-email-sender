@@ -5,54 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Sign in · Secure Mail Console</title>
-
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  {% if turnstile_site_key %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
 </head>
-
 <body class="login-page">
   <main class="login-card">
-    <div class="login-logo">
-      <i class="fa-solid fa-shield-halved"></i>
-    </div>
-
+    <div class="login-logo"><i class="fa-solid fa-shield-halved"></i></div>
     <h1>Secure Mail Console</h1>
     <p class="login-subtitle">Sign in to access your email workspace.</p>
 
     {% if error %}
     <div class="login-error" role="alert">
-      <i class="fa-solid fa-circle-exclamation"></i>
-      {{ error }}
+      <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
     </div>
     {% endif %}
 
     <form method="post" autocomplete="on">
       <label for="password">Access password</label>
-
       <div class="login-password">
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Enter your password"
-          autocomplete="current-password"
-          required
-          autofocus
-        >
-
-        <button
-          type="button"
-          id="showPassword"
-          aria-label="Show password"
-          title="Show password"
-        >
+        <input id="password" name="password" type="password"
+               placeholder="Enter your password"
+               autocomplete="current-password" required autofocus>
+        <button type="button" id="showPassword"
+                aria-label="Show password" title="Show password">
           <i class="fa-regular fa-eye" id="passwordIcon"></i>
         </button>
       </div>
 
+      {% if turnstile_site_key %}
+      <div class="login-turnstile">
+        <div class="cf-turnstile"
+             data-sitekey="{{ turnstile_site_key }}"
+             data-theme="auto"></div>
+      </div>
+      {% else %}
+      <div class="login-error" role="alert">
+        Turnstile keys are not configured in Vercel.
+      </div>
+      {% endif %}
+
       <button class="primary-button" type="submit">
-        <i class="fa-solid fa-lock-open"></i>
-        Sign in securely
+        <i class="fa-solid fa-lock-open"></i> Sign in securely
       </button>
     </form>
 
@@ -69,21 +65,15 @@
 
     showPasswordButton.addEventListener("click", () => {
       const reveal = passwordInput.type === "password";
-
       passwordInput.type = reveal ? "text" : "password";
-
       passwordIcon.className = reveal
         ? "fa-regular fa-eye-slash"
         : "fa-regular fa-eye";
-
       showPasswordButton.setAttribute(
         "aria-label",
         reveal ? "Hide password" : "Show password"
       );
-
-      showPasswordButton.title = reveal
-        ? "Hide password"
-        : "Show password";
+      showPasswordButton.title = reveal ? "Hide password" : "Show password";
     });
   </script>
 </body>
