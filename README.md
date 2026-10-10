@@ -10,6 +10,7 @@ Add the following variables:
 - SESSION_SECRET
 - TURNSTILE_SITE_KEY
 - TURNSTILE_SECRET_KEY
+- MAIL_GAP_SECONDS
 
 ### LOGIN_PASSWORD
 Your private dashboard login password.
