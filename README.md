@@ -1,60 +1,56 @@
 # Secure Mail Console
 
-## Vercel Environment Variables
+A dark-mode Flask email dashboard deployed on Vercel.
 
-Open Vercel → Project → Settings → Environment Variables.
+## Project structure
 
-Add the following variables:
+- api/index.py — Flask routes, login, Turnstile validation and SMTP sending
+- templates/login.html — Sign-in page
+- templates/index.html — Email dashboard
+- static/style.css — Dark-only interface
+- requirements.txt — Python dependencies
+- vercel.json — Vercel deployment configuration
+
+## Required Vercel environment variables
+
+Set these in Vercel Project Settings → Environment Variables:
 
 - LOGIN_PASSWORD
 - SESSION_SECRET
 - TURNSTILE_SITE_KEY
 - TURNSTILE_SECRET_KEY
-- MAIL_GAP_SECONDS
 
-### LOGIN_PASSWORD
-Your private dashboard login password.
+Use a long, random SESSION_SECRET. Never put the Turnstile secret
+or your login password in HTML or JavaScript.
 
-### SESSION_SECRET
-Use a long, random secret value. Do not use the example fallback value in production.
+## Cloudflare Turnstile
 
-### TURNSTILE_SITE_KEY
-The Cloudflare Turnstile site key for your deployed domain.
+1. Create a Turnstile widget in Cloudflare.
+2. Add your deployed domain to its allowed hostnames.
+3. Set the site key as TURNSTILE_SITE_KEY.
+4. Set the secret key as TURNSTILE_SECRET_KEY.
+5. Redeploy after adding or changing environment variables.
 
-### TURNSTILE_SECRET_KEY
-The Cloudflare Turnstile secret key. Keep this on the server only.
+## Gmail sending
 
-Never put SESSION_SECRET, TURNSTILE_SECRET_KEY, or your Gmail App Password in frontend JavaScript or a public repository.
-
-## Features
-
-- Password-protected login.
-- Cloudflare Turnstile verification on login and sending.
-- Secure session cookie settings and security headers.
-- Basic instance-local rate limiting.
-- Up to 25 unique valid recipients per request.
-- Two concurrent SMTP sending workers.
-- Plain-text and HTML message modes.
-- Message editor with font options and adjustable size.
-- Dark theme.
-
-## Project Files
-
-- api/index.py
-- templates/index.html
-- templates/login.html
-- static/style.css
-- requirements.txt
-- vercel.json
-- README.md
+Use your Gmail address and a Google App Password.
+Do not use your normal Google account password.
 
 ## Deploy
 
-1. Keep the folder structure exactly as shown above.
-2. Configure the Vercel environment variables.
-3. Make sure your Cloudflare Turnstile keys allow your deployed domain.
-4. Deploy or redeploy the project on Vercel.
-5. Test login and email delivery with an address you control.
+1. Push all project files to your GitHub repository.
+2. Import the repository into Vercel.
+3. Add the required environment variables.
+4. Deploy and test the login page.
+5. Send a test message to an address you control.
 
-Note: The in-memory rate limiter is best-effort and is not shared across all Vercel serverless instances.
-For global rate limiting, configure Cloudflare rules or a shared data store.
+## Important notes
+
+- The application accepts up to 25 recipients per request.
+- Messages are processed in groups of up to five concurrent sends.
+- A successful SMTP send means the receiving server accepted the
+  message; it does not guarantee inbox placement.
+- Stopping the browser request may not cancel emails already being
+  processed by the server.
+- Vercel runtime limits can affect long-running requests.
+- Test deployment and SMTP delivery before relying on the application.
