@@ -1,56 +1,55 @@
 # Secure Mail Console
 
-A dark-mode Flask email dashboard deployed on Vercel.
+A dark-only Flask email dashboard deployed on Vercel.
 
-## Project structure
+## Required environment variables
 
-- api/index.py — Flask routes, login, Turnstile validation and SMTP sending
-- templates/login.html — Sign-in page
-- templates/index.html — Email dashboard
-- static/style.css — Dark-only interface
-- requirements.txt — Python dependencies
-- vercel.json — Vercel deployment configuration
-
-## Required Vercel environment variables
-
-Set these in Vercel Project Settings → Environment Variables:
+Configure these in Vercel Project Settings → Environment Variables:
 
 - LOGIN_PASSWORD
 - SESSION_SECRET
 - TURNSTILE_SITE_KEY
 - TURNSTILE_SECRET_KEY
 
-Use a long, random SESSION_SECRET. Never put the Turnstile secret
-or your login password in HTML or JavaScript.
+Use a long, random SESSION_SECRET.
+Never expose private keys in frontend code.
 
 ## Cloudflare Turnstile
 
 1. Create a Turnstile widget in Cloudflare.
-2. Add your deployed domain to its allowed hostnames.
-3. Set the site key as TURNSTILE_SITE_KEY.
-4. Set the secret key as TURNSTILE_SECRET_KEY.
-5. Redeploy after adding or changing environment variables.
+2. Add your deployment domain to its allowed hostnames.
+3. Set TURNSTILE_SITE_KEY to the public site key.
+4. Set TURNSTILE_SECRET_KEY to the private secret key.
+5. Redeploy after changing environment variables.
 
-## Gmail sending
+## Gmail
 
-Use your Gmail address and a Google App Password.
-Do not use your normal Google account password.
+Use your Gmail address and Google App Password.
+Do not enter your regular Google account password.
 
-## Deploy
+## Deployment
 
-1. Push all project files to your GitHub repository.
+1. Push the project files to your Git repository.
 2. Import the repository into Vercel.
-3. Add the required environment variables.
+3. Configure the required environment variables.
 4. Deploy and test the login page.
-5. Send a test message to an address you control.
+5. Send a test email to an address you control.
 
-## Important notes
+## Features
 
-- The application accepts up to 25 recipients per request.
-- Messages are processed in groups of up to five concurrent sends.
-- A successful SMTP send means the receiving server accepted the
-  message; it does not guarantee inbox placement.
-- Stopping the browser request may not cancel emails already being
-  processed by the server.
-- Vercel runtime limits can affect long-running requests.
-- Test deployment and SMTP delivery before relying on the application.
+- Dark-only dashboard.
+- Compose Message and Recipients panels.
+- Plain Text and HTML message modes.
+- Total, Sent, Failed and Remaining counters.
+- Progress bar and Stop Sending button.
+- No Delivery Results section.
+- Maximum 25 recipients per request.
+- Up to five concurrent sends per group.
+
+## Important
+
+Stopping the browser request does not guarantee that emails
+already being processed by the server will be cancelled.
+
+SMTP acceptance does not guarantee inbox delivery. Test the
+deployment and email delivery before relying on it.
