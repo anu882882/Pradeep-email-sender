@@ -33,7 +33,9 @@ body {
   font-size: 13px;
 }
 
-button, input, textarea {
+button,
+input,
+textarea {
   font: inherit;
 }
 
@@ -42,14 +44,14 @@ button {
 }
 
 .topbar {
-  height: 76px;
+  min-height: 76px;
   padding: 0 4.2%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   border-bottom: 1px solid rgba(134, 159, 198, .14);
-  background: rgba(10, 17, 31, .82);
+  background: rgba(10, 17, 31, .92);
 }
 
 .brand {
@@ -121,7 +123,7 @@ button {
 }
 
 .compose-panel {
-  min-height: 690px;
+  min-height: 650px;
 }
 
 .panel-heading {
@@ -315,10 +317,6 @@ textarea:focus {
   font-size: 10px;
 }
 
-.cf-turnstile {
-  min-height: 0;
-}
-
 .notice {
   display: none;
   margin-top: 15px;
@@ -427,7 +425,7 @@ textarea:focus {
 }
 
 .progress-panel {
-  min-height: 395px;
+  min-height: 370px;
 }
 
 .stats-grid {
@@ -534,63 +532,6 @@ textarea:focus {
   border-color: #cb5966;
 }
 
-.results-area {
-  margin-top: 22px;
-  padding-top: 15px;
-  border-top: 1px solid #283951;
-}
-
-.results-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.results-heading h3 {
-  margin: 0;
-  font-size: 12px;
-}
-
-.results-list {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  max-height: 180px;
-  overflow-y: auto;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.result-item {
-  display: grid;
-  grid-template-columns: 16px minmax(0, 1fr);
-  gap: 4px 8px;
-  padding: 9px 10px;
-  border: 1px solid #283a53;
-  border-radius: 7px;
-  background: #0c1627;
-  overflow-wrap: anywhere;
-}
-
-.result-item > i {
-  grid-row: span 2;
-  margin-top: 2px;
-}
-
-.result-item.sent > i { color: #18d6a0; }
-.result-item.failed > i { color: #ff6f7d; }
-
-.result-recipient {
-  color: #e0eaf9;
-  font-size: 11px;
-}
-
-.result-label {
-  color: var(--muted);
-  font-size: 10px;
-}
-
 .page-footer {
   display: flex;
   justify-content: space-between;
@@ -604,7 +545,7 @@ textarea:focus {
   margin-right: 5px;
 }
 
-/* Login */
+/* Login page */
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -736,7 +677,7 @@ textarea:focus {
 
 @media (max-width: 520px) {
   .topbar {
-    height: 68px;
+    min-height: 68px;
   }
 
   .brand strong {
