@@ -15,7 +15,11 @@ from flask import (
     url_for, session, Response, jsonify
 )
 
-app = Flask(__name__, template_folder="../templates", static_folder="../static")
+app = Flask(
+    __name__,
+    template_folder="../templates",
+    static_folder="../static"
+)
 
 app.secret_key = os.environ.get("SESSION_SECRET", "")
 app.config.update(
@@ -33,14 +37,13 @@ EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def verify_turnstile(token):
-    """Verify a fresh Turnstile token on the server."""
+    """Validate a fresh Cloudflare Turnstile token server-side."""
     if not token or not TURNSTILE_SECRET_KEY:
         return False
 
     data = urllib.parse.urlencode({
         "secret": TURNSTILE_SECRET_KEY,
         "response": token,
-        "remoteip": request.headers.get("X-Forwarded-For", "").split(",")[0].strip(),
     }).encode()
 
     try:
@@ -72,27 +75,43 @@ def parse_recipients(raw):
     return unique
 
 
-def send_one_email(sender_email, app_password, sender_name,
-                   recipient, subject, body, is_html):
-    """Send one message using the sender's Gmail App Password."""
+def send_one_email(
+    sender_email,
+    app_password,
+    sender_name,
+    recipient,
+    subject,
+    body,
+    is_html,
+):
     msg = EmailMessage()
-    msg["From"] = formataddr((sender_name or sender_email, sender_email))
+    msg["From"] = formataddr(
+        (sender_name or sender_email, sender_email)
+    )
     msg["To"] = recipient
     msg["Subject"] = subject
 
     if is_html:
-        msg.set_content("This email contains HTML content. Please view it in an HTML-compatible email client.")
+        msg.set_content(
+            "This email contains HTML content. "
+            "Please use an HTML-compatible email client."
+        )
         msg.add_alternative(body, subtype="html")
     else:
         msg.set_content(body)
 
     context = ssl.create_default_context()
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=25) as smtp:
+    with smtplib.SMTP_SSL(
+        "smtp.gmail.com",
+        465,
+        context=context,
+        timeout=25,
+    ) as smtp:
         smtp.login(sender_email, app_password)
         smtp.send_message(msg)
 
-    return recipient
+    return True
 
 
 @app.after_request
@@ -100,7 +119,9 @@ def security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=()"
+    )
     response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -122,7 +143,7 @@ def login():
 
     if not LOGIN_PASSWORD or not app.secret_key:
         return (
-            "Server configuration is incomplete. Set LOGIN_PASSWORD "
+            "Server configuration incomplete. Set LOGIN_PASSWORD "
             "and SESSION_SECRET in your deployment environment.",
             503,
         )
@@ -138,7 +159,6 @@ def login():
         else:
             session.clear()
             session["authenticated"] = True
-            session.permanent = False
             return redirect(url_for("home"))
 
     return render_template(
@@ -157,7 +177,9 @@ def logout():
 @app.post("/send-batch")
 def send_batch():
     if not session.get("authenticated"):
-        return jsonify({"error": "Your session has expired. Please sign in again."}), 401
+        return jsonify({
+            "error": "Your session has expired. Please sign in again."
+        }), 401
 
     payload = request.get_json(silent=True) or {}
 
@@ -172,7 +194,9 @@ def send_batch():
     recipients = parse_recipients(payload.get("recipients", ""))
 
     if not verify_turnstile(token):
-        return jsonify({"error": "Cloudflare verification failed. Please verify again."}), 400
+        return jsonify({
+            "error": "Cloudflare verification failed. Please verify again."
+        }), 400
 
     if not EMAIL_PATTERN.fullmatch(sender_email):
         return jsonify({"error": "Enter a valid Gmail address."}), 400
@@ -181,26 +205,38 @@ def send_batch():
         return jsonify({"error": "Enter your Gmail App Password."}), 400
 
     if not recipients:
-        return jsonify({"error": "Add at least one recipient email address."}), 400
+        return jsonify({
+            "error": "Add at least one recipient email address."
+        }), 400
 
     if len(recipients) > 25:
-        return jsonify({"error": "Maximum 25 recipients per request."}), 400
+        return jsonify({
+            "error": "Maximum 25 recipients per request."
+        }), 400
 
-    invalid = [email for email in recipients if not EMAIL_PATTERN.fullmatch(email)]
+    invalid = [
+        email for email in recipients
+        if not EMAIL_PATTERN.fullmatch(email)
+    ]
     if invalid:
-        return jsonify({"error": "Invalid recipient address(es): " + ", ".join(invalid[:5])}), 400
+        return jsonify({
+            "error": "Invalid recipient address(es): "
+            + ", ".join(invalid[:5])
+        }), 400
 
     if not subject or not body.strip():
-        return jsonify({"error": "Subject and message body are required."}), 400
+        return jsonify({
+            "error": "Subject and message body are required."
+        }), 400
 
     def generate():
         total = len(recipients)
         yield json.dumps({"type": "start", "total": total}) + "\n"
 
-        results = {}
-        # Send in groups of five; each worker sends one email.
+        # Process up to five messages concurrently in each group.
         for start in range(0, total, 5):
             group = recipients[start:start + 5]
+            results = {}
 
             with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {
@@ -227,21 +263,23 @@ def send_batch():
                         }
                     except Exception as exc:
                         app.logger.warning(
-                            "Email delivery failed for %s: %s",
-                            recipient, type(exc).__name__
+                            "Email send failed for %s (%s)",
+                            recipient,
+                            type(exc).__name__,
                         )
                         results[recipient] = {
                             "status": "failed",
-                            "message": "Sending failed. Check Gmail settings and recipient address.",
+                            "message": (
+                                "Sending failed. Check Gmail settings "
+                                "and recipient address."
+                            ),
                         }
 
-            # Report results in the original recipient order.
             for recipient in group:
-                result = results[recipient]
                 yield json.dumps({
                     "type": "result",
                     "recipient": recipient,
-                    **result,
+                    **results[recipient],
                 }) + "\n"
 
         yield json.dumps({"type": "done"}) + "\n"
