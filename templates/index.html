@@ -5,21 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <title>Secure Mail Console</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
+
 <body>
   <header class="topbar">
     <a class="brand" href="/">
-      <span class="brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+      <span class="brand-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </span>
       <span>
         <strong>Secure Mail Console</strong>
         <small>EMAIL WORKSPACE</small>
       </span>
     </a>
+
     <a class="logout-link" href="{{ url_for('logout') }}">
       <i class="fa-solid fa-right-from-bracket"></i> Sign out
     </a>
@@ -47,8 +51,8 @@
           <div class="field">
             <label for="appPassword">App Password</label>
             <div class="password-wrap">
-              <input id="appPassword" type="password" placeholder="Google App Password"
-                     autocomplete="off" required>
+              <input id="appPassword" type="password"
+                     placeholder="Google App Password" autocomplete="off" required>
               <button type="button" class="eye-btn" id="togglePassword"
                       aria-label="Show or hide app password">
                 <i class="fa-regular fa-eye"></i>
@@ -66,13 +70,18 @@
         <div class="section-label body-label">
           <label for="messageBody">Message Body</label>
           <div class="mode-switch" role="group" aria-label="Message format">
-            <button type="button" class="mode-btn active" data-mode="plain">Plain Text</button>
-            <button type="button" class="mode-btn" data-mode="html">HTML</button>
+            <button type="button" class="mode-btn active" data-mode="plain">
+              Plain Text
+            </button>
+            <button type="button" class="mode-btn" data-mode="html">
+              HTML
+            </button>
           </div>
         </div>
 
         <textarea id="messageBody" class="message-body"
                   placeholder="Write your email message here..." required></textarea>
+
         <div class="editor-footer">
           <span id="bodyCount">0 characters</span>
           <span id="messageMode">Plain text message</span>
@@ -83,11 +92,15 @@
             <i class="fa-solid fa-shield-halved"></i>
             <span>Security Verification</span>
           </div>
+
           <div class="cf-turnstile"
                data-sitekey="{{ turnstile_site_key }}"
                data-theme="dark"
                data-action="send"></div>
-          <p class="verification-help">Complete verification before sending.</p>
+
+          <p class="verification-help">
+            Complete verification before sending.
+          </p>
         </div>
 
         <div class="notice" id="notice" role="status" aria-live="polite"></div>
@@ -101,15 +114,19 @@
             <h2><i class="fa-solid fa-users"></i> Recipients</h2>
             <p>Paste emails (comma separated, new lines, or Excel copy)</p>
           </div>
+
           <span class="count-badge" id="recipientCount">0 found</span>
         </div>
 
         <label class="sr-only" for="recipients">Recipient email addresses</label>
         <textarea id="recipients" class="recipients-input"
                   placeholder="name@example.com, another@example.com"></textarea>
+
         <div class="recipient-footer">
           <span>Maximum 25 recipients per send</span>
-          <button type="button" id="clearRecipients" class="text-btn">Clear list</button>
+          <button type="button" id="clearRecipients" class="text-btn">
+            Clear list
+          </button>
         </div>
       </section>
 
@@ -123,14 +140,17 @@
             <span>TOTAL</span>
             <strong id="totalCount" class="stat-total">0</strong>
           </div>
+
           <div class="stat-card">
             <span>SENT</span>
             <strong id="sentCount" class="stat-sent">0</strong>
           </div>
+
           <div class="stat-card">
             <span>FAILED</span>
             <strong id="failedCount" class="stat-failed">0</strong>
           </div>
+
           <div class="stat-card">
             <span>REMAINING</span>
             <strong id="remainingCount" class="stat-remaining">0</strong>
@@ -140,23 +160,17 @@
         <div class="progress-track">
           <div id="progressBar" class="progress-bar"></div>
         </div>
+
         <p class="progress-status" id="progressStatus">Ready to send</p>
 
         <div class="action-row">
           <button type="button" id="sendButton" class="btn btn-send">
             <i class="fa-solid fa-paper-plane"></i> Send All
           </button>
+
           <button type="button" id="stopButton" class="btn btn-stop" disabled>
             <i class="fa-solid fa-stop"></i> Stop Sending
           </button>
-        </div>
-
-        <div class="results-area">
-          <div class="results-heading">
-            <h3>Delivery Results</h3>
-            <button type="button" id="clearResults" class="text-btn">Clear</button>
-          </div>
-          <ul id="resultsList" class="results-list"></ul>
         </div>
       </section>
     </div>
@@ -176,7 +190,6 @@
     const sendButton = $("sendButton");
     const stopButton = $("stopButton");
     const notice = $("notice");
-    const resultsList = $("resultsList");
 
     let messageMode = "plain";
     let activeController = null;
@@ -189,14 +202,20 @@
     function getRecipients() {
       const raw = recipientsBox.value.split(/[,;\s]+/);
       const seen = new Set();
-      return raw.map(v => v.trim().toLowerCase())
-        .filter(v => v && !seen.has(v) && seen.add(v));
+
+      return raw
+        .map(value => value.trim().toLowerCase())
+        .filter(value => value && !seen.has(value) && seen.add(value));
     }
 
     function updateRecipientCount() {
       const recipients = getRecipients();
+
       $("recipientCount").textContent = `${recipients.length} found`;
-      $("recipientCount").classList.toggle("over-limit", recipients.length > 25);
+      $("recipientCount").classList.toggle(
+        "over-limit",
+        recipients.length > 25
+      );
     }
 
     function updateStats() {
@@ -205,7 +224,10 @@
       $("failedCount").textContent = failed;
       $("remainingCount").textContent = Math.max(0, total - processed);
 
-      const percent = total ? Math.round((processed / total) * 100) : 0;
+      const percent = total
+        ? Math.round((processed / total) * 100)
+        : 0;
+
       $("progressBar").style.width = `${percent}%`;
     }
 
@@ -218,28 +240,6 @@
       sending = value;
       sendButton.disabled = value;
       stopButton.disabled = !value;
-      $("progressStatus").textContent = value ? "Sending messages..." : "Ready to send";
-    }
-
-    function addResult(recipient, status, message) {
-      const item = document.createElement("li");
-      item.className = `result-item ${status}`;
-
-      const icon = document.createElement("i");
-      icon.className = status === "sent"
-        ? "fa-solid fa-circle-check"
-        : "fa-solid fa-circle-exclamation";
-
-      const text = document.createElement("span");
-      text.className = "result-recipient";
-      text.textContent = recipient;
-
-      const label = document.createElement("span");
-      label.className = "result-label";
-      label.textContent = message || status;
-
-      item.append(icon, text, label);
-      resultsList.prepend(item);
     }
 
     function resetStats() {
@@ -247,8 +247,16 @@
       sent = 0;
       failed = 0;
       processed = 0;
+
       updateStats();
-      $("progressStatus").textContent = "Ready to send";
+      $("progressStatus").textContent = "Preparing to send";
+    }
+
+    function getTurnstileToken() {
+      const field = document.querySelector(
+        '[name="cf-turnstile-response"]'
+      );
+      return field ? field.value : "";
     }
 
     recipientsBox.addEventListener("input", updateRecipientCount);
@@ -260,6 +268,7 @@
     $("togglePassword").addEventListener("click", () => {
       const input = $("appPassword");
       const show = input.type === "password";
+
       input.type = show ? "text" : "password";
       $("togglePassword").innerHTML = show
         ? '<i class="fa-regular fa-eye-slash"></i>'
@@ -269,34 +278,36 @@
     document.querySelectorAll(".mode-btn").forEach(button => {
       button.addEventListener("click", () => {
         messageMode = button.dataset.mode;
+
         document.querySelectorAll(".mode-btn").forEach(btn => {
           btn.classList.toggle("active", btn === button);
         });
+
         $("messageMode").textContent =
-          messageMode === "html" ? "HTML message" : "Plain text message";
+          messageMode === "html"
+            ? "HTML message"
+            : "Plain text message";
       });
     });
 
     $("clearRecipients").addEventListener("click", () => {
-      if (!sending) {
-        recipientsBox.value = "";
-        updateRecipientCount();
-      }
-    });
+      if (sending) return;
 
-    $("clearResults").addEventListener("click", () => {
-      if (!sending) resultsList.replaceChildren();
+      recipientsBox.value = "";
+      updateRecipientCount();
     });
 
     stopButton.addEventListener("click", () => {
-      if (activeController) {
-        activeController.abort();
-        setNotice(
-          "Stopped waiting for updates. Messages already accepted by the server may still be sent.",
-          "warning"
-        );
-        setSending(false);
-      }
+      if (!activeController) return;
+
+      activeController.abort();
+      setSending(false);
+
+      $("progressStatus").textContent = "Stopped";
+      setNotice(
+        "Stopped waiting for updates. Messages already being processed by the server may still be sent.",
+        "warning"
+      );
     });
 
     sendButton.addEventListener("click", async () => {
@@ -328,22 +339,27 @@
       }
 
       if (typeof window.turnstile === "undefined") {
-        setNotice("Cloudflare verification is still loading. Try again shortly.", "error");
+        setNotice(
+          "Cloudflare verification is still loading. Try again shortly.",
+          "error"
+        );
         return;
       }
 
-      const tokenInput = document.querySelector('[name="cf-turnstile-response"]');
-      const token = tokenInput ? tokenInput.value : "";
+      const token = getTurnstileToken();
 
       if (!token) {
-        setNotice("Complete Cloudflare verification before sending.", "error");
+        setNotice(
+          "Complete Cloudflare verification before sending.",
+          "error"
+        );
         return;
       }
 
       resetStats();
-      resultsList.replaceChildren();
       total = recipients.length;
       updateStats();
+
       setSending(true);
       setNotice("Preparing to send...", "info");
 
@@ -352,14 +368,16 @@
       try {
         const response = await fetch("/send-batch", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           signal: activeController.signal,
           body: JSON.stringify({
             sender_name: $("senderName").value.trim(),
             sender_email: senderEmail,
             app_password: appPassword,
-            subject,
-            body,
+            subject: subject,
+            body: body,
             recipients: recipients.join("\n"),
             is_html: messageMode === "html",
             turnstile_token: token
@@ -368,43 +386,61 @@
 
         if (!response.ok) {
           let message = "Unable to start sending.";
+
           try {
             const data = await response.json();
             if (data.error) message = data.error;
           } catch (_) {}
+
           throw new Error(message);
         }
 
-        if (!response.body) throw new Error("Streaming is not supported by this browser.");
+        if (!response.body) {
+          throw new Error("Streaming is not supported by this browser.");
+        }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let completedNormally = false;
 
         while (true) {
           const { value, done } = await reader.read();
-          if (done) break;
+
+          if (done) {
+            completedNormally = true;
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
+
           const lines = buffer.split("\n");
           buffer = lines.pop() || "";
 
           for (const line of lines) {
             if (!line.trim()) continue;
+
             const event = JSON.parse(line);
 
             if (event.type === "start") {
               total = event.total;
               updateStats();
               $("progressStatus").textContent = "Sending messages...";
-            } else if (event.type === "result") {
+            }
+
+            if (event.type === "result") {
               processed++;
-              if (event.status === "sent") sent++;
-              else failed++;
+
+              if (event.status === "sent") {
+                sent++;
+              } else {
+                failed++;
+              }
 
               updateStats();
-              addResult(event.recipient, event.status, event.message);
-            } else if (event.type === "done") {
+            }
+
+            if (event.type === "done") {
               $("progressStatus").textContent = "Sending complete";
             }
           }
@@ -413,20 +449,44 @@
         if (buffer.trim()) {
           try {
             const event = JSON.parse(buffer);
-            if (event.type === "done") $("progressStatus").textContent = "Sending complete";
+
+            if (event.type === "result") {
+              processed++;
+              if (event.status === "sent") sent++;
+              else failed++;
+              updateStats();
+            }
+
+            if (event.type === "done") {
+              $("progressStatus").textContent = "Sending complete";
+            }
           } catch (_) {}
         }
 
-        setNotice(`Finished: ${sent} sent, ${failed} failed.`, failed ? "warning" : "success");
-        if (window.turnstile) window.turnstile.reset();
+        if (completedNormally) {
+          setNotice(
+            `Finished: ${sent} sent, ${failed} failed.`,
+            failed ? "warning" : "success"
+          );
+        }
+
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
       } catch (error) {
         if (error.name === "AbortError") {
           $("progressStatus").textContent = "Stopped";
         } else {
-          setNotice(error.message || "An unexpected error occurred.", "error");
+          setNotice(
+            error.message || "An unexpected error occurred.",
+            "error"
+          );
           $("progressStatus").textContent = "Sending interrupted";
         }
-        if (window.turnstile) window.turnstile.reset();
+
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
       } finally {
         setSending(false);
         activeController = null;
