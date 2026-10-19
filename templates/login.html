@@ -12,22 +12,11 @@
     <div class="brand-icon">🛡</div>
     <h1>Secure Mail Console</h1>
     <p>Sign in to continue</p>
-
-    {% if error %}
-      <p class="login-error">{{ error }}</p>
-    {% endif %}
-
+    {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
     <form method="POST" action="{{ url_for('login') }}">
       <label for="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        required
-        autofocus
-      >
+      <input id="password" name="password" type="password"
+             placeholder="Enter password" autocomplete="current-password" required autofocus>
       <button type="submit">Sign In</button>
     </form>
   </main>
