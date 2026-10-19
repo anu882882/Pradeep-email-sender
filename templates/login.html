@@ -12,38 +12,32 @@
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="brand-icon">✉</div>
-    <p class="eyebrow">SECURE ACCESS</p>
+    <div class="shield login-shield">◈</div>
+    <p class="login-eyebrow">SECURE ACCESS</p>
     <h1>Secure Mail Console</h1>
-    <p class="muted">Sign in to continue</p>
+    <p class="login-subtitle">Sign in to continue</p>
 
     {% if error %}
-      <div class="error-message">{{ error }}</div>
+    <div class="error-notice login-error">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('login') }}">
       <label for="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        required
-        autofocus
-      >
+      <input id="password" name="password" type="password"
+             placeholder="Enter password" autocomplete="current-password" required autofocus>
 
       {% if turnstile_site_key %}
-      <div class="turnstile-wrap">
+      <div class="login-turnstile">
         <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>
       </div>
       {% else %}
-      <p class="error-message">Verification is not configured. Contact the administrator.</p>
+      <p class="error-notice">Cloudflare verification is not configured.</p>
       {% endif %}
 
-      <button type="submit" class="primary-button">Sign In <span>→</span></button>
+      <button type="submit" class="login-submit">Sign In <span>→</span></button>
     </form>
-    <p class="footer-note">Protected access · Secure Mail Console</p>
+
+    <p class="login-footer">Protected access · Secure Mail Console</p>
   </main>
 </body>
 </html>
