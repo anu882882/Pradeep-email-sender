@@ -6,291 +6,290 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% if turnstile_site_key %}
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
 </head>
-<body>
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-icon">🛡</div>
-    <div class="brand-name">Secure Mail Console</div>
-  </div>
-  <a class="logout-button" href="{{ url_for('logout') }}">⇥ Logout</a>
-</header>
+<body class="console-page">
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-icon">✉</span>
+      <span>Secure Mail <small>CONSOLE</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="status-pill"><i></i> SYSTEM READY</span>
+      <a class="logout-link" href="/logout">Sign out ↗</a>
+    </div>
+  </header>
 
-<main class="page-wrap">
-  <h1 class="page-title"><span>➤</span> Bulk Email Sender</h1>
-
-  <div class="dashboard-grid">
-    <section class="panel">
-      <div class="panel-heading">
-        <span class="heading-icon">✎</span>
-        <div><h2>Compose Message</h2><p>Set up your sender and message content.</p></div>
+  <main class="dashboard">
+    <section class="welcome-row">
+      <div>
+        <p class="eyebrow">MAIL WORKSPACE</p>
+        <h1>Compose <span>&amp; Send</span></h1>
+        <p class="muted">Prepare your message and monitor sending progress.</p>
       </div>
-
-      <form id="composeForm">
-        <div class="form-grid">
-          <div><label for="senderName">Sender Name</label><input id="senderName" placeholder="Your name" required></div>
-          <div><label for="gmail">Your Gmail</label><input id="gmail" type="email" placeholder="your@gmail.com" required></div>
-          <div>
-            <label for="appPassword">App Password</label>
-            <div class="password-row">
-              <input id="appPassword" type="password" placeholder="Google App Password" required>
-              <button type="button" id="togglePassword" aria-label="Show password">◉</button>
-            </div>
-          </div>
-          <div><label for="subject">Email Subject</label><input id="subject" placeholder="Email subject" required></div>
-        </div>
-
-        <div class="message-toolbar">
-          <label for="messageBody">Message Body</label>
-          <div class="mode-buttons">
-            <button type="button" class="mode-button active" data-mode="text">Plain Text</button>
-            <button type="button" class="mode-button" data-mode="html">HTML</button>
-          </div>
-        </div>
-        <textarea id="messageBody" placeholder="Write your email message here..." required></textarea>
-        <div class="char-count"><span id="charCount">0</span> characters</div>
-
-        <div class="info-banner">
-          <span class="banner-icon">✉</span>
-          <div><strong>Batch Sending</strong><p>Emails are processed in batches of 5. Maximum 25 unique recipients per request.</p></div>
-        </div>
-
-        <section class="spam-protection">
-          <h3>🛡 Spam Protection</h3>
-          <div id="turnstileWidget"
-               class="cf-turnstile"
-               data-sitekey="{{ turnstile_site_key }}"
-               data-theme="dark"
-               data-callback="turnstileSuccess"
-               data-expired-callback="turnstileExpired"
-               data-error-callback="turnstileError"></div>
-          <p id="verificationStatus" aria-live="polite">Complete verification before sending.</p>
-        </section>
-      </form>
+      <div class="secure-label"><span>◆</span> SECURE SESSION</div>
     </section>
 
-    <div class="right-column">
-      <section class="panel">
-        <div class="panel-heading recipients-heading">
-          <span class="heading-icon">♟</span>
-          <div class="heading-copy"><h2>Recipients</h2><p>Paste emails (comma separated, new lines, or Excel copy)</p></div>
-          <span class="found-pill"><span id="foundCount">0</span> found</span>
-        </div>
-        <textarea id="recipients" class="recipient-input" placeholder="name@example.com, another@example.com"></textarea>
-        <div class="recipient-footer">
-          <span>Maximum 25 unique valid addresses per request.</span>
-          <span id="invalidCount">0 invalid</span>
-        </div>
-      </section>
-
-      <section class="panel progress-panel">
+    <div class="main-grid">
+      <section class="panel compose-panel">
         <div class="panel-heading">
-          <span class="heading-icon">◔</span>
-          <div><h2>Progress Monitor</h2></div>
+          <div>
+            <span class="section-kicker">01 / COMPOSE</span>
+            <h2>Message Details</h2>
+          </div>
+          <span class="panel-symbol">✎</span>
         </div>
-        <div class="stats-grid">
-          <div class="stat-card total-stat"><span>TOTAL</span><strong id="totalCount">0</strong></div>
-          <div class="stat-card sent-stat"><span>SENT</span><strong id="sentCount">0</strong></div>
-          <div class="stat-card failed-stat"><span>FAILED</span><strong id="failedCount">0</strong></div>
-          <div class="stat-card remaining-stat"><span>REMAINING</span><strong id="remainingCount">0</strong></div>
-        </div>
-        <div class="progress-track" role="progressbar" id="progressTrack" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-meta"><span id="progressPercent">0% complete</span><span id="progressDone">0 of 0 processed</span></div>
-        <div class="status-box" id="statusBox" aria-live="polite">Ready to send</div>
-        <div class="action-buttons">
-          <button class="send-button" type="button" id="sendButton" disabled>➤ Send All</button>
-          <button class="stop-button" type="button" id="stopButton" disabled>■ Stop Sending</button>
-        </div>
-      </section>
-    </div>
-  </div>
-</main>
 
-<footer class="footer">
-  <span>🔒 Secure Mail Console</span>
-  <span>Keep your Gmail App Password private.</span>
-</footer>
+        <form id="composeForm">
+          <label for="senderName">Sender Name <b>*</b></label>
+          <input id="senderName" maxlength="150" placeholder="Your name or organization" required>
+
+          <label for="recipients">Recipients <b>*</b></label>
+          <textarea id="recipients" class="recipients-box" placeholder="recipient@example.com&#10;another@example.com" required></textarea>
+          <div class="field-foot">
+            <span>One email address per line; commas also supported.</span>
+            <span id="recipientCount">0 recipients</span>
+          </div>
+
+          <label for="subject">Subject <b>*</b></label>
+          <input id="subject" maxlength="300" placeholder="Enter email subject" required>
+
+          <div class="label-line">
+            <label for="body">Message Body <b>*</b></label>
+            <select id="fontStyle" aria-label="Message font">
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="Verdana, sans-serif">Verdana</option>
+              <option value="Tahoma, sans-serif">Tahoma</option>
+              <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="Garamond, serif">Garamond</option>
+              <option value="Palatino, serif">Palatino</option>
+              <option value="Impact, sans-serif">Impact</option>
+              <option value="'Lucida Sans', sans-serif">Lucida Sans</option>
+              <option value="'Segoe UI', sans-serif">Segoe UI</option>
+              <option value="Cambria, serif">Cambria</option>
+              <option value="Consolas, monospace">Consolas</option>
+              <option value="system-ui, sans-serif">System UI</option>
+            </select>
+          </div>
+          <textarea id="body" class="message-box" placeholder="Write your message here..." required></textarea>
+          <div class="field-foot">
+            <span>Drag the bottom edge to resize.</span>
+            <span id="charCount">0 characters</span>
+          </div>
+
+          <label class="check-row">
+            <input type="checkbox" id="htmlMode">
+            <span>Send body as HTML</span>
+          </label>
+
+          <div class="verify-panel">
+            <div>
+              <span class="section-kicker">SECURITY CHECK</span>
+              <h3>Spam Protection</h3>
+              <p class="muted">Verify before sending.</p>
+            </div>
+            {% if turnstile_site_key %}
+            <div class="cf-turnstile"
+                 data-sitekey="{{ turnstile_site_key }}"
+                 data-callback="turnstileSuccess"
+                 data-expired-callback="turnstileExpired"
+                 data-error-callback="turnstileExpired"></div>
+            {% else %}
+            <p class="error-text">Turnstile site key is not configured.</p>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="primary-button" id="sendButton">
+            <span>➤</span> Start Sending
+          </button>
+          <p class="small-note">Only send relevant messages to recipients who expect to hear from you.</p>
+        </form>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel monitor-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">02 / LIVE STATUS</span>
+              <h2>Progress Monitor</h2>
+            </div>
+            <span class="live-tag"><i></i> LIVE</span>
+          </div>
+
+          <div class="progress-track"><div id="progressBar"></div></div>
+          <div class="progress-label"><span id="progressText">Waiting to start</span><span id="progressPercent">0%</span></div>
+
+          <div class="stats-grid">
+            <div class="stat-card"><span>TOTAL</span><strong id="totalCount">0</strong></div>
+            <div class="stat-card"><span>SENT</span><strong class="success-text" id="sentCount">0</strong></div>
+            <div class="stat-card"><span>FAILED</span><strong class="error-text" id="failedCount">0</strong></div>
+            <div class="stat-card"><span>REMAINING</span><strong id="remainingCount">0</strong></div>
+          </div>
+          <div id="statusMessage" class="status-message">Ready when you are.</div>
+        </section>
+
+        <section class="panel info-panel">
+          <span class="section-kicker">DELIVERY SERVICE</span>
+          <h2>Resend API</h2>
+          <p class="muted">Email requests use HTTPS. Delivery depends on your API key, verified sender domain, account limits and recipient server.</p>
+          <div class="service-row"><span>API connection</span><span class="service-value">HTTPS</span></div>
+          <div class="service-row"><span>Batch size</span><span class="service-value">5 recipients</span></div>
+          <div class="service-row"><span>Sending mode</span><span class="service-value">Sequential</span></div>
+        </section>
+      </aside>
+    </div>
+    <footer>SECURE MAIL CONSOLE <span>•</span> PROTECTED WORKSPACE</footer>
+  </main>
 
 <script>
-(() => {
-  const $ = id => document.getElementById(id);
-  let htmlMode = false;
-  let sending = false;
-  let stopRequested = false;
-  let verified = false;
-  let sent = 0, failed = 0, remaining = 0, total = 0;
+let turnstileToken = "";
+let isSending = false;
 
-  window.turnstileSuccess = async function(token) {
-    $("verificationStatus").textContent = "Verifying securely…";
-    $("sendButton").disabled = true;
-    try {
-      const response = await fetch("/verify-turnstile", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({token})
-      });
-      const data = await response.json();
-      verified = response.ok && data.success === true;
-      $("verificationStatus").textContent = verified
-        ? "✓ Verification successful."
-        : (data.error || "Verification failed. Please try again.");
-      $("verificationStatus").className = verified ? "verification-ok" : "verification-error";
-      $("sendButton").disabled = sending || !verified;
-    } catch {
-      verified = false;
-      $("verificationStatus").textContent = "Could not verify. Check your connection and retry.";
-      $("verificationStatus").className = "verification-error";
-    }
-  };
+function turnstileSuccess(token) {
+  turnstileToken = token;
+}
 
-  window.turnstileExpired = function() {
-    verified = false;
-    $("sendButton").disabled = true;
-    $("verificationStatus").textContent = "Verification expired. Please complete it again.";
-    $("verificationStatus").className = "verification-error";
-  };
+function turnstileExpired() {
+  turnstileToken = "";
+}
 
-  window.turnstileError = function() {
-    verified = false;
-    $("sendButton").disabled = true;
-    $("verificationStatus").textContent = "Verification error. Please reload the challenge.";
-    $("verificationStatus").className = "verification-error";
-  };
+const $ = id => document.getElementById(id);
 
-  function getRecipients() {
-    const seen = new Set(), valid = [];
-    let invalid = 0;
-    for (const part of $("recipients").value.split(/[\s,;]+/)) {
-      const email = part.trim().toLowerCase();
-      if (!email) continue;
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { invalid++; continue; }
-      if (!seen.has(email)) { seen.add(email); valid.push(email); }
-    }
-    return {valid: valid.slice(0, 25), invalid};
+function parseRecipients(raw) {
+  const parts = raw.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+  return [...new Set(parts)];
+}
+
+function updateRecipientCount() {
+  const list = parseRecipients($("recipients").value);
+  $("recipientCount").textContent = `${list.length} recipient${list.length === 1 ? "" : "s"}`;
+}
+
+$("recipients").addEventListener("input", updateRecipientCount);
+$("body").addEventListener("input", () => {
+  $("charCount").textContent = `${$("body").value.length} characters`;
+});
+$("fontStyle").addEventListener("change", () => {
+  $("body").style.fontFamily = $("fontStyle").value;
+});
+
+function setProgress(total, sent, failed, remaining) {
+  const done = sent + failed;
+  const percent = total ? Math.round(done / total * 100) : 0;
+  $("totalCount").textContent = total;
+  $("sentCount").textContent = sent;
+  $("failedCount").textContent = failed;
+  $("remainingCount").textContent = remaining;
+  $("progressBar").style.width = `${percent}%`;
+  $("progressPercent").textContent = `${percent}%`;
+  $("progressText").textContent = remaining ? "Sending messages..." : "Finished";
+}
+
+async function postJSON(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || `Request failed (${response.status})`);
+  }
+  return result;
+}
+
+$("composeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (isSending) return;
+
+  const recipients = parseRecipients($("recipients").value);
+  if (!recipients.length) {
+    $("statusMessage").textContent = "Add at least one recipient.";
+    return;
+  }
+  if (recipients.length > 25) {
+    $("statusMessage").textContent = "Maximum 25 unique recipients per run.";
+    return;
+  }
+  if (!turnstileToken) {
+    $("statusMessage").textContent = "Complete Spam Protection first.";
+    return;
   }
 
-  function previewRecipients() {
-    const r = getRecipients();
-    $("foundCount").textContent = r.valid.length;
-    $("invalidCount").textContent = r.invalid + " invalid";
+  const senderName = $("senderName").value.trim();
+  const subject = $("subject").value.trim();
+  const body = $("body").value;
+  if (!senderName || !subject || !body.trim()) {
+    $("statusMessage").textContent = "Complete all required fields.";
+    return;
   }
 
-  function counters() {
-    $("totalCount").textContent = total;
-    $("sentCount").textContent = sent;
-    $("failedCount").textContent = failed;
-    $("remainingCount").textContent = remaining;
-    const done = sent + failed;
-    const pct = total ? Math.round(done / total * 100) : 0;
-    $("progressFill").style.width = pct + "%";
-    $("progressPercent").textContent = pct + "% complete";
-    $("progressDone").textContent = `${done} of ${total} processed`;
-    $("progressTrack").setAttribute("aria-valuenow", pct);
-  }
+  isSending = true;
+  $("sendButton").disabled = true;
+  $("sendButton").innerHTML = "<span>◌</span> Sending...";
+  $("statusMessage").textContent = "Checking verification...";
 
-  function status(message, type = "") {
-    $("statusBox").textContent = message;
-    $("statusBox").className = "status-box" + (type ? " " + type : "");
-  }
+  let sent = 0;
+  let failed = 0;
+  let firstError = "";
 
-  async function sendOne(email) {
-    try {
-      const response = await fetch("/send-one", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          senderName: $("senderName").value.trim(),
-          gmail: $("gmail").value.trim(),
-          appPassword: $("appPassword").value,
-          subject: $("subject").value.trim(),
-          body: $("messageBody").value,
-          recipient: email,
-          htmlMode
-        })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (response.status === 401) return {ok:false, error:"Session or verification expired. Verify again."};
-      return {ok:response.ok && data.success === true, error:data.error || `Request failed (${response.status})`};
-    } catch {
-      return {ok:false, error:"Network error"};
-    }
-  }
+  try {
+    await postJSON("/verify-turnstile", {token: turnstileToken});
 
-  async function startSending() {
-    if (sending) return;
-    if (!verified) { status("Complete Spam Protection verification first.", "error"); return; }
-    const recipients = getRecipients();
-    const emails = recipients.valid;
-    if (!$("senderName").value.trim() || !$("gmail").value.trim() ||
-        !$("appPassword").value.trim() || !$("subject").value.trim() ||
-        !$("messageBody").value.trim()) {
-      status("Please complete all message fields.", "error");
-      return;
-    }
-    if (!emails.length) { status("Enter at least one valid recipient.", "error"); return; }
+    setProgress(recipients.length, 0, 0, recipients.length);
+    $("statusMessage").textContent = "Sending messages...";
 
-    sending = true;
-    stopRequested = false;
-    sent = 0; failed = 0; total = emails.length; remaining = total;
-    $("sendButton").disabled = true;
-    $("stopButton").disabled = false;
-    $("recipients").disabled = true;
-    counters();
-    status("Sending started…", "sending");
+    // Groups of five; requests run sequentially to avoid opening
+    // several SMTP connections at once. This version uses HTTPS API.
+    for (let start = 0; start < recipients.length; start += 5) {
+      const batch = recipients.slice(start, start + 5);
 
-    try {
-      for (let i = 0; i < emails.length; i += 5) {
-        if (stopRequested) break;
-        const batch = emails.slice(i, i + 5);
-        const results = await Promise.all(batch.map(async email => ({email, ...(await sendOne(email))})));
-        for (const r of results) {
-          if (r.ok) sent++; else failed++;
-          remaining = Math.max(0, total - sent - failed);
-          counters();
-          status(`SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`,
-            r.ok ? "sending" : "warning");
+      for (const recipient of batch) {
+        try {
+          await postJSON("/send-one", {
+            senderName,
+            recipient,
+            subject,
+            body,
+            htmlMode: $("htmlMode").checked
+          });
+          sent++;
+        } catch (err) {
+          failed++;
+          if (!firstError) firstError = `${recipient}: ${err.message}`;
         }
-        if (results.some(r => r.error && /verification expired|verify again/i.test(r.error))) {
-          stopRequested = true;
-          verified = false;
-          $("sendButton").disabled = true;
-          $("verificationStatus").textContent = "Please complete verification again.";
-        }
+
+        setProgress(
+          recipients.length,
+          sent,
+          failed,
+          recipients.length - sent - failed
+        );
       }
-
-      if (stopRequested) status(`Stopped. SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`, "warning");
-      else if (!failed) status(`Finished. ${sent} email(s) accepted by the mail server.`, "success");
-      else status(`Finished. SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`, "warning");
-    } finally {
-      sending = false;
-      $("sendButton").disabled = !verified;
-      $("stopButton").disabled = true;
-      $("recipients").disabled = false;
     }
-  }
 
-  $("recipients").addEventListener("input", previewRecipients);
-  $("messageBody").addEventListener("input", () => $("charCount").textContent = $("messageBody").value.length);
-  $("togglePassword").addEventListener("click", () => {
-    $("appPassword").type = $("appPassword").type === "password" ? "text" : "password";
-  });
-  document.querySelectorAll(".mode-button").forEach(button => button.addEventListener("click", () => {
-    htmlMode = button.dataset.mode === "html";
-    document.querySelectorAll(".mode-button").forEach(b => b.classList.toggle("active", b === button));
-    $("messageBody").placeholder = htmlMode ? "Enter HTML message content..." : "Write your email message here...";
-  }));
-  $("sendButton").addEventListener("click", startSending);
-  $("stopButton").addEventListener("click", () => {
-    stopRequested = true;
-    $("stopButton").disabled = true;
-    status("Stop requested. Current batch will finish first.", "warning");
-  });
-  previewRecipients();
-  counters();
-})();
+    $("statusMessage").textContent = failed
+      ? `Finished with ${failed} failure(s). ${firstError}`
+      : `Finished successfully. ${sent} request(s) accepted by Resend.`;
+
+    if (window.turnstile) {
+      window.turnstile.reset();
+      turnstileToken = "";
+    }
+
+  } catch (err) {
+    $("statusMessage").textContent = err.message;
+  } finally {
+    isSending = false;
+    $("sendButton").disabled = false;
+    $("sendButton").innerHTML = "<span>➤</span> Start Sending";
+  }
+});
 </script>
 </body>
 </html>
