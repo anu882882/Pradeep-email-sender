@@ -1,286 +1,163 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  {% if turnstile_site_key %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
 </head>
 <body>
   <header class="topbar">
-    <h1 class="brand"><span class="shield">◈</span> Secure Mail Console</h1>
-    <form action="{{ url_for('logout') }}" method="post">
-      <button class="btn-logout" type="submit">⇥ Logout</button>
+    <div class="brand"><span class="brand-icon small">✉</span><div><strong>Secure Mail Console</strong><small>EMAIL WORKSPACE</small></div></div>
+    <form method="post" action="{{ url_for('logout') }}">
+      <button class="outline-button" type="submit">Sign out ↗</button>
     </form>
   </header>
 
-  <main class="page">
-    <h2 class="page-heading">➤ Bulk Email Sender</h2>
+  <main class="dashboard">
+    <section class="page-heading">
+      <div><p class="eyebrow">WORKSPACE</p><h1>Email Dashboard</h1><p class="muted">Prepare and send your email messages.</p></div>
+      <span class="status-pill"><span class="status-dot"></span> Session active</span>
+    </section>
 
-    <div class="dashboard">
-      <section class="panel compose">
-        <h2 class="panel-title">✎ Compose Message</h2>
-        <p class="subtitle">Set up your sender and message content.</p>
+    <section class="stats">
+      <div class="stat-card"><span>RECIPIENT LIMIT</span><strong>25</strong><small>per request</small></div>
+      <div class="stat-card"><span>BATCH SIZE</span><strong>5</strong><small>messages at a time</small></div>
+      <div class="stat-card"><span>CONNECTION</span><strong class="online">Ready</strong><small>Gmail SMTP · SSL</small></div>
+    </section>
 
-        <div class="fields">
-          <div>
-            <label for="senderName">Sender Name</label>
-            <input id="senderName" autocomplete="name" placeholder="Your name">
-          </div>
-          <div>
-            <label for="gmail">Your Gmail</label>
-            <input id="gmail" type="email" autocomplete="email" placeholder="your@gmail.com">
-          </div>
-          <div>
-            <label for="appPassword">App Password</label>
-            <input id="appPassword" type="password" autocomplete="new-password" placeholder="Google App Password">
-          </div>
-          <div>
-            <label for="subject">Email Subject</label>
-            <input id="subject" placeholder="Email subject">
-          </div>
+    <form id="emailForm" class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">COMPOSE</p><h2>New Email</h2></div><span class="panel-icon">✎</span></div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="sender_name">Sender name</label>
+          <input id="sender_name" name="sender_name" placeholder="Your name" required>
         </div>
-
-        <div class="message-heading">
-          <label for="message">Message Body</label>
-          <div class="mode-buttons">
-            <button type="button" id="plainMode" class="mode active">Plain Text</button>
-            <button type="button" id="htmlMode" class="mode">HTML</button>
-          </div>
+        <div class="field">
+          <label for="gmail">Gmail address</label>
+          <input id="gmail" name="gmail" type="email" placeholder="you@gmail.com" required>
         </div>
-
-        <textarea id="message" placeholder="Write your email message here..."></textarea>
-        <div class="char-count"><span id="charCount">0</span> characters</div>
-
-        <div class="notice">
-          <strong>⇄ Batch Sending Enabled</strong>
-          <span>Up to 5 emails are processed concurrently per batch.</span>
+        <div class="field full">
+          <label for="app_password">Gmail app password</label>
+          <input id="app_password" name="app_password" type="password" placeholder="Enter your Gmail app password" required autocomplete="off">
+          <small class="hint">Used for this request only. Never enter your normal Google account password.</small>
         </div>
-
-        <div class="security-heading">◈ Security Verification</div>
-        <div id="turnstile" class="turnstile-box"></div>
-        <p class="hint">Complete verification before sending.</p>
-
-        <div class="notice info">
-          <strong>ⓘ Sending information</strong>
-          <span>Use this tool only for recipients who have agreed to receive your email.</span>
+        <div class="field full">
+          <label for="recipients">Recipients <span class="label-note">UP TO 25 ADDRESSES</span></label>
+          <textarea id="recipients" name="recipients" rows="4" placeholder="person@example.com&#10;another@example.com" required></textarea>
+          <small class="hint">Separate addresses with a new line, comma, or semicolon. Send only to recipients who have agreed to receive your messages.</small>
         </div>
-      </section>
-
-      <div class="right-column">
-        <section class="panel recipients-panel">
-          <div class="section-heading">
-            <div>
-              <h2 class="panel-title">♟ Recipients</h2>
-              <p class="subtitle">Paste emails separated by commas, semicolons, or new lines.</p>
-            </div>
-            <span class="count-pill"><span id="found">0</span> found</span>
+        <div class="field full">
+          <label for="subject">Subject</label>
+          <input id="subject" name="subject" placeholder="Email subject" required>
+        </div>
+        <div class="field full">
+          <div class="label-row"><label for="body">Message body</label>
+            <label class="toggle-label"><input id="html_mode" type="checkbox"> HTML message</label>
           </div>
-          <textarea id="recipients" placeholder="name@example.com, another@example.com"></textarea>
-          <p class="hint">Maximum 25 unique recipients per request.</p>
-        </section>
-
-        <section class="panel progress-panel">
-          <h2 class="panel-title">◔ Progress Monitor</h2>
-
-          <div class="stats">
-            <div class="stat">
-              <span class="stat-label">Total</span>
-              <strong class="stat-value blue" id="total">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Sent</span>
-              <strong class="stat-value green" id="sent">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Failed</span>
-              <strong class="stat-value red" id="failed">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Remaining</span>
-              <strong class="stat-value orange" id="remaining">0</strong>
-            </div>
-          </div>
-
-          <div class="progress-track">
-            <div class="progress-fill" id="progress"></div>
-          </div>
-          <p class="status" id="status" role="status">Ready to send</p>
-          <p class="result-message" id="resultMessage" aria-live="polite"></p>
-
-          <div class="actions">
-            <button type="button" class="btn-send" id="sendButton">➤ Send All</button>
-            <button type="button" class="btn-stop" id="stopButton" disabled>■ Stop Sending</button>
-          </div>
-        </section>
+          <textarea id="body" name="body" rows="9" placeholder="Write your message here..." required></textarea>
+          <div class="label-row"><small class="hint">Plain text by default</small><small id="charCount" class="hint">0 characters</small></div>
+        </div>
       </div>
-    </div>
+
+      {% if turnstile_site_key %}
+      <div class="turnstile-wrap"><div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div></div>
+      {% else %}
+      <div class="error-message">Turnstile is not configured. Set the Vercel environment variables before sending.</div>
+      {% endif %}
+
+      <div class="action-row">
+        <button type="reset" class="outline-button">Clear form</button>
+        <button id="sendButton" type="submit" class="primary-button">Send messages <span>→</span></button>
+      </div>
+      <div id="result" class="result-box" hidden aria-live="polite"></div>
+    </form>
+
+    <p class="bottom-note">Use this console responsibly and follow your email provider's sending limits.</p>
   </main>
 
-  <footer>
-    <span>▣ Secure Mail Console</span>
-    <span>Keep your Gmail App Password private.</span>
-  </footer>
-
   <script>
-    const $ = (id) => document.getElementById(id);
-    let htmlMode = false;
-    let turnstileWidgetId = null;
-    let sending = false;
-    let stopRequested = false;
-    let turnstileToken = "";
+    const form = document.getElementById("emailForm");
+    const bodyField = document.getElementById("body");
+    const charCount = document.getElementById("charCount");
+    const sendButton = document.getElementById("sendButton");
+    const result = document.getElementById("result");
 
-    const turnstileSiteKey = {{ turnstile_site_key | tojson }};
-
-    function parseEmails(raw) {
-      const seen = new Set();
-      return raw.split(/[,;\s]+/)
-        .map(item => item.trim().toLowerCase())
-        .filter(item => {
-          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(item) || seen.has(item)) {
-            return false;
-          }
-          seen.add(item);
-          return true;
-        });
-    }
-
-    function updateRecipients() {
-      $("found").textContent = parseEmails($("recipients").value).length;
-    }
-
-    $("recipients").addEventListener("input", updateRecipients);
-    $("message").addEventListener("input", () => {
-      $("charCount").textContent = $("message").value.length;
+    bodyField.addEventListener("input", () => {
+      charCount.textContent = bodyField.value.length + " characters";
     });
 
-    $("plainMode").addEventListener("click", () => {
-      htmlMode = false;
-      $("plainMode").classList.add("active");
-      $("htmlMode").classList.remove("active");
+    form.addEventListener("reset", () => {
+      setTimeout(() => {
+        charCount.textContent = "0 characters";
+        result.hidden = true;
+      }, 0);
     });
 
-    $("htmlMode").addEventListener("click", () => {
-      htmlMode = true;
-      $("htmlMode").classList.add("active");
-      $("plainMode").classList.remove("active");
-    });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      result.hidden = false;
+      result.className = "result-box";
+      result.textContent = "";
 
-    function setStatus(text) {
-      $("status").textContent = text;
-    }
-
-    function setStats(total, sent, failed, remaining) {
-      $("total").textContent = total;
-      $("sent").textContent = sent;
-      $("failed").textContent = failed;
-      $("remaining").textContent = remaining;
-      const done = sent + failed;
-      $("progress").style.width = total ? `${Math.min(100, done / total * 100)}%` : "0%";
-    }
-
-    function renderTurnstile() {
-      if (!turnstileSiteKey) {
-        $("turnstile").textContent =
-          "Turnstile is not configured. Add TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in Vercel.";
-        return;
-      }
-      if (!window.turnstile || turnstileWidgetId !== null) return;
-
-      turnstileWidgetId = window.turnstile.render("#turnstile", {
-        sitekey: turnstileSiteKey,
-        theme: "dark",
-        callback: token => { turnstileToken = token; },
-        "expired-callback": () => { turnstileToken = ""; },
-        "error-callback": () => { turnstileToken = ""; }
-      });
-    }
-
-    window.addEventListener("load", renderTurnstile);
-    const turnstileWait = setInterval(() => {
-      if (window.turnstile) {
-        renderTurnstile();
-        clearInterval(turnstileWait);
-      }
-    }, 300);
-
-    $("sendButton").addEventListener("click", async () => {
-      if (sending) return;
-
-      const recipients = parseEmails($("recipients").value);
-      if (!recipients.length) {
-        setStatus("Add valid recipient addresses first.");
-        return;
-      }
-      if (recipients.length > 25) {
-        setStatus("Maximum 25 recipients per request.");
-        return;
-      }
-      if (!$("senderName").value.trim() || !$("gmail").value.trim() ||
-          !$("appPassword").value.trim() || !$("subject").value.trim() ||
-          !$("message").value.trim()) {
-        setStatus("Complete all sender and message fields.");
-        return;
-      }
-      if (!turnstileToken) {
-        setStatus("Complete Cloudflare verification first.");
+      const turnstile = form.querySelector('[name="cf-turnstile-response"]');
+      if (!turnstile || !turnstile.value) {
+        result.classList.add("error-message");
+        result.textContent = "Complete the Cloudflare verification first.";
         return;
       }
 
-      sending = true;
-      stopRequested = false;
-      $("sendButton").disabled = true;
-      $("stopButton").disabled = false;
-      $("resultMessage").textContent = "";
-      setStats(recipients.length, 0, 0, recipients.length);
-      setStatus("Sending batch requests...");
+      sendButton.disabled = true;
+      sendButton.textContent = "Sending…";
+
+      const payload = {
+        sender_name: document.getElementById("sender_name").value,
+        gmail: document.getElementById("gmail").value,
+        app_password: document.getElementById("app_password").value,
+        recipients: document.getElementById("recipients").value,
+        subject: document.getElementById("subject").value,
+        body: bodyField.value,
+        html_mode: document.getElementById("html_mode").checked,
+        turnstile_token: turnstile.value
+      };
 
       try {
         const response = await fetch("/send-batch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender_name: $("senderName").value.trim(),
-            gmail: $("gmail").value.trim(),
-            app_password: $("appPassword").value.trim(),
-            subject: $("subject").value.trim(),
-            body: $("message").value,
-            html_mode: htmlMode,
-            recipients: recipients.join("\n"),
-            turnstile_token: turnstileToken
-          })
+          body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
+        const data = await response.json();
+        result.classList.add(response.ok ? "success-message" : "error-message");
 
         if (!response.ok) {
-          throw new Error(result.error || "Sending request failed.");
+          result.textContent = data.error || "Sending failed.";
+        } else {
+          result.textContent = `Finished: ${data.sent} sent, ${data.failed} failed, ${data.total} total.`;
+          if (data.results?.length) {
+            const list = document.createElement("ul");
+            data.results.forEach(item => {
+              const li = document.createElement("li");
+              li.textContent = `${item.recipient}: ${item.status}`;
+              list.appendChild(li);
+            });
+            result.appendChild(list);
+          }
         }
-
-        setStats(result.total, result.sent, result.failed, result.remaining);
-        setStatus("Batch processing finished.");
-        $("resultMessage").textContent =
-          `Completed: ${result.sent} sent, ${result.failed} failed.`;
       } catch (error) {
-        setStatus(error.message || "Could not complete sending.");
+        result.classList.add("error-message");
+        result.textContent = "Request failed. Check the deployment logs and try again.";
       } finally {
-        sending = false;
-        $("sendButton").disabled = false;
-        $("stopButton").disabled = true;
-        turnstileToken = "";
-        if (window.turnstile && turnstileWidgetId !== null) {
-          window.turnstile.reset(turnstileWidgetId);
-        }
+        sendButton.disabled = false;
+        sendButton.innerHTML = 'Send messages <span>→</span>';
+        if (window.turnstile) window.turnstile.reset();
       }
-    });
-
-    $("stopButton").addEventListener("click", () => {
-      if (!sending) return;
-      stopRequested = true;
-      setStatus("Stop requested. The current server batch may finish first.");
-      // Browser-side stopping cannot cancel SMTP messages already submitted
-      // to the server. A true server-side stop requires job IDs and shared state.
     });
   </script>
 </body>
