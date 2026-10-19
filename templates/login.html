@@ -3,41 +3,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Secure Mail Console | Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  {% if turnstile_site_key %}
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="shield login-shield">◈</div>
-    <p class="login-eyebrow">SECURE ACCESS</p>
+    <div class="login-logo"><i class="fa-solid fa-shield-halved"></i></div>
     <h1>Secure Mail Console</h1>
     <p class="login-subtitle">Sign in to continue</p>
 
     {% if error %}
-    <div class="error-notice login-error">{{ error }}</div>
+      <div class="login-error">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('login') }}">
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required autofocus>
-
-      {% if turnstile_site_key %}
-      <div class="login-turnstile">
-        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>
-      </div>
-      {% else %}
-      <p class="error-notice">Cloudflare verification is not configured.</p>
-      {% endif %}
-
-      <button type="submit" class="login-submit">Sign In <span>→</span></button>
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" placeholder="Enter password" required autofocus autocomplete="current-password">
+      </label>
+      <button type="submit" class="login-submit">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
     </form>
-
-    <p class="login-footer">Protected access · Secure Mail Console</p>
+    <p class="login-footnote"><i class="fa-solid fa-lock"></i> Private access only</p>
   </main>
 </body>
 </html>
