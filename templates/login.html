@@ -4,21 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign In — Secure Mail Console</title>
+  <title>Sign In | Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="brand-icon">🛡</div>
-    <h1>Secure Mail Console</h1>
-    <p>Sign in to continue</p>
-    {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
-    <form method="POST" action="{{ url_for('login') }}">
+    <div class="login-logo">⬡</div>
+    <p class="section-kicker">PRIVATE WORKSPACE</p>
+    <h1>Secure Mail <span>Console</span></h1>
+    <p class="muted">Sign in to continue</p>
+
+    {% if error %}
+      <div class="login-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/login">
       <label for="password">Password</label>
       <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required autofocus>
-      <button type="submit">Sign In</button>
+             placeholder="Enter password" autocomplete="current-password"
+             autofocus required>
+      <button class="primary-button" type="submit">Sign In <span>→</span></button>
     </form>
+    <p class="small-note">Authorized access only.</p>
   </main>
 </body>
 </html>
