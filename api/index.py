@@ -1,92 +1,186 @@
 
 import os
 import time
-import re
 import requests
 
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, jsonify
-)
-from functools import wraps
-
-app = Flask(__name__)
-
-app.secret_key = os.environ.get("SESSION_SECRET", "local-development-only-change-me")
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    PERMANENT_SESSION_LIFETIME=1800,
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
 )
 
+# Project root: parent directory of api/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+app = Flask(
+    __name__,
+    template_folder=TEMPLATE_DIR,
+    static_folder=STATIC_DIR,
+)
+
+# Configure these in Vercel Environment Variables
+app.secret_key = os.environ.get("SESSION_SECRET", "")
+
+LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
+
+# The Resend API code requires these two additional variables.
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "")
-TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
-TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 
-EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-MAX_RECIPIENTS = 25
-MIN_VERIFY_INTERVAL = 600
-verification_times = {}
+MAIL_GAP_SECONDS = max(
+    0.0,
+    float(os.environ.get("MAIL_GAP_SECONDS", "2"))
+)
 
 
-def login_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not session.get("logged_in"):
-            return redirect(url_for("login"))
-        return view(*args, **kwargs)
-    return wrapped
+def is_logged_in():
+    return session.get("logged_in") is True
 
 
-def valid_email(value):
-    return bool(EMAIL_PATTERN.fullmatch(value or ""))
+def render_login(error=None):
+    return render_template(
+        "login.html",
+        error=error,
+    )
 
 
-def verify_turnstile(token, remote_ip=None):
-    # If Turnstile is configured, require a valid token.
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({
+        "status": "ok",
+        "templates_found": os.path.isdir(TEMPLATE_DIR),
+        "login_template_found": os.path.isfile(
+            os.path.join(TEMPLATE_DIR, "login.html")
+        ),
+        "index_template_found": os.path.isfile(
+            os.path.join(TEMPLATE_DIR, "index.html")
+        ),
+    })
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        if is_logged_in():
+            return redirect(url_for("home"))
+        return render_login()
+
+    submitted_password = request.form.get("password", "")
+
+    if not LOGIN_PASSWORD:
+        app.logger.error("LOGIN_PASSWORD is not configured.")
+        return render_login(
+            "Login is not configured. Please contact the administrator."
+        ), 500
+
+    if submitted_password and submitted_password == LOGIN_PASSWORD:
+        session.clear()
+        session["logged_in"] = True
+        return redirect(url_for("home"))
+
+    return render_login("Incorrect password."), 401
+
+
+@app.route("/logout", methods=["POST", "GET"])
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/", methods=["GET"])
+def home():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    return render_template(
+        "index.html",
+        turnstile_site_key=TURNSTILE_SITE_KEY,
+    )
+
+
+@app.route("/verify-turnstile", methods=["POST"])
+def verify_turnstile():
+    if not is_logged_in():
+        return jsonify({
+            "ok": False,
+            "error": "Please log in again.",
+        }), 401
+
     if not TURNSTILE_SECRET_KEY:
-        return True
+        app.logger.error("TURNSTILE_SECRET_KEY is not configured.")
+        return jsonify({
+            "ok": False,
+            "error": "Bot verification is not configured.",
+        }), 500
+
+    data = request.get_json(silent=True) or {}
+    token = data.get("token", "")
 
     if not token:
-        return False
-
-    data = {
-        "secret": TURNSTILE_SECRET_KEY,
-        "response": token,
-    }
-    if remote_ip:
-        data["remoteip"] = remote_ip
+        return jsonify({
+            "ok": False,
+            "error": "Complete the verification first.",
+        }), 400
 
     try:
         response = requests.post(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,
+            data={
+                "secret": TURNSTILE_SECRET_KEY,
+                "response": token,
+                "remoteip": request.headers.get("CF-Connecting-IP", ""),
+            },
             timeout=10,
         )
         response.raise_for_status()
         result = response.json()
-        return result.get("success") is True
-    except (requests.RequestException, ValueError):
-        app.logger.exception("Turnstile verification failed")
-        return False
+
+    except requests.RequestException:
+        app.logger.exception("Turnstile verification request failed.")
+        return jsonify({
+            "ok": False,
+            "error": "Verification service is temporarily unavailable.",
+        }), 502
+
+    if not result.get("success"):
+        return jsonify({
+            "ok": False,
+            "error": "Verification failed. Please try again.",
+        }), 400
+
+    session["turnstile_verified_at"] = time.time()
+
+    return jsonify({"ok": True})
 
 
-def send_with_resend(recipient, subject, body, sender_name, html_mode=False):
+def send_with_resend(recipient, subject, body, sender_name, html_mode):
     if not RESEND_API_KEY or not RESEND_FROM_EMAIL:
-        return False, "Email service is not configured."
-
-    payload = {
-        "from": f"{sender_name.strip() or 'Mail Console'} <{RESEND_FROM_EMAIL}>",
-        "to": [recipient],
-        "subject": subject.strip(),
-    }
+        return False, (
+            "Email provider is not configured. "
+            "Set RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel."
+        ), None
 
     if html_mode:
-        payload["html"] = body
+        content = {"html": body}
     else:
-        payload["text"] = body
+        content = {"text": body}
+
+    payload = {
+        "from": f"{sender_name} <{RESEND_FROM_EMAIL}>"
+        if sender_name
+        else RESEND_FROM_EMAIL,
+        "to": [recipient],
+        "subject": subject,
+        **content,
+    }
 
     try:
         response = requests.post(
@@ -99,131 +193,108 @@ def send_with_resend(recipient, subject, body, sender_name, html_mode=False):
             timeout=20,
         )
 
-        if response.status_code in (200, 201):
-            result = response.json()
-            return True, result.get("id", "accepted")
+        if response.status_code not in (200, 201):
+            app.logger.error(
+                "Resend API error %s: %s",
+                response.status_code,
+                response.text[:1000],
+            )
+            return False, (
+                f"Email provider rejected the request "
+                f"(HTTP {response.status_code})."
+            ), None
 
-        app.logger.error(
-            "Resend API error: status=%s response=%s",
-            response.status_code,
-            response.text[:1000],
-        )
-        return False, f"Email provider returned HTTP {response.status_code}."
+        result = response.json()
+        email_id = result.get("id")
+
+        if not email_id:
+            return False, "Email provider returned no email ID.", None
+
+        return True, "Accepted by email provider.", email_id
+
+    except requests.Timeout:
+        app.logger.exception("Resend API request timed out.")
+        return False, "Email provider timed out. Please try again.", None
 
     except requests.RequestException:
-        app.logger.exception("Resend request failed")
-        return False, "Could not connect to the email provider."
+        app.logger.exception("Resend API request failed.")
+        return False, "Could not connect to the email provider.", None
+
+    except ValueError:
+        app.logger.exception("Invalid JSON returned by Resend.")
+        return False, "Invalid response from the email provider.", None
 
 
-@app.get("/health")
-def health():
-    return jsonify({"ok": True})
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if session.get("logged_in"):
-        return redirect(url_for("index"))
-
-    error = None
-
-    if request.method == "POST":
-        expected = os.environ.get("LOGIN_PASSWORD", "")
-        password = request.form.get("password", "")
-
-        if expected and password and password == expected:
-            session.clear()
-            session.permanent = True
-            session["logged_in"] = True
-            return redirect(url_for("index"))
-
-        error = "Incorrect password or login is not configured."
-
-    return render_template("login.html", error=error)
-
-
-@app.get("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-
-
-@app.get("/")
-@login_required
-def index():
-    return render_template(
-        "index.html",
-        turnstile_site_key=TURNSTILE_SITE_KEY,
-        turnstile_enabled=bool(TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY),
-    )
-
-
-@app.post("/verify-turnstile")
-@login_required
-def verify():
-    if not TURNSTILE_SECRET_KEY:
-        session["verified_at"] = int(time.time())
-        return jsonify({"ok": True, "message": "Verification not configured."})
-
-    data = request.get_json(silent=True) or {}
-    token = data.get("token", "")
-    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    if not ip:
-        ip = request.remote_addr
-
-    if not verify_turnstile(token, ip):
-        return jsonify({"ok": False, "error": "Verification failed. Please try again."}), 400
-
-    session["verified_at"] = int(time.time())
-    return jsonify({"ok": True})
-
-
-@app.post("/send-one")
-@login_required
+@app.route("/send-one", methods=["POST"])
 def send_one():
-    now = int(time.time())
-    verified_at = int(session.get("verified_at", 0))
-
-    if TURNSTILE_SECRET_KEY and now - verified_at > MIN_VERIFY_INTERVAL:
+    if not is_logged_in():
         return jsonify({
             "ok": False,
-            "error": "Verification expired. Please verify again."
+            "error": "Please log in again.",
+        }), 401
+
+    verified_at = session.get("turnstile_verified_at", 0)
+
+    if time.time() - verified_at > 600:
+        session.pop("turnstile_verified_at", None)
+        return jsonify({
+            "ok": False,
+            "error": "Verification expired. Please verify again.",
         }), 403
 
     data = request.get_json(silent=True) or {}
 
-    recipient = (data.get("recipient") or "").strip().lower()
-    subject = (data.get("subject") or "").strip()
-    body = data.get("body") or ""
-    sender_name = (data.get("senderName") or "").strip()
-    html_mode = bool(data.get("htmlMode", False))
+    recipient = str(data.get("recipient", "")).strip()
+    subject = str(data.get("subject", "")).strip()
+    body = str(data.get("body", ""))
+    sender_name = str(data.get("senderName", "")).strip()
+    html_mode = data.get("htmlMode") is True
+    consent_confirmed = data.get("consentConfirmed") is True
 
-    if not valid_email(recipient):
-        return jsonify({"ok": False, "error": "Invalid recipient address."}), 400
-
-    if not subject or not body.strip():
-        return jsonify({"ok": False, "error": "Subject and message are required."}), 400
-
-    if len(subject) > 200 or len(body) > 50000:
-        return jsonify({"ok": False, "error": "Subject or message is too long."}), 400
-
-    # Do not let the browser turn this endpoint into an unrestricted sender.
-    # Require an explicit recipient-consent confirmation in the UI.
-    if data.get("consentConfirmed") is not True:
+    if not consent_confirmed:
         return jsonify({
             "ok": False,
-            "error": "Confirm that these recipients agreed to receive your message."
+            "error": "Please confirm you have permission to contact this recipient.",
         }), 400
 
-    success, result = send_with_resend(
-        recipient, subject, body, sender_name, html_mode
+    if not recipient or "@" not in recipient or recipient.startswith("@"):
+        return jsonify({
+            "ok": False,
+            "error": "Enter a valid recipient email address.",
+        }), 400
+
+    if not subject:
+        return jsonify({
+            "ok": False,
+            "error": "Subject cannot be empty.",
+        }), 400
+
+    if not body.strip():
+        return jsonify({
+            "ok": False,
+            "error": "Message body cannot be empty.",
+        }), 400
+
+    success, message, email_id = send_with_resend(
+        recipient=recipient,
+        subject=subject,
+        body=body,
+        sender_name=sender_name,
+        html_mode=html_mode,
     )
 
-    if success:
+    if not success:
         return jsonify({
-            "ok": True,
-            "emailId": result,
-            "message": "Accepted by email provider."
-        })
+            "ok": False,
+            "error": message,
+        }), 502
 
-    return jsonify({"ok": False, "error": result}), 502
+    return jsonify({
+        "ok": True,
+        "message": message,
+        "emailId": email_id,
+    })
+
+
+# Vercel imports this Flask application.
+# Do not call app.run() in a serverless deployment.
