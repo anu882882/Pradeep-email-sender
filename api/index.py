@@ -3,159 +3,136 @@ import re
 import json
 import ssl
 import smtplib
-import secrets
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from email.message import EmailMessage
-from email.utils import formataddr
+from functools import wraps
 
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, Response, jsonify
+    Flask, render_template, request, redirect, url_for,
+    session, jsonify, Response, stream_with_context
 )
 
-app = Flask(
-    __name__,
-    template_folder="../templates",
-    static_folder="../static"
-)
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
+app.secret_key = os.environ.get("SESSION_SECRET", "change-this-to-a-long-random-secret")
 
-app.secret_key = os.environ.get("SESSION_SECRET", "")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    MAX_CONTENT_LENGTH=1 * 1024 * 1024,
 )
 
-LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
-TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
-TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
-
-EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_RECIPIENTS = 25
+BATCH_SIZE = 5
 
 
-def verify_turnstile(token):
-    """Validate a fresh Cloudflare Turnstile token server-side."""
-    if not token or not TURNSTILE_SECRET_KEY:
+def verify_turnstile(token, remote_ip=None):
+    """Verify Turnstile with Cloudflare; never trust the browser token alone."""
+    secret = os.environ.get("TURNSTILE_SECRET_KEY", "").strip()
+    if not secret or not token:
         return False
 
-    data = urllib.parse.urlencode({
-        "secret": TURNSTILE_SECRET_KEY,
+    payload = {
+        "secret": secret,
         "response": token,
-    }).encode()
+    }
+    if remote_ip:
+        payload["remoteip"] = remote_ip
+
+    data = urllib.parse.urlencode(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        data=data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
 
     try:
-        req = urllib.request.Request(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=8) as response:
+        with urllib.request.urlopen(req, timeout=5) as response:
             result = json.loads(response.read().decode("utf-8"))
         return result.get("success") is True
     except Exception:
-        app.logger.warning("Turnstile verification failed.")
+        app.logger.warning("Turnstile verification failed or timed out.")
         return False
 
 
-def parse_recipients(raw):
-    items = re.split(r"[,;\s]+", raw or "")
-    unique = []
-    seen = set()
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("authenticated"):
+            if request.path.startswith("/send-batch"):
+                return jsonify({"error": "Please sign in again."}), 401
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped
 
-    for item in items:
+
+def parse_recipients(raw):
+    recipients = []
+    seen = set()
+    for item in re.split(r"[,;\s]+", raw or ""):
         email = item.strip().lower()
         if email and email not in seen:
             seen.add(email)
-            unique.append(email)
+            recipients.append(email)
+    return recipients
 
-    return unique
 
-
-def send_one_email(
-    sender_email,
-    app_password,
-    sender_name,
-    recipient,
-    subject,
-    body,
-    is_html,
-):
+def send_one_email(sender_email, app_password, sender_name, recipient, subject, body, html_mode):
     msg = EmailMessage()
-    msg["From"] = formataddr(
-        (sender_name or sender_email, sender_email)
-    )
+    msg["From"] = f"{sender_name} <{sender_email}>" if sender_name else sender_email
     msg["To"] = recipient
     msg["Subject"] = subject
+    msg.set_content(body)
 
-    if is_html:
-        msg.set_content(
-            "This email contains HTML content. "
-            "Please use an HTML-compatible email client."
-        )
+    if html_mode:
         msg.add_alternative(body, subtype="html")
-    else:
-        msg.set_content(body)
 
     context = ssl.create_default_context()
-
-    with smtplib.SMTP_SSL(
-        "smtp.gmail.com",
-        465,
-        context=context,
-        timeout=25,
-    ) as smtp:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=20) as smtp:
         smtp.login(sender_email, app_password)
         smtp.send_message(msg)
 
-    return True
+    return recipient
 
 
 @app.after_request
-def security_headers(response):
+def add_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = (
-        "camera=(), microphone=(), geolocation=()"
-    )
     response.headers["Cache-Control"] = "no-store"
     return response
 
 
-@app.get("/")
+@app.route("/", methods=["GET"])
+@login_required
 def home():
-    if not session.get("authenticated"):
-        return redirect(url_for("login"))
-
     return render_template(
         "index.html",
-        turnstile_site_key=TURNSTILE_SITE_KEY,
+        turnstile_site_key=os.environ.get("TURNSTILE_SITE_KEY", ""),
     )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("authenticated"):
+        return redirect(url_for("home"))
+
     error = None
-
-    if not LOGIN_PASSWORD or not app.secret_key:
-        return (
-            "Server configuration incomplete. Set LOGIN_PASSWORD "
-            "and SESSION_SECRET in your deployment environment.",
-            503,
-        )
-
     if request.method == "POST":
         password = request.form.get("password", "")
         token = request.form.get("cf-turnstile-response", "")
+        expected = os.environ.get("LOGIN_PASSWORD", "")
 
-        if not secrets.compare_digest(password, LOGIN_PASSWORD):
-            error = "Incorrect password. Please try again."
-        elif not verify_turnstile(token):
+        if not expected:
+            error = "Set LOGIN_PASSWORD in your deployment environment."
+        elif not verify_turnstile(token, request.remote_addr):
             error = "Verification failed. Please try again."
+        elif password != expected:
+            error = "Incorrect password."
         else:
             session.clear()
             session["authenticated"] = True
@@ -164,133 +141,108 @@ def login():
     return render_template(
         "login.html",
         error=error,
-        turnstile_site_key=TURNSTILE_SITE_KEY,
+        turnstile_site_key=os.environ.get("TURNSTILE_SITE_KEY", ""),
     )
 
 
-@app.get("/logout")
+@app.route("/logout", methods=["POST"])
+@login_required
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-@app.post("/send-batch")
+@app.route("/send-batch", methods=["POST"])
+@login_required
 def send_batch():
-    if not session.get("authenticated"):
+    data = request.get_json(silent=True) or {}
+
+    token = str(data.get("turnstile_token", "")).strip()
+    if not verify_turnstile(token, request.remote_addr):
         return jsonify({
-            "error": "Your session has expired. Please sign in again."
-        }), 401
-
-    payload = request.get_json(silent=True) or {}
-
-    sender_email = str(payload.get("sender_email", "")).strip()
-    app_password = str(payload.get("app_password", "")).replace(" ", "")
-    sender_name = str(payload.get("sender_name", "")).strip()[:120]
-    subject = str(payload.get("subject", "")).strip()[:250]
-    body = str(payload.get("body", ""))
-    is_html = payload.get("is_html") is True
-    token = str(payload.get("turnstile_token", ""))
-
-    recipients = parse_recipients(payload.get("recipients", ""))
-
-    if not verify_turnstile(token):
-        return jsonify({
-            "error": "Cloudflare verification failed. Please verify again."
+            "error": "Cloudflare verification failed or expired. Please wait for verification and try again."
         }), 400
 
-    if not EMAIL_PATTERN.fullmatch(sender_email):
-        return jsonify({"error": "Enter a valid Gmail address."}), 400
+    sender_email = str(data.get("sender_email", "")).strip()
+    app_password = str(data.get("app_password", "")).strip()
+    sender_name = str(data.get("sender_name", "")).strip()
+    subject = str(data.get("subject", "")).strip()
+    body = str(data.get("body", ""))
+    html_mode = data.get("mode") == "html"
+    recipients = parse_recipients(str(data.get("recipients", "")))
 
+    if not EMAIL_RE.fullmatch(sender_email):
+        return jsonify({"error": "Enter a valid sender email address."}), 400
     if not app_password:
-        return jsonify({"error": "Enter your Gmail App Password."}), 400
-
-    if not recipients:
-        return jsonify({
-            "error": "Add at least one recipient email address."
-        }), 400
-
-    if len(recipients) > 25:
-        return jsonify({
-            "error": "Maximum 25 recipients per request."
-        }), 400
-
-    invalid = [
-        email for email in recipients
-        if not EMAIL_PATTERN.fullmatch(email)
-    ]
-    if invalid:
-        return jsonify({
-            "error": "Invalid recipient address(es): "
-            + ", ".join(invalid[:5])
-        }), 400
-
+        return jsonify({"error": "Enter your Gmail app password."}), 400
     if not subject or not body.strip():
-        return jsonify({
-            "error": "Subject and message body are required."
-        }), 400
+        return jsonify({"error": "Subject and message body are required."}), 400
+    if not recipients:
+        return jsonify({"error": "Add at least one recipient."}), 400
+    if len(recipients) > MAX_RECIPIENTS:
+        return jsonify({"error": f"Maximum {MAX_RECIPIENTS} recipients per request."}), 400
+
+    invalid = [email for email in recipients if not EMAIL_RE.fullmatch(email)]
+    if invalid:
+        return jsonify({"error": "Invalid recipient address: " + ", ".join(invalid[:5])}), 400
 
     def generate():
         total = len(recipients)
         yield json.dumps({"type": "start", "total": total}) + "\n"
 
-        # Process up to five messages concurrently in each group.
-        for start in range(0, total, 5):
-            group = recipients[start:start + 5]
-            results = {}
+        sent = 0
+        failed = 0
 
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {
+        # Send no more than five messages concurrently.
+        for start in range(0, total, BATCH_SIZE):
+            batch = recipients[start:start + BATCH_SIZE]
+            with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+                future_map = {
                     executor.submit(
                         send_one_email,
-                        sender_email,
-                        app_password,
-                        sender_name,
-                        recipient,
-                        subject,
-                        body,
-                        is_html,
+                        sender_email, app_password, sender_name,
+                        recipient, subject, body, html_mode
                     ): recipient
-                    for recipient in group
+                    for recipient in batch
                 }
 
-                for future in as_completed(futures):
-                    recipient = futures[future]
+                for future in as_completed(future_map):
+                    recipient = future_map[future]
                     try:
                         future.result()
-                        results[recipient] = {
-                            "status": "sent",
-                            "message": "Sent successfully",
-                        }
-                    except Exception as exc:
-                        app.logger.warning(
-                            "Email send failed for %s (%s)",
-                            recipient,
-                            type(exc).__name__,
-                        )
-                        results[recipient] = {
-                            "status": "failed",
-                            "message": (
-                                "Sending failed. Check Gmail settings "
-                                "and recipient address."
-                            ),
-                        }
+                        sent += 1
+                        result = {"type": "result", "ok": True}
+                    except Exception:
+                        failed += 1
+                        app.logger.exception("Email send failed.")
+                        result = {"type": "result", "ok": False}
 
-            for recipient in group:
-                yield json.dumps({
-                    "type": "result",
-                    "recipient": recipient,
-                    **results[recipient],
-                }) + "\n"
+                    result.update({
+                        "sent": sent,
+                        "failed": failed,
+                        "remaining": total - sent - failed,
+                    })
+                    yield json.dumps(result) + "\n"
 
-        yield json.dumps({"type": "done"}) + "\n"
+        yield json.dumps({
+            "type": "done",
+            "total": total,
+            "sent": sent,
+            "failed": failed,
+            "remaining": total - sent - failed,
+        }) + "\n"
 
     return Response(
-        generate(),
+        stream_with_context(generate()),
         mimetype="application/x-ndjson",
         headers={"X-Accel-Buffering": "no"},
     )
 
 
-@app.errorhandler(413)
-def too_large(_error):
-    return jsonify({"error": "Request is too large."}), 413
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
+if __name__ == "__main__":
+    app.run(debug=False)
