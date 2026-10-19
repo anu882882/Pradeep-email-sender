@@ -5,8 +5,6 @@ import ssl
 import smtplib
 from concurrent.futures import ThreadPoolExecutor
 from email.message import EmailMessage
-from email.utils import formataddr
-
 from flask import (
     Flask, render_template, request, redirect,
     url_for, session, jsonify
@@ -18,32 +16,64 @@ app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
     static_folder=os.path.join(BASE_DIR, "static"),
-    static_url_path="/static"
+    static_url_path="/static",
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET", "replace-this-with-a-long-random-secret")
-
-BATCH_SIZE = 5
-MAX_RECIPIENTS = 25
+app.secret_key = os.environ.get("SESSION_SECRET", "change-this-secret-before-deploying")
+app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_RECIPIENTS = 25
+BATCH_SIZE = 5
+
+
+def valid_email(value):
+    value = (value or "").strip()
+    return bool(EMAIL_PATTERN.fullmatch(value))
 
 
 def parse_recipients(raw):
-    items = re.split(r"[,;\s]+", raw or "")
-    results = []
+    parts = re.split(r"[,;\s]+", raw or "")
+    result = []
     seen = set()
 
-    for item in items:
+    for item in parts:
         email = item.strip().lower()
-        if email and EMAIL_PATTERN.fullmatch(email) and email not in seen:
+        if email and valid_email(email) and email not in seen:
             seen.add(email)
-            results.append(email)
+            result.append(email)
 
-    return results
+    return result[:MAX_RECIPIENTS]
 
 
-@app.get("/")
+def send_one_email(sender_name, gmail, app_password,
+                   recipient, subject, body, html_mode=False):
+    msg = EmailMessage()
+    msg["From"] = f"{sender_name} <{gmail}>"
+    msg["To"] = recipient
+    msg["Subject"] = subject or "(No subject)"
+    msg.set_content(body or "")
+
+    if html_mode:
+        msg.add_alternative(body or "", subtype="html")
+
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL(
+        "smtp.gmail.com", 465, context=context, timeout=25
+    ) as smtp:
+        smtp.login(gmail, app_password)
+        smtp.send_message(msg)
+
+    return {"success": True, "recipient": recipient, "error": None}
+
+
+@app.route("/health")
+def health():
+    return jsonify({"ok": True})
+
+
+@app.route("/")
 def home():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
@@ -53,124 +83,79 @@ def home():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        password = os.environ.get("LOGIN_PASSWORD", "")
+        expected = os.environ.get("LOGIN_PASSWORD")
 
-        if not password:
+        if not expected:
             return render_template(
                 "login.html",
                 error="LOGIN_PASSWORD environment variable is not configured."
-            ), 500
+            )
 
-        if request.form.get("password", "") == password:
+        password = request.form.get("password", "")
+
+        if password and password == expected:
+            session.clear()
             session["logged_in"] = True
             return redirect(url_for("home"))
 
-        return render_template("login.html", error="Incorrect password."), 401
+        return render_template("login.html", error="Incorrect password.")
 
-    return render_template("login.html")
+    if session.get("logged_in"):
+        return redirect(url_for("home"))
+
+    return render_template("login.html", error=None)
 
 
-@app.get("/logout")
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-@app.get("/health")
-def health():
-    return jsonify({"status": "ok"})
-
-
-def send_one(sender_name, gmail, app_password, recipient, subject, body, html_mode):
-    message = EmailMessage()
-    message["From"] = formataddr((sender_name, gmail))
-    message["To"] = recipient
-    message["Subject"] = subject
-
-    if html_mode:
-        message.set_content("This email contains an HTML message.")
-        message.add_alternative(body, subtype="html")
-    else:
-        message.set_content(body)
-
-    context = ssl.create_default_context()
-
-    with smtplib.SMTP_SSL(
-        "smtp.gmail.com", 465, context=context, timeout=25
-    ) as server:
-        server.login(gmail, app_password)
-        server.send_message(message)
-
-    return True
-
-
-@app.post("/send-batch")
-def send_batch():
+@app.route("/send-one", methods=["POST"])
+def send_one():
     if not session.get("logged_in"):
-        return jsonify({"error": "Your session expired. Please sign in again."}), 401
+        return jsonify({"success": False, "error": "Please log in again."}), 401
 
     data = request.get_json(silent=True) or {}
 
-    sender_name = str(data.get("sender_name", "")).strip()
+    sender_name = str(data.get("senderName", "")).strip()
     gmail = str(data.get("gmail", "")).strip()
-    app_password = str(data.get("app_password", "")).replace(" ", "")
+    app_password = str(data.get("appPassword", "")).replace(" ", "")
+    recipient = str(data.get("recipient", "")).strip().lower()
     subject = str(data.get("subject", "")).strip()
     body = str(data.get("body", ""))
-    recipients = parse_recipients(data.get("recipients", ""))
-    html_mode = data.get("html_mode") is True
+    html_mode = data.get("htmlMode") is True
 
-    if not sender_name or not gmail or not app_password or not subject or not body.strip():
-        return jsonify({"error": "Please complete all message fields."}), 400
+    if not sender_name or not gmail or not app_password:
+        return jsonify({
+            "success": False,
+            "recipient": recipient,
+            "error": "Enter sender name, Gmail and App Password."
+        }), 400
 
-    if not EMAIL_PATTERN.fullmatch(gmail):
-        return jsonify({"error": "Enter a valid sender email address."}), 400
+    if not valid_email(gmail) or not valid_email(recipient):
+        return jsonify({
+            "success": False,
+            "recipient": recipient,
+            "error": "Invalid email address."
+        }), 400
 
-    if not recipients:
-        return jsonify({"error": "Enter at least one valid recipient."}), 400
-
-    if len(recipients) > MAX_RECIPIENTS:
-        return jsonify({"error": f"Maximum {MAX_RECIPIENTS} unique recipients per request."}), 400
-
-    sent = []
-    failed = []
-
-    # Five concurrent messages per batch. Never retry failed messages automatically.
-    for start in range(0, len(recipients), BATCH_SIZE):
-        batch = recipients[start:start + BATCH_SIZE]
-
-        with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
-            futures = {
-                recipient: executor.submit(
-                    send_one,
-                    sender_name,
-                    gmail,
-                    app_password,
-                    recipient,
-                    subject,
-                    body,
-                    html_mode
-                )
-                for recipient in batch
-            }
-
-            for recipient, future in futures.items():
-                try:
-                    future.result()
-                    sent.append(recipient)
-                except Exception:
-                    failed.append(recipient)
-
-    return jsonify({
-        "total": len(recipients),
-        "sent": len(sent),
-        "failed": len(failed),
-        "sent_recipients": sent,
-        "failed_recipients": failed,
-        "message": f"Finished: {len(sent)} sent, {len(failed)} failed."
-    })
+    try:
+        result = send_one_email(
+            sender_name, gmail, app_password,
+            recipient, subject, body, html_mode
+        )
+        return jsonify(result)
+    except Exception as exc:
+        # Return a safe error message; do not expose credentials.
+        message = str(exc).strip() or "SMTP sending failed."
+        return jsonify({
+            "success": False,
+            "recipient": recipient,
+            "error": message[:240]
+        }), 200
 
 
-@app.errorhandler(500)
-def server_error(error):
-    app.logger.exception("Internal server error")
-    return "Internal Server Error. Check the Vercel Function Logs.", 500
+if __name__ == "__main__":
+    app.run(debug=False)
