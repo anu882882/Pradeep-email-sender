@@ -1,1770 +1,262 @@
+
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Bulk Mail Sender</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Mail Console</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<body class="dashboard-page">
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🛡</div>
+    <div class="brand-name">Secure Mail Console</div>
+  </div>
+  <a class="logout-button" href="{{ url_for('logout') }}">⇥ Logout</a>
+</header>
 
+<main class="page-wrap">
+  <h1 class="page-title"><span>➤</span> Bulk Email Sender</h1>
+  <div class="dashboard-grid">
+    <section class="panel compose-panel">
+      <div class="panel-heading">
+        <span class="heading-icon">✎</span>
+        <div><h2>Compose Message</h2><p>Set up your sender and message content.</p></div>
+      </div>
 
-<body>
-
-
-<div class="page">
-
-
-    <!-- =================================================
-         HEADER
-    ================================================== -->
-
-    <header class="topbar">
-
-        <div class="brand">
-
-            <div class="brand-icon">
-                ✉
+      <form id="composeForm">
+        <div class="form-grid">
+          <div><label for="senderName">Sender Name</label><input id="senderName" placeholder="Your name" required></div>
+          <div><label for="gmail">Your Gmail</label><input id="gmail" type="email" placeholder="your@gmail.com" required></div>
+          <div>
+            <label for="appPassword">App Password</label>
+            <div class="password-row">
+              <input id="appPassword" type="password" placeholder="Google App Password" autocomplete="new-password" required>
+              <button type="button" id="togglePassword" aria-label="Show password">◉</button>
             </div>
-
-            <div>
-
-                <div class="brand-title">
-                    Bulk Mail Sender
-                </div>
-
-                <div class="brand-subtitle">
-                    Fast 16-Digit App Password Email Dispatcher
-                </div>
-
-            </div>
-
+          </div>
+          <div><label for="subject">Email Subject</label><input id="subject" placeholder="Email subject" required></div>
         </div>
 
-
-        <button
-            type="button"
-            class="reset-btn"
-            id="resetBtn"
-        >
-            ↻ &nbsp;Reset Fields
-        </button>
-
-    </header>
-
-
-
-    <!-- =================================================
-         MAIN
-    ================================================== -->
-
-    <main class="main-grid">
-
-
-        <!-- =================================================
-             COMPOSE
-        ================================================== -->
-
-        <section class="card compose-card">
-
-
-            <div class="card-header">
-
-                <div class="card-title">
-
-                    <span class="title-icon">
-                        ✎
-                    </span>
-
-                    Compose Message
-
-                </div>
-
-
-                <div class="personalization">
-
-                    Personalization:
-                    <strong>{0}</strong>,
-                    <strong>{name}</strong>
-
-                </div>
-
-            </div>
-
-
-
-            <form id="mailForm">
-
-
-                <!-- =================================================
-                     SENDER FIELDS
-                ================================================== -->
-
-                <div class="form-grid">
-
-
-                    <!-- SENDER NAME -->
-
-                    <div class="field">
-
-                        <label>
-
-                            Sender Name
-
-                            <span class="optional">
-                                (Optional)
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="senderName"
-                            name="sender_name"
-                            placeholder="e.g. John Doe / Company"
-                        >
-
-                    </div>
-
-
-
-                    <!-- GMAIL -->
-
-                    <div class="field">
-
-                        <label>
-
-                            Your Gmail
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="email"
-                            id="senderEmail"
-                            name="sender_email"
-                            placeholder="you@gmail.com"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- APP PASSWORD -->
-
-                    <div class="field">
-
-                        <label>
-
-                            16-Digit App Password
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <div class="password-wrap">
-
-
-                            <input
-                                type="password"
-                                id="appPassword"
-                                name="app_password"
-                                placeholder="xxxx xxxx xxxx xxxx"
-                                maxlength="19"
-                                required
-                            >
-
-
-                            <button
-                                type="button"
-                                id="togglePassword"
-                                class="eye-btn"
-                            >
-                                ◉
-                            </button>
-
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- SUBJECT -->
-
-                    <div class="field">
-
-                        <label>
-
-                            Email Subject
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="subject"
-                            name="subject"
-                            placeholder="Subject of the email..."
-                            required
-                        >
-
-                    </div>
-
-
-                </div>
-
-
-
-                <!-- =================================================
-                     MESSAGE BODY
-                ================================================== -->
-
-                <div class="message-section">
-
-
-                    <div class="message-top">
-
-                        <label>
-
-                            Message Body
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <span id="counter">
-                            0 characters • 0 lines
-                        </span>
-
-                    </div>
-
-
-
-                    <!-- FONT TOOLBAR -->
-
-                    <div class="font-toolbar">
-
-
-                        <span class="font-label">
-                            Message Font
-                        </span>
-
-
-                        <select
-                            id="fontSelect"
-                        >
-
-                            <option value="Inter">
-                                Inter
-                            </option>
-
-                            <option value="Arial">
-                                Arial
-                            </option>
-
-                            <option value="Verdana">
-                                Verdana
-                            </option>
-
-                            <option value="Tahoma">
-                                Tahoma
-                            </option>
-
-                            <option value="Trebuchet MS">
-                                Trebuchet MS
-                            </option>
-
-                            <option value="Georgia">
-                                Georgia
-                            </option>
-
-                            <option value="Times New Roman">
-                                Times New Roman
-                            </option>
-
-                            <option value="Courier New">
-                                Courier New
-                            </option>
-
-                            <option value="Lucida Console">
-                                Lucida Console
-                            </option>
-
-                            <option value="Segoe UI">
-                                Segoe UI
-                            </option>
-
-                            <option value="Calibri">
-                                Calibri
-                            </option>
-
-                            <option value="Cambria">
-                                Cambria
-                            </option>
-
-                            <option value="Garamond">
-                                Garamond
-                            </option>
-
-                            <option value="Palatino Linotype">
-                                Palatino Linotype
-                            </option>
-
-                            <option value="Comic Sans MS">
-                                Comic Sans MS
-                            </option>
-
-                        </select>
-
-
-
-                        <!-- SIZE CONTROLS -->
-
-                        <div class="size-controls">
-
-
-                            <button
-                                type="button"
-                                id="bodySmaller"
-                                title="Make font smaller"
-                            >
-                                −
-                            </button>
-
-
-                            <span id="bodySizeValue">
-                                11px
-                            </span>
-
-
-                            <button
-                                type="button"
-                                id="bodyLarger"
-                                title="Make font larger"
-                            >
-                                +
-                            </button>
-
-
-                            <button
-                                type="button"
-                                id="bodyResetSize"
-                            >
-                                Default
-                            </button>
-
-
-                        </div>
-
-
-                    </div>
-
-
-
-                    <!-- BODY -->
-
-                    <textarea
-                        id="body"
-                        name="body"
-                        placeholder="Write your email body here..."
-                        required
-                    ></textarea>
-
-
-                </div>
-
-
-
-                <!-- =================================================
-                     SEND BUTTON
-                ================================================== -->
-
-                <button
-                    type="submit"
-                    id="sendBtn"
-                    class="send-btn"
-                >
-
-                    <span id="sendIcon">
-                        ➤
-                    </span>
-
-
-                    <span id="sendText">
-                        Send Bulk Emails
-                    </span>
-
-                </button>
-
-
-            </form>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             RIGHT COLUMN
-        ================================================== -->
-
-        <aside class="right-column">
-
-
-            <!-- =================================================
-                 RECIPIENTS
-            ================================================== -->
-
-            <section class="card recipients-card">
-
-
-                <div class="card-header">
-
-
-                    <div class="card-title">
-
-                        <span class="title-icon">
-                            ♧
-                        </span>
-
-                        Recipients List
-
-                    </div>
-
-
-                    <span
-                        class="count-badge"
-                        id="recipientCount"
-                    >
-                        0 Emails
-                    </span>
-
-
-                </div>
-
-
-
-                <textarea
-                    id="recipients"
-                    name="recipients"
-                    class="recipients-input"
-                    placeholder="Paste client emails (one per line or comma separated)..."
-                ></textarea>
-
-
-
-                <button
-                    type="button"
-                    class="sample-btn"
-                    id="sampleBtn"
-                >
-
-                    ✨ Load 25 Sample Emails
-
-                </button>
-
-
-            </section>
-
-
-
-            <!-- =================================================
-                 PROGRESS
-            ================================================== -->
-
-            <section class="card progress-card">
-
-
-                <div class="progress-title">
-                    Delivery Progress
-                </div>
-
-
-
-                <div class="stats-grid">
-
-
-                    <div class="stat-box">
-
-                        <div class="stat-label">
-                            TOTAL
-                        </div>
-
-                        <div
-                            class="stat-number blue"
-                            id="totalCount"
-                        >
-                            0
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="stat-box">
-
-                        <div class="stat-label">
-                            SENT
-                        </div>
-
-                        <div
-                            class="stat-number green"
-                            id="sentCount"
-                        >
-                            0
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="stat-box">
-
-                        <div class="stat-label">
-                            FAILED
-                        </div>
-
-                        <div
-                            class="stat-number red"
-                            id="failedCount"
-                        >
-                            0
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="stat-box">
-
-                        <div class="stat-label">
-                            REMAINING
-                        </div>
-
-                        <div
-                            class="stat-number orange"
-                            id="remainingCount"
-                        >
-                            0
-                        </div>
-
-                    </div>
-
-
-                </div>
-
-
-
-                <!-- PROGRESS -->
-
-                <div class="progress-track">
-
-                    <div
-                        class="progress-bar"
-                        id="progressBar"
-                    ></div>
-
-                </div>
-
-
-
-                <!-- STATUS -->
-
-                <div class="status-box">
-
-                    <span
-                        class="status-dot"
-                        id="statusDot"
-                    ></span>
-
-
-                    <span id="statusText">
-                        Ready to send
-                    </span>
-
-                </div>
-
-
-
-                <!-- LIVE MESSAGE -->
-
-                <div
-                    class="live-message"
-                    id="liveMessage"
-                >
-                    Your email operation is ready.
-                </div>
-
-
-            </section>
-
-
-        </aside>
-
-
-    </main>
-
-
-
-    <!-- =================================================
-         RESULT MODAL
-    ================================================== -->
-
-    <div
-        class="modal"
-        id="resultModal"
-    >
-
-
-        <div class="modal-box">
-
-
-            <div
-                class="modal-icon"
-                id="modalIcon"
-            >
-                ✓
-            </div>
-
-
-            <h2 id="modalTitle">
-                Sending completed
-            </h2>
-
-
-            <p id="modalMessage">
-                Your email operation has finished.
-            </p>
-
-
-
-            <div class="modal-stats">
-
-
-                <div>
-
-                    <strong id="modalSent">
-                        0
-                    </strong>
-
-                    <span>
-                        Sent
-                    </span>
-
-                </div>
-
-
-
-                <div>
-
-                    <strong id="modalFailed">
-                        0
-                    </strong>
-
-                    <span>
-                        Failed
-                    </span>
-
-                </div>
-
-
-            </div>
-
-
-
-            <button
-                type="button"
-                id="closeModal"
-                class="modal-close"
-            >
-                Close
-            </button>
-
-
+        <div class="message-toolbar">
+          <label for="messageBody">Message Body</label>
+          <div class="mode-buttons">
+            <button type="button" class="mode-button active" data-mode="text">Plain Text</button>
+            <button type="button" class="mode-button" data-mode="html">HTML</button>
+          </div>
         </div>
+        <textarea id="messageBody" placeholder="Write your email message here..." required></textarea>
+        <div class="char-count"><span id="charCount">0</span> characters</div>
 
+        <div class="info-banner">
+          <span class="banner-icon">✉</span>
+          <div><strong>Batch Sending</strong><p>Emails are processed in batches of 5. Maximum 25 unique recipients per request.</p></div>
+        </div>
+        <p class="privacy-note">Use a Gmail App Password, not your normal Gmail password. Send only to recipients who have agreed to receive your messages.</p>
+      </form>
+    </section>
 
+    <div class="right-column">
+      <section class="panel recipients-panel">
+        <div class="panel-heading recipients-heading">
+          <span class="heading-icon">♟</span>
+          <div class="heading-copy"><h2>Recipients</h2><p>Paste emails (comma separated, new lines, or Excel copy)</p></div>
+          <span class="found-pill"><span id="foundCount">0</span> found</span>
+        </div>
+        <textarea id="recipients" class="recipient-input" placeholder="name@example.com, another@example.com"></textarea>
+        <div class="recipient-footer"><span id="recipientHelp">Maximum 25 unique valid addresses per request.</span><span id="invalidCount">0 invalid</span></div>
+      </section>
+
+      <section class="panel progress-panel">
+        <div class="panel-heading">
+          <span class="heading-icon">◔</span>
+          <div><h2>Progress Monitor</h2><p class="progress-subtitle" id="progressSubtitle">Live sending results</p></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card total-stat"><span>TOTAL</span><strong id="totalCount">0</strong></div>
+          <div class="stat-card sent-stat"><span>SENT</span><strong id="sentCount">0</strong></div>
+          <div class="stat-card failed-stat"><span>FAILED</span><strong id="failedCount">0</strong></div>
+          <div class="stat-card remaining-stat"><span>REMAINING</span><strong id="remainingCount">0</strong></div>
+        </div>
+        <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Sending progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-meta"><span id="progressPercent">0% complete</span><span id="progressDone">0 of 0 processed</span></div>
+        <div class="status-box" id="statusBox" aria-live="polite">Ready to send</div>
+        <div class="action-buttons">
+          <button class="send-button" type="button" id="sendButton">➤ Send All</button>
+          <button class="stop-button" type="button" id="stopButton" disabled>■ Stop Sending</button>
+        </div>
+        <div class="activity-heading">Recent Results</div>
+        <ul id="activityList" class="activity-list"><li class="empty-activity">Email results will appear here.</li></ul>
+      </section>
     </div>
+  </div>
+</main>
 
-
-</div>
-
-
-
-<!-- =====================================================
-     JAVASCRIPT
-====================================================== -->
+<footer class="footer"><span>🔒 Secure Mail Console</span><span>Keep your Gmail App Password private.</span></footer>
 
 <script>
-
-
-/* =========================================================
-   ELEMENTS
-========================================================= */
-
-const form =
-    document.getElementById("mailForm");
-
-
-const senderName =
-    document.getElementById("senderName");
-
-
-const senderEmail =
-    document.getElementById("senderEmail");
-
-
-const appPassword =
-    document.getElementById("appPassword");
-
-
-const subject =
-    document.getElementById("subject");
-
-
-const body =
-    document.getElementById("body");
-
-
-const recipients =
-    document.getElementById("recipients");
-
-
-const counter =
-    document.getElementById("counter");
-
-
-const recipientCount =
-    document.getElementById("recipientCount");
-
-
-const totalCount =
-    document.getElementById("totalCount");
-
-
-const sentCount =
-    document.getElementById("sentCount");
-
-
-const failedCount =
-    document.getElementById("failedCount");
-
-
-const remainingCount =
-    document.getElementById("remainingCount");
-
-
-const progressBar =
-    document.getElementById("progressBar");
-
-
-const statusText =
-    document.getElementById("statusText");
-
-
-const statusDot =
-    document.getElementById("statusDot");
-
-
-const liveMessage =
-    document.getElementById("liveMessage");
-
-
-const sendBtn =
-    document.getElementById("sendBtn");
-
-
-const sendText =
-    document.getElementById("sendText");
-
-
-const sendIcon =
-    document.getElementById("sendIcon");
-
-
-const resultModal =
-    document.getElementById("resultModal");
-
-
-const modalTitle =
-    document.getElementById("modalTitle");
-
-
-const modalMessage =
-    document.getElementById("modalMessage");
-
-
-const modalSent =
-    document.getElementById("modalSent");
-
-
-const modalFailed =
-    document.getElementById("modalFailed");
-
-
-const fontSelect =
-    document.getElementById("fontSelect");
-
-
-const bodySmaller =
-    document.getElementById("bodySmaller");
-
-
-const bodyLarger =
-    document.getElementById("bodyLarger");
-
-
-const bodyResetSize =
-    document.getElementById("bodyResetSize");
-
-
-const bodySizeValue =
-    document.getElementById("bodySizeValue");
-
-
-
-/* =========================================================
-   PASSWORD TOGGLE
-========================================================= */
-
-document
-    .getElementById("togglePassword")
-    .addEventListener(
-        "click",
-        function () {
-
-            if (
-                appPassword.type ===
-                "password"
-            ) {
-
-                appPassword.type =
-                    "text";
-
-                this.textContent =
-                    "◌";
-
-            } else {
-
-                appPassword.type =
-                    "password";
-
-                this.textContent =
-                    "◉";
-            }
-
-        }
-    );
-
-
-
-/* =========================================================
-   BODY CHARACTER COUNTER
-========================================================= */
-
-function updateBodyCounter() {
-
-    const text =
-        body.value;
-
-    const characters =
-        text.length;
-
-    const lines =
-        text
-            ? text.split(/\r?\n/).length
-            : 0;
-
-
-    counter.textContent =
-        `${characters} characters • ${lines} lines`;
-
-}
-
-
-body.addEventListener(
-    "input",
-    updateBodyCounter
-);
-
-
-
-/* =========================================================
-   FONT SYSTEM
-========================================================= */
-
-let bodyFontSize = 11;
-
-const MIN_BODY_SIZE = 8;
-const MAX_BODY_SIZE = 24;
-const BODY_SIZE_STEP = 1;
-
-
-function updateBodyFont() {
-
-    body.style.fontFamily =
-        `"${fontSelect.value}", sans-serif`;
-
-}
-
-
-function updateBodyFontSize() {
-
-    body.style.fontSize =
-        `${bodyFontSize}px`;
-
-    bodySizeValue.textContent =
-        `${bodyFontSize}px`;
-
-}
-
-
-fontSelect.addEventListener(
-    "change",
-    updateBodyFont
-);
-
-
-bodySmaller.addEventListener(
-    "click",
-    function () {
-
-        if (
-            bodyFontSize >
-            MIN_BODY_SIZE
-        ) {
-
-            bodyFontSize -=
-                BODY_SIZE_STEP;
-
-            updateBodyFontSize();
-
-        }
-
+(() => {
+  const $ = id => document.getElementById(id);
+  let htmlMode = false, sending = false, stopRequested = false;
+  let sent = 0, failed = 0, remaining = 0, total = 0;
+  let processed = new Set();
+
+  function getRecipients() {
+    const seen = new Set(), valid = [];
+    let invalid = 0;
+    for (const raw of $("recipients").value.split(/[\s,;]+/)) {
+      const email = raw.trim().toLowerCase();
+      if (!email) continue;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { invalid++; continue; }
+      if (!seen.has(email)) { seen.add(email); valid.push(email); }
     }
-);
+    return { valid: valid.slice(0, 25), invalid };
+  }
 
+  function previewRecipients() {
+    const r = getRecipients();
+    $("foundCount").textContent = r.valid.length;
+    $("invalidCount").textContent = r.invalid + " invalid";
+  }
 
-bodyLarger.addEventListener(
-    "click",
-    function () {
+  function counters() {
+    $("totalCount").textContent = total;
+    $("sentCount").textContent = sent;
+    $("failedCount").textContent = failed;
+    $("remainingCount").textContent = remaining;
+    const done = sent + failed;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    $("progressFill").style.width = pct + "%";
+    $("progressPercent").textContent = pct + "% complete";
+    $("progressDone").textContent = `${done} of ${total} processed`;
+    $("progressTrack").setAttribute("aria-valuenow", pct);
+    $("progressSubtitle").textContent = sending ? "Sending — results update live" : "Live sending results";
+  }
 
-        if (
-            bodyFontSize <
-            MAX_BODY_SIZE
-        ) {
+  function status(message, type = "") {
+    $("statusBox").textContent = message;
+    $("statusBox").className = "status-box" + (type ? " " + type : "");
+  }
 
-            bodyFontSize +=
-                BODY_SIZE_STEP;
+  function activity(email, ok, message) {
+    const list = $("activityList");
+    list.querySelector(".empty-activity")?.remove();
+    const li = document.createElement("li");
+    li.className = "activity-item " + (ok ? "activity-success" : "activity-failed");
+    const icon = document.createElement("span");
+    icon.className = "activity-icon";
+    icon.textContent = ok ? "✓" : "×";
+    const content = document.createElement("div");
+    content.className = "activity-content";
+    const address = document.createElement("strong");
+    address.textContent = email;
+    const detail = document.createElement("span");
+    detail.textContent = ok ? "Accepted by mail server" : (message || "Sending failed");
+    content.append(address, detail);
+    li.append(icon, content);
+    list.prepend(li);
+    while (list.children.length > 12) list.lastElementChild.remove();
+  }
 
-            updateBodyFontSize();
+  function result(email, ok, message) {
+    if (processed.has(email)) return;
+    processed.add(email);
+    if (ok) sent++; else failed++;
+    remaining = Math.max(0, total - sent - failed);
+    counters();
+    activity(email, ok, message);
+    status(`SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`, ok ? "sending" : "warning");
+  }
 
-        }
-
+  async function sendOne(email) {
+    const payload = {
+      senderName: $("senderName").value.trim(),
+      gmail: $("gmail").value.trim(),
+      appPassword: $("appPassword").value,
+      subject: $("subject").value.trim(),
+      body: $("messageBody").value,
+      recipient: email,
+      htmlMode
+    };
+    try {
+      const response = await fetch("/send-one", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401) return { ok: false, error: "Session expired. Please sign in again." };
+      return { ok: response.ok && data.success === true, error: data.error || `Request failed (${response.status})` };
+    } catch {
+      return { ok: false, error: "Network error" };
     }
-);
+  }
 
-
-bodyResetSize.addEventListener(
-    "click",
-    function () {
-
-        bodyFontSize = 11;
-
-        updateBodyFontSize();
-
+  async function startSending() {
+    if (sending) return;
+    const recipients = getRecipients();
+    const emails = recipients.valid;
+    if (!$("senderName").value.trim() || !$("gmail").value.trim() ||
+        !$("appPassword").value.trim() || !$("subject").value.trim() ||
+        !$("messageBody").value.trim()) {
+      status("Please fill in all sender and message fields.", "error");
+      return;
     }
-);
-
-
-updateBodyFont();
-updateBodyFontSize();
-
-
-
-/* =========================================================
-   RECIPIENT PARSER
-========================================================= */
-
-function getRecipients() {
-
-    return recipients.value
-        .split(/[\s,;]+/)
-        .map(
-            email =>
-                email.trim()
-        )
-        .filter(Boolean);
-
-}
-
-
-function updateRecipientCount() {
-
-    const list =
-        getRecipients();
-
-
-    const unique = [
-        ...new Set(
-            list.map(
-                email =>
-                    email.toLowerCase()
-            )
-        )
-    ];
-
-
-    recipientCount.textContent =
-        `${unique.length} Emails`;
-
-
-    totalCount.textContent =
-        unique.length;
-
-
-    remainingCount.textContent =
-        unique.length;
-
-}
-
-
-recipients.addEventListener(
-    "input",
-    updateRecipientCount
-);
-
-
-
-/* =========================================================
-   SAMPLE EMAILS
-========================================================= */
-
-document
-    .getElementById("sampleBtn")
-    .addEventListener(
-        "click",
-        function () {
-
-            const samples = [];
-
-
-            for (
-                let i = 1;
-                i <= 25;
-                i++
-            ) {
-
-                samples.push(
-                    `recipient${i}@example.com`
-                );
-
-            }
-
-
-            recipients.value =
-                samples.join("\n");
-
-
-            updateRecipientCount();
-
-        }
-    );
-
-
-
-/* =========================================================
-   RESET
-========================================================= */
-
-document
-    .getElementById("resetBtn")
-    .addEventListener(
-        "click",
-        function () {
-
-            form.reset();
-
-            recipients.value = "";
-
-
-            bodyFontSize = 11;
-
-
-            updateBodyCounter();
-            updateRecipientCount();
-
-            updateBodyFont();
-            updateBodyFontSize();
-
-
-            sentCount.textContent =
-                "0";
-
-            failedCount.textContent =
-                "0";
-
-            remainingCount.textContent =
-                "0";
-
-            totalCount.textContent =
-                "0";
-
-
-            progressBar.style.width =
-                "0%";
-
-
-            statusText.textContent =
-                "Ready to send";
-
-
-            liveMessage.textContent =
-                "Your email operation is ready.";
-
-
-            statusDot.className =
-                "status-dot";
-
-
-            sendBtn.disabled =
-                false;
-
-
-            sendText.textContent =
-                "Send Bulk Emails";
-
-
-            sendIcon.textContent =
-                "➤";
-
-        }
-    );
-
-
-
-/* =========================================================
-   PROGRESS UPDATE
-========================================================= */
-
-function updateProgress(data) {
-
-
-    if (
-        typeof data.total !==
-        "undefined"
-    ) {
-
-        totalCount.textContent =
-            data.total;
-
+    if (!emails.length) { status("Enter at least one valid recipient.", "error"); return; }
+
+    sending = true; stopRequested = false;
+    sent = 0; failed = 0; total = emails.length; remaining = total; processed = new Set();
+    $("activityList").innerHTML = "";
+    $("sendButton").disabled = true;
+    $("stopButton").disabled = false;
+    $("recipients").disabled = true;
+    counters();
+    status(recipients.invalid ? `${recipients.invalid} invalid address(es) skipped. Sending started.` : "Sending started…", "sending");
+
+    try {
+      for (let i = 0; i < emails.length; i += 5) {
+        if (stopRequested) break;
+        const batch = emails.slice(i, i + 5);
+        status(`Batch ${Math.floor(i / 5) + 1}: ${sent} sent, ${failed} failed, ${remaining} remaining`, "sending");
+        await Promise.all(batch.map(async email => {
+          if (stopRequested) return;
+          const r = await sendOne(email);
+          result(email, r.ok, r.error);
+        }));
+      }
+      if (stopRequested) status(`Stopped. SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`, "warning");
+      else if (failed === 0) status(`Finished. ${sent} email(s) accepted by the mail server.`, "success");
+      else status(`Finished. SENT: ${sent} | FAILED: ${failed} | REMAINING: ${remaining}`, "warning");
+    } finally {
+      sending = false;
+      $("sendButton").disabled = false;
+      $("stopButton").disabled = true;
+      $("recipients").disabled = false;
+      counters();
     }
-
-
-    if (
-        typeof data.sent !==
-        "undefined"
-    ) {
-
-        sentCount.textContent =
-            data.sent;
-
-    }
-
-
-    if (
-        typeof data.failed !==
-        "undefined"
-    ) {
-
-        failedCount.textContent =
-            data.failed;
-
-    }
-
-
-    if (
-        typeof data.remaining !==
-        "undefined"
-    ) {
-
-        remainingCount.textContent =
-            data.remaining;
-
-    }
-
-
-    if (
-        data.total > 0
-    ) {
-
-        const completed =
-            (data.sent || 0) +
-            (data.failed || 0);
-
-
-        const percentage =
-            Math.round(
-                (
-                    completed /
-                    data.total
-                ) * 100
-            );
-
-
-        progressBar.style.width =
-            `${percentage}%`;
-
-    }
-
-
-    if (data.message) {
-
-        liveMessage.textContent =
-            data.message;
-
-    }
-
-}
-
-
-
-/* =========================================================
-   SEND FORM
-========================================================= */
-
-form.addEventListener(
-    "submit",
-    async function (event) {
-
-        event.preventDefault();
-
-
-        const emailList =
-            getRecipients();
-
-
-        /* -----------------------------------------------
-           VALIDATION
-        ------------------------------------------------ */
-
-        if (
-            emailList.length === 0
-        ) {
-
-            alert(
-                "Kam se kam ek recipient enter karein."
-            );
-
-            return;
-
-        }
-
-
-        if (
-            !senderEmail.value.trim()
-        ) {
-
-            alert(
-                "Gmail address enter karein."
-            );
-
-            senderEmail.focus();
-
-            return;
-
-        }
-
-
-        if (
-            !appPassword.value.trim()
-        ) {
-
-            alert(
-                "16-digit App Password enter karein."
-            );
-
-            appPassword.focus();
-
-            return;
-
-        }
-
-
-        if (
-            !subject.value.trim()
-        ) {
-
-            alert(
-                "Email subject enter karein."
-            );
-
-            subject.focus();
-
-            return;
-
-        }
-
-
-        if (
-            !body.value.trim()
-        ) {
-
-            alert(
-                "Message body enter karein."
-            );
-
-            body.focus();
-
-            return;
-
-        }
-
-
-        /* -----------------------------------------------
-           UI
-        ------------------------------------------------ */
-
-        sendBtn.disabled =
-            true;
-
-
-        sendIcon.textContent =
-            "●";
-
-
-        sendText.textContent =
-            "Sending...";
-
-
-        sentCount.textContent =
-            "0";
-
-
-        failedCount.textContent =
-            "0";
-
-
-        totalCount.textContent =
-            emailList.length;
-
-
-        remainingCount.textContent =
-            emailList.length;
-
-
-        progressBar.style.width =
-            "0%";
-
-
-        statusDot.className =
-            "status-dot active";
-
-
-        statusText.textContent =
-            "Sending emails...";
-
-
-        liveMessage.textContent =
-            "Gmail server se connect ho raha hai...";
-
-
-        /* -----------------------------------------------
-           FORM DATA
-        ------------------------------------------------ */
-
-        const formData =
-            new FormData(form);
-
-
-        formData.set(
-            "recipients",
-            emailList.join("\n")
-        );
-
-
-        /* -----------------------------------------------
-           REQUEST
-        ------------------------------------------------ */
-
-        try {
-
-            const response =
-                await fetch(
-                    "/send-stream",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    "Server request failed."
-                );
-
-            }
-
-
-            const reader =
-                response.body.getReader();
-
-
-            const decoder =
-                new TextDecoder(
-                    "utf-8"
-                );
-
-
-            let buffer = "";
-
-
-            /* -------------------------------------------
-               READ STREAM
-            -------------------------------------------- */
-
-            while (true) {
-
-                const {
-                    value,
-                    done
-                } =
-                    await reader.read();
-
-
-                if (done) {
-                    break;
-                }
-
-
-                buffer +=
-                    decoder.decode(
-                        value,
-                        {
-                            stream: true
-                        }
-                    );
-
-
-                const lines =
-                    buffer.split("\n");
-
-
-                buffer =
-                    lines.pop();
-
-
-                for (
-                    const line
-                    of lines
-                ) {
-
-
-                    if (
-                        !line.trim()
-                    ) {
-
-                        continue;
-
-                    }
-
-
-                    try {
-
-                        const data =
-                            JSON.parse(line);
-
-
-                        updateProgress(
-                            data
-                        );
-
-
-                        /* -----------------------------
-                           CONNECTED
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "connected"
-                        ) {
-
-                            statusText.textContent =
-                                "Connected";
-
-                        }
-
-
-                        /* -----------------------------
-                           BATCH
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "batch"
-                        ) {
-
-                            statusText.textContent =
-                                `Batch ${data.batch}/${data.total_batches}`;
-
-                        }
-
-
-                        /* -----------------------------
-                           PROGRESS
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "progress"
-                        ) {
-
-                            statusText.textContent =
-                                data.success
-                                    ? "Email sent"
-                                    : "Email failed";
-
-                        }
-
-
-                        /* -----------------------------
-                           WAITING
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "waiting"
-                        ) {
-
-                            statusText.textContent =
-                                "Next batch...";
-
-                        }
-
-
-                        /* -----------------------------
-                           FATAL
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "fatal"
-                        ) {
-
-                            statusDot.className =
-                                "status-dot error";
-
-
-                            statusText.textContent =
-                                "Sending failed";
-
-
-                            sendBtn.disabled =
-                                false;
-
-
-                            sendIcon.textContent =
-                                "➤";
-
-
-                            sendText.textContent =
-                                "Send Bulk Emails";
-
-
-                            alert(
-                                data.message
-                            );
-
-                        }
-
-
-                        /* -----------------------------
-                           COMPLETE
-                        ----------------------------- */
-
-                        if (
-                            data.type ===
-                            "complete"
-                        ) {
-
-                            statusDot.className =
-                                "status-dot success";
-
-
-                            statusText.textContent =
-                                "Sending completed";
-
-
-                            sendBtn.disabled =
-                                false;
-
-
-                            sendIcon.textContent =
-                                "✓";
-
-
-                            sendText.textContent =
-                                "Send Bulk Emails";
-
-
-                            modalSent.textContent =
-                                data.sent;
-
-
-                            modalFailed.textContent =
-                                data.failed;
-
-
-                            modalTitle.textContent =
-                                "Sending completed";
-
-
-                            modalMessage.textContent =
-                                `Processed ${data.total} recipients.`;
-
-
-                            resultModal.classList.add(
-                                "show"
-                            );
-
-                        }
-
-
-                    } catch (error) {
-
-                        console.error(
-                            "JSON parse error:",
-                            error
-                        );
-
-                    }
-
-                }
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                error
-            );
-
-
-            statusDot.className =
-                "status-dot error";
-
-
-            statusText.textContent =
-                "Connection error";
-
-
-            liveMessage.textContent =
-                error.message;
-
-
-            sendBtn.disabled =
-                false;
-
-
-            sendIcon.textContent =
-                "➤";
-
-
-            sendText.textContent =
-                "Send Bulk Emails";
-
-        }
-
-    }
-);
-
-
-
-/* =========================================================
-   CLOSE MODAL
-========================================================= */
-
-document
-    .getElementById("closeModal")
-    .addEventListener(
-        "click",
-        function () {
-
-            resultModal.classList.remove(
-                "show"
-            );
-
-        }
-    );
-
-
-resultModal.addEventListener(
-    "click",
-    function (event) {
-
-        if (
-            event.target ===
-            resultModal
-        ) {
-
-            resultModal.classList.remove(
-                "show"
-            );
-
-        }
-
-    }
-);
-
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-updateBodyCounter();
-
-updateRecipientCount();
-
-updateBodyFont();
-
-updateBodyFontSize();
-
+  }
+
+  $("recipients").addEventListener("input", previewRecipients);
+  $("messageBody").addEventListener("input", () => $("charCount").textContent = $("messageBody").value.length);
+  $("togglePassword").addEventListener("click", () => {
+    const input = $("appPassword");
+    input.type = input.type === "password" ? "text" : "password";
+  });
+  document.querySelectorAll(".mode-button").forEach(button => button.addEventListener("click", () => {
+    htmlMode = button.dataset.mode === "html";
+    document.querySelectorAll(".mode-button").forEach(b => b.classList.toggle("active", b === button));
+    $("messageBody").placeholder = htmlMode ? "Enter HTML message content..." : "Write your email message here...";
+  }));
+  $("sendButton").addEventListener("click", startSending);
+  $("stopButton").addEventListener("click", () => {
+    stopRequested = true;
+    $("stopButton").disabled = true;
+    status("Stop requested; waiting for active requests to finish…", "warning");
+  });
+  previewRecipients();
+  counters();
+})();
 </script>
-
-
 </body>
-
 </html>
