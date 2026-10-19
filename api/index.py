@@ -1,103 +1,83 @@
 
 import os
+import re
 import time
+import ssl
+import smtplib
+from email.message import EmailMessage
+from email.utils import formataddr
+
 import requests
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session,
-    jsonify,
-)
-
-# Project root: parent directory of api/
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
-STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 app = Flask(
     __name__,
-    template_folder=TEMPLATE_DIR,
-    static_folder=STATIC_DIR,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
 )
 
-# Configure these in Vercel Environment Variables
 app.secret_key = os.environ.get("SESSION_SECRET", "")
-
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
 TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
-
-# The Resend API code requires these two additional variables.
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "")
-
 MAIL_GAP_SECONDS = max(
-    0.0,
-    float(os.environ.get("MAIL_GAP_SECONDS", "2"))
+    0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "2")), 30.0)
 )
 
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-def is_logged_in():
+
+def logged_in():
     return session.get("logged_in") is True
 
 
-def render_login(error=None):
-    return render_template(
-        "login.html",
-        error=error,
-    )
-
-
-@app.route("/health", methods=["GET"])
+@app.get("/health")
 def health():
-    return jsonify({
-        "status": "ok",
-        "templates_found": os.path.isdir(TEMPLATE_DIR),
-        "login_template_found": os.path.isfile(
-            os.path.join(TEMPLATE_DIR, "login.html")
+    return jsonify(
+        status="ok",
+        login_template_found=os.path.isfile(
+            os.path.join(BASE_DIR, "templates", "login.html")
         ),
-        "index_template_found": os.path.isfile(
-            os.path.join(TEMPLATE_DIR, "index.html")
+        index_template_found=os.path.isfile(
+            os.path.join(BASE_DIR, "templates", "index.html")
         ),
-    })
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        if is_logged_in():
+        if logged_in():
             return redirect(url_for("home"))
-        return render_login()
-
-    submitted_password = request.form.get("password", "")
+        return render_template("login.html")
 
     if not LOGIN_PASSWORD:
-        app.logger.error("LOGIN_PASSWORD is not configured.")
-        return render_login(
-            "Login is not configured. Please contact the administrator."
+        return render_template(
+            "login.html",
+            error="Set LOGIN_PASSWORD in Vercel Environment Variables."
         ), 500
 
-    if submitted_password and submitted_password == LOGIN_PASSWORD:
+    if request.form.get("password", "") == LOGIN_PASSWORD:
         session.clear()
         session["logged_in"] = True
         return redirect(url_for("home"))
 
-    return render_login("Incorrect password."), 401
+    return render_template(
+        "login.html", error="Incorrect password."
+    ), 401
 
 
-@app.route("/logout", methods=["POST", "GET"])
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-@app.route("/", methods=["GET"])
+@app.get("/")
 def home():
-    if not is_logged_in():
+    if not logged_in():
         return redirect(url_for("login"))
 
     return render_template(
@@ -106,29 +86,19 @@ def home():
     )
 
 
-@app.route("/verify-turnstile", methods=["POST"])
+@app.post("/verify-turnstile")
 def verify_turnstile():
-    if not is_logged_in():
-        return jsonify({
-            "ok": False,
-            "error": "Please log in again.",
-        }), 401
+    if not logged_in():
+        return jsonify(ok=False, error="Please log in again."), 401
 
     if not TURNSTILE_SECRET_KEY:
-        app.logger.error("TURNSTILE_SECRET_KEY is not configured.")
-        return jsonify({
-            "ok": False,
-            "error": "Bot verification is not configured.",
-        }), 500
+        return jsonify(ok=False, error="Turnstile is not configured."), 500
 
     data = request.get_json(silent=True) or {}
     token = data.get("token", "")
 
     if not token:
-        return jsonify({
-            "ok": False,
-            "error": "Complete the verification first.",
-        }), 400
+        return jsonify(ok=False, error="Complete security verification first."), 400
 
     try:
         response = requests.post(
@@ -142,159 +112,111 @@ def verify_turnstile():
         )
         response.raise_for_status()
         result = response.json()
-
-    except requests.RequestException:
-        app.logger.exception("Turnstile verification request failed.")
-        return jsonify({
-            "ok": False,
-            "error": "Verification service is temporarily unavailable.",
-        }), 502
+    except (requests.RequestException, ValueError):
+        app.logger.exception("Turnstile verification failed")
+        return jsonify(ok=False, error="Verification service unavailable."), 502
 
     if not result.get("success"):
-        return jsonify({
-            "ok": False,
-            "error": "Verification failed. Please try again.",
-        }), 400
+        return jsonify(ok=False, error="Verification failed. Try again."), 400
 
     session["turnstile_verified_at"] = time.time()
+    return jsonify(ok=True)
 
-    return jsonify({"ok": True})
 
+def gmail_send(sender_email, app_password, sender_name,
+               recipient, subject, body, html_mode):
+    message = EmailMessage()
 
-def send_with_resend(recipient, subject, body, sender_name, html_mode):
-    if not RESEND_API_KEY or not RESEND_FROM_EMAIL:
-        return False, (
-            "Email provider is not configured. "
-            "Set RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel."
-        ), None
+    message["From"] = (
+        formataddr((sender_name, sender_email))
+        if sender_name else sender_email
+    )
+    message["To"] = recipient
+    message["Subject"] = subject
 
     if html_mode:
-        content = {"html": body}
-    else:
-        content = {"text": body}
-
-    payload = {
-        "from": f"{sender_name} <{RESEND_FROM_EMAIL}>"
-        if sender_name
-        else RESEND_FROM_EMAIL,
-        "to": [recipient],
-        "subject": subject,
-        **content,
-    }
-
-    try:
-        response = requests.post(
-            "https://api.resend.com/emails",
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=20,
+        message.set_content(
+            "This message contains HTML content. "
+            "Open it in an HTML-capable email client."
         )
+        message.add_alternative(body, subtype="html")
+    else:
+        message.set_content(body)
 
-        if response.status_code not in (200, 201):
-            app.logger.error(
-                "Resend API error %s: %s",
-                response.status_code,
-                response.text[:1000],
-            )
-            return False, (
-                f"Email provider rejected the request "
-                f"(HTTP {response.status_code})."
-            ), None
-
-        result = response.json()
-        email_id = result.get("id")
-
-        if not email_id:
-            return False, "Email provider returned no email ID.", None
-
-        return True, "Accepted by email provider.", email_id
-
-    except requests.Timeout:
-        app.logger.exception("Resend API request timed out.")
-        return False, "Email provider timed out. Please try again.", None
-
-    except requests.RequestException:
-        app.logger.exception("Resend API request failed.")
-        return False, "Could not connect to the email provider.", None
-
-    except ValueError:
-        app.logger.exception("Invalid JSON returned by Resend.")
-        return False, "Invalid response from the email provider.", None
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=25) as server:
+        server.ehlo()
+        server.starttls(context=ssl.create_default_context())
+        server.ehlo()
+        server.login(sender_email, app_password)
+        server.send_message(message)
 
 
-@app.route("/send-one", methods=["POST"])
+@app.post("/send-one")
 def send_one():
-    if not is_logged_in():
-        return jsonify({
-            "ok": False,
-            "error": "Please log in again.",
-        }), 401
+    if not logged_in():
+        return jsonify(ok=False, error="Please log in again."), 401
 
     verified_at = session.get("turnstile_verified_at", 0)
-
     if time.time() - verified_at > 600:
         session.pop("turnstile_verified_at", None)
-        return jsonify({
-            "ok": False,
-            "error": "Verification expired. Please verify again.",
-        }), 403
+        return jsonify(
+            ok=False,
+            error="Verification expired. Verify again."
+        ), 403
 
     data = request.get_json(silent=True) or {}
 
+    sender_name = str(data.get("senderName", "")).strip()[:120]
+    sender_email = str(data.get("senderEmail", "")).strip()
+    app_password = str(data.get("appPassword", "")).replace(" ", "")
     recipient = str(data.get("recipient", "")).strip()
-    subject = str(data.get("subject", "")).strip()
+    subject = str(data.get("subject", "")).strip()[:250]
     body = str(data.get("body", ""))
-    sender_name = str(data.get("senderName", "")).strip()
     html_mode = data.get("htmlMode") is True
-    consent_confirmed = data.get("consentConfirmed") is True
 
-    if not consent_confirmed:
-        return jsonify({
-            "ok": False,
-            "error": "Please confirm you have permission to contact this recipient.",
-        }), 400
+    if data.get("consentConfirmed") is not True:
+        return jsonify(
+            ok=False,
+            error="Confirm recipients agreed to receive this email."
+        ), 400
 
-    if not recipient or "@" not in recipient or recipient.startswith("@"):
-        return jsonify({
-            "ok": False,
-            "error": "Enter a valid recipient email address.",
-        }), 400
+    if not EMAIL_RE.fullmatch(sender_email):
+        return jsonify(ok=False, error="Enter a valid Gmail address."), 400
 
-    if not subject:
-        return jsonify({
-            "ok": False,
-            "error": "Subject cannot be empty.",
-        }), 400
+    if not app_password:
+        return jsonify(ok=False, error="Enter your Google App Password."), 400
 
-    if not body.strip():
-        return jsonify({
-            "ok": False,
-            "error": "Message body cannot be empty.",
-        }), 400
+    if not EMAIL_RE.fullmatch(recipient):
+        return jsonify(ok=False, error="Invalid recipient address."), 400
 
-    success, message, email_id = send_with_resend(
-        recipient=recipient,
-        subject=subject,
-        body=body,
-        sender_name=sender_name,
-        html_mode=html_mode,
-    )
+    if not subject or not body.strip():
+        return jsonify(
+            ok=False,
+            error="Subject and message body are required."
+        ), 400
 
-    if not success:
-        return jsonify({
-            "ok": False,
-            "error": message,
-        }), 502
+    try:
+        gmail_send(
+            sender_email, app_password, sender_name,
+            recipient, subject, body, html_mode
+        )
+        return jsonify(ok=True, message="Accepted by Gmail SMTP.")
 
-    return jsonify({
-        "ok": True,
-        "message": message,
-        "emailId": email_id,
-    })
+    except smtplib.SMTPAuthenticationError:
+        return jsonify(
+            ok=False,
+            error="Gmail authentication failed. Check your email and App Password."
+        ), 502
 
+    except smtplib.SMTPRecipientsRefused:
+        return jsonify(
+            ok=False,
+            error="Gmail rejected the recipient address."
+        ), 502
 
-# Vercel imports this Flask application.
-# Do not call app.run() in a serverless deployment.
+    except (smtplib.SMTPException, OSError, TimeoutError):
+        app.logger.exception("Gmail SMTP send failed")
+        return jsonify(
+            ok=False,
+            error="Gmail SMTP failed. Check your credentials and connection."
+        ), 502
