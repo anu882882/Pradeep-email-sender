@@ -2,71 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="dark">
-  <title>Sign In | Secure Mail Console</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In — Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  <link rel="dns-prefetch" href="//challenges.cloudflare.com">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-
 <body class="login-page">
   <main class="login-card">
-    <div class="login-logo">
-      <i class="fa-solid fa-shield-halved"></i>
-    </div>
-
+    <div class="login-logo">✉</div>
+    <div class="eyebrow centered">SECURE WORKSPACE</div>
     <h1>Secure Mail Console</h1>
     <p class="login-subtitle">Sign in to continue</p>
 
     {% if error %}
-      <div class="login-error" role="alert">{{ error }}</div>
+      <div class="form-error">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('login') }}">
-      <label for="password">Password</label>
-
-      <div class="password-wrap login-password">
-        <input id="password" name="password" type="password"
-               placeholder="Enter your password"
-               autocomplete="current-password" required>
-
-        <button type="button" class="eye-btn" id="toggleLoginPassword"
-                aria-label="Show or hide password">
-          <i class="fa-regular fa-eye"></i>
-        </button>
-      </div>
+    <form method="post" action="{{ url_for('login') }}">
+      <label class="field">
+        <span>Password</span>
+        <div class="password-wrap">
+          <input id="password" name="password" type="password"
+                 placeholder="Enter password" autocomplete="current-password"
+                 required autofocus>
+          <button id="togglePassword" class="password-toggle" type="button"
+                  aria-label="Show password">Show</button>
+        </div>
+      </label>
 
       <div class="login-verification">
         <div class="cf-turnstile"
              data-sitekey="{{ turnstile_site_key }}"
              data-theme="dark"
-             data-action="login"></div>
+             data-appearance="interaction-only"
+             data-retry="auto"
+             data-refresh-expired="auto"></div>
       </div>
 
-      <button type="submit" class="btn btn-login">
-        <i class="fa-solid fa-arrow-right-to-bracket"></i>
-        Sign In
-      </button>
+      <button class="btn btn-primary login-submit" type="submit">Sign in <span>→</span></button>
     </form>
-
-    <p class="login-footnote">
-      <i class="fa-solid fa-lock"></i> Protected sign-in
-    </p>
+    <div class="login-foot">Protected sign-in · Secure Mail Console</div>
   </main>
 
   <script>
-    document.getElementById("toggleLoginPassword").addEventListener("click", () => {
-      const input = document.getElementById("password");
-      const show = input.type === "password";
+    const passwordInput = document.getElementById("password");
+    const toggle = document.getElementById("togglePassword");
 
-      input.type = show ? "text" : "password";
-
-      document.getElementById("toggleLoginPassword").innerHTML = show
-        ? '<i class="fa-regular fa-eye-slash"></i>'
-        : '<i class="fa-regular fa-eye"></i>';
+    toggle.addEventListener("click", () => {
+      const showing = passwordInput.type === "text";
+      passwordInput.type = showing ? "password" : "text";
+      toggle.textContent = showing ? "Show" : "Hide";
+      toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
     });
   </script>
 </body>
