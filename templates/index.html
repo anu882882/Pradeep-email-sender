@@ -280,4 +280,8 @@
       stopRequested = true;
       setStatus("Stop requested. The current server batch may finish first.");
       // Browser-side stopping cannot cancel SMTP messages already submitted
-      // to the server. A true server-side stop requires job IDs
+      // to the server. A true server-side stop requires job IDs and shared state.
+    });
+  </script>
+</body>
+</html>
