@@ -1,39 +1,49 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in | Secure Mail Console</title>
+  <title>Secure Mail Console | Login</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% if turnstile_site_key %}
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
 </head>
 <body class="login-page">
   <main class="login-card">
-    <h1 class="brand">◈ Secure Mail Console</h1>
-    <h2>Sign in to continue</h2>
-    <p class="subtitle">Enter your console password.</p>
+    <div class="brand-icon">✉</div>
+    <p class="eyebrow">SECURE ACCESS</p>
+    <h1>Secure Mail Console</h1>
+    <p class="muted">Sign in to continue</p>
 
     {% if error %}
       <div class="error-message">{{ error }}</div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" action="{{ url_for('login') }}">
       <label for="password">Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        required
+        autofocus
+      >
 
-      <div class="turnstile-login">
-        {% if turnstile_site_key %}
-          <div class="cf-turnstile"
-               data-sitekey="{{ turnstile_site_key }}"
-               data-theme="dark"></div>
-        {% else %}
-          <p class="hint">Cloudflare Turnstile is not configured.</p>
-        {% endif %}
+      {% if turnstile_site_key %}
+      <div class="turnstile-wrap">
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>
       </div>
+      {% else %}
+      <p class="error-message">Verification is not configured. Contact the administrator.</p>
+      {% endif %}
 
-      <button type="submit" class="btn-send login-submit">Sign In</button>
+      <button type="submit" class="primary-button">Sign In <span>→</span></button>
     </form>
+    <p class="footer-note">Protected access · Secure Mail Console</p>
   </main>
 </body>
 </html>
