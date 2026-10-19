@@ -1,23 +1,17 @@
 
 import os
 import re
-import ssl
-import time
-import smtplib
 import json
-import urllib.parse
+import time
+import html
 import urllib.request
+import urllib.error
+import urllib.parse
 from functools import wraps
-from email.message import EmailMessage
 
 from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session,
-    jsonify,
+    Flask, render_template, request, redirect,
+    url_for, session, jsonify
 )
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +23,7 @@ app = Flask(
     static_url_path="/static",
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET", "")
+app.secret_key = os.environ.get("SESSION_SECRET", "replace-this-secret")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=True,
@@ -37,14 +31,10 @@ app.config.update(
 )
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-VERIFICATION_TTL = 600
-SMTP_TIMEOUT = 30
+TURNSTILE_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+RESEND_URL = "https://api.resend.com/emails"
+VERIFY_TTL = 600
 
-
-# ----------------------------
-# Login protection
-# ----------------------------
 
 def login_required(view):
     @wraps(view)
@@ -60,13 +50,8 @@ def login_required(view):
     return wrapped
 
 
-# ----------------------------
-# Cloudflare Turnstile
-# ----------------------------
-
-def verify_turnstile_token(token, remote_ip=None):
+def verify_turnstile(token, remote_ip=None):
     secret = os.environ.get("TURNSTILE_SECRET_KEY", "")
-
     if not secret or not token:
         return False, "Spam Protection is not configured."
 
@@ -74,99 +59,98 @@ def verify_turnstile_token(token, remote_ip=None):
         "secret": secret,
         "response": token,
     }
-
     if remote_ip:
         fields["remoteip"] = remote_ip
 
-    body = urllib.parse.urlencode(fields).encode("utf-8")
-
+    data = urllib.parse.urlencode(fields).encode("utf-8")
     req = urllib.request.Request(
-        TURNSTILE_VERIFY_URL,
-        data=body,
-        headers={
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
+        TURNSTILE_URL,
+        data=data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
         method="POST",
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=8) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             result = json.loads(response.read().decode("utf-8"))
 
         if result.get("success") is not True:
             return False, "Verification failed. Please try again."
 
-        expected_hostname = os.environ.get(
-            "TURNSTILE_HOSTNAME", ""
-        ).strip().lower()
+        expected = os.environ.get("TURNSTILE_HOSTNAME", "").strip().lower()
+        actual = str(result.get("hostname", "")).lower()
 
-        actual_hostname = str(
-            result.get("hostname", "")
-        ).lower()
-
-        if expected_hostname and actual_hostname != expected_hostname:
+        if expected and actual != expected:
             return False, "Verification hostname did not match."
 
         return True, ""
 
     except Exception:
-        app.logger.exception("Cloudflare verification failed")
-        return False, "Could not verify with Cloudflare. Please retry."
+        app.logger.exception("Turnstile verification request failed")
+        return False, "Cloudflare verification is temporarily unavailable."
 
 
-# ----------------------------
-# Gmail SMTP sender
-# ----------------------------
+def send_with_resend(sender_name, recipient, subject, body, html_mode):
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
 
-def send_gmail_message(gmail, app_password, message):
-    """
-    Send through Gmail SMTP over SSL.
+    if not api_key:
+        raise ValueError("RESEND_API_KEY is missing in Vercel Environment Variables.")
 
-    Retry once only when the SMTP connection is closed before
-    the message has been accepted by send_message().
-    """
-    context = ssl.create_default_context()
+    if not from_email or not EMAIL_PATTERN.fullmatch(from_email):
+        raise ValueError(
+            "Set RESEND_FROM_EMAIL to a valid sender address on your verified domain."
+        )
 
-    for attempt in range(2):
+    safe_name = sender_name.replace("\r", "").replace("\n", "").strip()
+    from_value = f"{safe_name} <{from_email}>" if safe_name else from_email
+
+    payload = {
+        "from": from_value,
+        "to": [recipient],
+        "subject": subject,
+    }
+
+    if html_mode:
+        payload["html"] = body
+        payload["text"] = "This message is available in HTML format."
+    else:
+        payload["text"] = body
+
+    req = urllib.request.Request(
+        RESEND_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        email_id = result.get("id")
+        if not email_id:
+            raise RuntimeError("Resend did not return an email ID.")
+
+        return email_id
+
+    except urllib.error.HTTPError as exc:
         try:
-            with smtplib.SMTP_SSL(
-                "smtp.gmail.com",
-                465,
-                context=context,
-                timeout=SMTP_TIMEOUT,
-            ) as server:
-                server.ehlo()
-                server.login(gmail, app_password)
-                server.send_message(message)
+            detail = exc.read().decode("utf-8")[:1500]
+        except Exception:
+            detail = "No error details returned."
 
-            return
+        app.logger.error("Resend API returned HTTP %s: %s", exc.code, detail)
 
-        except smtplib.SMTPServerDisconnected:
-            app.logger.warning(
-                "Gmail SMTP connection closed (attempt %s of 2)",
-                attempt + 1,
-            )
+        # Do not automatically retry: a send request may have been accepted.
+        raise RuntimeError(
+            f"Resend API error ({exc.code}). Check the API key, sender domain, "
+            "recipient permissions and Resend logs."
+        ) from exc
 
-            if attempt == 0:
-                time.sleep(1)
-                continue
-
-            raise
-
-        except (TimeoutError, OSError):
-            app.logger.exception(
-                "Gmail SMTP network error (attempt %s of 2)",
-                attempt + 1,
-            )
-
-            # Do not blindly retry network errors after sending begins:
-            # the server may have accepted the message before disconnecting.
-            raise
-
-
-# ----------------------------
-# Routes
-# ----------------------------
 
 @app.route("/health")
 def health():
@@ -184,10 +168,7 @@ def login():
             session["authenticated"] = True
             return redirect(url_for("index"))
 
-        return render_template(
-            "login.html",
-            error="Incorrect password. Please try again.",
-        )
+        return render_template("login.html", error="Incorrect password.")
 
     if session.get("authenticated"):
         return redirect(url_for("index"))
@@ -210,13 +191,9 @@ def index():
     )
 
 
-# ----------------------------
-# Verify Turnstile
-# ----------------------------
-
 @app.route("/verify-turnstile", methods=["POST"])
 @login_required
-def verify_turnstile():
+def verify_turnstile_route():
     data = request.get_json(silent=True) or {}
     token = str(data.get("token", "")).strip()
 
@@ -224,29 +201,18 @@ def verify_turnstile():
         session.pop("turnstile_verified_at", None)
         return jsonify({
             "success": False,
-            "error": "Complete verification first."
+            "error": "Complete Spam Protection verification first."
         }), 400
 
-    success, error = verify_turnstile_token(
-        token,
-        request.remote_addr,
-    )
+    ok, error = verify_turnstile(token, request.remote_addr)
 
-    if not success:
+    if not ok:
         session.pop("turnstile_verified_at", None)
-        return jsonify({
-            "success": False,
-            "error": error
-        }), 400
+        return jsonify({"success": False, "error": error}), 400
 
     session["turnstile_verified_at"] = int(time.time())
-
     return jsonify({"success": True})
 
-
-# ----------------------------
-# Send one email
-# ----------------------------
 
 @app.route("/send-one", methods=["POST"])
 @login_required
@@ -255,44 +221,32 @@ def send_one():
 
     if (
         not isinstance(verified_at, (int, float))
-        or time.time() - verified_at > VERIFICATION_TTL
+        or time.time() - verified_at > VERIFY_TTL
     ):
         session.pop("turnstile_verified_at", None)
         return jsonify({
             "success": False,
-            "error": "Spam Protection verification expired. Verify again."
+            "error": "Verification expired. Complete Spam Protection again."
         }), 401
 
     data = request.get_json(silent=True) or {}
 
     sender_name = str(data.get("senderName", "")).strip()[:150]
-    gmail = str(data.get("gmail", "")).strip()
-    app_password = str(data.get("appPassword", "")).replace(" ", "")
+    recipient = str(data.get("recipient", "")).strip().lower()
     subject = str(data.get("subject", "")).strip()[:300]
     body = str(data.get("body", ""))
-    recipient = str(data.get("recipient", "")).strip().lower()
     html_mode = data.get("htmlMode") is True
 
-    if not all([
-        sender_name,
-        gmail,
-        app_password,
-        subject,
-        body,
-        recipient,
-    ]):
+    if not sender_name or not recipient or not subject or not body.strip():
         return jsonify({
             "success": False,
             "error": "Complete all required fields."
         }), 400
 
-    if (
-        not EMAIL_PATTERN.fullmatch(gmail)
-        or not EMAIL_PATTERN.fullmatch(recipient)
-    ):
+    if not EMAIL_PATTERN.fullmatch(recipient):
         return jsonify({
             "success": False,
-            "error": "Invalid email address."
+            "error": "Invalid recipient email address."
         }), 400
 
     if len(body) > 100000:
@@ -301,81 +255,25 @@ def send_one():
             "error": "Message body is too long."
         }), 400
 
-    message = EmailMessage()
-    message["From"] = f"{sender_name} <{gmail}>"
-    message["To"] = recipient
-    message["Subject"] = subject
-
-    if html_mode:
-        message.set_content(
-            "This email contains HTML content. "
-            "Please view it in an HTML-compatible email client."
-        )
-        message.add_alternative(body, subtype="html")
-    else:
-        message.set_content(body)
-
     try:
-        send_gmail_message(gmail, app_password, message)
-
+        email_id = send_with_resend(
+            sender_name, recipient, subject, body, html_mode
+        )
         return jsonify({
             "success": True,
             "recipient": recipient,
+            "emailId": email_id,
         })
 
-    except smtplib.SMTPAuthenticationError:
-        app.logger.warning("Gmail SMTP authentication failed")
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
 
-        return jsonify({
-            "success": False,
-            "error": (
-                "Gmail authentication failed. "
-                "Check the Gmail address and App Password."
-            ),
-        }), 400
-
-    except smtplib.SMTPRecipientsRefused:
-        app.logger.warning("Gmail rejected recipient")
-
-        return jsonify({
-            "success": False,
-            "error": "The mail server rejected this recipient."
-        }), 502
-
-    except smtplib.SMTPServerDisconnected:
-        app.logger.exception("Gmail SMTP connection unexpectedly closed")
-
-        return jsonify({
-            "success": False,
-            "error": (
-                "Gmail SMTP connection closed unexpectedly. "
-                "Check Vercel logs before retrying this recipient."
-            ),
-        }), 502
-
-    except smtplib.SMTPException:
-        app.logger.exception("Gmail SMTP error")
-
-        return jsonify({
-            "success": False,
-            "error": "Gmail SMTP error. Check Vercel logs for details."
-        }), 502
-
-    except (OSError, TimeoutError):
-        app.logger.exception("Gmail SMTP network error")
-
-        return jsonify({
-            "success": False,
-            "error": (
-                "SMTP network connection failed. "
-                "Check Vercel logs before retrying."
-            ),
-        }), 502
+    except RuntimeError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 502
 
     except Exception:
-        app.logger.exception("Unexpected email sending error")
-
+        app.logger.exception("Unexpected Resend sending error")
         return jsonify({
             "success": False,
-            "error": "Unexpected server error."
-        }), 500
+            "error": "Unexpected sending error. Check Vercel logs."
+        }), 502
