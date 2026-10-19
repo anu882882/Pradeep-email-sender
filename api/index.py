@@ -7,242 +7,220 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from email.message import EmailMessage
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, session, jsonify, Response
+)
 from functools import wraps
 
-from flask import (
-    Flask, render_template, request, redirect, url_for,
-    session, jsonify, Response, stream_with_context
-)
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "")
 
-app = Flask(__name__, template_folder="../templates", static_folder="../static")
-app.secret_key = os.environ.get("SESSION_SECRET", "change-this-to-a-long-random-secret")
-
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-)
-
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-MAX_RECIPIENTS = 25
 BATCH_SIZE = 5
+MAX_RECIPIENTS = 25
+SMTP_TIMEOUT = 20
+
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def is_valid_email(email):
+    return EMAIL_PATTERN.fullmatch(email) is not None
+
+
+def parse_recipients(raw):
+    items = re.split(r"[,;\s]+", raw or "")
+    seen = set()
+    result = []
+
+    for item in items:
+        email = item.strip().lower()
+        if email and email not in seen and is_valid_email(email):
+            seen.add(email)
+            result.append(email)
+
+    return result
 
 
 def verify_turnstile(token, remote_ip=None):
-    """Verify Turnstile with Cloudflare; never trust the browser token alone."""
-    secret = os.environ.get("TURNSTILE_SECRET_KEY", "").strip()
+    secret = os.environ.get("TURNSTILE_SECRET_KEY", "")
     if not secret or not token:
         return False
 
-    payload = {
+    data = {
         "secret": secret,
         "response": token,
     }
     if remote_ip:
-        payload["remoteip"] = remote_ip
+        data["remoteip"] = remote_ip
 
-    data = urllib.parse.urlencode(payload).encode("utf-8")
+    encoded = urllib.parse.urlencode(data).encode()
     req = urllib.request.Request(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        data=encoded,
         method="POST",
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=5) as response:
-            result = json.loads(response.read().decode("utf-8"))
+        with urllib.request.urlopen(req, timeout=8) as response:
+            result = json.loads(response.read().decode())
         return result.get("success") is True
     except Exception:
-        app.logger.warning("Turnstile verification failed or timed out.")
         return False
 
 
-def login_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not session.get("authenticated"):
-            if request.path.startswith("/send-batch"):
-                return jsonify({"error": "Please sign in again."}), 401
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("logged_in"):
             return redirect(url_for("login"))
-        return view(*args, **kwargs)
-    return wrapped
+        return fn(*args, **kwargs)
+    return wrapper
 
 
-def parse_recipients(raw):
-    recipients = []
-    seen = set()
-    for item in re.split(r"[,;\s]+", raw or ""):
-        email = item.strip().lower()
-        if email and email not in seen:
-            seen.add(email)
-            recipients.append(email)
-    return recipients
-
-
-def send_one_email(sender_email, app_password, sender_name, recipient, subject, body, html_mode):
-    msg = EmailMessage()
-    msg["From"] = f"{sender_name} <{sender_email}>" if sender_name else sender_email
-    msg["To"] = recipient
-    msg["Subject"] = subject
-    msg.set_content(body)
-
-    if html_mode:
-        msg.add_alternative(body, subtype="html")
-
-    context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=20) as smtp:
-        smtp.login(sender_email, app_password)
-        smtp.send_message(msg)
-
-    return recipient
-
-
-@app.after_request
-def add_security_headers(response):
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Cache-Control"] = "no-store"
-    return response
-
-
-@app.route("/", methods=["GET"])
+@app.get("/")
 @login_required
-def home():
+def index():
     return render_template(
         "index.html",
-        turnstile_site_key=os.environ.get("TURNSTILE_SITE_KEY", ""),
+        turnstile_site_key=os.environ.get("TURNSTILE_SITE_KEY", "")
     )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if session.get("authenticated"):
-        return redirect(url_for("home"))
-
     error = None
+    site_key = os.environ.get("TURNSTILE_SITE_KEY", "")
+
     if request.method == "POST":
         password = request.form.get("password", "")
         token = request.form.get("cf-turnstile-response", "")
-        expected = os.environ.get("LOGIN_PASSWORD", "")
 
-        if not expected:
-            error = "Set LOGIN_PASSWORD in your deployment environment."
-        elif not verify_turnstile(token, request.remote_addr):
-            error = "Verification failed. Please try again."
+        expected = os.environ.get("LOGIN_PASSWORD", "")
+        if not expected or not app.secret_key:
+            error = "Login environment variables are not configured."
         elif password != expected:
             error = "Incorrect password."
+        elif not verify_turnstile(token, request.remote_addr):
+            error = "Please complete Cloudflare verification."
         else:
             session.clear()
-            session["authenticated"] = True
-            return redirect(url_for("home"))
+            session["logged_in"] = True
+            return redirect(url_for("index"))
 
     return render_template(
         "login.html",
         error=error,
-        turnstile_site_key=os.environ.get("TURNSTILE_SITE_KEY", ""),
+        turnstile_site_key=site_key
     )
 
 
-@app.route("/logout", methods=["POST"])
-@login_required
+@app.post("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-@app.route("/send-batch", methods=["POST"])
+def send_one_email(recipient, sender_name, gmail, app_password,
+                   subject, body, html_mode):
+    message = EmailMessage()
+    message["From"] = f"{sender_name} <{gmail}>"
+    message["To"] = recipient
+    message["Subject"] = subject
+
+    if html_mode:
+        message.set_content("This email contains an HTML message.")
+        message.add_alternative(body, subtype="html")
+    else:
+        message.set_content(body)
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(
+        "smtp.gmail.com", 465, context=context,
+        timeout=SMTP_TIMEOUT
+    ) as server:
+        server.login(gmail, app_password)
+        server.send_message(message)
+
+    return True
+
+
+@app.post("/send-batch")
 @login_required
 def send_batch():
     data = request.get_json(silent=True) or {}
 
-    token = str(data.get("turnstile_token", "")).strip()
+    token = data.get("turnstile_token", "")
     if not verify_turnstile(token, request.remote_addr):
         return jsonify({
-            "error": "Cloudflare verification failed or expired. Please wait for verification and try again."
-        }), 400
+            "error": "Cloudflare verification failed. Please verify again."
+        }), 403
 
-    sender_email = str(data.get("sender_email", "")).strip()
-    app_password = str(data.get("app_password", "")).strip()
-    sender_name = str(data.get("sender_name", "")).strip()
-    subject = str(data.get("subject", "")).strip()
-    body = str(data.get("body", ""))
-    html_mode = data.get("mode") == "html"
-    recipients = parse_recipients(str(data.get("recipients", "")))
+    sender_name = (data.get("sender_name") or "").strip()
+    gmail = (data.get("gmail") or "").strip()
+    app_password = (data.get("app_password") or "").strip()
+    subject = (data.get("subject") or "").strip()
+    body = data.get("body") or ""
+    html_mode = data.get("html_mode") is True
+    recipients = parse_recipients(data.get("recipients") or "")
 
-    if not EMAIL_RE.fullmatch(sender_email):
-        return jsonify({"error": "Enter a valid sender email address."}), 400
+    if not sender_name or not gmail or not is_valid_email(gmail):
+        return jsonify({"error": "Enter a valid sender name and Gmail."}), 400
     if not app_password:
-        return jsonify({"error": "Enter your Gmail app password."}), 400
+        return jsonify({"error": "Enter your Gmail App Password."}), 400
     if not subject or not body.strip():
         return jsonify({"error": "Subject and message body are required."}), 400
     if not recipients:
-        return jsonify({"error": "Add at least one recipient."}), 400
+        return jsonify({"error": "Enter valid recipient email addresses."}), 400
     if len(recipients) > MAX_RECIPIENTS:
-        return jsonify({"error": f"Maximum {MAX_RECIPIENTS} recipients per request."}), 400
+        return jsonify({
+            "error": f"Maximum {MAX_RECIPIENTS} recipients per request."
+        }), 400
 
-    invalid = [email for email in recipients if not EMAIL_RE.fullmatch(email)]
-    if invalid:
-        return jsonify({"error": "Invalid recipient address: " + ", ".join(invalid[:5])}), 400
+    # Each batch submits no more than five messages concurrently.
+    results = []
+    for start in range(0, len(recipients), BATCH_SIZE):
+        batch = recipients[start:start + BATCH_SIZE]
 
-    def generate():
-        total = len(recipients)
-        yield json.dumps({"type": "start", "total": total}) + "\n"
+        with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+            futures = {
+                executor.submit(
+                    send_one_email,
+                    recipient, sender_name, gmail, app_password,
+                    subject, body, html_mode
+                ): recipient
+                for recipient in batch
+            }
 
-        sent = 0
-        failed = 0
-
-        # Send no more than five messages concurrently.
-        for start in range(0, total, BATCH_SIZE):
-            batch = recipients[start:start + BATCH_SIZE]
-            with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
-                future_map = {
-                    executor.submit(
-                        send_one_email,
-                        sender_email, app_password, sender_name,
-                        recipient, subject, body, html_mode
-                    ): recipient
-                    for recipient in batch
-                }
-
-                for future in as_completed(future_map):
-                    recipient = future_map[future]
-                    try:
-                        future.result()
-                        sent += 1
-                        result = {"type": "result", "ok": True}
-                    except Exception:
-                        failed += 1
-                        app.logger.exception("Email send failed.")
-                        result = {"type": "result", "ok": False}
-
-                    result.update({
-                        "sent": sent,
-                        "failed": failed,
-                        "remaining": total - sent - failed,
+            for future in as_completed(futures):
+                recipient = futures[future]
+                try:
+                    future.result()
+                    results.append({
+                        "recipient": recipient,
+                        "status": "sent"
                     })
-                    yield json.dumps(result) + "\n"
+                except Exception:
+                    # Avoid returning SMTP credentials or internal errors.
+                    results.append({
+                        "recipient": recipient,
+                        "status": "failed"
+                    })
 
-        yield json.dumps({
-            "type": "done",
-            "total": total,
-            "sent": sent,
-            "failed": failed,
-            "remaining": total - sent - failed,
-        }) + "\n"
+    sent = sum(item["status"] == "sent" for item in results)
+    failed = len(results) - sent
 
-    return Response(
-        stream_with_context(generate()),
-        mimetype="application/x-ndjson",
-        headers={"X-Accel-Buffering": "no"},
-    )
+    return jsonify({
+        "total": len(recipients),
+        "sent": sent,
+        "failed": failed,
+        "remaining": 0,
+        "results": results,
+    })
 
 
-@app.route("/health")
+@app.get("/health")
 def health():
     return jsonify({"status": "ok"})
 
 
-if __name__ == "__main__":
-    app.run(debug=False)
+# Vercel's Python runtime imports this WSGI app.
