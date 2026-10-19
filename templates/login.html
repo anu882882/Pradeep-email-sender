@@ -1,61 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign In — Secure Mail Console</title>
+  <title>Sign in | Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="preconnect" href="https://challenges.cloudflare.com">
-  <link rel="dns-prefetch" href="//challenges.cloudflare.com">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="login-logo">✉</div>
-    <div class="eyebrow centered">SECURE WORKSPACE</div>
-    <h1>Secure Mail Console</h1>
-    <p class="login-subtitle">Sign in to continue</p>
+    <h1 class="brand">◈ Secure Mail Console</h1>
+    <h2>Sign in to continue</h2>
+    <p class="subtitle">Enter your console password.</p>
 
     {% if error %}
-      <div class="form-error">{{ error }}</div>
+      <div class="error-message">{{ error }}</div>
     {% endif %}
 
-    <form method="post" action="{{ url_for('login') }}">
-      <label class="field">
-        <span>Password</span>
-        <div class="password-wrap">
-          <input id="password" name="password" type="password"
-                 placeholder="Enter password" autocomplete="current-password"
-                 required autofocus>
-          <button id="togglePassword" class="password-toggle" type="button"
-                  aria-label="Show password">Show</button>
-        </div>
-      </label>
+    <form method="post">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password"
+             placeholder="Enter password" autocomplete="current-password" required>
 
-      <div class="login-verification">
-        <div class="cf-turnstile"
-             data-sitekey="{{ turnstile_site_key }}"
-             data-theme="dark"
-             data-appearance="interaction-only"
-             data-retry="auto"
-             data-refresh-expired="auto"></div>
+      <div class="turnstile-login">
+        {% if turnstile_site_key %}
+          <div class="cf-turnstile"
+               data-sitekey="{{ turnstile_site_key }}"
+               data-theme="dark"></div>
+        {% else %}
+          <p class="hint">Cloudflare Turnstile is not configured.</p>
+        {% endif %}
       </div>
 
-      <button class="btn btn-primary login-submit" type="submit">Sign in <span>→</span></button>
+      <button type="submit" class="btn-send login-submit">Sign In</button>
     </form>
-    <div class="login-foot">Protected sign-in · Secure Mail Console</div>
   </main>
-
-  <script>
-    const passwordInput = document.getElementById("password");
-    const toggle = document.getElementById("togglePassword");
-
-    toggle.addEventListener("click", () => {
-      const showing = passwordInput.type === "text";
-      passwordInput.type = showing ? "password" : "text";
-      toggle.textContent = showing ? "Show" : "Hide";
-      toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
-    });
-  </script>
 </body>
 </html>
