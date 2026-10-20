@@ -1,314 +1,345 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  {% if turnstile_enabled %}
+  {% if turnstile_site_key %}
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   {% endif %}
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">
-      <span class="brand-icon">✉</span>
-      <span>Secure Mail <b>Console</b><small>EMAIL WORKSPACE</small></span>
-    </a>
-    <div class="top-actions">
-      <span class="status-pill"><i></i> SYSTEM READY</span>
-      <a class="logout" href="/logout">Log out ↗</a>
+    <div class="brand">
+      <span class="logo">⬡</span>
+      <strong>Secure Mail Console</strong>
     </div>
+    <a href="{{ url_for('logout') }}" class="logout">⇥ Logout</a>
   </header>
 
-  <main class="shell">
-    <section class="welcome">
-      <div>
-        <div class="eyebrow">YOUR WORKSPACE</div>
-        <h1>Mail <span>Console</span></h1>
-        <p>Compose, review, and send your email with a clear delivery status.</p>
-      </div>
-      <div class="secure-label">⌑ &nbsp; PRIVATE WORKSPACE</div>
-    </section>
+  <main class="page-wrap">
+    <h1 class="page-title">➤ <span>Bulk Email Sender</span></h1>
 
-    <section class="stats-grid">
-      <article class="stat-card"><span>TOTAL</span><strong id="totalCount">0</strong><small>Valid recipients</small></article>
-      <article class="stat-card"><span>SENT</span><strong id="sentCount">0</strong><small>Accepted by provider</small></article>
-      <article class="stat-card"><span>FAILED</span><strong id="failedCount">0</strong><small>Not accepted</small></article>
-      <article class="stat-card"><span>REMAINING</span><strong id="remainingCount">0</strong><small>Still to process</small></article>
-    </section>
+    <div class="dashboard">
+      <section class="panel compose">
+        <div class="panel-heading"><h2>✎ Compose Message</h2></div>
 
-    <div class="workspace-grid">
-      <section class="panel compose-panel">
-        <div class="panel-heading">
-          <div class="heading-icon">✎</div>
-          <div><h2>Compose message</h2><p>Prepare your email below</p></div>
-          <span class="step-label">01 / COMPOSE</span>
-        </div>
-
-        <form id="mailForm">
-          <label for="senderName">Sender name</label>
-          <input id="senderName" maxlength="100" placeholder="Your name or company" autocomplete="organization">
-
-          <label for="recipients">Recipients <span class="label-hint">MAX 25</span></label>
-          <textarea id="recipients" class="recipients-box" placeholder="name@example.com&#10;another@example.com"></textarea>
-          <div class="field-note">Separate addresses with a new line, comma, or semicolon.</div>
-
-          <label for="subject">Subject</label>
-          <input id="subject" maxlength="200" placeholder="Enter email subject" required>
-
-          <div class="editor-label">
-            <label for="body">Message body</label>
-            <span id="charCount">0 characters</span>
-          </div>
-          <div class="editor-tools">
-            <label class="font-label" for="fontStyle">Font style</label>
-            <select id="fontStyle">
-              <option value="Arial, sans-serif">1. Arial</option>
-              <option value="Verdana, sans-serif">2. Verdana</option>
-              <option value="Tahoma, sans-serif">3. Tahoma</option>
-              <option value="Trebuchet MS, sans-serif">4. Trebuchet MS</option>
-              <option value="Georgia, serif">5. Georgia</option>
-              <option value="'Times New Roman', serif">6. Times New Roman</option>
-              <option value="'Courier New', monospace">7. Courier New</option>
-              <option value="Garamond, serif">8. Garamond</option>
-              <option value="Palatino Linotype, serif">9. Palatino</option>
-              <option value="Impact, sans-serif">10. Impact</option>
-              <option value="system-ui, sans-serif">11. System UI</option>
-              <option value="Roboto, sans-serif">12. Roboto</option>
-              <option value="Lato, sans-serif">13. Lato</option>
-              <option value="Montserrat, sans-serif">14. Montserrat</option>
-              <option value="monospace">15. Monospace</option>
-            </select>
-            <div class="font-size-control">
-              <button type="button" id="smallerFont" aria-label="Decrease font size">−</button>
-              <span id="fontSizeLabel">15 px</span>
-              <button type="button" id="largerFont" aria-label="Increase font size">+</button>
+        <form id="sendForm">
+          <div class="fields">
+            <div>
+              <label for="senderName">Sender Name</label>
+              <input id="senderName" placeholder="Your name">
+            </div>
+            <div>
+              <label for="senderEmail">Your Gmail</label>
+              <input id="senderEmail" type="email" placeholder="your@gmail.com" required>
+            </div>
+            <div>
+              <label for="appPassword">App Password</label>
+              <div class="password-wrap">
+                <input id="appPassword" type="password" placeholder="Google App Password" required autocomplete="new-password">
+                <button type="button" id="togglePassword" aria-label="Show password">◎</button>
+              </div>
+            </div>
+            <div>
+              <label for="subject">Email Subject</label>
+              <input id="subject" placeholder="Email subject" required maxlength="250">
             </div>
           </div>
 
-          <textarea id="body" class="message-editor" placeholder="Write your message here..." required></textarea>
-          <div class="editor-footer"><span>↕ Drag the corner to resize</span><span id="bodyMode">Plain text</span></div>
-
-          <label class="toggle-row">
-            <input type="checkbox" id="htmlMode">
-            <span class="toggle-ui"></span>
-            <span><b>HTML message</b><small>Enable only if your body contains trusted HTML markup.</small></span>
-          </label>
-
-          <label class="consent-row">
-            <input type="checkbox" id="consentConfirmed" required>
-            <span>I confirm these recipients have agreed to receive this email.</span>
-          </label>
-
-          {% if turnstile_enabled %}
-          <div class="verification-block">
-            <div class="field-title">Security verification</div>
-            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark"></div>
+          <div class="toolbar">
+            <label for="body">Message Body</label>
+            <div class="mode-tabs">
+              <button type="button" class="mode active" id="plainMode">Plain Text</button>
+              <button type="button" class="mode" id="htmlModeButton">HTML</button>
+            </div>
           </div>
-          {% endif %}
 
-          <div id="notice" class="notice" role="status" aria-live="polite"></div>
-          <button type="submit" id="sendButton" class="send-button">
-            <span>➤</span> Send emails <span class="button-arrow">→</span>
-          </button>
-          <p class="send-footnote">Review the recipient list and message before sending.</p>
+          <textarea id="body" class="body-box" placeholder="Write your email message here..." required></textarea>
+
+          <div class="editor-options">
+            <div>
+              <label for="fontFamily">Font style</label>
+              <select id="fontFamily">
+                <option>Arial</option>
+                <option>Verdana</option>
+                <option>Tahoma</option>
+                <option>Trebuchet MS</option>
+                <option>Georgia</option>
+                <option>Times New Roman</option>
+                <option>Courier New</option>
+                <option>Impact</option>
+                <option>Comic Sans MS</option>
+                <option>Lucida Console</option>
+                <option>Palatino Linotype</option>
+                <option>Garamond</option>
+                <option>Segoe UI</option>
+                <option>Roboto</option>
+                <option>system-ui</option>
+              </select>
+            </div>
+            <div>
+              <label>Font size</label>
+              <div class="size-tools">
+                <button type="button" id="fontDown">−</button>
+                <span id="fontSize">15 px</span>
+                <button type="button" id="fontUp">＋</button>
+              </div>
+            </div>
+            <small><span id="charCount">0</span> characters</small>
+          </div>
+
+          <label class="consent">
+            <input type="checkbox" id="consent">
+            I confirm these recipients have agreed to receive this email.
+          </label>
+
+          <fieldset class="verify">
+            <legend>🛡 Spam Protection</legend>
+            {% if turnstile_site_key %}
+              <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light"></div>
+            {% else %}
+              <p class="warn">TURNSTILE_SITE_KEY is not configured in Vercel.</p>
+            {% endif %}
+          </fieldset>
+
+          <p id="status" class="status" aria-live="polite"></p>
         </form>
       </section>
 
-      <aside class="right-column">
-        <section class="panel progress-panel">
-          <div class="panel-heading">
-            <div class="heading-icon purple">◴</div>
-            <div><h2>Sending progress</h2><p>Live processing status</p></div>
+      <aside class="right">
+        <section class="panel recipients-panel">
+          <div class="section-heading">
+            <div>
+              <h2>♟ Recipients</h2>
+              <p>Paste emails (comma separated, new lines, or Excel copy)</p>
+            </div>
+            <span class="pill" id="found">0 found</span>
           </div>
-          <div class="progress-meta"><span>Overall progress</span><b id="progressPercent">0%</b></div>
-          <div class="progress-track"><div id="progressBar"></div></div>
-          <div class="progress-caption"><span id="progressStatus">Waiting to start</span><span id="processedCount">0 / 0</span></div>
-          <div class="batch-info"><span class="batch-icon">▦</span><div><b>Batch processing</b><small>Up to 5 recipients per batch, processed sequentially.</small></div></div>
-          <div class="divider"></div>
-          <div class="activity-heading">ACTIVITY LOG <button type="button" id="clearLog">Clear</button></div>
-          <div id="activityLog" class="activity-log"><div class="empty-log">Your activity will appear here.</div></div>
+
+          <textarea id="recipients" class="recipient-input"
+            placeholder="name@example.com, another@example.com"
+            required form="sendForm"></textarea>
+
+          <div class="recipient-foot">
+            <span>Up to 25 unique recipients</span>
+            <span id="recipientCount">0 valid</span>
+          </div>
         </section>
 
-        <section class="tip-card">
-          <div class="tip-icon">✧</div>
-          <div><b>Delivery note</b><p>A successful result means Resend accepted the request. Check provider logs for delivery, bounce, or rejection events.</p></div>
+        <section class="panel monitor">
+          <div class="section-heading"><h2>◔ Progress Monitor</h2></div>
+
+          <div class="stats">
+            <div class="stat"><small>TOTAL</small><strong id="total">0</strong></div>
+            <div class="stat"><small>SENT</small><strong id="sent">0</strong></div>
+            <div class="stat"><small>FAILED</small><strong id="failed">0</strong></div>
+            <div class="stat"><small>REMAINING</small><strong id="remaining">0</strong></div>
+          </div>
+
+          <div class="progress"><div id="bar"></div></div>
+          <p class="run-state" id="runState">Ready to send</p>
+
+          <div class="send-actions">
+            <button id="sendBtn" class="send-all" type="submit" form="sendForm">➤ Send All</button>
+            <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
+          </div>
+          <p class="fine-print">Messages are processed sequentially. Gmail SMTP acceptance does not guarantee inbox delivery.</p>
         </section>
       </aside>
     </div>
-    <footer>SECURE MAIL CONSOLE <span>•</span> PRIVATE WORKSPACE</footer>
   </main>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const form = $("mailForm");
-let sending = false;
-let fontSize = 15;
+const $ = id => document.getElementById(id);
+let fontSize = 15, busy = false, stopRequested = false, htmlMode = false;
 
 function getRecipients() {
-  const parts = $("recipients").value
-    .split(/[,\s;]+/)
-    .map(x => x.trim().toLowerCase())
-    .filter(Boolean);
-  return [...new Set(parts)];
-}
-
-function setNotice(message, type = "") {
-  const el = $("notice");
-  el.textContent = message;
-  el.className = "notice" + (type ? " " + type : "");
-}
-
-function addLog(message, type = "info") {
-  const log = $("activityLog");
-  const empty = log.querySelector(".empty-log");
-  if (empty) empty.remove();
-  const row = document.createElement("div");
-  row.className = "log-row " + type;
-  const time = document.createElement("time");
-  time.textContent = new Date().toLocaleTimeString();
-  const text = document.createElement("span");
-  text.textContent = message;
-  row.append(time, text);
-  log.prepend(row);
-  while (log.children.length > 80) log.lastElementChild.remove();
-}
-
-function updateProgress(total, sent, failed, processed) {
-  $("totalCount").textContent = total;
-  $("sentCount").textContent = sent;
-  $("failedCount").textContent = failed;
-  $("remainingCount").textContent = Math.max(0, total - processed);
-  const percent = total ? Math.round(processed / total * 100) : 0;
-  $("progressPercent").textContent = percent + "%";
-  $("progressBar").style.width = percent + "%";
-  $("processedCount").textContent = `${processed} / ${total}`;
-}
-
-async function postJSON(url, payload) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(payload)
-  });
-  let data;
-  try { data = await response.json(); }
-  catch { data = {ok: false, error: "Unexpected server response."}; }
-  if (!response.ok || !data.ok) {
-    throw new Error(data.error || "Request failed.");
+  const raw = $('recipients').value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+  const seen = new Set(), out = [];
+  for (const email of raw) {
+    const key = email.toLowerCase();
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(key) && !seen.has(key)) {
+      seen.add(key);
+      out.push(key);
+    }
   }
-  return data;
+  return out;
 }
 
-$("body").addEventListener("input", () => {
-  $("charCount").textContent = $("body").value.length + " characters";
+function updateList() {
+  const list = getRecipients();
+  $('found').textContent = list.length + ' found';
+  $('recipientCount').textContent = list.length + ' valid';
+  $('total').textContent = list.length;
+  $('remaining').textContent = list.length;
+}
+
+function setFont() {
+  $('body').style.fontFamily = $('fontFamily').value;
+  $('body').style.fontSize = fontSize + 'px';
+  $('fontSize').textContent = fontSize + ' px';
+}
+
+function updateProgress(total, sent, failed) {
+  const done = sent + failed;
+  $('total').textContent = total;
+  $('sent').textContent = sent;
+  $('failed').textContent = failed;
+  $('remaining').textContent = total - done;
+  $('bar').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+}
+
+$('recipients').addEventListener('input', updateList);
+$('fontFamily').addEventListener('change', setFont);
+$('body').addEventListener('input', () => {
+  $('charCount').textContent = $('body').value.length;
 });
-$("fontStyle").addEventListener("change", () => {
-  $("body").style.fontFamily = $("fontStyle").value;
-});
-$("smallerFont").addEventListener("click", () => {
+
+$('fontDown').onclick = () => {
   fontSize = Math.max(10, fontSize - 1);
-  $("body").style.fontSize = fontSize + "px";
-  $("fontSizeLabel").textContent = fontSize + " px";
-});
-$("largerFont").addEventListener("click", () => {
-  fontSize = Math.min(28, fontSize + 1);
-  $("body").style.fontSize = fontSize + "px";
-  $("fontSizeLabel").textContent = fontSize + " px";
-});
-$("htmlMode").addEventListener("change", () => {
-  $("bodyMode").textContent = $("htmlMode").checked ? "HTML" : "Plain text";
-});
-$("recipients").addEventListener("input", () => {
-  $("totalCount").textContent = getRecipients().length;
-});
-$("clearLog").addEventListener("click", () => {
-  $("activityLog").innerHTML = '<div class="empty-log">Your activity will appear here.</div>';
-});
+  setFont();
+};
+$('fontUp').onclick = () => {
+  fontSize = Math.min(32, fontSize + 1);
+  setFont();
+};
 
-form.addEventListener("submit", async (event) => {
+$('togglePassword').onclick = () => {
+  const input = $('appPassword');
+  input.type = input.type === 'password' ? 'text' : 'password';
+  $('togglePassword').textContent = input.type === 'password' ? '◎' : '◉';
+};
+
+$('plainMode').onclick = () => {
+  htmlMode = false;
+  $('plainMode').classList.add('active');
+  $('htmlModeButton').classList.remove('active');
+  $('body').placeholder = 'Write your plain-text email here...';
+};
+
+$('htmlModeButton').onclick = () => {
+  htmlMode = true;
+  $('htmlModeButton').classList.add('active');
+  $('plainMode').classList.remove('active');
+  $('body').placeholder = 'Enter HTML email content here...';
+};
+
+$('stopBtn').onclick = () => {
+  if (busy) {
+    stopRequested = true;
+    $('runState').textContent = 'Stopping after current message…';
+    $('stopBtn').disabled = true;
+  }
+};
+
+setFont();
+updateList();
+
+$('sendForm').addEventListener('submit', async event => {
   event.preventDefault();
-  if (sending) return;
+  if (busy) return;
 
-  const recipients = getRecipients();
-  const subject = $("subject").value.trim();
-  const body = $("body").value;
-  const senderName = $("senderName").value.trim();
-  const consentConfirmed = $("consentConfirmed").checked;
+  const list = getRecipients();
+  const senderName = $('senderName').value.trim();
+  const senderEmail = $('senderEmail').value.trim();
+  const appPassword = $('appPassword').value.replace(/\s/g, '');
+  const subject = $('subject').value.trim();
+  const body = $('body').value;
 
-  if (!recipients.length) return setNotice("Enter at least one recipient.", "error");
-  if (recipients.length > 25) return setNotice("Maximum 25 recipients per run.", "error");
-  if (!subject || !body.trim()) return setNotice("Subject and message body are required.", "error");
-  if (!consentConfirmed) return setNotice("Please confirm recipient consent.", "error");
+  if (!list.length) {
+    $('status').textContent = 'Enter at least one valid recipient.';
+    return;
+  }
+  if (list.length > 25) {
+    $('status').textContent = 'Maximum 25 recipients allowed.';
+    return;
+  }
+  if (!senderEmail || !appPassword || !subject || !body.trim()) {
+    $('status').textContent = 'Complete all required fields.';
+    return;
+  }
+  if (!$('consent').checked) {
+    $('status').textContent = 'Confirm recipient consent first.';
+    return;
+  }
 
-  const invalid = recipients.filter(address => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address));
-  if (invalid.length) return setNotice("Invalid email address: " + invalid[0], "error");
+  const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
+  if (!token) {
+    $('status').textContent = 'Complete Cloudflare verification first.';
+    return;
+  }
 
-  {% if turnstile_enabled %}
-  const token = (typeof turnstile !== "undefined") ? turnstile.getResponse() : "";
-  if (!token) return setNotice("Complete the security verification first.", "error");
-  {% else %}
-  const token = "";
-  {% endif %}
+  busy = true;
+  stopRequested = false;
+  $('sendBtn').disabled = true;
+  $('stopBtn').disabled = false;
+  $('status').textContent = '';
+  $('runState').textContent = 'Verifying security…';
 
-  sending = true;
-  $("sendButton").disabled = true;
-  $("sendButton").innerHTML = "Sending…";
-  $("progressStatus").textContent = "Preparing recipients";
-  setNotice("Sending has started. Keep this page open.", "info");
-  $("activityLog").innerHTML = "";
-  let sent = 0, failed = 0, processed = 0;
-  updateProgress(recipients.length, sent, failed, processed);
+  let sent = 0, failed = 0;
+  updateProgress(list.length, 0, 0);
 
   try {
-    await postJSON("/verify-turnstile", {token});
-    addLog("Security verification passed.", "success");
+    const verification = await fetch('/verify-turnstile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token})
+    });
+    const verificationData = await verification.json();
 
-    for (let start = 0; start < recipients.length; start += 5) {
-      const batch = recipients.slice(start, start + 5);
-      $("progressStatus").textContent =
-        `Processing batch ${Math.floor(start / 5) + 1}`;
+    if (!verification.ok || !verificationData.ok) {
+      throw new Error(verificationData.error || 'Verification failed');
+    }
 
-      for (const recipient of batch) {
-        try {
-          const result = await postJSON("/send-one", {
-            recipient,
-            subject,
-            body,
-            senderName,
-            htmlMode: $("htmlMode").checked,
-            consentConfirmed
-          });
-          sent++;
-          addLog(`${recipient} — accepted by provider`, "success");
-        } catch (error) {
-          failed++;
-          addLog(`${recipient} — ${error.message}`, "error");
-          if (error.message.includes("Verification expired")) {
-            throw error;
-          }
-        }
-        processed++;
-        updateProgress(recipients.length, sent, failed, processed);
+    for (let i = 0; i < list.length; i++) {
+      if (stopRequested) break;
+
+      $('runState').textContent = 'Sending ' + (i + 1) + ' of ' + list.length;
+      $('status').textContent = 'Processing ' + (i + 1) + ' of ' + list.length;
+
+      try {
+        const response = await fetch('/send-one', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            senderName, senderEmail, appPassword,
+            recipient: list[i], subject, body, htmlMode,
+            consentConfirmed: $('consent').checked
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Send failed');
+        sent++;
+      } catch (error) {
+        failed++;
+      }
+
+      updateProgress(list.length, sent, failed);
+
+      if (i < list.length - 1 && !stopRequested) {
+        await new Promise(resolve => setTimeout(resolve, {{ mail_gap_ms }}));
       }
     }
 
-    $("progressStatus").textContent = "Completed";
-    setNotice(`Finished. Provider accepted: ${sent}; failed: ${failed}.`, failed ? "error" : "success");
-    addLog("Run completed.", "info");
+    if (stopRequested) {
+      $('runState').textContent = 'Stopped';
+      $('status').textContent = 'Sending stopped. Sent: ' + sent + '; failed: ' + failed + '.';
+    } else {
+      $('runState').textContent = 'Completed';
+      $('status').textContent = 'Finished. SMTP accepted: ' + sent + '; failed: ' + failed + '.';
+    }
   } catch (error) {
-    $("progressStatus").textContent = "Stopped";
-    setNotice(error.message || "Sending stopped. Please try again.", "error");
-    addLog("Run stopped: " + (error.message || "unknown error"), "error");
+    $('runState').textContent = 'Verification failed';
+    $('status').textContent = error.message;
   } finally {
-    sending = false;
-    $("sendButton").disabled = false;
-    $("sendButton").innerHTML = '<span>➤</span> Send emails <span class="button-arrow">→</span>';
-    {% if turnstile_enabled %}
-    if (typeof turnstile !== "undefined") turnstile.reset();
-    {% endif %}
+    busy = false;
+    $('sendBtn').disabled = false;
+    $('stopBtn').disabled = true;
+    if (window.turnstile) window.turnstile.reset();
   }
 });
 </script>
