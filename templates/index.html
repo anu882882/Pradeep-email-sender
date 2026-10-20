@@ -321,7 +321,7 @@ $('sendForm').addEventListener('submit', async event => {
       updateProgress(list.length, sent, failed);
 
       if (i < list.length - 1 && !stopRequested) {
-        await new Promise(resolve => setTimeout(resolve, {{ mail_gap_ms }}));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
