@@ -115,8 +115,7 @@ body {
   gap: 17px 14px;
 }
 
-.fields label,
-.editor-options label {
+.fields label {
   display: block;
   font-size: 11px;
   font-weight: 700;
@@ -209,44 +208,14 @@ textarea:focus {
 
 .editor-options {
   display: flex;
-  align-items: end;
-  gap: 13px;
+  align-items: center;
+  justify-content: flex-end;
   margin-top: 10px;
 }
 
-.editor-options > div:first-child { width: 145px; }
-.editor-options select { height: 30px; padding: 0 7px; }
-
 .editor-options > small {
-  margin-left: auto;
   color: #71829a;
   font-size: 10px;
-  padding-bottom: 8px;
-}
-
-.size-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 30px;
-}
-
-.size-tools button {
-  height: 29px;
-  min-width: 29px;
-  border: 1px solid #d5dfed;
-  border-radius: 6px;
-  color: #3d6fbc;
-  background: #fff;
-  font-size: 17px;
-  cursor: pointer;
-}
-
-.size-tools span {
-  font-size: 10px;
-  min-width: 39px;
-  text-align: center;
-  color: #536985;
 }
 
 .consent {
@@ -537,10 +506,6 @@ textarea:focus {
   .page-title { font-size: 19px; margin-bottom: 16px; }
   .compose, .recipients-panel, .monitor { padding: 16px; }
   .fields { gap: 13px 10px; }
-  .editor-options { flex-wrap: wrap; }
-  .editor-options > div:first-child,
-  .editor-options > div:nth-child(2) { width: calc(50% - 8px); }
-  .editor-options > small { width: 100%; text-align: right; padding: 0; }
   .stats { gap: 9px; }
   .stat { min-height: 80px; padding: 14px 8px; }
   .send-actions { gap: 9px; }
