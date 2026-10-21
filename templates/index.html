@@ -5,9 +5,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+
   {% if turnstile_site_key %}
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async defer></script>
   {% endif %}
 </head>
 <body>
@@ -32,37 +35,57 @@
           <div class="fields">
             <div>
               <label for="senderName">Sender Name</label>
-              <input id="senderName" placeholder="Your name">
+              <input id="senderName"
+                     placeholder="Your name">
             </div>
 
             <div>
               <label for="senderEmail">Your Gmail</label>
-              <input id="senderEmail" type="email" placeholder="your@gmail.com" required>
+              <input id="senderEmail"
+                     type="email"
+                     placeholder="your@gmail.com"
+                     required>
             </div>
 
             <div>
               <label for="appPassword">App Password</label>
               <div class="password-wrap">
-                <input id="appPassword" type="password" placeholder="Google App Password" required autocomplete="new-password">
-                <button type="button" id="togglePassword" aria-label="Show password">◎</button>
+                <input id="appPassword"
+                       type="password"
+                       placeholder="Google App Password"
+                       required
+                       autocomplete="new-password">
+                <button type="button"
+                        id="togglePassword"
+                        aria-label="Show password">◎</button>
               </div>
             </div>
 
             <div>
               <label for="subject">Email Subject</label>
-              <input id="subject" placeholder="Email subject" required maxlength="250">
+              <input id="subject"
+                     placeholder="Email subject"
+                     required
+                     maxlength="250">
             </div>
           </div>
 
           <div class="toolbar">
             <label for="body">Message Body</label>
             <div class="mode-tabs">
-              <button type="button" class="mode active" id="plainMode">Plain Text</button>
-              <button type="button" class="mode" id="htmlModeButton">HTML</button>
+              <button type="button"
+                      class="mode active"
+                      id="plainMode">Plain Text</button>
+              <button type="button"
+                      class="mode"
+                      id="htmlModeButton">HTML</button>
             </div>
           </div>
 
-          <textarea id="body" class="body-box" placeholder="Write your email message here..." required></textarea>
+          <textarea id="body"
+                    class="body-box"
+                    placeholder="Write your email message here..."
+                    required></textarea>
 
           <div class="editor-options">
             <small><span id="charCount">0</span> characters</small>
@@ -76,9 +99,13 @@
           <fieldset class="verify">
             <legend>🛡 Spam Protection</legend>
             {% if turnstile_site_key %}
-              <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light"></div>
+              <div class="cf-turnstile"
+                   data-sitekey="{{ turnstile_site_key }}"
+                   data-theme="light"></div>
             {% else %}
-              <p class="warn">TURNSTILE_SITE_KEY is not configured in Vercel.</p>
+              <p class="warn">
+                TURNSTILE_SITE_KEY is not configured in Vercel.
+              </p>
             {% endif %}
           </fieldset>
 
@@ -96,9 +123,11 @@
             <span class="pill" id="found">0 found</span>
           </div>
 
-          <textarea id="recipients" class="recipient-input"
-            placeholder="name@example.com, another@example.com"
-            required form="sendForm"></textarea>
+          <textarea id="recipients"
+                    class="recipient-input"
+                    placeholder="name@example.com, another@example.com"
+                    required
+                    form="sendForm"></textarea>
 
           <div class="recipient-foot">
             <span>Up to 25 unique recipients</span>
@@ -112,21 +141,47 @@
           </div>
 
           <div class="stats">
-            <div class="stat"><small>TOTAL</small><strong id="total">0</strong></div>
-            <div class="stat"><small>SENT</small><strong id="sent">0</strong></div>
-            <div class="stat"><small>FAILED</small><strong id="failed">0</strong></div>
-            <div class="stat"><small>REMAINING</small><strong id="remaining">0</strong></div>
+            <div class="stat">
+              <small>TOTAL</small>
+              <strong id="total">0</strong>
+            </div>
+            <div class="stat">
+              <small>SENT</small>
+              <strong id="sent">0</strong>
+            </div>
+            <div class="stat">
+              <small>FAILED</small>
+              <strong id="failed">0</strong>
+            </div>
+            <div class="stat">
+              <small>REMAINING</small>
+              <strong id="remaining">0</strong>
+            </div>
           </div>
 
-          <div class="progress"><div id="bar"></div></div>
+          <div class="progress">
+            <div id="bar"></div>
+          </div>
+
           <p class="run-state" id="runState">Ready to send</p>
 
           <div class="send-actions">
-            <button id="sendBtn" class="send-all" type="submit" form="sendForm">➤ Send All</button>
-            <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
+            <button id="sendBtn"
+                    class="send-all"
+                    type="submit"
+                    form="sendForm">➤ Send All</button>
+
+            <button id="stopBtn"
+                    class="stop-btn"
+                    type="button"
+                    disabled>■ Stop Sending</button>
           </div>
 
-          <p class="fine-print">Messages are processed sequentially. Gmail SMTP acceptance does not guarantee inbox delivery.</p>
+          <p class="fine-print">
+            Messages are sent sequentially over one SMTP connection.
+            Gmail limits still apply; SMTP acceptance does not guarantee
+            inbox delivery.
+          </p>
         </section>
       </aside>
     </div>
@@ -136,28 +191,30 @@
 const $ = id => document.getElementById(id);
 
 let busy = false;
-let stopRequested = false;
 let htmlMode = false;
 
 function getRecipients() {
   const raw = $('recipients').value
     .split(/[\s,;]+/)
-    .map(x => x.trim())
+    .map(value => value.trim())
     .filter(Boolean);
 
   const seen = new Set();
-  const out = [];
+  const output = [];
 
-  for (const email of raw) {
-    const key = email.toLowerCase();
+  for (const value of raw) {
+    const email = value.toLowerCase();
 
-    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(key) && !seen.has(key)) {
-      seen.add(key);
-      out.push(key);
+    if (
+      /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
+      !seen.has(email)
+    ) {
+      seen.add(email);
+      output.push(email);
     }
   }
 
-  return out;
+  return output;
 }
 
 function updateList() {
@@ -175,7 +232,8 @@ function updateProgress(total, sent, failed) {
   $('total').textContent = total;
   $('sent').textContent = sent;
   $('failed').textContent = failed;
-  $('remaining').textContent = total - done;
+  $('remaining').textContent = Math.max(0, total - done);
+
   $('bar').style.width =
     (total ? Math.round(done / total * 100) : 0) + '%';
 }
@@ -186,34 +244,36 @@ $('body').addEventListener('input', () => {
   $('charCount').textContent = $('body').value.length;
 });
 
-$('togglePassword').onclick = () => {
+$('togglePassword').addEventListener('click', () => {
   const input = $('appPassword');
   input.type = input.type === 'password' ? 'text' : 'password';
+
   $('togglePassword').textContent =
     input.type === 'password' ? '◎' : '◉';
-};
+});
 
-$('plainMode').onclick = () => {
+$('plainMode').addEventListener('click', () => {
   htmlMode = false;
+
   $('plainMode').classList.add('active');
   $('htmlModeButton').classList.remove('active');
-  $('body').placeholder = 'Write your plain-text email here...';
-};
 
-$('htmlModeButton').onclick = () => {
+  $('body').placeholder = 'Write your plain-text email here...';
+});
+
+$('htmlModeButton').addEventListener('click', () => {
   htmlMode = true;
+
   $('htmlModeButton').classList.add('active');
   $('plainMode').classList.remove('active');
-  $('body').placeholder = 'Enter HTML email content here...';
-};
 
-$('stopBtn').onclick = () => {
-  if (busy) {
-    stopRequested = true;
-    $('runState').textContent = 'Stopping after current message…';
-    $('stopBtn').disabled = true;
-  }
-};
+  $('body').placeholder = 'Enter HTML email content here...';
+});
+
+$('stopBtn').addEventListener('click', () => {
+  $('status').textContent =
+    'The current batch cannot be stopped once sending has started.';
+});
 
 updateList();
 
@@ -222,19 +282,19 @@ $('sendForm').addEventListener('submit', async event => {
 
   if (busy) return;
 
-  const list = getRecipients();
+  const recipients = getRecipients();
   const senderName = $('senderName').value.trim();
   const senderEmail = $('senderEmail').value.trim();
   const appPassword = $('appPassword').value.replace(/\s/g, '');
   const subject = $('subject').value.trim();
   const body = $('body').value;
 
-  if (!list.length) {
+  if (!recipients.length) {
     $('status').textContent = 'Enter at least one valid recipient.';
     return;
   }
 
-  if (list.length > 25) {
+  if (recipients.length > 25) {
     $('status').textContent = 'Maximum 25 recipients allowed.';
     return;
   }
@@ -249,25 +309,23 @@ $('sendForm').addEventListener('submit', async event => {
     return;
   }
 
-  const token =
-    document.querySelector('[name="cf-turnstile-response"]')?.value;
+  const token = document.querySelector(
+    '[name="cf-turnstile-response"]'
+  )?.value;
 
   if (!token) {
-    $('status').textContent = 'Complete Cloudflare verification first.';
+    $('status').textContent =
+      'Complete Cloudflare verification first.';
     return;
   }
 
   busy = true;
-  stopRequested = false;
   $('sendBtn').disabled = true;
-  $('stopBtn').disabled = false;
+  $('stopBtn').disabled = true;
   $('status').textContent = '';
   $('runState').textContent = 'Verifying security…';
 
-  let sent = 0;
-  let failed = 0;
-
-  updateProgress(list.length, 0, 0);
+  updateProgress(recipients.length, 0, 0);
 
   try {
     const verification = await fetch('/verify-turnstile', {
@@ -284,61 +342,59 @@ $('sendForm').addEventListener('submit', async event => {
       );
     }
 
-    for (let i = 0; i < list.length; i++) {
-      if (stopRequested) break;
+    $('runState').textContent = 'Sending batch…';
+    $('status').textContent =
+      'Sending ' + recipients.length +
+      ' messages. Please keep this page open.';
 
-      $('runState').textContent =
-        'Sending ' + (i + 1) + ' of ' + list.length;
+    const response = await fetch('/send-batch', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        senderName,
+        senderEmail,
+        appPassword,
+        recipients,
+        subject,
+        body,
+        htmlMode,
+        consentConfirmed: $('consent').checked
+      })
+    });
 
-      $('status').textContent =
-        'Processing ' + (i + 1) + ' of ' + list.length;
+    const data = await response.json();
 
-      try {
-        const response = await fetch('/send-one', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            senderName,
-            senderEmail,
-            appPassword,
-            recipient: list[i],
-            subject,
-            body,
-            htmlMode,
-            consentConfirmed: $('consent').checked
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.ok) {
-          throw new Error(data.error || 'Send failed');
-        }
-
-        sent++;
-      } catch (error) {
-        failed++;
-      }
-
-      updateProgress(list.length, sent, failed);
-
-      if (i < list.length - 1 && !stopRequested) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || 'Batch send failed');
     }
 
-    if (stopRequested) {
-      $('runState').textContent = 'Stopped';
-      $('status').textContent =
-        'Sending stopped. Sent: ' + sent + '; failed: ' + failed + '.';
-    } else {
-      $('runState').textContent = 'Completed';
-      $('status').textContent =
-        'Finished. SMTP accepted: ' + sent + '; failed: ' + failed + '.';
+    const sent = Number(data.sent || 0);
+    const failed = Number(data.failed || 0);
+
+    updateProgress(recipients.length, sent, failed);
+
+    $('runState').textContent = 'Completed';
+    $('status').textContent =
+      'Finished. SMTP accepted: ' + sent +
+      '; failed: ' + failed + '.';
+
+    if (failed && Array.isArray(data.results)) {
+      const failures = data.results
+        .filter(item => !item.ok)
+        .map(item =>
+          item.recipient + ': ' + (item.error || 'Send failed')
+        )
+        .slice(0, 5);
+
+      if (failures.length) {
+        $('status').textContent +=
+          ' Details: ' + failures.join(' | ');
+      }
     }
   } catch (error) {
-    $('runState').textContent = 'Verification failed';
-    $('status').textContent = error.message;
+    $('runState').textContent = 'Failed';
+    $('status').textContent =
+      error.message || 'An unexpected error occurred.';
   } finally {
     busy = false;
     $('sendBtn').disabled = false;
