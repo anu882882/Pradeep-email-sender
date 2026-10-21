@@ -24,7 +24,9 @@
 
     <div class="dashboard">
       <section class="panel compose">
-        <div class="panel-heading"><h2>✎ Compose Message</h2></div>
+        <div class="panel-heading">
+          <h2>✎ Compose Message</h2>
+        </div>
 
         <form id="sendForm">
           <div class="fields">
@@ -32,10 +34,12 @@
               <label for="senderName">Sender Name</label>
               <input id="senderName" placeholder="Your name">
             </div>
+
             <div>
               <label for="senderEmail">Your Gmail</label>
               <input id="senderEmail" type="email" placeholder="your@gmail.com" required>
             </div>
+
             <div>
               <label for="appPassword">App Password</label>
               <div class="password-wrap">
@@ -43,6 +47,7 @@
                 <button type="button" id="togglePassword" aria-label="Show password">◎</button>
               </div>
             </div>
+
             <div>
               <label for="subject">Email Subject</label>
               <input id="subject" placeholder="Email subject" required maxlength="250">
@@ -60,34 +65,6 @@
           <textarea id="body" class="body-box" placeholder="Write your email message here..." required></textarea>
 
           <div class="editor-options">
-            <div>
-              <label for="fontFamily">Font style</label>
-              <select id="fontFamily">
-                <option>Arial</option>
-                <option>Verdana</option>
-                <option>Tahoma</option>
-                <option>Trebuchet MS</option>
-                <option>Georgia</option>
-                <option>Times New Roman</option>
-                <option>Courier New</option>
-                <option>Impact</option>
-                <option>Comic Sans MS</option>
-                <option>Lucida Console</option>
-                <option>Palatino Linotype</option>
-                <option>Garamond</option>
-                <option>Segoe UI</option>
-                <option>Roboto</option>
-                <option>system-ui</option>
-              </select>
-            </div>
-            <div>
-              <label>Font size</label>
-              <div class="size-tools">
-                <button type="button" id="fontDown">−</button>
-                <span id="fontSize">15 px</span>
-                <button type="button" id="fontUp">＋</button>
-              </div>
-            </div>
             <small><span id="charCount">0</span> characters</small>
           </div>
 
@@ -130,7 +107,9 @@
         </section>
 
         <section class="panel monitor">
-          <div class="section-heading"><h2>◔ Progress Monitor</h2></div>
+          <div class="section-heading">
+            <h2>◔ Progress Monitor</h2>
+          </div>
 
           <div class="stats">
             <div class="stat"><small>TOTAL</small><strong id="total">0</strong></div>
@@ -146,6 +125,7 @@
             <button id="sendBtn" class="send-all" type="submit" form="sendForm">➤ Send All</button>
             <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
           </div>
+
           <p class="fine-print">Messages are processed sequentially. Gmail SMTP acceptance does not guarantee inbox delivery.</p>
         </section>
       </aside>
@@ -154,63 +134,63 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let fontSize = 15, busy = false, stopRequested = false, htmlMode = false;
+
+let busy = false;
+let stopRequested = false;
+let htmlMode = false;
 
 function getRecipients() {
-  const raw = $('recipients').value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
-  const seen = new Set(), out = [];
+  const raw = $('recipients').value
+    .split(/[\s,;]+/)
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  const seen = new Set();
+  const out = [];
+
   for (const email of raw) {
     const key = email.toLowerCase();
+
     if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(key) && !seen.has(key)) {
       seen.add(key);
       out.push(key);
     }
   }
+
   return out;
 }
 
 function updateList() {
   const list = getRecipients();
+
   $('found').textContent = list.length + ' found';
   $('recipientCount').textContent = list.length + ' valid';
   $('total').textContent = list.length;
   $('remaining').textContent = list.length;
 }
 
-function setFont() {
-  $('body').style.fontFamily = $('fontFamily').value;
-  $('body').style.fontSize = fontSize + 'px';
-  $('fontSize').textContent = fontSize + ' px';
-}
-
 function updateProgress(total, sent, failed) {
   const done = sent + failed;
+
   $('total').textContent = total;
   $('sent').textContent = sent;
   $('failed').textContent = failed;
   $('remaining').textContent = total - done;
-  $('bar').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+  $('bar').style.width =
+    (total ? Math.round(done / total * 100) : 0) + '%';
 }
 
 $('recipients').addEventListener('input', updateList);
-$('fontFamily').addEventListener('change', setFont);
+
 $('body').addEventListener('input', () => {
   $('charCount').textContent = $('body').value.length;
 });
 
-$('fontDown').onclick = () => {
-  fontSize = Math.max(10, fontSize - 1);
-  setFont();
-};
-$('fontUp').onclick = () => {
-  fontSize = Math.min(32, fontSize + 1);
-  setFont();
-};
-
 $('togglePassword').onclick = () => {
   const input = $('appPassword');
   input.type = input.type === 'password' ? 'text' : 'password';
-  $('togglePassword').textContent = input.type === 'password' ? '◎' : '◉';
+  $('togglePassword').textContent =
+    input.type === 'password' ? '◎' : '◉';
 };
 
 $('plainMode').onclick = () => {
@@ -235,11 +215,11 @@ $('stopBtn').onclick = () => {
   }
 };
 
-setFont();
 updateList();
 
 $('sendForm').addEventListener('submit', async event => {
   event.preventDefault();
+
   if (busy) return;
 
   const list = getRecipients();
@@ -253,20 +233,25 @@ $('sendForm').addEventListener('submit', async event => {
     $('status').textContent = 'Enter at least one valid recipient.';
     return;
   }
+
   if (list.length > 25) {
     $('status').textContent = 'Maximum 25 recipients allowed.';
     return;
   }
+
   if (!senderEmail || !appPassword || !subject || !body.trim()) {
     $('status').textContent = 'Complete all required fields.';
     return;
   }
+
   if (!$('consent').checked) {
     $('status').textContent = 'Confirm recipient consent first.';
     return;
   }
 
-  const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
+  const token =
+    document.querySelector('[name="cf-turnstile-response"]')?.value;
+
   if (!token) {
     $('status').textContent = 'Complete Cloudflare verification first.';
     return;
@@ -279,7 +264,9 @@ $('sendForm').addEventListener('submit', async event => {
   $('status').textContent = '';
   $('runState').textContent = 'Verifying security…';
 
-  let sent = 0, failed = 0;
+  let sent = 0;
+  let failed = 0;
+
   updateProgress(list.length, 0, 0);
 
   try {
@@ -288,31 +275,46 @@ $('sendForm').addEventListener('submit', async event => {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({token})
     });
+
     const verificationData = await verification.json();
 
     if (!verification.ok || !verificationData.ok) {
-      throw new Error(verificationData.error || 'Verification failed');
+      throw new Error(
+        verificationData.error || 'Verification failed'
+      );
     }
 
     for (let i = 0; i < list.length; i++) {
       if (stopRequested) break;
 
-      $('runState').textContent = 'Sending ' + (i + 1) + ' of ' + list.length;
-      $('status').textContent = 'Processing ' + (i + 1) + ' of ' + list.length;
+      $('runState').textContent =
+        'Sending ' + (i + 1) + ' of ' + list.length;
+
+      $('status').textContent =
+        'Processing ' + (i + 1) + ' of ' + list.length;
 
       try {
         const response = await fetch('/send-one', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
-            senderName, senderEmail, appPassword,
-            recipient: list[i], subject, body, htmlMode,
+            senderName,
+            senderEmail,
+            appPassword,
+            recipient: list[i],
+            subject,
+            body,
+            htmlMode,
             consentConfirmed: $('consent').checked
           })
         });
 
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.error || 'Send failed');
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || 'Send failed');
+        }
+
         sent++;
       } catch (error) {
         failed++;
@@ -327,10 +329,12 @@ $('sendForm').addEventListener('submit', async event => {
 
     if (stopRequested) {
       $('runState').textContent = 'Stopped';
-      $('status').textContent = 'Sending stopped. Sent: ' + sent + '; failed: ' + failed + '.';
+      $('status').textContent =
+        'Sending stopped. Sent: ' + sent + '; failed: ' + failed + '.';
     } else {
       $('runState').textContent = 'Completed';
-      $('status').textContent = 'Finished. SMTP accepted: ' + sent + '; failed: ' + failed + '.';
+      $('status').textContent =
+        'Finished. SMTP accepted: ' + sent + '; failed: ' + failed + '.';
     }
   } catch (error) {
     $('runState').textContent = 'Verification failed';
@@ -339,7 +343,10 @@ $('sendForm').addEventListener('submit', async event => {
     busy = false;
     $('sendBtn').disabled = false;
     $('stopBtn').disabled = true;
-    if (window.turnstile) window.turnstile.reset();
+
+    if (window.turnstile) {
+      window.turnstile.reset();
+    }
   }
 });
 </script>
