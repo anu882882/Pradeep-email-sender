@@ -5,12 +5,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
+
   <link rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}">
 
   {% if turnstile_site_key %}
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          async defer></script>
+  <script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+    async
+    defer>
+  </script>
   {% endif %}
 </head>
 <body>
@@ -35,55 +39,44 @@
           <div class="fields">
             <div>
               <label for="senderName">Sender Name</label>
-              <input id="senderName"
-                     placeholder="Your name">
+              <input id="senderName" placeholder="Your name">
             </div>
 
             <div>
               <label for="senderEmail">Your Gmail</label>
-              <input id="senderEmail"
-                     type="email"
-                     placeholder="your@gmail.com"
-                     required>
+              <input id="senderEmail" type="email"
+                     placeholder="your@gmail.com" required>
             </div>
 
             <div>
               <label for="appPassword">App Password</label>
               <div class="password-wrap">
-                <input id="appPassword"
-                       type="password"
+                <input id="appPassword" type="password"
                        placeholder="Google App Password"
-                       required
-                       autocomplete="new-password">
-                <button type="button"
-                        id="togglePassword"
+                       autocomplete="new-password" required>
+                <button type="button" id="togglePassword"
                         aria-label="Show password">◎</button>
               </div>
             </div>
 
             <div>
               <label for="subject">Email Subject</label>
-              <input id="subject"
-                     placeholder="Email subject"
-                     required
-                     maxlength="250">
+              <input id="subject" placeholder="Email subject"
+                     maxlength="250" required>
             </div>
           </div>
 
           <div class="toolbar">
             <label for="body">Message Body</label>
             <div class="mode-tabs">
-              <button type="button"
-                      class="mode active"
+              <button type="button" class="mode active"
                       id="plainMode">Plain Text</button>
-              <button type="button"
-                      class="mode"
+              <button type="button" class="mode"
                       id="htmlModeButton">HTML</button>
             </div>
           </div>
 
-          <textarea id="body"
-                    class="body-box"
+          <textarea id="body" class="body-box"
                     placeholder="Write your email message here..."
                     required></textarea>
 
@@ -92,20 +85,21 @@
           </div>
 
           <label class="consent">
-            <input type="checkbox" id="consent">
+            <input type="checkbox" id="consent" required>
             I confirm these recipients have agreed to receive this email.
           </label>
 
           <fieldset class="verify">
             <legend>🛡 Spam Protection</legend>
+
             {% if turnstile_site_key %}
-              <div class="cf-turnstile"
-                   data-sitekey="{{ turnstile_site_key }}"
-                   data-theme="light"></div>
+            <div class="cf-turnstile"
+                 data-sitekey="{{ turnstile_site_key }}"
+                 data-theme="light"></div>
             {% else %}
-              <p class="warn">
-                TURNSTILE_SITE_KEY is not configured in Vercel.
-              </p>
+            <p class="warn">
+              Cloudflare site key is missing from Vercel settings.
+            </p>
             {% endif %}
           </fieldset>
 
@@ -118,16 +112,14 @@
           <div class="section-heading">
             <div>
               <h2>♟ Recipients</h2>
-              <p>Paste emails (comma separated, new lines, or Excel copy)</p>
+              <p>Paste emails separated by commas or new lines</p>
             </div>
             <span class="pill" id="found">0 found</span>
           </div>
 
-          <textarea id="recipients"
-                    class="recipient-input"
+          <textarea id="recipients" class="recipient-input"
                     placeholder="name@example.com, another@example.com"
-                    required
-                    form="sendForm"></textarea>
+                    required form="sendForm"></textarea>
 
           <div class="recipient-foot">
             <span>Up to 25 unique recipients</span>
@@ -142,45 +134,32 @@
 
           <div class="stats">
             <div class="stat">
-              <small>TOTAL</small>
-              <strong id="total">0</strong>
+              <small>TOTAL</small><strong id="total">0</strong>
             </div>
             <div class="stat">
-              <small>SENT</small>
-              <strong id="sent">0</strong>
+              <small>SENT</small><strong id="sent">0</strong>
             </div>
             <div class="stat">
-              <small>FAILED</small>
-              <strong id="failed">0</strong>
+              <small>FAILED</small><strong id="failed">0</strong>
             </div>
             <div class="stat">
-              <small>REMAINING</small>
-              <strong id="remaining">0</strong>
+              <small>REMAINING</small><strong id="remaining">0</strong>
             </div>
           </div>
 
-          <div class="progress">
-            <div id="bar"></div>
-          </div>
-
+          <div class="progress"><div id="bar"></div></div>
           <p class="run-state" id="runState">Ready to send</p>
 
           <div class="send-actions">
-            <button id="sendBtn"
-                    class="send-all"
-                    type="submit"
-                    form="sendForm">➤ Send All</button>
-
-            <button id="stopBtn"
-                    class="stop-btn"
-                    type="button"
-                    disabled>■ Stop Sending</button>
+            <button id="sendBtn" class="send-all"
+                    type="submit" form="sendForm">➤ Send All</button>
+            <button id="stopBtn" class="stop-btn"
+                    type="button" disabled>■ Stop Sending</button>
           </div>
 
           <p class="fine-print">
-            Messages are sent sequentially over one SMTP connection.
-            Gmail limits still apply; SMTP acceptance does not guarantee
-            inbox delivery.
+            Sends are processed sequentially. Gmail limits and Vercel
+            request timeouts can affect delivery.
           </p>
         </section>
       </aside>
@@ -189,37 +168,31 @@
 
 <script>
 const $ = id => document.getElementById(id);
-
 let busy = false;
 let htmlMode = false;
 
 function getRecipients() {
-  const raw = $('recipients').value
+  const entries = $('recipients').value
     .split(/[\s,;]+/)
-    .map(value => value.trim())
+    .map(v => v.trim().toLowerCase())
     .filter(Boolean);
 
   const seen = new Set();
-  const output = [];
+  const valid = [];
 
-  for (const value of raw) {
-    const email = value.toLowerCase();
-
-    if (
-      /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
-      !seen.has(email)
-    ) {
+  for (const email of entries) {
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
+        && !seen.has(email)) {
       seen.add(email);
-      output.push(email);
+      valid.push(email);
     }
   }
 
-  return output;
+  return valid;
 }
 
 function updateList() {
   const list = getRecipients();
-
   $('found').textContent = list.length + ' found';
   $('recipientCount').textContent = list.length + ' valid';
   $('total').textContent = list.length;
@@ -228,12 +201,10 @@ function updateList() {
 
 function updateProgress(total, sent, failed) {
   const done = sent + failed;
-
   $('total').textContent = total;
   $('sent').textContent = sent;
   $('failed').textContent = failed;
   $('remaining').textContent = Math.max(0, total - done);
-
   $('bar').style.width =
     (total ? Math.round(done / total * 100) : 0) + '%';
 }
@@ -245,57 +216,46 @@ $('body').addEventListener('input', () => {
 });
 
 $('togglePassword').addEventListener('click', () => {
-  const input = $('appPassword');
-  input.type = input.type === 'password' ? 'text' : 'password';
-
+  const field = $('appPassword');
+  field.type = field.type === 'password' ? 'text' : 'password';
   $('togglePassword').textContent =
-    input.type === 'password' ? '◎' : '◉';
+    field.type === 'password' ? '◎' : '◉';
 });
 
 $('plainMode').addEventListener('click', () => {
   htmlMode = false;
-
   $('plainMode').classList.add('active');
   $('htmlModeButton').classList.remove('active');
-
   $('body').placeholder = 'Write your plain-text email here...';
 });
 
 $('htmlModeButton').addEventListener('click', () => {
   htmlMode = true;
-
   $('htmlModeButton').classList.add('active');
   $('plainMode').classList.remove('active');
-
   $('body').placeholder = 'Enter HTML email content here...';
 });
 
 $('stopBtn').addEventListener('click', () => {
   $('status').textContent =
-    'The current batch cannot be stopped once sending has started.';
+    'A batch already submitted to the server cannot be stopped safely.';
 });
 
 updateList();
 
 $('sendForm').addEventListener('submit', async event => {
   event.preventDefault();
-
   if (busy) return;
 
   const recipients = getRecipients();
-  const senderName = $('senderName').value.trim();
   const senderEmail = $('senderEmail').value.trim();
   const appPassword = $('appPassword').value.replace(/\s/g, '');
   const subject = $('subject').value.trim();
   const body = $('body').value;
 
-  if (!recipients.length) {
-    $('status').textContent = 'Enter at least one valid recipient.';
-    return;
-  }
-
-  if (recipients.length > 25) {
-    $('status').textContent = 'Maximum 25 recipients allowed.';
+  if (!recipients.length || recipients.length > 25) {
+    $('status').textContent =
+      'Enter between 1 and 25 valid unique recipients.';
     return;
   }
 
@@ -305,7 +265,8 @@ $('sendForm').addEventListener('submit', async event => {
   }
 
   if (!$('consent').checked) {
-    $('status').textContent = 'Confirm recipient consent first.';
+    $('status').textContent =
+      'Please confirm recipient consent before sending.';
     return;
   }
 
@@ -324,7 +285,6 @@ $('sendForm').addEventListener('submit', async event => {
   $('stopBtn').disabled = true;
   $('status').textContent = '';
   $('runState').textContent = 'Verifying security…';
-
   updateProgress(recipients.length, 0, 0);
 
   try {
@@ -338,20 +298,20 @@ $('sendForm').addEventListener('submit', async event => {
 
     if (!verification.ok || !verificationData.ok) {
       throw new Error(
-        verificationData.error || 'Verification failed'
+        verificationData.error || 'Cloudflare verification failed.'
       );
     }
 
     $('runState').textContent = 'Sending batch…';
     $('status').textContent =
       'Sending ' + recipients.length +
-      ' messages. Please keep this page open.';
+      ' messages. Keep this page open.';
 
     const response = await fetch('/send-batch', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        senderName,
+        senderName: $('senderName').value.trim(),
         senderEmail,
         appPassword,
         recipients,
@@ -365,36 +325,35 @@ $('sendForm').addEventListener('submit', async event => {
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || 'Batch send failed');
+      throw new Error(data.error || 'Batch sending failed.');
     }
 
-    const sent = Number(data.sent || 0);
-    const failed = Number(data.failed || 0);
-
-    updateProgress(recipients.length, sent, failed);
+    updateProgress(
+      recipients.length,
+      Number(data.sent || 0),
+      Number(data.failed || 0)
+    );
 
     $('runState').textContent = 'Completed';
     $('status').textContent =
-      'Finished. SMTP accepted: ' + sent +
-      '; failed: ' + failed + '.';
+      'Completed. SMTP accepted: ' + data.sent +
+      '; failed: ' + data.failed + '.';
 
-    if (failed && Array.isArray(data.results)) {
-      const failures = data.results
+    if (Array.isArray(data.results)) {
+      const failedItems = data.results
         .filter(item => !item.ok)
-        .map(item =>
-          item.recipient + ': ' + (item.error || 'Send failed')
-        )
-        .slice(0, 5);
+        .slice(0, 5)
+        .map(item => item.recipient + ': ' + item.error);
 
-      if (failures.length) {
+      if (failedItems.length) {
         $('status').textContent +=
-          ' Details: ' + failures.join(' | ');
+          ' Details: ' + failedItems.join(' | ');
       }
     }
   } catch (error) {
     $('runState').textContent = 'Failed';
     $('status').textContent =
-      error.message || 'An unexpected error occurred.';
+      error.message || 'Unexpected error occurred.';
   } finally {
     busy = false;
     $('sendBtn').disabled = false;
