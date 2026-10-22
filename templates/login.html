@@ -4,27 +4,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Secure Mail Console</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Secure Mail Console — Sign In</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="brand-mark">⬡</div>
-    <div class="eyebrow">PRIVATE WORKSPACE</div>
+    <div class="login-logo">⬡</div>
+    <p class="eyebrow">PRIVATE WORKSPACE</p>
+
     <h1>Secure Mail <span>Console</span></h1>
-    <p class="muted">Sign in to continue to your workspace.</p>
+    <p class="login-copy">Sign in to continue to your workspace.</p>
 
     {% if error %}
-      <div class="alert error">{{ error }}</div>
+      <div class="alert error" role="alert">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('login') }}">
       <label for="password">Workspace Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required>
-      <button class="primary-btn full" type="submit">Sign in ›</button>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        required
+        autofocus>
+
+      <button type="submit" class="primary-btn full">
+        Sign in ›
+      </button>
     </form>
-    <div class="login-foot">Protected private workspace</div>
+
+    <p class="login-footer">Secure access to your private workspace.</p>
   </main>
 </body>
 </html>
