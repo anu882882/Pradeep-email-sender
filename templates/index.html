@@ -5,16 +5,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Mail Console</title>
-
   <link rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}">
 
   {% if turnstile_site_key %}
   <script
     src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-    async
-    defer>
-  </script>
+    async defer></script>
   {% endif %}
 </head>
 <body>
@@ -43,20 +40,14 @@
             </div>
 
             <div>
-              <label for="senderEmail">Your Gmail</label>
+              <label for="senderEmail">Authorized Gmail</label>
               <input id="senderEmail" type="email"
-                     placeholder="your@gmail.com" required>
+                     placeholder="authorized@gmail.com" required>
             </div>
 
             <div>
-              <label for="appPassword">App Password</label>
-              <div class="password-wrap">
-                <input id="appPassword" type="password"
-                       placeholder="Google App Password"
-                       autocomplete="new-password" required>
-                <button type="button" id="togglePassword"
-                        aria-label="Show password">◎</button>
-              </div>
+              <label>Authentication</label>
+              <input value="Google OAuth · Gmail API" readonly>
             </div>
 
             <div>
@@ -91,7 +82,6 @@
 
           <fieldset class="verify">
             <legend>🛡 Spam Protection</legend>
-
             {% if turnstile_site_key %}
             <div class="cf-turnstile"
                  data-sitekey="{{ turnstile_site_key }}"
@@ -158,8 +148,8 @@
           </div>
 
           <p class="fine-print">
-            Sends are processed sequentially. Gmail limits and Vercel
-            request timeouts can affect delivery.
+            Uses Gmail API with Google OAuth. Gmail sending limits and
+            Vercel execution timeouts still apply.
           </p>
         </section>
       </aside>
@@ -187,7 +177,6 @@ function getRecipients() {
       valid.push(email);
     }
   }
-
   return valid;
 }
 
@@ -215,13 +204,6 @@ $('body').addEventListener('input', () => {
   $('charCount').textContent = $('body').value.length;
 });
 
-$('togglePassword').addEventListener('click', () => {
-  const field = $('appPassword');
-  field.type = field.type === 'password' ? 'text' : 'password';
-  $('togglePassword').textContent =
-    field.type === 'password' ? '◎' : '◉';
-});
-
 $('plainMode').addEventListener('click', () => {
   htmlMode = false;
   $('plainMode').classList.add('active');
@@ -238,7 +220,7 @@ $('htmlModeButton').addEventListener('click', () => {
 
 $('stopBtn').addEventListener('click', () => {
   $('status').textContent =
-    'A batch already submitted to the server cannot be stopped safely.';
+    'A batch already submitted to the server cannot be stopped.';
 });
 
 updateList();
@@ -248,8 +230,7 @@ $('sendForm').addEventListener('submit', async event => {
   if (busy) return;
 
   const recipients = getRecipients();
-  const senderEmail = $('senderEmail').value.trim();
-  const appPassword = $('appPassword').value.replace(/\s/g, '');
+  const senderEmail = $('senderEmail').value.trim().toLowerCase();
   const subject = $('subject').value.trim();
   const body = $('body').value;
 
@@ -259,14 +240,14 @@ $('sendForm').addEventListener('submit', async event => {
     return;
   }
 
-  if (!senderEmail || !appPassword || !subject || !body.trim()) {
+  if (!senderEmail || !subject || !body.trim()) {
     $('status').textContent = 'Complete all required fields.';
     return;
   }
 
   if (!$('consent').checked) {
     $('status').textContent =
-      'Please confirm recipient consent before sending.';
+      'Confirm recipient consent before sending.';
     return;
   }
 
@@ -283,8 +264,8 @@ $('sendForm').addEventListener('submit', async event => {
   busy = true;
   $('sendBtn').disabled = true;
   $('stopBtn').disabled = true;
-  $('status').textContent = '';
   $('runState').textContent = 'Verifying security…';
+  $('status').textContent = '';
   updateProgress(recipients.length, 0, 0);
 
   try {
@@ -302,7 +283,7 @@ $('sendForm').addEventListener('submit', async event => {
       );
     }
 
-    $('runState').textContent = 'Sending batch…';
+    $('runState').textContent = 'Sending with Gmail API…';
     $('status').textContent =
       'Sending ' + recipients.length +
       ' messages. Keep this page open.';
@@ -313,7 +294,6 @@ $('sendForm').addEventListener('submit', async event => {
       body: JSON.stringify({
         senderName: $('senderName').value.trim(),
         senderEmail,
-        appPassword,
         recipients,
         subject,
         body,
@@ -325,7 +305,7 @@ $('sendForm').addEventListener('submit', async event => {
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || 'Batch sending failed.');
+      throw new Error(data.error || 'Gmail API sending failed.');
     }
 
     updateProgress(
@@ -336,18 +316,18 @@ $('sendForm').addEventListener('submit', async event => {
 
     $('runState').textContent = 'Completed';
     $('status').textContent =
-      'Completed. SMTP accepted: ' + data.sent +
+      'Completed. Gmail API accepted: ' + data.sent +
       '; failed: ' + data.failed + '.';
 
     if (Array.isArray(data.results)) {
-      const failedItems = data.results
+      const failures = data.results
         .filter(item => !item.ok)
         .slice(0, 5)
         .map(item => item.recipient + ': ' + item.error);
 
-      if (failedItems.length) {
+      if (failures.length) {
         $('status').textContent +=
-          ' Details: ' + failedItems.join(' | ');
+          ' Details: ' + failures.join(' | ');
       }
     }
   } catch (error) {
