@@ -8,7 +8,10 @@ from email.message import EmailMessage
 from email.utils import formataddr
 
 import requests
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, session, jsonify
+)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,10 +28,11 @@ TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
 
 try:
     MAIL_GAP_SECONDS = max(
-        0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "0.2")), 30.0)
+        0.0,
+        min(float(os.environ.get("MAIL_GAP_SECONDS", "0.5")), 30.0)
     )
 except (TypeError, ValueError):
-    MAIL_GAP_SECONDS = 0.2
+    MAIL_GAP_SECONDS = 0.5
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -39,15 +43,7 @@ def logged_in():
 
 @app.get("/health")
 def health():
-    return jsonify(
-        status="ok",
-        login_template_found=os.path.isfile(
-            os.path.join(BASE_DIR, "templates", "login.html")
-        ),
-        index_template_found=os.path.isfile(
-            os.path.join(BASE_DIR, "templates", "index.html")
-        ),
-    )
+    return jsonify(status="ok")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -95,9 +91,10 @@ def verify_turnstile():
     if not logged_in():
         return jsonify(ok=False, error="Please log in again."), 401
 
-    if not TURNSTILE_SECRET_KEY:
+    if not TURNSTILE_SECRET_KEY or not TURNSTILE_SITE_KEY:
         return jsonify(
-            ok=False, error="Turnstile is not configured."
+            ok=False,
+            error="Cloudflare Turnstile keys are not configured."
         ), 500
 
     data = request.get_json(silent=True) or {}
@@ -105,7 +102,8 @@ def verify_turnstile():
 
     if not token:
         return jsonify(
-            ok=False, error="Complete security verification first."
+            ok=False,
+            error="Complete Cloudflare verification first."
         ), 400
 
     try:
@@ -118,20 +116,22 @@ def verify_turnstile():
                     "CF-Connecting-IP", ""
                 ),
             },
-            timeout=10,
+            timeout=8,
         )
         response.raise_for_status()
         result = response.json()
 
     except (requests.RequestException, ValueError):
-        app.logger.exception("Turnstile verification failed")
+        app.logger.exception("Turnstile verification request failed")
         return jsonify(
-            ok=False, error="Verification service unavailable."
+            ok=False,
+            error="Cloudflare verification service is unavailable."
         ), 502
 
     if not result.get("success"):
         return jsonify(
-            ok=False, error="Verification failed. Try again."
+            ok=False,
+            error="Verification failed. Please try again."
         ), 400
 
     session["turnstile_verified_at"] = time.time()
@@ -142,7 +142,6 @@ def build_message(
     sender_email, sender_name, recipient, subject, body, html_mode
 ):
     message = EmailMessage()
-
     message["From"] = (
         formataddr((sender_name, sender_email))
         if sender_name else sender_email
@@ -153,7 +152,7 @@ def build_message(
     if html_mode:
         message.set_content(
             "This message contains HTML content. "
-            "Open it in an HTML-capable email client."
+            "Please use an HTML-capable email client."
         )
         message.add_alternative(body, subtype="html")
     else:
@@ -163,73 +162,50 @@ def build_message(
 
 
 def send_batch_smtp(
-    sender_email,
-    app_password,
-    sender_name,
-    recipients,
-    subject,
-    body,
-    html_mode,
+    sender_email, app_password, sender_name,
+    recipients, subject, body, html_mode
 ):
     results = []
 
-    # One SMTP connection for the entire batch.
-    with smtplib.SMTP(
-        "smtp.gmail.com", 587, timeout=25
-    ) as server:
+    # Reuse one SMTP connection for this batch.
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=25) as server:
         server.ehlo()
-        server.starttls(
-            context=ssl.create_default_context()
-        )
+        server.starttls(context=ssl.create_default_context())
         server.ehlo()
         server.login(sender_email, app_password)
 
         for index, recipient in enumerate(recipients):
             try:
                 message = build_message(
-                    sender_email,
-                    sender_name,
-                    recipient,
-                    subject,
-                    body,
-                    html_mode,
+                    sender_email, sender_name, recipient,
+                    subject, body, html_mode
                 )
-
                 refused = server.send_message(message)
 
                 if refused:
                     results.append({
                         "recipient": recipient,
                         "ok": False,
-                        "error": "Gmail refused this recipient.",
+                        "error": "Recipient was refused by the mail server."
                     })
                 else:
                     results.append({
                         "recipient": recipient,
-                        "ok": True,
+                        "ok": True
                     })
-
-            except smtplib.SMTPRecipientsRefused:
-                results.append({
-                    "recipient": recipient,
-                    "ok": False,
-                    "error": "Gmail rejected this recipient address.",
-                })
 
             except (
                 smtplib.SMTPException,
                 OSError,
-                TimeoutError,
+                TimeoutError
             ) as exc:
                 app.logger.warning(
-                    "SMTP send failed for %s: %s",
-                    recipient,
-                    exc,
+                    "SMTP send failed for %s: %s", recipient, exc
                 )
                 results.append({
                     "recipient": recipient,
                     "ok": False,
-                    "error": "SMTP failed for this recipient.",
+                    "error": "SMTP sending failed for this recipient."
                 })
 
             if (
@@ -241,12 +217,9 @@ def send_batch_smtp(
     return results
 
 
-@app.post("/send-batch")
-def send_batch():
+def check_send_access():
     if not logged_in():
-        return jsonify(
-            ok=False, error="Please log in again."
-        ), 401
+        return jsonify(ok=False, error="Please log in again."), 401
 
     verified_at = session.get("turnstile_verified_at", 0)
 
@@ -254,49 +227,76 @@ def send_batch():
         session.pop("turnstile_verified_at", None)
         return jsonify(
             ok=False,
-            error="Verification expired. Verify again.",
+            error="Cloudflare verification expired. Verify again."
         ), 403
 
-    data = request.get_json(silent=True) or {}
+    return None
 
-    sender_name = str(
-        data.get("senderName", "")
-    ).strip()[:120]
 
-    sender_email = str(
-        data.get("senderEmail", "")
-    ).strip()
-
-    app_password = str(
-        data.get("appPassword", "")
-    ).replace(" ", "")
-
-    subject = str(
-        data.get("subject", "")
-    ).strip()[:250]
-
+def parse_send_data(data):
+    sender_name = str(data.get("senderName", "")).strip()[:120]
+    sender_email = str(data.get("senderEmail", "")).strip().lower()
+    app_password = str(data.get("appPassword", "")).replace(" ", "")
+    subject = str(data.get("subject", "")).strip()[:250]
     body = str(data.get("body", ""))
     html_mode = data.get("htmlMode") is True
-    raw_recipients = data.get("recipients", [])
 
     if data.get("consentConfirmed") is not True:
-        return jsonify(
-            ok=False,
-            error="Confirm recipients agreed to receive this email.",
-        ), 400
+        return None, (
+            jsonify(
+                ok=False,
+                error="Confirm that recipients agreed to receive the email."
+            ),
+            400
+        )
 
     if (
         not EMAIL_RE.fullmatch(sender_email)
-        or not sender_email.lower().endswith("@gmail.com")
+        or not sender_email.endswith("@gmail.com")
     ):
-        return jsonify(
-            ok=False, error="Enter a valid Gmail address."
-        ), 400
+        return None, (
+            jsonify(ok=False, error="Enter a valid Gmail address."),
+            400
+        )
 
     if not app_password:
-        return jsonify(
-            ok=False, error="Enter your Google App Password."
-        ), 400
+        return None, (
+            jsonify(ok=False, error="Enter your Google App Password."),
+            400
+        )
+
+    if not subject or not body.strip():
+        return None, (
+            jsonify(
+                ok=False,
+                error="Subject and message body are required."
+            ),
+            400
+        )
+
+    return {
+        "sender_name": sender_name,
+        "sender_email": sender_email,
+        "app_password": app_password,
+        "subject": subject,
+        "body": body,
+        "html_mode": html_mode,
+    }, None
+
+
+@app.post("/send-batch")
+def send_batch():
+    access_error = check_send_access()
+    if access_error:
+        return access_error
+
+    data = request.get_json(silent=True) or {}
+    parsed, error = parse_send_data(data)
+
+    if error:
+        return error
+
+    raw_recipients = data.get("recipients", [])
 
     if not isinstance(raw_recipients, list) or not raw_recipients:
         return jsonify(
@@ -312,7 +312,7 @@ def send_batch():
         if not EMAIL_RE.fullmatch(email):
             return jsonify(
                 ok=False,
-                error="One or more recipient addresses are invalid.",
+                error="One or more recipient addresses are invalid."
             ), 400
 
         if email not in seen:
@@ -321,25 +321,18 @@ def send_batch():
 
     if len(recipients) > 25:
         return jsonify(
-            ok=False,
-            error="Maximum 25 unique recipients allowed.",
-        ), 400
-
-    if not subject or not body.strip():
-        return jsonify(
-            ok=False,
-            error="Subject and message body are required.",
+            ok=False, error="Maximum 25 unique recipients allowed."
         ), 400
 
     try:
         results = send_batch_smtp(
-            sender_email,
-            app_password,
-            sender_name,
+            parsed["sender_email"],
+            parsed["app_password"],
+            parsed["sender_name"],
             recipients,
-            subject,
-            body,
-            html_mode,
+            parsed["subject"],
+            parsed["body"],
+            parsed["html_mode"],
         )
 
         sent = sum(1 for item in results if item["ok"])
@@ -347,7 +340,6 @@ def send_batch():
 
         return jsonify(
             ok=True,
-            message="Batch finished.",
             results=results,
             sent=sent,
             failed=failed,
@@ -356,137 +348,64 @@ def send_batch():
     except smtplib.SMTPAuthenticationError:
         return jsonify(
             ok=False,
-            error=(
-                "Gmail authentication failed. "
-                "Check your email and App Password."
-            ),
+            error="Gmail login failed. Check your Google App Password."
         ), 502
 
-    except (
-        smtplib.SMTPException,
-        OSError,
-        TimeoutError,
-    ):
-        app.logger.exception("Gmail SMTP batch failed")
+    except (smtplib.SMTPException, OSError, TimeoutError):
+        app.logger.exception("SMTP batch failed")
         return jsonify(
             ok=False,
-            error=(
-                "Gmail SMTP failed. Check credentials, "
-                "connection, or sending limits."
-            ),
+            error="SMTP connection failed. Check Gmail limits and credentials."
         ), 502
 
 
-# Compatibility endpoint for older frontend versions.
 @app.post("/send-one")
 def send_one():
-    if not logged_in():
-        return jsonify(
-            ok=False, error="Please log in again."
-        ), 401
-
-    verified_at = session.get("turnstile_verified_at", 0)
-
-    if time.time() - verified_at > 600:
-        session.pop("turnstile_verified_at", None)
-        return jsonify(
-            ok=False, error="Verification expired. Verify again."
-        ), 403
+    access_error = check_send_access()
+    if access_error:
+        return access_error
 
     data = request.get_json(silent=True) or {}
+    parsed, error = parse_send_data(data)
 
-    recipient = str(
-        data.get("recipient", "")
-    ).strip().lower()
+    if error:
+        return error
 
-    sender_email = str(
-        data.get("senderEmail", "")
-    ).strip()
-
-    app_password = str(
-        data.get("appPassword", "")
-    ).replace(" ", "")
-
-    sender_name = str(
-        data.get("senderName", "")
-    ).strip()[:120]
-
-    subject = str(
-        data.get("subject", "")
-    ).strip()[:250]
-
-    body = str(data.get("body", ""))
-    html_mode = data.get("htmlMode") is True
-
-    if data.get("consentConfirmed") is not True:
-        return jsonify(
-            ok=False, error="Confirm recipient consent first."
-        ), 400
-
-    if (
-        not EMAIL_RE.fullmatch(sender_email)
-        or not sender_email.lower().endswith("@gmail.com")
-    ):
-        return jsonify(
-            ok=False, error="Enter a valid Gmail address."
-        ), 400
-
-    if not app_password:
-        return jsonify(
-            ok=False, error="Enter your Google App Password."
-        ), 400
+    recipient = str(data.get("recipient", "")).strip().lower()
 
     if not EMAIL_RE.fullmatch(recipient):
         return jsonify(
             ok=False, error="Invalid recipient address."
         ), 400
 
-    if not subject or not body.strip():
-        return jsonify(
-            ok=False,
-            error="Subject and message body are required.",
-        ), 400
-
     try:
         results = send_batch_smtp(
-            sender_email,
-            app_password,
-            sender_name,
+            parsed["sender_email"],
+            parsed["app_password"],
+            parsed["sender_name"],
             [recipient],
-            subject,
-            body,
-            html_mode,
+            parsed["subject"],
+            parsed["body"],
+            parsed["html_mode"],
         )
 
         if results and results[0]["ok"]:
-            return jsonify(
-                ok=True,
-                message="Accepted by Gmail SMTP.",
-            )
+            return jsonify(ok=True, message="Accepted by Gmail SMTP.")
 
-        error = (
-            results[0].get("error")
-            if results else "Send failed."
-        )
-
-        return jsonify(ok=False, error=error), 502
+        return jsonify(
+            ok=False,
+            error=results[0].get("error", "Sending failed.")
+        ), 502
 
     except smtplib.SMTPAuthenticationError:
         return jsonify(
             ok=False,
-            error=(
-                "Gmail authentication failed. "
-                "Check your email and App Password."
-            ),
+            error="Gmail login failed. Check your Google App Password."
         ), 502
 
-    except (
-        smtplib.SMTPException,
-        OSError,
-        TimeoutError,
-    ):
-        app.logger.exception("Gmail SMTP send failed")
+    except (smtplib.SMTPException, OSError, TimeoutError):
+        app.logger.exception("SMTP single send failed")
         return jsonify(
             ok=False,
-            error="Gmail SMTP failed. Check credentials and connection.",
+            error="SMTP connection failed."
         ), 502
