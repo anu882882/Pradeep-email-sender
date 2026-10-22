@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f7fb">
   <title>Secure Mail Console — Sign In</title>
   <link rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}">
@@ -13,7 +12,6 @@
   <main class="login-card">
     <div class="login-logo">⬡</div>
     <p class="eyebrow">PRIVATE WORKSPACE</p>
-
     <h1>Secure Mail <span>Console</span></h1>
     <p class="login-copy">Sign in to continue to your workspace.</p>
 
@@ -23,18 +21,10 @@
 
     <form method="post" action="{{ url_for('login') }}">
       <label for="password">Workspace Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        required
-        autofocus>
-
-      <button type="submit" class="primary-btn full">
-        Sign in ›
-      </button>
+      <input id="password" name="password" type="password"
+             placeholder="Enter password"
+             autocomplete="current-password" required autofocus>
+      <button type="submit" class="primary-btn full">Sign in ›</button>
     </form>
 
     <p class="login-footer">Secure access to your private workspace.</p>
