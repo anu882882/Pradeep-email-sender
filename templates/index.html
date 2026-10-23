@@ -31,10 +31,12 @@
         <label for="appPassword">App Password</label>
         <div class="password-wrap">
           <input id="appPassword" type="password"
-                 placeholder="Google App Password" autocomplete="current-password" required>
-          <button type="button" id="togglePassword" aria-label="Show or hide password">◉</button>
+                 placeholder="Google App Password"
+                 autocomplete="current-password" required>
+          <button type="button" id="togglePassword"
+                  aria-label="Show or hide password">◉</button>
         </div>
-        <small>Use a Google App Password, not your normal account password.</small>
+        <small>Use your Google App Password, not your normal account password.</small>
       </div>
       <div>
         <label for="subject">Email Subject</label>
@@ -67,7 +69,7 @@
       <label for="consent">I confirm these recipients have agreed to receive this email.</label>
     </div>
     <p class="help-text">Only send messages to recipients who have consented.</p>
-    <p class="help-text">Your App Password is sent over HTTPS with the request and is not saved by this page.</p>
+    <p class="help-text">The App Password remains in this form after sending. It is not saved to browser storage.</p>
   </section>
 
   <div class="right-column">
@@ -120,28 +122,32 @@
   document.querySelectorAll(".mode").forEach(button => {
     button.addEventListener("click", () => {
       mode = button.dataset.mode;
-      document.querySelectorAll(".mode").forEach(item =>
-        item.classList.toggle("active", item === button)
-      );
+      document.querySelectorAll(".mode").forEach(item => {
+        item.classList.toggle("active", item === button);
+      });
     });
   });
 
   function getRecipients() {
-    return [...new Set($("recipients").value
-      .split(/[\n,;\t]+/)
-      .map(value => value.trim())
-      .filter(Boolean))];
+    return [...new Set(
+      $("recipients").value
+        .split(/[\n,;\t]+/)
+        .map(value => value.trim())
+        .filter(Boolean)
+    )];
   }
 
   function updateFound() {
     $("foundBadge").textContent = `${getRecipients().length} found`;
   }
+
   $("recipients").addEventListener("input", updateFound);
 
   function showResult(item) {
     const row = document.createElement("div");
     row.className = `result-row ${item.status}`;
-    row.textContent = `${item.status.toUpperCase()} — ${item.email}: ${item.detail}`;
+    row.textContent =
+      `${item.status.toUpperCase()} — ${item.email}: ${item.detail}`;
     $("results").prepend(row);
   }
 
@@ -163,13 +169,16 @@
     const body = $("messageBody").value.trim();
 
     if (!senderEmail || !appPassword || !subject || !body || !recipients.length) {
-      $("status").textContent = "Fill in Gmail, App Password, recipients, subject, and message.";
+      $("status").textContent =
+        "Fill in Gmail, App Password, recipients, subject, and message.";
       return;
     }
+
     if (recipients.length > 25) {
       $("status").textContent = "Maximum 25 recipients per batch.";
       return;
     }
+
     if (!$("consent").checked) {
       $("status").textContent = "Confirm recipient permission first.";
       return;
@@ -193,11 +202,11 @@
     $("status").textContent = "Sending…";
 
     try {
-      // Small sequential batches keep the progress display responsive.
       for (let start = 0; start < recipients.length; start += 5) {
         if (stopped) break;
 
         const batch = recipients.slice(start, start + 5);
+
         const response = await fetch("/send-batch", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -214,7 +223,10 @@
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Sending request failed.");
+
+        if (!response.ok) {
+          throw new Error(data.error || "Sending request failed.");
+        }
 
         for (const item of data.results || []) {
           showResult(item);
@@ -228,19 +240,24 @@
         $("remaining").textContent = recipients.length - processed;
         $("progressBar").style.width =
           `${Math.round(processed / recipients.length * 100)}%`;
-        $("status").textContent = `Processed ${processed} of ${recipients.length}`;
+        $("status").textContent =
+          `Processed ${processed} of ${recipients.length}`;
       }
 
       $("status").textContent = stopped
         ? `Stopped. SMTP accepted: ${sent}; failed: ${failed}.`
         : `Finished. SMTP accepted: ${sent}; failed: ${failed}.`;
+
     } catch (error) {
       $("status").textContent = `Error: ${error.message}`;
+
     } finally {
       busy = false;
       $("sendBtn").disabled = false;
       $("stopBtn").disabled = true;
-      $("appPassword").value = "";
+
+      // FIX: App Password ko clear nahi karna.
+      // Isliye sending ke baad field ki value bani rahegi.
     }
   });
 })();
