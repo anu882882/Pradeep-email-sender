@@ -15,18 +15,20 @@
 
 <main class="dashboard">
   <section class="card compose">
-    <h2>🖉 Compose Message</h2>
+    <h2>✎ Compose Message</h2>
 
     <div class="two-col">
       <div>
         <label for="senderName">Sender Name</label>
         <input id="senderName" placeholder="Your name" maxlength="100">
       </div>
+
       <div>
         <label for="senderEmail">Your Gmail</label>
         <input id="senderEmail" type="email" placeholder="your@gmail.com"
                autocomplete="username" required>
       </div>
+
       <div>
         <label for="appPassword">App Password</label>
         <div class="password-wrap">
@@ -36,8 +38,9 @@
           <button type="button" id="togglePassword"
                   aria-label="Show or hide password">◉</button>
         </div>
-        <small>Use your Google App Password, not your normal account password.</small>
+        <small>Use a Google App Password, not your regular account password.</small>
       </div>
+
       <div>
         <label for="subject">Email Subject</label>
         <input id="subject" placeholder="Email subject" maxlength="200" required>
@@ -55,21 +58,22 @@
     <textarea id="messageBody" class="message-body"
               placeholder="Write your email message..." required></textarea>
 
-    <div class="info-strip">
-      <span class="shuffle">⤨</span>
-      <div>
-        <strong>Spintax Enabled</strong>
-        <small>Supports {Hello|Hi|Hey} variations.</small>
-      </div>
+    <h3 class="security-heading">◈ Spam Protection</h3>
+
+    <div class="consent-row">
+      <input id="consent" type="checkbox" required>
+      <label for="consent">
+        I confirm these recipients have agreed to receive this email.
+      </label>
     </div>
 
-    <h3 class="security-heading">◈ Spam Protection</h3>
-    <div class="consent-row">
-      <input id="consent" type="checkbox">
-      <label for="consent">I confirm these recipients have agreed to receive this email.</label>
-    </div>
-    <p class="help-text">Only send messages to recipients who have consented.</p>
-    <p class="help-text">The App Password remains in this form after sending. It is not saved to browser storage.</p>
+    <p class="help-text">
+      Only send messages to recipients who have consented.
+    </p>
+    <p class="help-text">
+      Your App Password remains in the field after sending, but is not saved
+      to browser storage.
+    </p>
   </section>
 
   <div class="right-column">
@@ -81,6 +85,7 @@
         </div>
         <span id="foundBadge" class="badge">0 found</span>
       </div>
+
       <textarea id="recipients" class="recipient-input"
                 placeholder="person@example.com&#10;another@example.com"></textarea>
       <small>Maximum 25 recipients per batch.</small>
@@ -88,6 +93,7 @@
 
     <section class="card progress-card">
       <h2>◔ Progress Monitor</h2>
+
       <div class="stats-grid">
         <div class="stat"><span>TOTAL</span><strong id="total">0</strong></div>
         <div class="stat"><span>SENT</span><strong class="green" id="sent">0</strong></div>
@@ -95,13 +101,17 @@
         <div class="stat"><span>REMAINING</span><strong class="orange" id="remaining">0</strong></div>
       </div>
 
-      <div class="progress-track"><div id="progressBar"></div></div>
+      <div class="progress-track">
+        <div id="progressBar"></div>
+      </div>
+
       <p id="status" class="status" role="status">Ready to send</p>
 
       <div class="action-row">
         <button id="sendBtn" class="send-btn" type="button">➤ Send All</button>
         <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
       </div>
+
       <div id="results" class="results"></div>
     </section>
   </div>
@@ -122,6 +132,7 @@
   document.querySelectorAll(".mode").forEach(button => {
     button.addEventListener("click", () => {
       mode = button.dataset.mode;
+
       document.querySelectorAll(".mode").forEach(item => {
         item.classList.toggle("active", item === button);
       });
@@ -154,7 +165,7 @@
   $("stopBtn").addEventListener("click", () => {
     stopped = true;
     $("status").textContent =
-      "Stop requested. The current SMTP request may still finish.";
+      "Stop requested. The current server request may still finish.";
     $("stopBtn").disabled = true;
   });
 
@@ -256,8 +267,7 @@
       $("sendBtn").disabled = false;
       $("stopBtn").disabled = true;
 
-      // FIX: App Password ko clear nahi karna.
-      // Isliye sending ke baad field ki value bani rahegi.
+      // Intentionally do not clear appPassword here.
     }
   });
 })();
