@@ -26,7 +26,7 @@ LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 MAIL_GAP_SECONDS = max(
-    0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "1)), 10.0)
+    0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "1")), 10.0)
 )
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
