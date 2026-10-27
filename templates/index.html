@@ -24,21 +24,19 @@
       </div>
       <div>
         <label for="senderEmail">Your Gmail</label>
-        <input id="senderEmail" type="email" placeholder="your@gmail.com"
-               autocomplete="username" required>
+        <input id="senderEmail" type="email" placeholder="your@gmail.com" autocomplete="username">
       </div>
       <div>
         <label for="appPassword">App Password</label>
         <div class="password-wrap">
-          <input id="appPassword" type="password"
-                 placeholder="Google App Password" autocomplete="current-password" required>
+          <input id="appPassword" type="password" placeholder="Google App Password" autocomplete="current-password">
           <button type="button" id="togglePassword" aria-label="Show or hide password">◉</button>
         </div>
-        <small>Use a Google App Password, not your regular account password.</small>
+        <small>Use your Google App Password.</small>
       </div>
       <div>
         <label for="subject">Email Subject</label>
-        <input id="subject" placeholder="Email subject" maxlength="200" required>
+        <input id="subject" placeholder="Email subject" maxlength="200">
       </div>
     </div>
 
@@ -49,8 +47,8 @@
         <button type="button" class="mode" data-mode="html">HTML</button>
       </div>
     </div>
-    <textarea id="messageBody" class="message-body"
-              placeholder="Write your email message..." required></textarea>
+
+    <textarea id="messageBody" class="message-body" placeholder="Write your email message..."></textarea>
 
     <h3 class="security-heading">◈ Spam Protection</h3>
     <div class="consent-row">
@@ -58,7 +56,7 @@
       <label for="consent">I confirm these recipients have agreed to receive this email.</label>
     </div>
     <p class="help-text">Only send messages to recipients who have consented.</p>
-    <p class="help-text">The App Password stays in this field after sending, but is not saved to browser storage.</p>
+    <p class="help-text">The password stays in this field after sending. It is not saved to browser storage.</p>
   </section>
 
   <div class="right-column">
@@ -70,9 +68,8 @@
         </div>
         <span id="foundBadge" class="badge">0 found</span>
       </div>
-      <textarea id="recipients" class="recipient-input"
-                placeholder="person@example.com&#10;another@example.com"></textarea>
-      <small>Up to 25 recipients in the list; requests are sent in batches of 5.</small>
+      <textarea id="recipients" class="recipient-input" placeholder="person@example.com&#10;another@example.com"></textarea>
+      <small>Maximum 25 addresses in the list; batches contain 5.</small>
     </section>
 
     <section class="card progress-card">
@@ -86,7 +83,6 @@
 
       <div class="progress-track"><div id="progressBar"></div></div>
       <p id="status" class="status" role="status">Ready to send</p>
-
       <div class="action-row">
         <button id="sendBtn" class="send-btn" type="button">➤ Send All</button>
         <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
@@ -119,10 +115,8 @@
 
   function getRecipients() {
     return [...new Set(
-      $("recipients").value
-        .split(/[\n,;\t]+/)
-        .map(value => value.trim())
-        .filter(Boolean)
+      $("recipients").value.split(/[\n,;\t]+/)
+        .map(value => value.trim()).filter(Boolean)
     )];
   }
 
@@ -141,7 +135,7 @@
 
   $("stopBtn").addEventListener("click", () => {
     stopped = true;
-    $("status").textContent = "Stop requested. The current batch may still finish.";
+    $("status").textContent = "Stop requested; current batch may finish.";
     $("stopBtn").disabled = true;
   });
 
@@ -156,12 +150,12 @@
     const body = $("messageBody").value.trim();
 
     if (!senderEmail || !appPassword || !subject || !body || !recipients.length) {
-      $("status").textContent = "Fill in Gmail, App Password, recipients, subject, and message.";
+      $("status").textContent = "Complete all fields before sending.";
       return;
     }
 
     if (recipients.length > 25) {
-      $("status").textContent = "Maximum 25 recipients per send.";
+      $("status").textContent = "Maximum 25 recipients per run.";
       return;
     }
 
@@ -191,17 +185,12 @@
       for (let start = 0; start < recipients.length; start += 5) {
         if (stopped) break;
 
-        const batch = recipients.slice(start, start + 5);
         const response = await fetch("/send-batch", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            recipients: batch,
-            senderEmail,
-            appPassword,
-            senderName,
-            subject,
-            body,
+            recipients: recipients.slice(start, start + 5),
+            senderEmail, appPassword, senderName, subject, body,
             htmlMode: mode === "html",
             consentConfirmed: $("consent").checked
           })
@@ -209,9 +198,7 @@
 
         const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || "Sending request failed.");
-        }
+        if (!response.ok) throw new Error(data.error || "Sending failed.");
 
         for (const item of data.results || []) {
           showResult(item);
@@ -229,8 +216,8 @@
       }
 
       $("status").textContent = stopped
-        ? `Stopped. SMTP accepted: ${sent}; failed: ${failed}.`
-        : `Finished. SMTP accepted: ${sent}; failed: ${failed}.`;
+        ? `Stopped. Accepted: ${sent}; failed: ${failed}.`
+        : `Finished. Accepted: ${sent}; failed: ${failed}.`;
 
     } catch (error) {
       $("status").textContent = `Error: ${error.message}`;
@@ -238,8 +225,7 @@
       busy = false;
       $("sendBtn").disabled = false;
       $("stopBtn").disabled = true;
-
-      // Password field is intentionally left unchanged.
+      // Do not clear the App Password field.
     }
   });
 })();
