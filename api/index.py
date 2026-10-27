@@ -13,18 +13,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
-    static_folder=os.path.join(BASE_DIR, "static"),
+    static_folder=os.path.join(BASE_DIR, "static")
 )
 
-secret = os.environ.get("SESSION_SECRET")
-app.secret_key = secret or os.urandom(32).hex()
+app.secret_key = os.environ.get("SESSION_SECRET") or os.urandom(32).hex()
 app.config["MAX_CONTENT_LENGTH"] = 1_000_000
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 MAIL_GAP_SECONDS = max(
-    0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "0.2")), 10.0)
+    0.0, min(float(os.environ.get("MAIL_GAP_SECONDS", "0.5")), 10.0)
 )
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -34,7 +33,7 @@ def logged_in():
     return session.get("logged_in") is True
 
 
-def smtp_connect(sender_email, app_password):
+def open_smtp(sender, password):
     context = ssl.create_default_context()
 
     if SMTP_PORT == 465:
@@ -48,23 +47,23 @@ def smtp_connect(sender_email, app_password):
         server.starttls(context=context)
         server.ehlo()
 
-    server.login(sender_email, app_password)
+    server.login(sender, password)
     return server
 
 
-def make_message(sender_email, sender_name, recipient, subject, body, html_mode):
-    message = EmailMessage()
-    message["From"] = formataddr((sender_name or sender_email, sender_email))
-    message["To"] = recipient
-    message["Subject"] = subject
+def make_message(sender, sender_name, recipient, subject, body, html_mode):
+    msg = EmailMessage()
+    msg["From"] = formataddr((sender_name or sender, sender))
+    msg["To"] = recipient
+    msg["Subject"] = subject
 
     if html_mode:
-        message.set_content("This message contains an HTML version.")
-        message.add_alternative(body, subtype="html")
+        msg.set_content("Please view this message in an HTML-compatible email client.")
+        msg.add_alternative(body, subtype="html")
     else:
-        message.set_content(body)
+        msg.set_content(body)
 
-    return message
+    return msg
 
 
 @app.get("/health")
@@ -78,7 +77,7 @@ def login():
 
     if request.method == "POST":
         if not LOGIN_PASSWORD:
-            error = "Set LOGIN_PASSWORD in your deployment environment."
+            error = "LOGIN_PASSWORD is missing from environment variables."
         elif request.form.get("password", "") == LOGIN_PASSWORD:
             session.clear()
             session["logged_in"] = True
@@ -105,12 +104,12 @@ def index():
 @app.post("/send-batch")
 def send_batch():
     if not logged_in():
-        return jsonify({"error": "Your session expired. Please sign in again."}), 401
+        return jsonify({"error": "Session expired. Please sign in again."}), 401
 
     data = request.get_json(silent=True) or {}
 
-    sender_email = str(data.get("senderEmail", "")).strip().lower()
-    app_password = str(data.get("appPassword", "")).replace(" ", "")
+    sender = str(data.get("senderEmail", "")).strip().lower()
+    password = str(data.get("appPassword", "")).replace(" ", "")
     sender_name = str(data.get("senderName", "")).strip()[:100]
     subject = str(data.get("subject", "")).strip()
     body = str(data.get("body", "")).strip()
@@ -118,33 +117,36 @@ def send_batch():
     recipients = data.get("recipients", [])
 
     if data.get("consentConfirmed") is not True:
-        return jsonify({"error": "Confirm recipient permission first."}), 400
+        return jsonify({"error": "Confirm that recipients agreed to receive email."}), 400
 
-    if not EMAIL_RE.fullmatch(sender_email):
+    if not EMAIL_RE.fullmatch(sender):
         return jsonify({"error": "Enter a valid Gmail address."}), 400
 
-    if not sender_email.endswith("@gmail.com"):
+    if not sender.endswith("@gmail.com"):
         return jsonify({"error": "Use a Gmail address for this SMTP configuration."}), 400
 
-    if not app_password:
+    if not password:
         return jsonify({"error": "Enter your Google App Password."}), 400
 
     if not isinstance(recipients, list):
         return jsonify({"error": "Recipients must be a list."}), 400
 
-    cleaned = []
+    clean = []
     for item in recipients:
         if isinstance(item, str):
-            email = item.strip().lower()
-            if EMAIL_RE.fullmatch(email) and email not in cleaned:
-                cleaned.append(email)
+            address = item.strip().lower()
+            if EMAIL_RE.fullmatch(address) and address not in clean:
+                clean.append(address)
 
-    if not cleaned:
-        return jsonify({"error": "No valid recipient addresses found."}), 400
-    if len(cleaned) > 5:
-        return jsonify({"error": "Send no more than 5 recipients per request."}), 400
+    if not clean:
+        return jsonify({"error": "No valid recipients found."}), 400
+
+    if len(clean) > 5:
+        return jsonify({"error": "Maximum 5 recipients per request."}), 400
+
     if not subject or not body:
-        return jsonify({"error": "Subject and message are required."}), 400
+        return jsonify({"error": "Subject and message body are required."}), 400
+
     if len(subject) > 200 or len(body) > 100_000:
         return jsonify({"error": "Subject or message is too long."}), 400
 
@@ -152,15 +154,16 @@ def send_batch():
     server = None
 
     try:
-        server = smtp_connect(sender_email, app_password)
+        server = open_smtp(sender, password)
 
-        for index, recipient in enumerate(cleaned):
-            message = make_message(
-                sender_email, sender_name, recipient, subject, body, html_mode
+        for i, recipient in enumerate(clean):
+            msg = make_message(
+                sender, sender_name, recipient, subject, body, html_mode
             )
 
             try:
-                refused = server.send_message(message)
+                refused = server.send_message(msg)
+
                 if refused:
                     results.append({
                         "email": recipient,
@@ -186,23 +189,25 @@ def send_batch():
                     "status": "failed",
                     "detail": f"SMTP rejected message (code {exc.smtp_code})."
                 })
+            except (smtplib.SMTPException, OSError) as exc:
+                results.append({
+                    "email": recipient,
+                    "status": "failed",
+                    "detail": f"SMTP error: {str(exc)[:120]}"
+                })
+                break
 
-            if index < len(cleaned) - 1 and MAIL_GAP_SECONDS:
+            if i < len(clean) - 1 and MAIL_GAP_SECONDS:
                 time.sleep(MAIL_GAP_SECONDS)
 
     except smtplib.SMTPAuthenticationError:
         return jsonify({
-            "error": "Gmail authentication failed. Check the Gmail address and App Password."
+            "error": "Gmail login failed. Verify your Gmail address and App Password."
         }), 400
     except (smtplib.SMTPException, OSError, TimeoutError) as exc:
-        already_processed = {item["email"] for item in results}
-        for recipient in cleaned:
-            if recipient not in already_processed:
-                results.append({
-                    "email": recipient,
-                    "status": "failed",
-                    "detail": f"SMTP connection error: {str(exc)[:120]}"
-                })
+        return jsonify({
+            "error": f"SMTP connection failed: {str(exc)[:160]}"
+        }), 502
     finally:
         if server is not None:
             try:
@@ -211,9 +216,20 @@ def send_batch():
                 pass
 
     sent = sum(item["status"] == "sent" for item in results)
+    failed = len(clean) - sent
+    completed = {item["email"] for item in results}
+
+    for recipient in clean:
+        if recipient not in completed:
+            results.append({
+                "email": recipient,
+                "status": "failed",
+                "detail": "Not attempted because the SMTP connection failed."
+            })
+
     return jsonify({
-        "total": len(cleaned),
+        "total": len(clean),
         "sent": sent,
-        "failed": len(cleaned) - sent,
+        "failed": failed,
         "results": results
     })
