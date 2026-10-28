@@ -4,12 +4,19 @@ import re
 import time
 import ssl
 import smtplib
+import logging
+
 from email.message import EmailMessage
 from email.utils import formataddr
 
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, jsonify
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
 )
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,7 +27,7 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static"),
 )
 
-# Set SESSION_SECRET in Vercel Environment Variables.
+# Keep this value stable across Vercel invocations.
 app.secret_key = os.environ.get("SESSION_SECRET", "")
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
@@ -29,10 +36,14 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 
 MAIL_GAP_SECONDS = max(
     0.0,
-    min(float(os.environ.get("MAIL_GAP_SECONDS", "1")), 30.0)
+    min(float(os.environ.get("MAIL_GAP_SECONDS", "1")), 30.0),
 )
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+# Write diagnostic messages to Vercel runtime logs.
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.INFO)
 
 
 def logged_in():
@@ -41,40 +52,78 @@ def logged_in():
 
 def open_smtp(sender, password):
     context = ssl.create_default_context()
-
-    if SMTP_PORT == 465:
-        server = smtplib.SMTP_SSL(
-            SMTP_HOST,
-            SMTP_PORT,
-            timeout=25,
-            context=context,
-        )
-    else:
-        server = smtplib.SMTP(
-            SMTP_HOST,
-            SMTP_PORT,
-            timeout=25,
-        )
-        server.ehlo()
-        server.starttls(context=context)
-        server.ehlo()
+    server = None
 
     try:
+        app.logger.info(
+            "SMTP connection starting: host=%s port=%s",
+            SMTP_HOST,
+            SMTP_PORT,
+        )
+
+        if SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(
+                SMTP_HOST,
+                SMTP_PORT,
+                timeout=25,
+                context=context,
+            )
+        else:
+            server = smtplib.SMTP(
+                SMTP_HOST,
+                SMTP_PORT,
+                timeout=25,
+            )
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+
         server.login(sender, password)
+
+        app.logger.info("SMTP login successful")
         return server
+
     except Exception:
-        try:
-            server.quit()
-        except Exception:
-            pass
+        app.logger.exception("SMTP connection/login failed")
+
+        if server is not None:
+            try:
+                server.quit()
+            except Exception:
+                try:
+                    server.close()
+                except Exception:
+                    pass
         raise
 
 
 def error_text(exc):
-    message = str(exc).strip()
-    if not message:
-        message = type(exc).__name__
+    # Do not log or return credentials.
+    message = str(exc).strip() or type(exc).__name__
     return message[:250]
+
+
+def make_message(sender, sender_name, recipient, subject, body, body_mode):
+    message = EmailMessage()
+
+    message["From"] = (
+        formataddr((sender_name, sender))
+        if sender_name
+        else sender
+    )
+    message["To"] = recipient
+    message["Subject"] = subject
+
+    if body_mode == "html":
+        message.set_content(
+            "This message contains HTML content. "
+            "Please use an HTML-compatible email client."
+        )
+        message.add_alternative(body, subtype="html")
+    else:
+        message.set_content(body)
+
+    return message
 
 
 @app.route("/health")
@@ -94,14 +143,14 @@ def login():
     if not app.secret_key:
         return render_template(
             "login.html",
-            error="SESSION_SECRET is not configured in Vercel."
+            error="SESSION_SECRET is not configured in Vercel.",
         ), 500
 
     if request.method == "POST":
         if not LOGIN_PASSWORD:
             return render_template(
                 "login.html",
-                error="LOGIN_PASSWORD is not configured in Vercel."
+                error="LOGIN_PASSWORD is not configured in Vercel.",
             ), 500
 
         password = request.form.get("password", "")
@@ -113,7 +162,7 @@ def login():
 
         return render_template(
             "login.html",
-            error="Incorrect password. Please try again."
+            error="Incorrect password. Please try again.",
         ), 401
 
     if logged_in():
@@ -141,7 +190,7 @@ def send_batch():
     if not logged_in():
         return jsonify({
             "success": False,
-            "error": "Session expired. Please sign in again."
+            "error": "Session expired. Please sign in again.",
         }), 401
 
     data = request.get_json(silent=True) or {}
@@ -149,7 +198,9 @@ def send_batch():
     if data.get("consentConfirmed") is not True:
         return jsonify({
             "success": False,
-            "error": "Confirm that recipients agreed to receive these emails."
+            "error": (
+                "Confirm that recipients agreed to receive these emails."
+            ),
         }), 400
 
     sender = str(data.get("sender", "")).strip()
@@ -163,7 +214,7 @@ def send_batch():
     if not app.secret_key:
         return jsonify({
             "success": False,
-            "error": "SESSION_SECRET is not configured."
+            "error": "SESSION_SECRET is not configured.",
         }), 500
 
     if (
@@ -172,25 +223,25 @@ def send_batch():
     ):
         return jsonify({
             "success": False,
-            "error": "Enter a valid Gmail sender address."
+            "error": "Enter a valid Gmail sender address.",
         }), 400
 
     if not password:
         return jsonify({
             "success": False,
-            "error": "Enter your Gmail App Password."
+            "error": "Enter your Gmail App Password.",
         }), 400
 
     if not subject:
         return jsonify({
             "success": False,
-            "error": "Enter an email subject."
+            "error": "Enter an email subject.",
         }), 400
 
     if not isinstance(body, str) or not body.strip():
         return jsonify({
             "success": False,
-            "error": "Enter the message body."
+            "error": "Enter the message body.",
         }), 400
 
     if body_mode not in ("text", "html"):
@@ -203,7 +254,7 @@ def send_batch():
     ):
         return jsonify({
             "success": False,
-            "error": "Each batch must contain between 1 and 5 recipients."
+            "error": "Each batch must contain between 1 and 5 recipients.",
         }), 400
 
     valid_recipients = []
@@ -225,7 +276,7 @@ def send_batch():
     if not valid_recipients:
         return jsonify({
             "success": False,
-            "error": "No valid recipient addresses were provided."
+            "error": "No valid recipient addresses were provided.",
         }), 400
 
     results = []
@@ -234,13 +285,21 @@ def send_batch():
     server = None
     connection_lost = False
 
+    # Connect and authenticate before attempting recipients.
     try:
         server = open_smtp(sender, password)
 
-    except (smtplib.SMTPException, OSError, ValueError) as exc:
+    except Exception as exc:
+        error = error_text(exc)
+
+        app.logger.exception(
+            "Batch aborted during SMTP setup; recipient_count=%s",
+            len(valid_recipients),
+        )
+
         return jsonify({
             "success": False,
-            "error": "SMTP connection/login failed: " + error_text(exc),
+            "error": "SMTP connection/login failed: " + error,
             "sent": 0,
             "failed": len(valid_recipients),
             "total": len(valid_recipients),
@@ -248,33 +307,24 @@ def send_batch():
                 {
                     "recipient": recipient,
                     "status": "failed",
-                    "message": "SMTP connection/login failed: "
-                               + error_text(exc)
+                    "message": "SMTP connection/login failed: " + error,
                 }
                 for recipient in valid_recipients
-            ]
+            ],
         }), 502
 
     try:
         for index, recipient in enumerate(valid_recipients):
-            message = EmailMessage()
-            message["From"] = (
-                formataddr((sender_name, sender))
-                if sender_name else sender
-            )
-            message["To"] = recipient
-            message["Subject"] = subject
-
-            if body_mode == "html":
-                message.set_content(
-                    "This message contains HTML content. "
-                    "Please use an HTML-compatible email client."
-                )
-                message.add_alternative(body, subtype="html")
-            else:
-                message.set_content(body)
-
             try:
+                message = make_message(
+                    sender,
+                    sender_name,
+                    recipient,
+                    subject,
+                    body,
+                    body_mode,
+                )
+
                 refused = server.send_message(message)
 
                 if refused:
@@ -282,15 +332,25 @@ def send_batch():
                     results.append({
                         "recipient": recipient,
                         "status": "failed",
-                        "message": "SMTP server refused this recipient."
+                        "message": "SMTP server refused this recipient.",
                     })
+
+                    app.logger.warning(
+                        "SMTP refused recipient; batch_index=%s",
+                        index,
+                    )
                 else:
                     sent += 1
                     results.append({
                         "recipient": recipient,
                         "status": "sent",
-                        "message": "SMTP server accepted the message."
+                        "message": "SMTP server accepted the message.",
                     })
+
+                    app.logger.info(
+                        "SMTP accepted message; batch_index=%s",
+                        index,
+                    )
 
             except (
                 smtplib.SMTPServerDisconnected,
@@ -302,8 +362,16 @@ def send_batch():
                 results.append({
                     "recipient": recipient,
                     "status": "failed",
-                    "message": "SMTP connection lost: " + error_text(exc)
+                    "message": (
+                        "SMTP connection lost: " + error_text(exc)
+                    ),
                 })
+
+                app.logger.exception(
+                    "SMTP connection lost while sending; batch_index=%s",
+                    index,
+                )
+
                 connection_lost = True
                 break
 
@@ -312,8 +380,13 @@ def send_batch():
                 results.append({
                     "recipient": recipient,
                     "status": "failed",
-                    "message": error_text(exc)
+                    "message": error_text(exc),
                 })
+
+                app.logger.exception(
+                    "SMTP send failed; batch_index=%s",
+                    index,
+                )
 
             if (
                 not connection_lost
@@ -327,12 +400,18 @@ def send_batch():
             try:
                 server.quit()
             except Exception:
+                app.logger.warning(
+                    "SMTP quit failed; connection may already be closed."
+                )
                 try:
                     server.close()
                 except Exception:
                     pass
 
-    processed = {item["recipient"].lower() for item in results}
+    processed = {
+        item["recipient"].lower()
+        for item in results
+    }
 
     if connection_lost:
         for recipient in valid_recipients:
@@ -343,8 +422,16 @@ def send_batch():
                     "status": "failed",
                     "message": (
                         "Not attempted because the SMTP connection was lost."
-                    )
+                    ),
                 })
+
+    app.logger.info(
+        "Batch finished: total=%s sent=%s failed=%s connection_lost=%s",
+        len(valid_recipients),
+        sent,
+        failed,
+        connection_lost,
+    )
 
     return jsonify({
         "success": failed == 0 and sent == len(valid_recipients),
