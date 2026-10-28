@@ -1,3 +1,4 @@
+
 import os
 import re
 import time
@@ -19,13 +20,13 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static"),
 )
 
-app.secret_key = os.environ.get("SESSION_SECRET") or os.urandom(32).hex()
+# Set SESSION_SECRET in Vercel Environment Variables.
+app.secret_key = os.environ.get("SESSION_SECRET", "")
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 
-# Default sending gap: 1 second
 MAIL_GAP_SECONDS = max(
     0.0,
     min(float(os.environ.get("MAIL_GAP_SECONDS", "1")), 30.0)
@@ -39,21 +40,41 @@ def logged_in():
 
 
 def open_smtp(sender, password):
+    context = ssl.create_default_context()
+
     if SMTP_PORT == 465:
         server = smtplib.SMTP_SSL(
             SMTP_HOST,
             SMTP_PORT,
-            timeout=30,
-            context=ssl.create_default_context(),
+            timeout=25,
+            context=context,
         )
     else:
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
+        server = smtplib.SMTP(
+            SMTP_HOST,
+            SMTP_PORT,
+            timeout=25,
+        )
         server.ehlo()
-        server.starttls(context=ssl.create_default_context())
+        server.starttls(context=context)
         server.ehlo()
 
-    server.login(sender, password)
-    return server
+    try:
+        server.login(sender, password)
+        return server
+    except Exception:
+        try:
+            server.quit()
+        except Exception:
+            pass
+        raise
+
+
+def error_text(exc):
+    message = str(exc).strip()
+    if not message:
+        message = type(exc).__name__
+    return message[:250]
 
 
 @app.route("/health")
@@ -61,6 +82,7 @@ def health():
     return jsonify({
         "status": "ok",
         "login_configured": bool(LOGIN_PASSWORD),
+        "session_secret_configured": bool(app.secret_key),
         "smtp_host": SMTP_HOST,
         "smtp_port": SMTP_PORT,
         "mail_gap_seconds": MAIL_GAP_SECONDS,
@@ -69,6 +91,12 @@ def health():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if not app.secret_key:
+        return render_template(
+            "login.html",
+            error="SESSION_SECRET is not configured in Vercel."
+        ), 500
+
     if request.method == "POST":
         if not LOGIN_PASSWORD:
             return render_template(
@@ -125,14 +153,23 @@ def send_batch():
         }), 400
 
     sender = str(data.get("sender", "")).strip()
-    password = str(data.get("appPassword", ""))
+    password = str(data.get("appPassword", "")).strip()
     sender_name = str(data.get("senderName", "")).strip()
     subject = str(data.get("subject", "")).strip()
     body = data.get("body", "")
     body_mode = data.get("bodyMode", "text")
     recipients = data.get("recipients", [])
 
-    if not EMAIL_RE.fullmatch(sender) or not sender.lower().endswith("@gmail.com"):
+    if not app.secret_key:
+        return jsonify({
+            "success": False,
+            "error": "SESSION_SECRET is not configured."
+        }), 500
+
+    if (
+        not EMAIL_RE.fullmatch(sender)
+        or not sender.lower().endswith("@gmail.com")
+    ):
         return jsonify({
             "success": False,
             "error": "Enter a valid Gmail sender address."
@@ -159,7 +196,11 @@ def send_batch():
     if body_mode not in ("text", "html"):
         body_mode = "text"
 
-    if not isinstance(recipients, list) or not recipients or len(recipients) > 5:
+    if (
+        not isinstance(recipients, list)
+        or not recipients
+        or len(recipients) > 5
+    ):
         return jsonify({
             "success": False,
             "error": "Each batch must contain between 1 and 5 recipients."
@@ -173,7 +214,11 @@ def send_batch():
             continue
 
         address = item.strip()
-        if EMAIL_RE.fullmatch(address) and address.lower() not in seen:
+
+        if (
+            EMAIL_RE.fullmatch(address)
+            and address.lower() not in seen
+        ):
             valid_recipients.append(address)
             seen.add(address.lower())
 
@@ -187,86 +232,127 @@ def send_batch():
     sent = 0
     failed = 0
     server = None
+    connection_lost = False
 
     try:
         server = open_smtp(sender, password)
 
-        for index, recipient in enumerate(valid_recipients):
-            try:
-                message = EmailMessage()
-                message["From"] = (
-                    formataddr((sender_name, sender))
-                    if sender_name else sender
-                )
-                message["To"] = recipient
-                message["Subject"] = subject
-
-                if body_mode == "html":
-                    message.set_content(
-                        "This message contains HTML content. "
-                        "Please use an HTML-compatible email client."
-                    )
-                    message.add_alternative(body, subtype="html")
-                else:
-                    message.set_content(body)
-
-                server.send_message(message)
-                sent += 1
-                results.append({
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        return jsonify({
+            "success": False,
+            "error": "SMTP connection/login failed: " + error_text(exc),
+            "sent": 0,
+            "failed": len(valid_recipients),
+            "total": len(valid_recipients),
+            "results": [
+                {
                     "recipient": recipient,
-                    "status": "sent",
-                    "message": "SMTP server accepted the message."
-                })
+                    "status": "failed",
+                    "message": "SMTP connection/login failed: "
+                               + error_text(exc)
+                }
+                for recipient in valid_recipients
+            ]
+        }), 502
 
-            except (smtplib.SMTPException, OSError, ValueError) as exc:
+    try:
+        for index, recipient in enumerate(valid_recipients):
+            message = EmailMessage()
+            message["From"] = (
+                formataddr((sender_name, sender))
+                if sender_name else sender
+            )
+            message["To"] = recipient
+            message["Subject"] = subject
+
+            if body_mode == "html":
+                message.set_content(
+                    "This message contains HTML content. "
+                    "Please use an HTML-compatible email client."
+                )
+                message.add_alternative(body, subtype="html")
+            else:
+                message.set_content(body)
+
+            try:
+                refused = server.send_message(message)
+
+                if refused:
+                    failed += 1
+                    results.append({
+                        "recipient": recipient,
+                        "status": "failed",
+                        "message": "SMTP server refused this recipient."
+                    })
+                else:
+                    sent += 1
+                    results.append({
+                        "recipient": recipient,
+                        "status": "sent",
+                        "message": "SMTP server accepted the message."
+                    })
+
+            except (
+                smtplib.SMTPServerDisconnected,
+                ConnectionError,
+                TimeoutError,
+                OSError,
+            ) as exc:
                 failed += 1
                 results.append({
                     "recipient": recipient,
                     "status": "failed",
-                    "message": str(exc)[:250]
+                    "message": "SMTP connection lost: " + error_text(exc)
+                })
+                connection_lost = True
+                break
+
+            except (smtplib.SMTPException, ValueError) as exc:
+                failed += 1
+                results.append({
+                    "recipient": recipient,
+                    "status": "failed",
+                    "message": error_text(exc)
                 })
 
-                # Stop this batch if the SMTP connection is lost.
-                if isinstance(exc, (smtplib.SMTPServerDisconnected, OSError)):
-                    break
-
-            if index < len(valid_recipients) - 1 and MAIL_GAP_SECONDS:
+            if (
+                not connection_lost
+                and index < len(valid_recipients) - 1
+                and MAIL_GAP_SECONDS > 0
+            ):
                 time.sleep(MAIL_GAP_SECONDS)
-
-    except (smtplib.SMTPException, OSError, ValueError) as exc:
-        return jsonify({
-            "success": False,
-            "error": "SMTP connection or login failed: " + str(exc)[:250],
-            "sent": sent,
-            "failed": failed,
-            "results": results
-        }), 502
 
     finally:
         if server is not None:
             try:
                 server.quit()
             except Exception:
-                pass
+                try:
+                    server.close()
+                except Exception:
+                    pass
 
-    # Mark any remaining addresses as failed if connection broke.
     processed = {item["recipient"].lower() for item in results}
-    for recipient in valid_recipients:
-        if recipient.lower() not in processed:
-            failed += 1
-            results.append({
-                "recipient": recipient,
-                "status": "failed",
-                "message": "Batch stopped because the SMTP connection was lost."
-            })
+
+    if connection_lost:
+        for recipient in valid_recipients:
+            if recipient.lower() not in processed:
+                failed += 1
+                results.append({
+                    "recipient": recipient,
+                    "status": "failed",
+                    "message": (
+                        "Not attempted because the SMTP connection was lost."
+                    )
+                })
 
     return jsonify({
-        "success": failed == 0,
+        "success": failed == 0 and sent == len(valid_recipients),
         "sent": sent,
         "failed": failed,
         "total": len(valid_recipients),
         "results": results,
-        "mail_gap_seconds": MAIL_GAP_SECONDS
+        "mail_gap_seconds": MAIL_GAP_SECONDS,
     })
 
 
@@ -274,5 +360,5 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(os.environ.get("PORT", "5000")),
-        debug=False
+        debug=False,
     )
