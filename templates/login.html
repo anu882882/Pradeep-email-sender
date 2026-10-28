@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,19 +8,33 @@
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="app-title">➤ Bulk Email Sender</div>
-    <p>Sign in to continue to your workspace.</p>
+    <div class="login-brand">
+      <span class="brand-mark">⬡</span>
+      <span>PRIVATE WORKSPACE</span>
+    </div>
+
+    <h1>Bulk Email <span>Sender</span></h1>
+    <p class="muted">Sign in to continue to your workspace.</p>
 
     {% if error %}
-      <div class="error">{{ error }}</div>
+      <div class="notice error">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('login') }}">
-      <label for="password">Workspace Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required>
-      <button class="primary-btn" type="submit">Sign in ›</button>
+      <div class="field">
+        <label for="password">Workspace Password</label>
+        <input id="password" name="password" type="password"
+               placeholder="Enter password"
+               autocomplete="current-password" required>
+      </div>
+      <button class="primary-btn full-width" type="submit">
+        <span>Sign in</span><span>→</span>
+      </button>
     </form>
+
+    <p class="login-footnote">
+      <span class="secure-dot"></span> Private workspace access
+    </p>
   </main>
 </body>
 </html>
