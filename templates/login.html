@@ -1,40 +1,29 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · Bulk Email Sender</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Sign in · Secure Mail Console</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="login-brand">
-      <span class="brand-mark">⬡</span>
-      <span>PRIVATE WORKSPACE</span>
-    </div>
-
-    <h1>Bulk Email <span>Sender</span></h1>
-    <p class="muted">Sign in to continue to your workspace.</p>
+    <div class="brand-mark">⬡</div>
+    <p class="muted">PRIVATE WORKSPACE</p>
+    <h1>Secure Mail <span>Console</span></h1>
+    <p>Sign in to continue to your workspace.</p>
 
     {% if error %}
-      <div class="notice error">{{ error }}</div>
+      <div class="alert error">{{ error }}</div>
     {% endif %}
 
-    <form method="post" action="{{ url_for('login') }}">
-      <div class="field">
-        <label for="password">Workspace Password</label>
-        <input id="password" name="password" type="password"
-               placeholder="Enter password"
-               autocomplete="current-password" required>
-      </div>
-      <button class="primary-btn full-width" type="submit">
-        <span>Sign in</span><span>→</span>
-      </button>
+    <form method="post" action="/login">
+      <label for="password">Workspace Password</label>
+      <input id="password" name="password" type="password"
+        placeholder="Enter password" autocomplete="current-password" required>
+      <button class="primary-btn full" type="submit">Sign in ›</button>
     </form>
-
-    <p class="login-footnote">
-      <span class="secure-dot"></span> Private workspace access
-    </p>
   </main>
 </body>
 </html>
