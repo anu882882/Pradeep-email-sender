@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,178 +11,158 @@
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}">
       <span class="brand-mark">⬡</span>
-      <span>
-        <strong>Bulk Email Sender</strong>
-        <small>PRIVATE WORKSPACE</small>
-      </span>
+      <span class="brand-name">Bulk Email Sender</span>
     </a>
     <a class="logout-btn" href="{{ url_for('logout') }}">Logout ↗</a>
   </header>
 
-  <main class="page-wrap">
-    <section class="page-heading">
-      <div>
-        <p class="eyebrow">EMAIL WORKSPACE</p>
-        <h1>Send your emails</h1>
-        <p class="muted">Configure your sender, compose a message, and review the results.</p>
-      </div>
-      <div class="secure-label"><span></span> Workspace session</div>
-    </section>
-
+  <main class="workspace">
     <div id="notice" class="notice" role="status" hidden></div>
 
-    <div class="dashboard-grid">
-      <section class="panel">
-        <div class="panel-heading">
-          <div class="step-number">01</div>
+    <div class="main-grid">
+      <!-- LEFT: COMPOSE MESSAGE -->
+      <section class="panel compose-panel">
+        <h2 class="section-title">
+          <span class="section-icon">✎</span>
+          Compose Message
+        </h2>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="senderName">Sender Name</label>
+            <input id="senderName" type="text" placeholder="Your name">
+          </div>
+
+          <div class="field">
+            <label for="sender">Your Gmail</label>
+            <input id="sender" type="email" placeholder="your@gmail.com"
+                   autocomplete="username" required>
+          </div>
+
+          <div class="field">
+            <label for="appPassword">App Password</label>
+            <div class="password-wrap">
+              <input id="appPassword" type="password"
+                     placeholder="Google App Password"
+                     autocomplete="new-password" required>
+              <button type="button" id="togglePassword"
+                      class="password-toggle" aria-label="Show password">⊙</button>
+            </div>
+            <small class="field-help">Use your Google App Password, not your normal account password.</small>
+          </div>
+
+          <div class="field">
+            <label for="subject">Email Subject</label>
+            <input id="subject" type="text" placeholder="Email subject" required>
+          </div>
+        </div>
+
+        <div class="field body-field">
+          <div class="label-toolbar">
+            <label for="body">Message Body</label>
+            <div class="mode-buttons">
+              <button type="button" class="mode-btn active" data-mode="text">Plain Text</button>
+              <button type="button" class="mode-btn" data-mode="html">HTML</button>
+            </div>
+          </div>
+          <textarea id="body" placeholder="Write your email message..." required></textarea>
+        </div>
+
+        <div class="spintax-card">
+          <span class="spintax-icon">⤨</span>
           <div>
-            <h2>Sender details</h2>
-            <p>Connect your Gmail account through SMTP.</p>
+            <strong>Spintax Enabled</strong>
+            <small>Supports {Hello|Hi|Hey} variations.</small>
           </div>
         </div>
 
-        <div class="field">
-          <label for="senderName">Sender name</label>
-          <input id="senderName" type="text" placeholder="Your name or business">
-        </div>
-
-        <div class="field">
-          <label for="sender">Your Gmail</label>
-          <input id="sender" type="email" placeholder="you@gmail.com"
-                 autocomplete="username" required>
-        </div>
-
-        <div class="field">
-          <label for="appPassword">App Password</label>
-          <div class="password-wrap">
-            <input id="appPassword" type="password"
-                   placeholder="Enter Gmail App Password"
-                   autocomplete="new-password" required>
-            <button type="button" id="togglePassword" class="toggle-password">
-              Show
-            </button>
-          </div>
-          <p class="field-help">Use a Gmail App Password, not your regular account password.</p>
-        </div>
-
-        <div class="info-note">
-          <strong>SMTP connection</strong>
-          <p>Your credentials are used for this send request. Avoid sharing them with anyone.</p>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div class="step-number">02</div>
-          <div>
-            <h2>Compose message</h2>
-            <p>Write your subject and email body.</p>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="subject">Email subject</label>
-          <input id="subject" type="text" placeholder="Enter subject" required>
-        </div>
-
-        <div class="field">
-          <label>Message format</label>
-          <div class="mode-switch">
-            <button type="button" class="mode-btn active" data-mode="text">Plain Text</button>
-            <button type="button" class="mode-btn" data-mode="html">HTML</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="body">Message Body <span class="required">*</span></label>
-          <textarea id="body" rows="11" placeholder="Write your email message here..." required></textarea>
-          <div class="editor-footer">
-            <span id="charCount">0 characters</span>
-            <span id="currentMode">Plain Text mode</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel recipients-panel">
-        <div class="panel-heading">
-          <div class="step-number">03</div>
-          <div>
-            <h2>Recipients</h2>
-            <p>Enter one email address per line.</p>
-          </div>
-          <span id="recipientBadge" class="count-badge">0 recipients</span>
-        </div>
-
-        <div class="field">
-          <label for="recipients">Recipient email addresses</label>
-          <textarea id="recipients" rows="8"
-                    placeholder="person1@example.com&#10;person2@example.com"></textarea>
-          <div class="editor-footer">
-            <span>Maximum 25 recipients per run</span>
-            <button type="button" class="text-btn" id="clearRecipients">Clear list</button>
-          </div>
-        </div>
+        <div class="protection-title">❖ Spam Protection</div>
 
         <label class="consent-row">
           <input id="consent" type="checkbox">
           <span>I confirm these recipients have agreed to receive this email.</span>
         </label>
 
-        <div class="button-row">
-          <button id="sendBtn" class="primary-btn" type="button">
-            <span>Send emails</span><span>→</span>
-          </button>
-          <button id="stopBtn" class="secondary-btn" type="button" disabled>
-            Stop after current batch
-          </button>
-        </div>
-        <p class="field-help">Only send messages to recipients who have agreed to receive them.</p>
+        <p class="bottom-note">Only send messages to recipients who have consented.</p>
+        <p class="bottom-note">The App Password remains in this form after sending. It is not saved to browser storage.</p>
       </section>
 
-      <section class="panel monitor-panel">
-        <div class="panel-heading">
-          <div class="step-number">04</div>
-          <div>
-            <h2>Sending monitor</h2>
-            <p>Live progress for the current run.</p>
+      <!-- RIGHT: RECIPIENTS + PROGRESS -->
+      <div class="right-column">
+        <section class="panel recipients-panel">
+          <div class="section-heading-row">
+            <div>
+              <h2 class="section-title">
+                <span class="section-icon">♟</span>
+                Recipients
+              </h2>
+              <p class="section-subtitle">Paste emails (comma separated, new lines, or Excel copy)</p>
+            </div>
+            <span id="recipientBadge" class="count-badge">0 found</span>
           </div>
-          <span id="statusBadge" class="status-badge">Ready</span>
-        </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span>Total</span><strong id="totalStat">0</strong>
-          </div>
-          <div class="stat-card success-stat">
-            <span>Sent</span><strong id="sentStat">0</strong>
-          </div>
-          <div class="stat-card failed-stat">
-            <span>Failed</span><strong id="failedStat">0</strong>
-          </div>
-          <div class="stat-card">
-            <span>Remaining</span><strong id="remainingStat">0</strong>
-          </div>
-        </div>
+          <textarea id="recipients" class="recipients-input"
+                    placeholder="person@example.com&#10;another@example.com"></textarea>
 
-        <div class="progress-track">
-          <div id="progressBar" class="progress-bar"></div>
-        </div>
-        <div class="progress-caption">
-          <span id="progressText">Waiting to start</span>
-          <strong id="progressPercent">0%</strong>
-        </div>
+          <div class="recipients-footer">
+            <small>Maximum 25 recipients per batch.</small>
+          </div>
+        </section>
 
-        <div class="results-heading">
-          <h3>Recipient results</h3>
-          <button type="button" id="clearResults" class="text-btn">Clear results</button>
-        </div>
-        <div id="results" class="results-list">
-          <div class="empty-state">Results will appear here after sending begins.</div>
-        </div>
-      </section>
+        <section class="panel progress-panel">
+          <h2 class="section-title">
+            <span class="section-icon">◷</span>
+            Progress Monitor
+          </h2>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">TOTAL</span>
+              <strong id="totalStat" class="stat-total">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">SENT</span>
+              <strong id="sentStat" class="stat-sent">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">FAILED</span>
+              <strong id="failedStat" class="stat-failed">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">REMAINING</span>
+              <strong id="remainingStat" class="stat-remaining">0</strong>
+            </div>
+          </div>
+
+          <div class="progress-track">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+
+          <p id="progressText" class="progress-status">Ready to send</p>
+
+          <div class="send-buttons">
+            <button type="button" id="sendBtn" class="send-all-btn">
+              <span>➤</span> Send All
+            </button>
+            <button type="button" id="stopBtn" class="stop-btn" disabled>
+              ▪ Stop Sending
+            </button>
+          </div>
+
+          <div class="results-section">
+            <div class="results-heading">
+              <strong>Recipient Results</strong>
+              <button type="button" id="clearResults" class="text-btn">Clear</button>
+            </div>
+            <div id="results" class="results-list">
+              <p class="empty-state">Ready to send emails.</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
 
-    <footer class="footer-note">Bulk Email Sender <span>•</span> Secure workspace</footer>
+    <footer class="footer-note">Bulk Email Sender <span>•</span> Private Workspace</footer>
   </main>
 
   <script>
@@ -192,47 +173,38 @@
     let stopRequested = false;
 
     function getRecipients() {
-      const raw = $("recipients").value.split(/[\n,;]+/);
-      const seen = new Set();
-      return raw.map(x => x.trim()).filter(x => {
-        if (!x || seen.has(x.toLowerCase())) return false;
-        seen.add(x.toLowerCase());
-        return true;
-      });
+      const entries = $("recipients").value.split(/[\n,;\t]+/);
+      const unique = new Set();
+
+      for (const entry of entries) {
+        const address = entry.trim();
+        if (address) unique.add(address);
+      }
+
+      return [...unique];
     }
 
     function updateRecipientCount() {
-      const count = getRecipients().length;
-      $("recipientBadge").textContent = `${count} recipient${count === 1 ? "" : "s"}`;
-    }
-
-    function updateCharCount() {
-      $("charCount").textContent = `${$("body").value.length} characters`;
+      $("recipientBadge").textContent = `${getRecipients().length} found`;
     }
 
     function showNotice(message, type = "info") {
-      const notice = $("notice");
-      notice.textContent = message;
-      notice.className = `notice ${type}`;
-      notice.hidden = false;
-    }
-
-    function setStatus(message) {
-      $("statusBadge").textContent = message;
+      const box = $("notice");
+      box.textContent = message;
+      box.className = `notice ${type}`;
+      box.hidden = false;
     }
 
     function updateProgress(total, sent, failed) {
-      const done = sent + failed;
-      const remaining = Math.max(0, total - done);
-      const percent = total ? Math.round(done / total * 100) : 0;
+      const completed = sent + failed;
+      const remaining = Math.max(0, total - completed);
+      const percent = total ? Math.round(completed / total * 100) : 0;
 
       $("totalStat").textContent = total;
       $("sentStat").textContent = sent;
       $("failedStat").textContent = failed;
       $("remainingStat").textContent = remaining;
       $("progressBar").style.width = `${percent}%`;
-      $("progressPercent").textContent = `${percent}%`;
-      $("progressText").textContent = total ? `${done} of ${total} processed` : "Waiting to start";
     }
 
     function addResult(recipient, status, message) {
@@ -245,7 +217,7 @@
       const address = document.createElement("strong");
       address.textContent = recipient;
 
-      const description = document.createElement("span");
+      const description = document.createElement("small");
       description.textContent = message || status;
 
       const badge = document.createElement("span");
@@ -262,7 +234,7 @@
       $("results").prepend(row);
     }
 
-    async function sendBatch(recipients) {
+    async function sendBatch(batch) {
       const payload = {
         sender: $("sender").value.trim(),
         appPassword: $("appPassword").value,
@@ -270,7 +242,7 @@
         subject: $("subject").value.trim(),
         body: $("body").value,
         bodyMode,
-        recipients,
+        recipients: batch,
         consentConfirmed: $("consent").checked
       };
 
@@ -283,7 +255,7 @@
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || `Request failed (${response.status})`);
+        throw new Error(data.error || `Request failed: ${response.status}`);
       }
 
       return data;
@@ -293,18 +265,17 @@
       if (isSending) return;
 
       const recipients = getRecipients();
-      const sender = $("sender").value.trim();
-      const password = $("appPassword").value;
-      const subject = $("subject").value.trim();
-      const body = $("body").value;
 
-      if (!sender || !password || !subject || !body.trim()) {
-        showNotice("Please complete the sender, password, subject and message fields.", "error");
+      if (!$("sender").value.trim() ||
+          !$("appPassword").value ||
+          !$("subject").value.trim() ||
+          !$("body").value.trim()) {
+        showNotice("Please complete all sender and message fields.", "error");
         return;
       }
 
       if (!recipients.length) {
-        showNotice("Please enter at least one recipient email address.", "error");
+        showNotice("Please enter at least one recipient.", "error");
         return;
       }
 
@@ -314,7 +285,7 @@
       }
 
       if (!$("consent").checked) {
-        showNotice("Please confirm that recipients agreed to receive the email.", "error");
+        showNotice("Please confirm that recipients agreed to receive your email.", "error");
         return;
       }
 
@@ -323,16 +294,20 @@
       $("sendBtn").disabled = true;
       $("stopBtn").disabled = false;
       $("results").innerHTML = "";
+      $("progressText").textContent = "Sending in progress...";
       updateProgress(recipients.length, 0, 0);
-      setStatus("Sending");
-      showNotice("Sending has started.", "info");
+      showNotice("Sending started.", "info");
 
       let sent = 0;
       let failed = 0;
+      let stopped = false;
 
       try {
         for (let i = 0; i < recipients.length; i += 5) {
-          if (stopRequested) break;
+          if (stopRequested) {
+            stopped = true;
+            break;
+          }
 
           const batch = recipients.slice(i, i + 5);
           let data;
@@ -340,44 +315,55 @@
           try {
             data = await sendBatch(batch);
           } catch (error) {
+            if (error.message.toLowerCase().includes("session")) {
+              showNotice(error.message, "error");
+              stopped = true;
+              break;
+            }
+
             for (const recipient of batch) {
               failed++;
               addResult(recipient, "failed", error.message);
             }
+
             updateProgress(recipients.length, sent, failed);
-            if (error.message.toLowerCase().includes("session")) {
-              throw error;
-            }
             continue;
           }
 
-          for (const result of (data.results || [])) {
-            if (result.status === "sent") sent++;
+          for (const item of (data.results || [])) {
+            if (item.status === "sent") sent++;
             else failed++;
-            addResult(result.recipient, result.status, result.message);
+
+            addResult(item.recipient, item.status, item.message);
           }
 
           updateProgress(recipients.length, sent, failed);
+
+          if (data.error && !data.results) {
+            showNotice(data.error, "error");
+            stopped = true;
+            break;
+          }
         }
 
-        if (stopRequested) {
-          setStatus("Stopped");
-          showNotice("Stopped after the current batch. Remaining recipients were not sent.", "info");
-        } else if (failed) {
-          setStatus("Completed with errors");
-          showNotice(`Finished: ${sent} accepted by SMTP, ${failed} failed.`, "error");
+        if (stopRequested) stopped = true;
+
+        if (stopped) {
+          $("progressText").textContent = "Sending stopped";
+          showNotice("Sending stopped. Some recipients may remain unsent.", "info");
         } else {
-          setStatus("Completed");
-          showNotice(`Finished: ${sent} message(s) accepted by SMTP.`, "success");
+          $("progressText").textContent =
+            failed ? "Finished with errors" : "All batches processed";
+          showNotice(
+            `Finished: ${sent} accepted by SMTP, ${failed} failed.`,
+            failed ? "error" : "success"
+          );
         }
-      } catch (error) {
-        setStatus("Error");
-        showNotice(error.message, "error");
       } finally {
         isSending = false;
         $("sendBtn").disabled = false;
         $("stopBtn").disabled = true;
-        // App Password field is deliberately not cleared.
+        // Keep App Password visible in the field; do not clear it.
       }
     }
 
@@ -385,29 +371,19 @@
       const field = $("appPassword");
       const show = field.type === "password";
       field.type = show ? "text" : "password";
-      $("togglePassword").textContent = show ? "Hide" : "Show";
+      $("togglePassword").textContent = show ? "◉" : "⊙";
     });
 
     $("recipients").addEventListener("input", updateRecipientCount);
-    $("body").addEventListener("input", updateCharCount);
 
-    document.querySelectorAll(".mode-btn").forEach(button => {
+    document.querySelectorAll(".mode-btn").forEach((button) => {
       button.addEventListener("click", () => {
         bodyMode = button.dataset.mode;
-        document.querySelectorAll(".mode-btn").forEach(item => {
+
+        document.querySelectorAll(".mode-btn").forEach((item) => {
           item.classList.toggle("active", item === button);
         });
-        $("currentMode").textContent = bodyMode === "html" ? "HTML mode" : "Plain Text mode";
       });
-    });
-
-    $("clearRecipients").addEventListener("click", () => {
-      $("recipients").value = "";
-      updateRecipientCount();
-    });
-
-    $("clearResults").addEventListener("click", () => {
-      $("results").innerHTML = '<div class="empty-state">Results cleared.</div>';
     });
 
     $("sendBtn").addEventListener("click", startSending);
@@ -415,11 +391,15 @@
     $("stopBtn").addEventListener("click", () => {
       stopRequested = true;
       $("stopBtn").disabled = true;
-      showNotice("Stop requested. The current batch will finish first.", "info");
+      $("progressText").textContent = "Stopping after current batch...";
+    });
+
+    $("clearResults").addEventListener("click", () => {
+      $("results").innerHTML = '<p class="empty-state">Results cleared.</p>';
     });
 
     updateRecipientCount();
-    updateCharCount();
   </script>
 </body>
 </html>
+```
