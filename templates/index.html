@@ -59,7 +59,7 @@
       <span class="shuffle">⤨</span>
       <div>
         <strong>Spintax Enabled</strong>
-        <small>Supports {Hello|Hi|Hey} variations.</small>
+        <small>Example: {Hello|Hi|Hey} — a random option is selected for each recipient.</small>
       </div>
     </div>
 
@@ -83,7 +83,7 @@
       </div>
       <textarea id="recipients" class="recipient-input"
                 placeholder="person@example.com&#10;another@example.com"></textarea>
-      <small>Maximum 25 recipients per batch.</small>
+      <small>Maximum 25 recipients per sending session. Sent in batches of 5.</small>
     </section>
 
     <section class="card progress-card">
@@ -110,6 +110,7 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+
   let mode = "plain";
   let busy = false;
   let stopped = false;
@@ -122,6 +123,7 @@
   document.querySelectorAll(".mode").forEach(button => {
     button.addEventListener("click", () => {
       mode = button.dataset.mode;
+
       document.querySelectorAll(".mode").forEach(item => {
         item.classList.toggle("active", item === button);
       });
@@ -146,15 +148,31 @@
   function showResult(item) {
     const row = document.createElement("div");
     row.className = `result-row ${item.status}`;
+
     row.textContent =
       `${item.status.toUpperCase()} — ${item.email}: ${item.detail}`;
+
     $("results").prepend(row);
+  }
+
+  async function readResponse(response) {
+    const text = await response.text();
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(
+        `Server returned HTTP ${response.status}. Check Vercel Runtime Logs.`
+      );
+    }
   }
 
   $("stopBtn").addEventListener("click", () => {
     stopped = true;
+
     $("status").textContent =
-      "Stop requested. The current SMTP request may still finish.";
+      "Stop requested. The current SMTP batch may still finish.";
+
     $("stopBtn").disabled = true;
   });
 
@@ -163,29 +181,35 @@
 
     const recipients = getRecipients();
     const senderEmail = $("senderEmail").value.trim();
-    const appPassword = $("appPassword").value.trim();
+    const appPassword = $("appPassword").value.replace(/\s/g, "");
     const senderName = $("senderName").value.trim();
     const subject = $("subject").value.trim();
-    const body = $("messageBody").value.trim();
+    const body = $("messageBody").value;
 
-    if (!senderEmail || !appPassword || !subject || !body || !recipients.length) {
+    if (
+      !senderEmail || !appPassword || !subject ||
+      !body.trim() || !recipients.length
+    ) {
       $("status").textContent =
         "Fill in Gmail, App Password, recipients, subject, and message.";
       return;
     }
 
     if (recipients.length > 25) {
-      $("status").textContent = "Maximum 25 recipients per batch.";
+      $("status").textContent =
+        "Maximum 25 recipients per sending session.";
       return;
     }
 
     if (!$("consent").checked) {
-      $("status").textContent = "Confirm recipient permission first.";
+      $("status").textContent =
+        "Confirm recipient permission first.";
       return;
     }
 
     busy = true;
     stopped = false;
+
     $("sendBtn").disabled = true;
     $("stopBtn").disabled = false;
     $("results").replaceChildren();
@@ -222,24 +246,28 @@
           })
         });
 
-        const data = await response.json();
+        const data = await readResponse(response);
 
         if (!response.ok) {
-          throw new Error(data.error || "Sending request failed.");
+          throw new Error(data.error || `Request failed: HTTP ${response.status}`);
         }
 
         for (const item of data.results || []) {
           showResult(item);
+
           if (item.status === "sent") sent++;
           else failed++;
+
           processed++;
         }
 
         $("sent").textContent = sent;
         $("failed").textContent = failed;
         $("remaining").textContent = recipients.length - processed;
+
         $("progressBar").style.width =
           `${Math.round(processed / recipients.length * 100)}%`;
+
         $("status").textContent =
           `Processed ${processed} of ${recipients.length}`;
       }
@@ -255,11 +283,10 @@
       busy = false;
       $("sendBtn").disabled = false;
       $("stopBtn").disabled = true;
-
-      // FIX: App Password ko clear nahi karna.
-      // Isliye sending ke baad field ki value bani rahegi.
     }
   });
+
+  updateFound();
 })();
 </script>
 </body>
