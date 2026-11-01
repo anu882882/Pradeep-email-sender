@@ -3,13 +3,13 @@ import os
 import re
 import ssl
 import time
-import html
 import secrets
 import smtplib
-from urllib.parse import quote
+
 from email.message import EmailMessage
-from email.utils import formataddr, make_msgid
+from email.utils import formataddr
 from email.header import Header
+
 from html.parser import HTMLParser
 
 from flask import (
@@ -36,6 +36,7 @@ app = Flask(
 )
 
 app.secret_key = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
+
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
@@ -71,6 +72,7 @@ def process_spintax(text):
     pattern = re.compile(r"\{([^{}]+)\}")
 
     while True:
+
         match = pattern.search(text)
 
         if not match:
@@ -99,6 +101,7 @@ class HTMLTextExtractor(HTMLParser):
         self.parts = []
 
     def handle_data(self, data):
+
         value = data.strip()
 
         if value:
@@ -118,6 +121,7 @@ def get_plain_text(body, html_mode):
     try:
         parser.feed(body)
         return parser.get_text()
+
     except Exception:
         return body
 
@@ -146,7 +150,11 @@ def open_smtp_connection(sender_email, app_password):
         )
 
         server.ehlo()
-        server.starttls(context=ssl.create_default_context())
+
+        server.starttls(
+            context=ssl.create_default_context()
+        )
+
         server.ehlo()
 
     server.login(sender_email, app_password)
@@ -155,7 +163,7 @@ def open_smtp_connection(sender_email, app_password):
 
 
 # --------------------------------------------------
-# CREATE EMAIL WITH SIMPLE REPLY BUTTONS
+# CREATE EMAIL WITHOUT REPLY BUTTONS
 # --------------------------------------------------
 
 def create_message(
@@ -170,108 +178,37 @@ def create_message(
     final_subject = process_spintax(subject)
     final_body = process_spintax(body)
 
-    message_id = make_msgid()
-
-    reply_options = [
-        "Yes, please do.",
-        "Yes, of course you can.",
-        "Yes, that would be fine."
-    ]
-
-    # Plain text version
-    plain_original = get_plain_text(final_body, html_mode)
-
-    plain_message = plain_original
-
-    plain_message += "\n\n"
-    plain_message += "Quick reply options:\n"
-
-    for option in reply_options:
-        plain_message += option + "\n"
-
-    # HTML original message
-    if html_mode:
-        original_html = final_body
-    else:
-        original_html = (
-            "<div style='white-space:pre-wrap;'>"
-            + html.escape(final_body)
-            + "</div>"
-        )
-
-    # Simple reply buttons
-    buttons_html = ""
-
-    for option in reply_options:
-
-        reply_subject = "Re: " + final_subject
-
-        mailto_link = (
-            f"mailto:{quote(recipient_email, safe='@')}"
-            f"?subject={quote(reply_subject)}"
-            f"&body={quote(option)}"
-        )
-
-        buttons_html += f"""
-        <a href="{html.escape(mailto_link, quote=True)}"
-           style="
-             display:inline-block;
-             margin:5px 5px 5px 0;
-             padding:10px 16px;
-             background:#ffffff;
-             border:1px solid #cbd5e1;
-             border-radius:7px;
-             color:#2563eb;
-             font-family:Arial,sans-serif;
-             font-size:13px;
-             text-decoration:none;
-           ">
-           {html.escape(option)}
-        </a>
-        """
-
-    html_message = f"""
-    <html>
-    <body style="
-        margin:0;
-        padding:20px;
-        color:#1f2937;
-        font-family:Arial,sans-serif;
-        font-size:14px;
-        line-height:1.6;
-    ">
-
-        <div>
-            {original_html}
-        </div>
-
-        <div style="
-            margin-top:25px;
-            padding-top:18px;
-            border-top:1px solid #e5e7eb;
-        ">
-
-            <p style="font-weight:bold;margin-bottom:12px;">
-                Quick reply
-            </p>
-
-            {buttons_html}
-
-        </div>
-
-    </body>
-    </html>
-    """
-
     message = EmailMessage()
 
-    message["From"] = formataddr((sender_name, sender_email))
-    message["To"] = recipient_email
-    message["Subject"] = str(Header(final_subject, "utf-8"))
-    message["Message-ID"] = message_id
+    message["From"] = formataddr(
+        (sender_name, sender_email)
+    )
 
-    message.set_content(plain_message)
-    message.add_alternative(html_message, subtype="html")
+    message["To"] = recipient_email
+
+    message["Subject"] = str(
+        Header(final_subject, "utf-8")
+    )
+
+    # Plain text email
+    if not html_mode:
+
+        message.set_content(final_body)
+
+    # HTML email
+    else:
+
+        plain_version = get_plain_text(
+            final_body,
+            True
+        )
+
+        message.set_content(plain_version)
+
+        message.add_alternative(
+            final_body,
+            subtype="html"
+        )
 
     return message
 
@@ -351,7 +288,11 @@ def send_batch_with_smtp(
 
                 break
 
-            if index < len(recipients) - 1 and MAIL_GAP_SECONDS:
+            if (
+                index < len(recipients) - 1
+                and MAIL_GAP_SECONDS > 0
+            ):
+
                 time.sleep(MAIL_GAP_SECONDS)
 
     except Exception as error:
@@ -371,6 +312,7 @@ def send_batch_with_smtp(
 
             try:
                 server.quit()
+
             except Exception:
                 pass
 
@@ -475,14 +417,33 @@ def send_batch():
             "error": "Invalid recipients format."
         }), 400
 
-    sender_email = str(data.get("senderEmail", "")).strip()
-    app_password = str(data.get("appPassword", "")).strip()
-    sender_name = str(data.get("senderName", "")).strip()
-    subject = str(data.get("subject", "")).strip()
-    body = str(data.get("body", ""))
+    sender_email = str(
+        data.get("senderEmail", "")
+    ).strip()
 
-    html_mode = bool(data.get("htmlMode", False))
-    consent_confirmed = bool(data.get("consentConfirmed", False))
+    app_password = str(
+        data.get("appPassword", "")
+    ).strip()
+
+    sender_name = str(
+        data.get("senderName", "")
+    ).strip()
+
+    subject = str(
+        data.get("subject", "")
+    ).strip()
+
+    body = str(
+        data.get("body", "")
+    )
+
+    html_mode = bool(
+        data.get("htmlMode", False)
+    )
+
+    consent_confirmed = bool(
+        data.get("consentConfirmed", False)
+    )
 
     if not consent_confirmed:
 
@@ -532,6 +493,7 @@ def send_batch():
         ):
 
             recipients.append(email_address)
+
             seen.add(email_address.lower())
 
     if not recipients:
@@ -541,7 +503,7 @@ def send_batch():
         }), 400
 
     # Maximum five recipients per batch
-    if len(recipients) > 5:
+    if len(recipients) > 10:
 
         return jsonify({
             "error": "Maximum 10 recipients are allowed per batch."
