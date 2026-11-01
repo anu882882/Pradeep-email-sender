@@ -5,16 +5,21 @@ import ssl
 import time
 import html
 import secrets
-import random
 import smtplib
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from urllib.parse import quote
 from email.message import EmailMessage
 from email.utils import formataddr, make_msgid
 from email.header import Header
+from html.parser import HTMLParser
+
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, jsonify
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify
 )
 
 
@@ -31,7 +36,6 @@ app = Flask(
 )
 
 app.secret_key = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
-
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
@@ -45,8 +49,6 @@ MAIL_GAP_SECONDS = max(
 )
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-IST = ZoneInfo("Asia/Kolkata")
 
 
 # --------------------------------------------------
@@ -62,6 +64,7 @@ def logged_in():
 # --------------------------------------------------
 
 def process_spintax(text):
+
     if not text:
         return ""
 
@@ -89,9 +92,6 @@ def process_spintax(text):
 # HTML TO TEXT CONVERTER
 # --------------------------------------------------
 
-from html.parser import HTMLParser
-
-
 class HTMLTextExtractor(HTMLParser):
 
     def __init__(self):
@@ -109,6 +109,7 @@ class HTMLTextExtractor(HTMLParser):
 
 
 def get_plain_text(body, html_mode):
+
     if not html_mode:
         return body
 
@@ -128,13 +129,16 @@ def get_plain_text(body, html_mode):
 def open_smtp_connection(sender_email, app_password):
 
     if SMTP_PORT == 465:
+
         server = smtplib.SMTP_SSL(
             SMTP_HOST,
             SMTP_PORT,
             timeout=25,
             context=ssl.create_default_context()
         )
+
     else:
+
         server = smtplib.SMTP(
             SMTP_HOST,
             SMTP_PORT,
@@ -151,50 +155,7 @@ def open_smtp_connection(sender_email, app_password):
 
 
 # --------------------------------------------------
-# ORIGINAL EMAIL DETAILS FOR REPLY
-# --------------------------------------------------
-
-def create_reply_details(
-    sender_email,
-    recipient_email,
-    sender_name,
-    subject,
-    original_body,
-    html_mode,
-    sent_time,
-    message_id
-):
-
-    formatted_date = sent_time.strftime("%d %b %Y")
-    formatted_time = sent_time.strftime("%I:%M:%S %p IST")
-
-    original_text = get_plain_text(original_body, html_mode)
-
-    details = (
-        "\n\n"
-        "----------------------------------------\n"
-        "ORIGINAL EMAIL DETAILS\n"
-        "----------------------------------------\n"
-        f"From: {sender_name} <{sender_email}>\n"
-        f"To: {recipient_email}\n"
-        f"Date: {formatted_date}\n"
-        f"Time: {formatted_time}\n"
-        f"Subject: {subject}\n"
-        f"Message-ID: {message_id}\n"
-        "\n"
-        "ORIGINAL MESSAGE:\n"
-        "----------------------------------------\n"
-        f"{original_text}\n"
-        "----------------------------------------\n"
-        "\n"
-        "YOUR REPLY:\n"
-    )
-
-    return details
-
-
-# --------------------------------------------------
-# CREATE EMAIL WITH REPLY BUTTONS
+# CREATE EMAIL WITH SIMPLE REPLY BUTTONS
 # --------------------------------------------------
 
 def create_message(
@@ -206,25 +167,10 @@ def create_message(
     html_mode
 ):
 
-    sent_time = datetime.now(IST)
-
-    # A unique ID for this individual email
-    message_id = make_msgid()
-
-    # Process Spintax separately for each recipient
     final_subject = process_spintax(subject)
     final_body = process_spintax(body)
 
-    reply_details = create_reply_details(
-        sender_email=sender_email,
-        recipient_email=recipient_email,
-        sender_name=sender_name,
-        subject=final_subject,
-        original_body=final_body,
-        html_mode=html_mode,
-        sent_time=sent_time,
-        message_id=message_id
-    )
+    message_id = make_msgid()
 
     reply_options = [
         "Yes, please do.",
@@ -238,18 +184,10 @@ def create_message(
     plain_message = plain_original
 
     plain_message += "\n\n"
-    plain_message += "----------------------------------------\n"
-    plain_message += "QUICK REPLY OPTIONS\n"
-    plain_message += "----------------------------------------\n"
+    plain_message += "Quick reply options:\n"
 
     for option in reply_options:
-        plain_message += f"\n{option}"
-
-    plain_message += (
-        "\n\n"
-        "Click a reply option in the HTML version "
-        "to prepare your response.\n"
-    )
+        plain_message += option + "\n"
 
     # HTML original message
     if html_mode:
@@ -261,26 +199,17 @@ def create_message(
             + "</div>"
         )
 
-    # Create HTML reply buttons
+    # Simple reply buttons
     buttons_html = ""
 
     for option in reply_options:
 
         reply_subject = "Re: " + final_subject
 
-        mailto_body = option + reply_details
-
         mailto_link = (
-            "mailto:"
-            + recipient_email
-            + "?subject="
-            + __import__("urllib.parse", fromlist=["quote"]).quote(
-                reply_subject
-            )
-            + "&body="
-            + __import__("urllib.parse", fromlist=["quote"]).quote(
-                mailto_body
-            )
+            f"mailto:{quote(recipient_email, safe='@')}"
+            f"?subject={quote(reply_subject)}"
+            f"&body={quote(option)}"
         )
 
         buttons_html += f"""
@@ -328,34 +257,23 @@ def create_message(
 
             {buttons_html}
 
-            <p style="
-                color:#64748b;
-                font-size:12px;
-                margin-top:12px;
-            ">
-                Select an option to prepare your reply with
-                the original email details included.
-            </p>
-
         </div>
 
     </body>
     </html>
     """
 
-    # Build email
     message = EmailMessage()
 
     message["From"] = formataddr((sender_name, sender_email))
     message["To"] = recipient_email
     message["Subject"] = str(Header(final_subject, "utf-8"))
-    message["Date"] = sent_time.strftime("%a, %d %b %Y %H:%M:%S %z")
     message["Message-ID"] = message_id
 
     message.set_content(plain_message)
     message.add_alternative(html_message, subtype="html")
 
-    return message, sent_time, final_subject
+    return message
 
 
 # --------------------------------------------------
@@ -373,10 +291,10 @@ def send_batch_with_smtp(
 ):
 
     results = []
-
     server = None
 
     try:
+
         server = open_smtp_connection(
             sender_email,
             app_password
@@ -386,7 +304,7 @@ def send_batch_with_smtp(
 
             try:
 
-                message, sent_time, final_subject = create_message(
+                message = create_message(
                     sender_email=sender_email,
                     recipient_email=recipient,
                     sender_name=sender_name,
@@ -400,10 +318,7 @@ def send_batch_with_smtp(
                 results.append({
                     "email": recipient,
                     "status": "sent",
-                    "detail": "Accepted by SMTP",
-                    "date": sent_time.strftime("%d %b %Y"),
-                    "time": sent_time.strftime("%I:%M:%S %p IST"),
-                    "subject": final_subject
+                    "detail": "Accepted by SMTP"
                 })
 
             except smtplib.SMTPRecipientsRefused as error:
@@ -426,9 +341,8 @@ def send_batch_with_smtp(
                     "detail": str(error)
                 })
 
-                # Connection may be unusable after an SMTP error.
-                # Stop this batch rather than pretending later sends worked.
                 for remaining in recipients[index + 1:]:
+
                     results.append({
                         "email": remaining,
                         "status": "failed",
@@ -454,6 +368,7 @@ def send_batch_with_smtp(
     finally:
 
         if server is not None:
+
             try:
                 server.quit()
             except Exception:
@@ -538,6 +453,7 @@ def index():
 def send_batch():
 
     if not logged_in():
+
         return jsonify({
             "error": "Session expired. Please sign in again."
         }), 401
@@ -547,12 +463,14 @@ def send_batch():
     recipients_input = data.get("recipients", [])
 
     if isinstance(recipients_input, str):
+
         recipients_input = re.split(
             r"[\n,;\t]+",
             recipients_input
         )
 
     if not isinstance(recipients_input, list):
+
         return jsonify({
             "error": "Invalid recipients format."
         }), 400
@@ -567,26 +485,31 @@ def send_batch():
     consent_confirmed = bool(data.get("consentConfirmed", False))
 
     if not consent_confirmed:
+
         return jsonify({
             "error": "Please confirm that recipients have given permission."
         }), 400
 
     if not sender_email or not EMAIL_RE.match(sender_email):
+
         return jsonify({
             "error": "Enter a valid sender Gmail address."
         }), 400
 
     if not app_password:
+
         return jsonify({
             "error": "Enter your Gmail App Password."
         }), 400
 
     if not subject:
+
         return jsonify({
             "error": "Email subject is required."
         }), 400
 
     if not body.strip():
+
         return jsonify({
             "error": "Email message is required."
         }), 400
@@ -612,12 +535,14 @@ def send_batch():
             seen.add(email_address.lower())
 
     if not recipients:
+
         return jsonify({
             "error": "No valid recipient email addresses found."
         }), 400
 
-    # Frontend sends batches of five
+    # Maximum five recipients per batch
     if len(recipients) > 5:
+
         return jsonify({
             "error": "Maximum 10 recipients are allowed per batch."
         }), 400
