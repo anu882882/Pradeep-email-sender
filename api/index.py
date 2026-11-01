@@ -9,7 +9,6 @@ import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 from email.header import Header
-
 from html.parser import HTMLParser
 
 from flask import (
@@ -36,7 +35,6 @@ app = Flask(
 )
 
 app.secret_key = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
-
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024
 
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
@@ -48,6 +46,8 @@ MAIL_GAP_SECONDS = max(
     0.0,
     min(float(os.environ.get("MAIL_GAP_SECONDS", "1")), 10.0)
 )
+
+BATCH_SIZE = 10
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -190,13 +190,7 @@ def create_message(
         Header(final_subject, "utf-8")
     )
 
-    # Plain text email
-    if not html_mode:
-
-        message.set_content(final_body)
-
-    # HTML email
-    else:
+    if html_mode:
 
         plain_version = get_plain_text(
             final_body,
@@ -209,6 +203,10 @@ def create_message(
             final_body,
             subtype="html"
         )
+
+    else:
+
+        message.set_content(final_body)
 
     return message
 
@@ -329,7 +327,8 @@ def health():
     return jsonify({
         "status": "ok",
         "smtp_host": SMTP_HOST,
-        "smtp_port": SMTP_PORT
+        "smtp_port": SMTP_PORT,
+        "batch_size": BATCH_SIZE
     })
 
 
@@ -493,7 +492,6 @@ def send_batch():
         ):
 
             recipients.append(email_address)
-
             seen.add(email_address.lower())
 
     if not recipients:
@@ -502,8 +500,8 @@ def send_batch():
             "error": "No valid recipient email addresses found."
         }), 400
 
-    # Maximum five recipients per batch
-    if len(recipients) > 10:
+    # Maximum 10 recipients per batch
+    if len(recipients) > BATCH_SIZE:
 
         return jsonify({
             "error": "Maximum 10 recipients are allowed per batch."
