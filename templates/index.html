@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,11 +21,13 @@
         <label for="senderName">Sender Name</label>
         <input id="senderName" placeholder="Your name" maxlength="100">
       </div>
+
       <div>
         <label for="senderEmail">Your Gmail</label>
         <input id="senderEmail" type="email" placeholder="your@gmail.com"
                autocomplete="username" required>
       </div>
+
       <div>
         <label for="appPassword">App Password</label>
         <div class="password-wrap">
@@ -38,6 +39,7 @@
         </div>
         <small>Use your Google App Password, not your normal account password.</small>
       </div>
+
       <div>
         <label for="subject">Email Subject</label>
         <input id="subject" placeholder="Email subject" maxlength="200" required>
@@ -64,10 +66,12 @@
     </div>
 
     <h3 class="security-heading">◈ Spam Protection</h3>
+
     <div class="consent-row">
       <input id="consent" type="checkbox">
       <label for="consent">I confirm these recipients have agreed to receive this email.</label>
     </div>
+
     <p class="help-text">Only send messages to recipients who have consented.</p>
     <p class="help-text">The App Password remains in this form after sending. It is not saved to browser storage.</p>
   </section>
@@ -81,13 +85,16 @@
         </div>
         <span id="foundBadge" class="badge">0 found</span>
       </div>
+
       <textarea id="recipients" class="recipient-input"
                 placeholder="person@example.com&#10;another@example.com"></textarea>
-      <small>Maximum 25 recipients per sending session. Sent in batches of 5.</small>
+
+      <small>Maximum 25 recipients per sending session. Sent in batches of 10.</small>
     </section>
 
     <section class="card progress-card">
       <h2>◔ Progress Monitor</h2>
+
       <div class="stats-grid">
         <div class="stat"><span>TOTAL</span><strong id="total">0</strong></div>
         <div class="stat"><span>SENT</span><strong class="green" id="sent">0</strong></div>
@@ -95,13 +102,17 @@
         <div class="stat"><span>REMAINING</span><strong class="orange" id="remaining">0</strong></div>
       </div>
 
-      <div class="progress-track"><div id="progressBar"></div></div>
+      <div class="progress-track">
+        <div id="progressBar"></div>
+      </div>
+
       <p id="status" class="status" role="status">Ready to send</p>
 
       <div class="action-row">
         <button id="sendBtn" class="send-btn" type="button">➤ Send All</button>
         <button id="stopBtn" class="stop-btn" type="button" disabled>■ Stop Sending</button>
       </div>
+
       <div id="results" class="results"></div>
     </section>
   </div>
@@ -110,6 +121,9 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+
+  const BATCH_SIZE = 10;
+  const MAX_RECIPIENTS = 25;
 
   let mode = "plain";
   let busy = false;
@@ -150,7 +164,7 @@
     row.className = `result-row ${item.status}`;
 
     row.textContent =
-      `${item.status.toUpperCase()} — ${item.email}: ${item.detail}`;
+      `${String(item.status || "unknown").toUpperCase()} — ${item.email || "Unknown"}: ${item.detail || ""}`;
 
     $("results").prepend(row);
   }
@@ -195,9 +209,9 @@
       return;
     }
 
-    if (recipients.length > 25) {
+    if (recipients.length > MAX_RECIPIENTS) {
       $("status").textContent =
-        "Maximum 25 recipients per sending session.";
+        `Maximum ${MAX_RECIPIENTS} recipients per sending session.`;
       return;
     }
 
@@ -226,10 +240,18 @@
     $("status").textContent = "Sending…";
 
     try {
-      for (let start = 0; start < recipients.length; start += 5) {
+      for (
+        let start = 0;
+        start < recipients.length;
+        start += BATCH_SIZE
+      ) {
         if (stopped) break;
 
-        const batch = recipients.slice(start, start + 5);
+        // Each request contains a maximum of 10 recipients.
+        const batch = recipients.slice(start, start + BATCH_SIZE);
+
+        $("status").textContent =
+          `Sending batch ${Math.floor(start / BATCH_SIZE) + 1}…`;
 
         const response = await fetch("/send-batch", {
           method: "POST",
@@ -249,14 +271,19 @@
         const data = await readResponse(response);
 
         if (!response.ok) {
-          throw new Error(data.error || `Request failed: HTTP ${response.status}`);
+          throw new Error(
+            data.error || `Request failed: HTTP ${response.status}`
+          );
         }
 
         for (const item of data.results || []) {
           showResult(item);
 
-          if (item.status === "sent") sent++;
-          else failed++;
+          if (item.status === "sent") {
+            sent++;
+          } else {
+            failed++;
+          }
 
           processed++;
         }
