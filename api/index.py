@@ -6,9 +6,11 @@ import time
 import logging
 import secrets
 import smtplib
+import html
+
+from urllib.parse import urlencode
 from email.message import EmailMessage
 from email.utils import formataddr
-from html.parser import HTMLParser
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -49,17 +51,9 @@ def logged_in():
     return session.get("logged_in") is True
 
 
+# ---------------- SPINTAX ----------------
+
 def process_spintax(text):
-    """
-    Supports:
-    {Hello|Hi|Hey}
-    {professional|attractive|well designed}
-    Nested choices such as:
-    {{Hello|Hi}|Hey}
-
-    One random option is selected for each recipient.
-    """
-
     if not isinstance(text, str):
         return text
 
@@ -68,7 +62,6 @@ def process_spintax(text):
         options = []
         current = []
         depth = 0
-        found_open = False
         i = 0
 
         while i < len(value):
@@ -76,11 +69,11 @@ def process_spintax(text):
 
             if char == "{":
                 if depth == 0:
-                    found_open = True
                     current = []
                     options = []
                 else:
                     current.append(char)
+
                 depth += 1
 
             elif char == "}" and depth > 0:
@@ -90,12 +83,12 @@ def process_spintax(text):
                     options.append("".join(current))
 
                     if len(options) > 1:
-                        selected = secrets.choice(options)
-                        output.append(parse_segment(selected))
+                        output.append(
+                            parse_segment(secrets.choice(options))
+                        )
                     else:
                         output.append("{" + options[0] + "}")
 
-                    found_open = False
                     current = []
                     options = []
                 else:
@@ -122,6 +115,11 @@ def process_spintax(text):
     return parse_segment(text)
 
 
+# ---------------- HTML TEXT ----------------
+
+from html.parser import HTMLParser
+
+
 class HTMLTextExtractor(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -133,6 +131,8 @@ class HTMLTextExtractor(HTMLParser):
     def get_text(self):
         return " ".join(self.parts).strip()
 
+
+# ---------------- EMAIL CREATION ----------------
 
 def create_message(
     recipient,
@@ -150,18 +150,90 @@ def create_message(
     message["To"] = recipient
     message["Subject"] = subject
 
+    reply_options = [
+        "Yes, please do.",
+        "Yes, of course you can.",
+        "Yes, that would be fine."
+    ]
+
+    buttons = ""
+
+    for answer in reply_options:
+        params = urlencode({
+            "subject": "Re: " + subject,
+            "body": answer
+        })
+
+        mailto_url = f"mailto:{sender_email}?{params}"
+
+        buttons += f"""
+        <a href="{html.escape(mailto_url, quote=True)}"
+           style="
+             display:inline-block;
+             padding:8px 14px;
+             margin:5px 4px 5px 0;
+             border:1px solid #888888;
+             border-radius:9px;
+             background:#ffffff;
+             color:#1677ff;
+             text-decoration:none;
+             font-family:Arial,sans-serif;
+             font-size:14px;
+             font-weight:600;
+           ">
+           {html.escape(answer)}
+        </a>
+        """
+
     if html_mode:
+        email_content = body
+
         extractor = HTMLTextExtractor()
         extractor.feed(body)
-        plain_text = extractor.get_text() or "Please view this email in an HTML-compatible email client."
 
-        message.set_content(plain_text)
-        message.add_alternative(body, subtype="html")
+        plain_text = (
+            extractor.get_text()
+            or "Please view this email in an HTML-compatible email client."
+        )
     else:
-        message.set_content(body)
+        email_content = html.escape(body).replace("\n", "<br>")
+        plain_text = body
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <body>
+      <div style="
+        font-family:Arial,sans-serif;
+        font-size:14px;
+        line-height:1.6;
+        color:#222222;
+      ">
+        {email_content}
+      </div>
+
+      <div style="margin-top:22px;">
+        {buttons}
+      </div>
+    </body>
+    </html>
+    """
+
+    message.set_content(
+        plain_text
+        + "\n\nReply options:\n"
+        + "\n".join(reply_options)
+    )
+
+    message.add_alternative(
+        html_content,
+        subtype="html"
+    )
 
     return message
 
+
+# ---------------- SMTP CONNECTION ----------------
 
 def open_smtp_connection(sender_email, app_password):
     context = ssl.create_default_context()
@@ -179,17 +251,19 @@ def open_smtp_connection(sender_email, app_password):
             SMTP_PORT,
             timeout=15
         )
+
         server.ehlo()
         server.starttls(context=context)
         server.ehlo()
 
     server.login(sender_email, app_password)
+
     return server
 
 
 def smtp_error_message(exc):
     if isinstance(exc, smtplib.SMTPAuthenticationError):
-        return "Gmail login failed. Check Gmail address and Google App Password."
+        return "Gmail login failed. Check Gmail address and App Password."
 
     if isinstance(exc, smtplib.SMTPRecipientsRefused):
         return "Recipient address rejected by Gmail SMTP."
@@ -209,6 +283,8 @@ def smtp_error_message(exc):
     return f"Unexpected sending error: {str(exc)[:180]}"
 
 
+# ---------------- BATCH SENDING ----------------
+
 def send_batch_with_smtp(
     recipients,
     subject,
@@ -221,32 +297,51 @@ def send_batch_with_smtp(
     results = []
     server = None
 
-    # Reuse one authenticated SMTP connection for this batch.
     for attempt in range(2):
         try:
-            server = open_smtp_connection(sender_email, app_password)
+            server = open_smtp_connection(
+                sender_email,
+                app_password
+            )
             break
+
         except smtplib.SMTPAuthenticationError as exc:
-            logger.warning("SMTP authentication failed: %s", exc)
+            logger.exception("SMTP authentication failed")
             error = smtp_error_message(exc)
+
             return [
-                {"email": address, "status": "failed", "detail": error}
+                {
+                    "email": address,
+                    "status": "failed",
+                    "detail": error
+                }
                 for address in recipients
             ]
+
         except Exception as exc:
-            logger.exception("SMTP connection attempt %s failed", attempt + 1)
+            logger.exception(
+                "SMTP connection attempt %s failed",
+                attempt + 1
+            )
+
             if attempt == 0:
                 time.sleep(1)
             else:
                 error = smtp_error_message(exc)
+
                 return [
-                    {"email": address, "status": "failed", "detail": error}
+                    {
+                        "email": address,
+                        "status": "failed",
+                        "detail": error
+                    }
                     for address in recipients
                 ]
 
     try:
         for index, recipient in enumerate(recipients):
-            # Generate a fresh variation for every recipient.
+
+            # Fresh Spintax variation for each recipient.
             personalized_subject = process_spintax(subject)
             personalized_body = process_spintax(body)
 
@@ -290,20 +385,21 @@ def send_batch_with_smtp(
                 })
 
             except (smtplib.SMTPException, OSError, TimeoutError) as exc:
-                logger.exception("SMTP sending failed for recipient")
+                logger.exception("SMTP sending failed")
+
                 results.append({
                     "email": recipient,
                     "status": "failed",
                     "detail": smtp_error_message(exc)
                 })
 
-                # A connection-level failure can affect later recipients.
                 for remaining in recipients[index + 1:]:
                     results.append({
                         "email": remaining,
                         "status": "failed",
-                        "detail": "Batch stopped because the SMTP connection failed."
+                        "detail": "Batch stopped because SMTP connection failed."
                     })
+
                 break
 
             if index < len(recipients) - 1 and MAIL_GAP_SECONDS:
@@ -321,6 +417,8 @@ def send_batch_with_smtp(
 
     return results
 
+
+# ---------------- ROUTES ----------------
 
 @app.get("/health")
 def health():
@@ -363,7 +461,9 @@ def index():
 @app.post("/send-batch")
 def send_batch():
     if not logged_in():
-        return jsonify({"error": "Please sign in again."}), 401
+        return jsonify({
+            "error": "Please sign in again."
+        }), 401
 
     try:
         data = request.get_json(silent=True) or {}
@@ -443,12 +543,18 @@ def send_batch():
             html_mode
         )
 
-        sent = sum(item["status"] == "sent" for item in results)
+        sent = sum(
+            item["status"] == "sent"
+            for item in results
+        )
+
         failed = len(results) - sent
 
         logger.info(
             "Batch completed: total=%s sent=%s failed=%s",
-            len(results), sent, failed
+            len(results),
+            sent,
+            failed
         )
 
         return jsonify({
@@ -460,6 +566,7 @@ def send_batch():
 
     except Exception:
         logger.exception("Unhandled error in /send-batch")
+
         return jsonify({
             "error": "Server error while processing the batch. Check Vercel Runtime Logs."
         }), 500
