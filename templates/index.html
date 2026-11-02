@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +90,7 @@
       <textarea id="recipients" class="recipient-input"
                 placeholder="person@example.com&#10;another@example.com"></textarea>
 
-      <small>Maximum 25 recipients per sending session. Sent in batches of 10.</small>
+      <small>Maximum 25 recipients per sending session. Sent in batches of 10 with a 5-second gap.</small>
     </section>
 
     <section class="card progress-card">
@@ -124,6 +125,7 @@
 
   const BATCH_SIZE = 10;
   const MAX_RECIPIENTS = 25;
+  const BATCH_WAIT_MS = 5000;
 
   let mode = "plain";
   let busy = false;
@@ -247,11 +249,11 @@
       ) {
         if (stopped) break;
 
-        // Each request contains a maximum of 10 recipients.
         const batch = recipients.slice(start, start + BATCH_SIZE);
+        const batchNumber = Math.floor(start / BATCH_SIZE) + 1;
 
         $("status").textContent =
-          `Sending batch ${Math.floor(start / BATCH_SIZE) + 1}…`;
+          `Sending batch ${batchNumber}...`;
 
         const response = await fetch("/send-batch", {
           method: "POST",
@@ -297,6 +299,21 @@
 
         $("status").textContent =
           `Processed ${processed} of ${recipients.length}`;
+
+        // Wait 5 seconds before the next batch.
+        if (
+          start + BATCH_SIZE < recipients.length &&
+          !stopped
+        ) {
+          for (let remaining = 5; remaining > 0; remaining--) {
+            if (stopped) break;
+
+            $("status").textContent =
+              `Batch ${batchNumber} complete. Next batch starts in ${remaining} seconds...`;
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
       }
 
       $("status").textContent = stopped
