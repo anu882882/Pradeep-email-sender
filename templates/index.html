@@ -90,7 +90,7 @@
       <textarea id="recipients" class="recipient-input"
                 placeholder="person@example.com&#10;another@example.com"></textarea>
 
-      <small>Maximum 25 recipients per sending session. Sent in batches of 10 with a 5-second gap.</small>
+      <small>Maximum 25 recipients per sending session. Sent in batches of 10 without waiting between batches.</small>
     </section>
 
     <section class="card progress-card">
@@ -125,7 +125,6 @@
 
   const BATCH_SIZE = 10;
   const MAX_RECIPIENTS = 25;
-  const BATCH_WAIT_MS = 5000;
 
   let mode = "plain";
   let busy = false;
@@ -300,20 +299,7 @@
         $("status").textContent =
           `Processed ${processed} of ${recipients.length}`;
 
-        // Wait 5 seconds before the next batch.
-        if (
-          start + BATCH_SIZE < recipients.length &&
-          !stopped
-        ) {
-          for (let remaining = 5; remaining > 0; remaining--) {
-            if (stopped) break;
-
-            $("status").textContent =
-              `Batch ${batchNumber} complete. Next batch starts in ${remaining} seconds...`;
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
+        // Next batch starts immediately. No 5-second waiting period.
       }
 
       $("status").textContent = stopped
