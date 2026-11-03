@@ -52,14 +52,6 @@ SESSION_SECRET = os.environ.get(
     "SESSION_SECRET", ""
 ).strip()
 
-TURNSTILE_SITE_KEY = os.environ.get(
-    "TURNSTILE_SITE_KEY", ""
-).strip()
-
-TURNSTILE_SECRET_KEY = os.environ.get(
-    "TURNSTILE_SECRET_KEY", ""
-).strip()
-
 LOGIN_PASSWORD = os.environ.get(
     "LOGIN_PASSWORD", ""
 ).strip()
@@ -251,73 +243,6 @@ def html_to_plain_text(html):
 
 
 # =========================================================
-# TURNSTILE
-# =========================================================
-
-def verify_turnstile(token, remote_ip=None):
-
-    if not TURNSTILE_SECRET_KEY:
-        return (
-            False,
-            "TURNSTILE_SECRET_KEY is not configured.",
-        )
-
-    if not token:
-        return (
-            False,
-            "Cloudflare verification is required.",
-        )
-
-    payload = {
-        "secret": TURNSTILE_SECRET_KEY,
-        "response": token,
-    }
-
-    if remote_ip:
-        payload["remoteip"] = remote_ip
-
-    encoded = urllib.parse.urlencode(
-        payload
-    ).encode("utf-8")
-
-    req = urllib.request.Request(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        data=encoded,
-        headers={
-            "Content-Type":
-                "application/x-www-form-urlencoded"
-        },
-        method="POST",
-    )
-
-    try:
-
-        with urllib.request.urlopen(
-            req,
-            timeout=10,
-        ) as response:
-
-            result = json.loads(
-                response.read().decode("utf-8")
-            )
-
-        if result.get("success") is True:
-            return True, None
-
-        return (
-            False,
-            "Cloudflare verification failed.",
-        )
-
-    except Exception:
-
-        return (
-            False,
-            "Unable to verify Cloudflare.",
-        )
-
-
-# =========================================================
 # LOGIN
 # =========================================================
 
@@ -332,7 +257,6 @@ def login():
         return render_template(
             "login.html",
             error=None,
-            turnstile_site_key=TURNSTILE_SITE_KEY,
         )
 
     password = str(
@@ -350,7 +274,6 @@ def login():
         return render_template(
             "login.html",
             error="Incorrect password.",
-            turnstile_site_key=TURNSTILE_SITE_KEY,
         ), 401
 
     session.clear()
@@ -390,8 +313,7 @@ def home():
         )
 
     return render_template(
-        "index.html",
-        turnstile_site_key=TURNSTILE_SITE_KEY,
+        "index.html"
     )
 
 
@@ -798,13 +720,6 @@ def send_batch():
         [],
     )
 
-    turnstile_token = str(
-        data.get(
-            "turnstile_token",
-            "",
-        )
-    ).strip()
-
 
     # =====================================================
     # VALIDATION
@@ -923,41 +838,6 @@ def send_batch():
             "message":
                 "No valid recipients found.",
         }), 400
-
-
-    # =====================================================
-    # TURNSTILE
-    # =====================================================
-
-    forwarded_for = request.headers.get(
-        "X-Forwarded-For"
-    )
-
-    if forwarded_for:
-
-        remote_ip = (
-            forwarded_for
-            .split(",", 1)[0]
-            .strip()
-        )
-
-    else:
-
-        remote_ip = request.remote_addr
-
-    verified, verify_error = (
-        verify_turnstile(
-            turnstile_token,
-            remote_ip,
-        )
-    )
-
-    if not verified:
-
-        return jsonify({
-            "success": False,
-            "message": verify_error,
-        }), 403
 
 
     # =====================================================
