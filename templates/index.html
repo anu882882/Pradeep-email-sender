@@ -27,14 +27,6 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 >
 
-{% if turnstile_site_key %}
-<script
-src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-async
-defer
-></script>
-{% endif %}
-
 </head>
 
 
@@ -260,39 +252,6 @@ Spintax is always ON.
 </span>
 
 </div>
-
-</div>
-
-
-<div class="security-title">
-
-<i class="fa-solid fa-shield-halved"></i>
-
-Spam Protection
-
-</div>
-
-
-<div class="security-box">
-
-{% if turnstile_site_key %}
-
-<div
-class="cf-turnstile"
-data-sitekey="{{ turnstile_site_key }}"
-data-theme="light"
-data-callback="turnstileCompleted"
-data-expired-callback="turnstileExpired"
-data-error-callback="turnstileError"
-></div>
-
-{% else %}
-
-<div class="turnstile-warning">
-Turnstile Site Key is not configured.
-</div>
-
-{% endif %}
 
 </div>
 
@@ -538,8 +497,6 @@ let isHTML = false;
 
 let sending = false;
 
-let turnstileToken = "";
-
 let currentController = null;
 
 
@@ -599,25 +556,6 @@ window.addEventListener(
         forceBlankMessageBody();
     }
 );
-
-
-/*
-=========================================================
-TURNSTILE
-=========================================================
-*/
-
-function turnstileCompleted(token) {
-    turnstileToken = token || "";
-}
-
-function turnstileExpired() {
-    turnstileToken = "";
-}
-
-function turnstileError() {
-    turnstileToken = "";
-}
 
 
 /*
@@ -1117,16 +1055,6 @@ async function sendBatch() {
     }
 
 
-    if (!turnstileToken) {
-
-        showToast(
-            "Complete Cloudflare verification."
-        );
-
-        return;
-    }
-
-
     sending = true;
 
 
@@ -1203,9 +1131,6 @@ async function sendBatch() {
 
                         recipients:
                             recipients,
-
-                        turnstile_token:
-                            turnstileToken
 
                     })
                 }
