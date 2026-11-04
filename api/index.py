@@ -1211,7 +1211,7 @@ def health():
 
     return jsonify({
         "status": "ok",
-        "service": "YATENDRA Mail Console",
+        "service": "PRADEEP Mail Console",
         "mailer": "Gmail SMTP",
         "parallel_sends":
             MAX_PARALLEL_SENDS,
