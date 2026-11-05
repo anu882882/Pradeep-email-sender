@@ -6,6 +6,9 @@ import logging
 import secrets
 import smtplib
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import local
+
 from email.message import EmailMessage
 from email.utils import formataddr
 from html.parser import HTMLParser
@@ -74,17 +77,16 @@ SMTP_PORT = int(
     os.environ.get("SMTP_PORT", "587")
 )
 
-MAIL_GAP_SECONDS = max(
-    0.0,
-    min(
-        float(os.environ.get("MAIL_GAP_SECONDS", "1")),
-        10.0
-    )
-)
+# Fast mode: no delay between emails.
+MAIL_GAP_SECONDS = 0
 
 SMTP_TIMEOUT = 20
 
-MAX_RECIPIENTS = 5
+# Allow 25 recipients in one request.
+MAX_RECIPIENTS = 25
+
+# 5 parallel SMTP connections.
+MAX_SMTP_WORKERS = 5
 
 EMAIL_RE = re.compile(
     r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
@@ -307,7 +309,6 @@ def open_smtp_connection(
             app_password
         )
 
-        # Check that the SMTP connection is responsive.
         server.noop()
 
         return server
@@ -392,7 +393,7 @@ def smtp_error_message(exc):
 
 
 # =========================================================
-# SEND BATCH WITH SMTP
+# SEND BATCH WITH SMTP — PARALLEL VERSION
 # =========================================================
 
 def send_batch_with_smtp(
@@ -407,196 +408,118 @@ def send_batch_with_smtp(
 
     results = []
 
-    server = None
+    thread_data = local()
 
-    # -----------------------------------------------------
-    # CONNECT ONCE AND REUSE THE CONNECTION
-    # -----------------------------------------------------
-
-    for attempt in range(2):
+    def send_one(recipient):
 
         try:
+            # Each worker thread gets its own SMTP connection.
+            if not hasattr(thread_data, "server"):
 
-            server = open_smtp_connection(
+                thread_data.server = open_smtp_connection(
+                    sender_email,
+                    app_password
+                )
+
+            server = thread_data.server
+
+            personalized_subject = process_spintax(subject)
+
+            personalized_body = process_spintax(body)
+
+            message = create_message(
+                recipient,
+                personalized_subject,
+                personalized_body,
+                sender_name,
                 sender_email,
-                app_password
+                html_mode
             )
 
-            break
+            refused = server.send_message(message)
+
+            if refused:
+
+                return {
+                    "email": recipient,
+                    "status": "failed",
+                    "detail": (
+                        "Recipient rejected by SMTP server."
+                    )
+                }
+
+            return {
+                "email": recipient,
+                "status": "sent",
+                "detail": (
+                    "Accepted by SMTP server."
+                )
+            }
 
         except smtplib.SMTPAuthenticationError as exc:
 
-            logger.warning(
-                "SMTP authentication failed: %s",
-                exc
-            )
+            return {
+                "email": recipient,
+                "status": "failed",
+                "detail": smtp_error_message(exc)
+            }
 
-            error = smtp_error_message(exc)
+        except smtplib.SMTPRecipientsRefused:
 
-            return [
-                {
-                    "email": address,
-                    "status": "failed",
-                    "detail": error
-                }
-                for address in recipients
-            ]
+            return {
+                "email": recipient,
+                "status": "failed",
+                "detail": (
+                    "Recipient address rejected by Gmail."
+                )
+            }
+
+        except smtplib.SMTPDataError as exc:
+
+            return {
+                "email": recipient,
+                "status": "failed",
+                "detail": (
+                    f"Message rejected. "
+                    f"SMTP code: {exc.smtp_code}"
+                )
+            }
+
+        except (
+            smtplib.SMTPException,
+            OSError,
+            TimeoutError
+        ) as exc:
+
+            return {
+                "email": recipient,
+                "status": "failed",
+                "detail": smtp_error_message(exc)
+            }
 
         except Exception as exc:
 
-            logger.exception(
-                "SMTP connection attempt %s failed",
-                attempt + 1
-            )
-
-            if attempt == 0:
-
-                time.sleep(1)
-
-            else:
-
-                error = smtp_error_message(exc)
-
-                return [
-                    {
-                        "email": address,
-                        "status": "failed",
-                        "detail": error
-                    }
-                    for address in recipients
-                ]
-
-    # -----------------------------------------------------
-    # SEND EMAILS
-    # -----------------------------------------------------
-
-    try:
-
-        for index, recipient in enumerate(recipients):
-
-            personalized_subject = process_spintax(
-                subject
-            )
-
-            personalized_body = process_spintax(
-                body
-            )
-
-            try:
-
-                message = create_message(
-                    recipient,
-                    personalized_subject,
-                    personalized_body,
-                    sender_name,
-                    sender_email,
-                    html_mode
+            return {
+                "email": recipient,
+                "status": "failed",
+                "detail": (
+                    f"Unexpected error: {str(exc)[:180]}"
                 )
+            }
 
-                refused = server.send_message(
-                    message
-                )
+    # Send all recipients concurrently using 5 workers.
+    with ThreadPoolExecutor(
+        max_workers=MAX_SMTP_WORKERS
+    ) as executor:
 
-                if refused:
+        future_map = {
+            executor.submit(send_one, recipient): recipient
+            for recipient in recipients
+        }
 
-                    results.append({
-                        "email": recipient,
-                        "status": "failed",
-                        "detail": (
-                            "Recipient rejected by SMTP server."
-                        )
-                    })
+        for future in as_completed(future_map):
 
-                else:
-
-                    results.append({
-                        "email": recipient,
-                        "status": "sent",
-                        "detail": (
-                            "Accepted by Gmail SMTP."
-                        )
-                    })
-
-            except smtplib.SMTPRecipientsRefused:
-
-                results.append({
-                    "email": recipient,
-                    "status": "failed",
-                    "detail": (
-                        "Recipient address rejected by Gmail."
-                    )
-                })
-
-            except smtplib.SMTPDataError as exc:
-
-                logger.warning(
-                    "SMTP data error: %s",
-                    exc
-                )
-
-                results.append({
-                    "email": recipient,
-                    "status": "failed",
-                    "detail": (
-                        f"Message rejected. "
-                        f"SMTP code: {exc.smtp_code}"
-                    )
-                })
-
-            except (
-                smtplib.SMTPException,
-                OSError,
-                TimeoutError
-            ) as exc:
-
-                logger.exception(
-                    "SMTP sending failed for recipient"
-                )
-
-                results.append({
-                    "email": recipient,
-                    "status": "failed",
-                    "detail": smtp_error_message(exc)
-                })
-
-                # Stop the batch if the connection itself failed.
-                for remaining in recipients[index + 1:]:
-
-                    results.append({
-                        "email": remaining,
-                        "status": "failed",
-                        "detail": (
-                            "Batch stopped because "
-                            "the SMTP connection failed."
-                        )
-                    })
-
-                break
-
-            # Respect the configured sending interval.
-            if (
-                index < len(recipients) - 1
-                and MAIL_GAP_SECONDS > 0
-            ):
-
-                time.sleep(
-                    MAIL_GAP_SECONDS
-                )
-
-    finally:
-
-        if server is not None:
-
-            try:
-
-                server.quit()
-
-            except Exception:
-
-                try:
-                    server.close()
-                except Exception:
-                    pass
+            results.append(future.result())
 
     return results
 
@@ -614,7 +537,8 @@ def health():
         "smtp_host": SMTP_HOST,
         "smtp_port": SMTP_PORT,
         "mail_gap_seconds": MAIL_GAP_SECONDS,
-        "max_recipients": MAX_RECIPIENTS
+        "max_recipients": MAX_RECIPIENTS,
+        "max_smtp_workers": MAX_SMTP_WORKERS
     })
 
 
