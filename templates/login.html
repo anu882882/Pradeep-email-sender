@@ -3,23 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · Bulk Email Sender</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Sign in | Bulk Email Sender</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="login-page">
   <main class="login-card">
-    <div class="app-title">➤ Bulk Email Sender</div>
-    <p>Sign in to continue to your workspace.</p>
+    <h1>Bulk Email Sender</h1>
+    <p class="help-text">Sign in to your workspace.</p>
 
     {% if error %}
-      <div class="error">{{ error }}</div>
+      <div class="error" role="alert">{{ error }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('login') }}">
+      <input type="hidden"
+             name="csrf_token"
+             value="{{ csrf_token() }}">
+
       <label for="password">Workspace Password</label>
-      <input id="password" name="password" type="password"
-             placeholder="Enter password" autocomplete="current-password" required>
-      <button class="primary-btn" type="submit">Sign in ›</button>
+      <input id="password"
+             name="password"
+             type="password"
+             autocomplete="current-password"
+             placeholder="Enter workspace password"
+             required>
+
+      <button class="primary-btn" type="submit">Sign in</button>
     </form>
   </main>
 </body>
