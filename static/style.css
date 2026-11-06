@@ -1,964 +1,579 @@
-<CodeBlock language="html" editable>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Secure Mail Console</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-<body>
-
-<header class="topbar">
-    <div>
-        <div class="eyebrow">MAIL OPERATIONS</div>
-        <h1>Secure Mail Console</h1>
-    </div>
-
-<form action="{{ url_for('logout') }}" method="post">
-        <button class="btn secondary" type="submit">Log out</button>
-    </form>
-</header>
-
-<main class="layout">
-
-    <section class="panel">
-
-<div class="panel-head">
-            <div>
-                <div class="eyebrow">MESSAGE BUILDER</div>
-                <h2>Compose email</h2>
-            </div>
-            <span class="pill">Gmail SMTP</span>
-        </div>
-
-        <form id="sendForm">
-
-            <div class="field-grid">
-
-<label class="sender-label">
-                    Sender Name
-                    <input id="senderName" type="text" maxlength="150"
-                           required placeholder="Your name or business">
-                </label>
-
-<label>
-                    Your Gmail
-                    <input id="gmail" type="email" required
-                           placeholder="you@gmail.com">
-                </label>
-
-<label>
-                    App Password
-                    <input id="appPassword" type="password" required
-                           autocomplete="new-password">
-                </label>
-
-<label>
-                    Email Subject
-                    <input id="subject" type="text" maxlength="250"
-                           required placeholder="Email subject">
-                </label>
-
-            </div>
-
-<label>
-                Message body
-                <textarea id="body" rows="9" required
-                    placeholder="Write your message. You can use {{ '{{name}}' }} and {{ '{{email}}' }}."></textarea>
-            </label>
-
-<label class="check">
-                <input id="isHtml" type="checkbox">
-                Message body is HTML
-            </label>
-
-<p class="muted">
-                Send only to recipients who agreed to receive your email.
-            </p>
-
-<div class="actions">
-                <button id="sendBtn" class="btn primary" type="submit">
-                    Send All
-                </button>
-
-<button id="stopBtn" class="btn secondary" type="button" disabled>
-                    Stop UI Updates
-                </button>
-            </div>
-
-<p id="status" class="status" role="status">
-                Ready to send.
-            </p>
-
-</form>
-    </section>
-
-    <div class="right-stack">
-
-        <section class="panel">
-
-<div class="panel-head">
-                <div>
-                    <h2>♟ Recipients</h2>
-                    <p class="muted">
-                        Paste email addresses separated by commas or new lines
-                    </p>
-                </div>
-
-<span id="recipientCount" class="pill">0 found</span>
-            </div>
-
-<label>
-                <textarea id="recipients" rows="6" required form="sendForm"
-                    placeholder="person@example.com
-another@example.com"></textarea>
-            </label>
-
-<label class="check">
-                <input id="consent" type="checkbox" required form="sendForm">
-                I confirm these recipients agreed to receive this email.
-            </label>
-
-        </section>
-
-        <section class="panel">
-
-<div class="panel-head">
-                <div>
-                    <div class="eyebrow">LIVE STATUS</div>
-                    <h2>Progress monitor</h2>
-                </div>
-
-<span id="statePill" class="pill">Ready</span>
-            </div>
-
-            <div class="stats">
-
-<div class="stat">
-                    <span>Total</span>
-                    <strong id="total">0</strong>
-                </div>
-
-<div class="stat">
-                    <span>Sent</span>
-                    <strong id="sent">0</strong>
-                </div>
-
-<div class="stat">
-                    <span>Failed</span>
-                    <strong id="failed">0</strong>
-                </div>
-
-<div class="stat">
-                    <span>Remaining</span>
-                    <strong id="remaining">0</strong>
-                </div>
-
-            </div>
-
-<div class="progress-track">
-                <div id="progressBar" class="progress-bar"></div>
-            </div>
-
-            <h3>Activity log</h3>
-
-<div id="log" class="log" aria-live="polite">
-                <p class="muted">Sending results will appear here.</p>
-            </div>
-
-<p class="footnote">
-                Sent means Gmail accepted the message for sending;
-                it does not confirm Inbox delivery.
-            </p>
-
-        </section>
-
-    </div>
-
-</main>
-
-<script>
-(() => {
-
-    const $ = id => document.getElementById(id);
-
-let controller = null;
-    let stopUi = false;
-
-    // ACTIVITY LOG
-
-    function logLine(message, kind = "") {
-
-        const p = document.createElement("p");
-
-p.className = kind;
-        p.textContent = message;
-
-$("log").prepend(p);
-    }
-
-    // UPDATE COUNTS
-
-    function updateCounts(e) {
-
-        ["total", "sent", "failed", "remaining"].forEach(k => {
-
-if (e[k] !== undefined) {
-                $(k).textContent = e[k];
-            }
-
-        });
-
-        const total = Number($("total").textContent) || 0;
-
-const done =
-            (Number($("sent").textContent) || 0) +
-            (Number($("failed").textContent) || 0);
-
-$("progressBar").style.width =
-            (total ? Math.min(100, done / total * 100) : 0) + "%";
-    }
-
-    // HANDLE STREAM EVENTS
-
-    function handleEvent(e) {
-
-        if (stopUi) return;
-
-        updateCounts(e);
-
-        if (e.type === "start") {
-
-$("statePill").textContent = "Sending";
-            $("status").textContent = "Sending started.";
-
-logLine(Started $DIL0 recipient(s).);
-
-if (e.invalid_skipped > 0) {
-logLine($DIL0 invalid recipient(s) skipped.);
-}
-
-        }
-
-        else if (e.type === "progress") {
-
-            const ok = e.result === "sent";
-
-logLine(
-$DIL0: $DIL1$DIL2,
-ok ? "success" : "failure"
-);
-
-        }
-
-        else if (e.type === "complete") {
-
-            $("statePill").textContent = "Finished";
-
-$("status").textContent =
-Finished: $DIL0 accepted, $DIL1 failed.;
-
-            logLine($("status").textContent);
-
-        }
-
-        else if (e.type === "error") {
-
-            $("status").textContent = e.message || "Sending failed.";
-
-logLine($("status").textContent, "failure");
-        }
-    }
-
-    // RECIPIENT COUNT
-
-    $("recipients").addEventListener("input", () => {
-
-const lines = $("recipients").value
-            .split(/[\n,;]+/)
-            .map(s => s.trim())
-            .filter(Boolean);
-
-const unique = [...new Set(
-            lines.map(s => s.toLowerCase())
-        )];
-
-$("recipientCount").textContent = unique.length + " found";
-    });
-
-    // SEND EMAIL
-
-    $("sendForm").addEventListener("submit", async ev => {
-
-        ev.preventDefault();
-
-        if (controller) return;
-
-        const gmail = $("gmail").value.trim();
-
-const lines = $("recipients").value
-            .split(/[\n,;]+/)
-            .map(s => s.trim())
-            .filter(Boolean);
-
-        const recipients = lines.map(email => ({ email }));
-
-        $("recipientCount").textContent = recipients.length + " found";
-
-        if (!gmail.toLowerCase().endsWith("@gmail.com")) {
-
-$("status").textContent =
-                "Use a valid @gmail.com sender address.";
-
-return;
-        }
-
-        if (!recipients.length || recipients.length > 25) {
-
-            $("status").textContent = "Enter 1–25 recipients.";
-
-return;
-        }
-
-        if (!$("consent").checked) {
-
-$("status").textContent =
-                "Confirm recipient permission before sending.";
-
-return;
-        }
-
-        if (!$("senderName").value.trim()) {
-
-            $("status").textContent = "Enter Sender Name.";
-
-return;
-        }
-
-controller = new AbortController();
-        stopUi = false;
-
-$("sendBtn").disabled = true;
-        $("stopBtn").disabled = false;
-
-        $("log").replaceChildren();
-
-$("statePill").textContent = "Connecting";
-        $("status").textContent = "Connecting to Gmail…";
-
-$("total").textContent = "0";
-        $("sent").textContent = "0";
-        $("failed").textContent = "0";
-        $("remaining").textContent = "0";
-
-        $("progressBar").style.width = "0%";
-
-        try {
-
-            const response = await fetch("/send-batch", {
-
-                method: "POST",
-
-headers: {
-                    "Content-Type": "application/json"
-                },
-
-                signal: controller.signal,
-
-                body: JSON.stringify({
-
-                    sender_name: $("senderName").value.trim(),
-
-                    gmail: gmail,
-
-                    app_password: $("appPassword").value,
-
-                    subject: $("subject").value.trim(),
-
-                    body: $("body").value,
-
-                    is_html: $("isHtml").checked,
-
-                    recipients: recipients,
-
-                    consent_confirmed: true
-
-                })
-
-            });
-
-            if (!response.ok) {
-
-let message = Request failed ($DIL0).;
-
-try {
-
-const d = await response.json();
-
-message = d.message || d.error || message;
-
-} catch {}
-
-throw new Error(message);
-}
-
-if (!response.body) {
-throw new Error("Streaming response unavailable.");
-}
-
-const reader = response.body.getReader();
-const decoder = new TextDecoder();
-
-let buffer = "";
-
-while (true) {
-
-const { value, done } = await reader.read();
-
-if (done) break;
-
-buffer += decoder.decode(value, { stream: true });
-
-const rows = buffer.split("\n");
-
-buffer = rows.pop();
-
-for (const row of rows) {
-
-if (row.trim()) {
-
-try {
-handleEvent(JSON.parse(row));
-} catch {}
-
-}
-}
-}
-
-if (buffer.trim()) {
-
-try {
-handleEvent(JSON.parse(buffer));
-} catch {}
-}
-
-} catch (err) {
-
-$("status").textContent =
-err.name === "AbortError"
-? "Browser request cancelled; some emails may already have been sent."
-: (err.message || "Sending failed.");
-
-logLine($("status").textContent, "failure");
-
-$("statePill").textContent = "Stopped";
-
-} finally {
-
-controller = null;
-
-$("sendBtn").disabled = false;
-$("stopBtn").disabled = true;
-
-}
-
-});
-
-// STOP UI UPDATES
-
-$("stopBtn").addEventListener("click", () => {
-
-stopUi = true;
-
-if (controller) {
-controller.abort();
-}
-
-$("status").textContent =
-"Browser request cancelled. Some emails may already have been sent.";
-
-$("statePill").textContent = "Stopped";
-
-});
-
-})();
-</script>
-
-</body>
-</html>
-</CodeBlock>
-
-3. static/style.css
-<CodeBlock language="css" editable>
 :root {
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    color: #172033;
-    background: #f4f6fb;
-    font-synthesis: none;
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --line: #e3e9f2;
+    --text: #10203d;
+    --muted: #71809a;
+    --blue: #3457db;
+    --blue-light: #edf2ff;
+    --green: #0a9f72;
+    --red: #df4d5a;
+    --orange: #f59e0b;
+    --shadow: 0 5px 22px rgba(22, 42, 82, 0.045);
 }
-
 
 * {
-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-margin: 0;
-min-height: 100vh;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, Arial, sans-serif;
+    font-size: 13px;
 }
 
-/* TOPBAR */
+button,
+input,
+textarea {
+    font: inherit;
+}
 
 .topbar {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 22px max(22px, calc((100vw - 1200px) / 2));
-background: #101b35;
-color: white;
-gap: 16px;
+    min-height: 64px;
+    padding: 0 25px;
+    background: #101b35;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.topbar h1 {
-margin: 3px 0 0;
-font-size: 24px;
+.brand {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
 }
 
-.eyebrow {
-font-size: 10px;
-letter-spacing: .16em;
-font-weight: 800;
-color: #7c8ba9;
+.logout {
+    color: #fff;
+    text-decoration: none;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 8px;
+    padding: 9px 13px;
+    font-weight: 600;
+    transition: background 0.2s;
 }
 
-.topbar .eyebrow {
-color: #9eadd0;
+.logout:hover {
+    background: rgba(255,255,255,0.19);
 }
-
-/* MAIN LAYOUT */
 
 .layout {
-max-width: 1200px;
-margin: 26px auto;
-padding: 0 20px;
-display: grid;
-grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-gap: 22px;
-align-items: start;
+    width: min(1450px, calc(100% - 40px));
+    margin: 25px auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
 }
 
-.right-stack {
-display: grid;
-gap: 22px;
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
 }
 
-.field-grid {
-display: grid;
-grid-template-columns: repeat(2, minmax(0, 1fr));
-gap: 0 16px;
-}
-
-.field-grid label {
-min-width: 0;
-}
-
-.right-stack textarea {
-min-height: 132px;
-}
-
-/* PANELS */
-
-.panel,
-.login-card {
-background: #fff;
-border: 1px solid #e4e8f0;
-border-radius: 18px;
-padding: 24px;
-box-shadow: 0 8px 28px #1a2a4b0b;
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    padding: 21px;
+    box-shadow: var(--shadow);
+    min-width: 0;
 }
 
 .panel-head {
-display: flex;
-justify-content: space-between;
-align-items: center;
-gap: 12px;
-margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 21px;
 }
 
-.panel h2 {
-margin: 5px 0 0;
-font-size: 21px;
+.panel-head h2 {
+    font-size: 16px;
+    margin: 0 0 5px;
+    font-weight: 800;
+    letter-spacing: -0.25px;
+}
+
+.panel-head p {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 0;
 }
 
 .pill {
-font-size: 12px;
-padding: 7px 10px;
-border-radius: 999px;
-background: #eef2ff;
-color: #3e52a1;
-font-weight: 700;
+    color: var(--blue);
+    background: var(--blue-light);
+    border-radius: 20px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
 }
-
-/* LABELS */
 
 label {
-display: block;
-font-size: 13px;
-font-weight: 700;
-margin: 15px 0;
-color: #34415a;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin: 16px 0 7px;
 }
-
-/* SENDER NAME - NOT BOLD */
 
 .sender-label {
-font-weight: 400;
+    font-weight: 400;
 }
 
-/* INPUTS */
-
-input:not([type=checkbox]),
+input:not([type="checkbox"]),
 textarea {
-display: block;
-width: 100%;
-margin-top: 7px;
-border: 1px solid #d8deea;
-border-radius: 10px;
-padding: 12px 13px;
-font: inherit;
-font-size: 14px;
-color: #172033;
-background: #fff;
-outline: none;
+    display: block;
+    width: 100%;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid #dce4ef;
+    border-radius: 8px;
+    outline: none;
+    padding: 11px 12px;
+    font-size: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:not([type="checkbox"]) {
+    min-height: 41px;
+}
+
+textarea {
+    resize: vertical;
+    line-height: 1.65;
+    min-height: 110px;
 }
 
 input:focus,
 textarea:focus {
-border-color: #6579d7;
-box-shadow: 0 0 0 3px #6579d71c;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(52, 87, 219, 0.09);
 }
 
-textarea {
-resize: vertical;
-line-height: 1.55;
+input::placeholder,
+textarea::placeholder {
+    color: #a2adbf;
 }
 
-/* CHECKBOX */
-
-.check {
-display: flex;
-align-items: flex-start;
-gap: 9px;
-line-height: 1.5;
+.password-wrap {
+    position: relative;
 }
 
-.check input {
-margin-top: 3px;
+.password-wrap input {
+    padding-right: 65px;
 }
 
-.muted {
-color: #778198;
-font-size: 12px;
-font-weight: 400;
+.toggle-password {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    color: var(--blue);
+    background: transparent;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-/* BUTTONS */
+.field-note {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.body-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.body-heading label {
+    margin: 0 0 8px;
+}
+
+.mode-switch {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: #f0f3f9;
+    border-radius: 7px;
+    margin-bottom: 7px;
+}
+
+.mode-btn {
+    border: 0;
+    border-radius: 5px;
+    padding: 7px 10px;
+    color: #687791;
+    background: transparent;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.mode-btn.active {
+    color: var(--blue);
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(20, 40, 80, 0.1);
+}
+
+.info-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-top: 9px;
+    color: #526b9d;
+    background: #f2f6ff;
+    border: 1px solid #e3eaff;
+    border-radius: 7px;
+    font-size: 10px;
+}
+
+.info-strip span:first-child {
+    color: var(--blue);
+    font-weight: 700;
+}
+
+.consent-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 17px;
+    padding: 12px;
+    background: #f8faff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.consent-box input {
+    margin: 2px 0 0;
+    accent-color: var(--blue);
+    flex-shrink: 0;
+}
+
+.consent-box label {
+    margin: 0;
+    color: #52617a;
+    font-size: 11px;
+    line-height: 1.6;
+    font-weight: 500;
+}
 
 .btn {
-border: 0;
-border-radius: 10px;
-padding: 11px 16px;
-font-weight: 750;
-cursor: pointer;
+    width: 100%;
+    min-height: 42px;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    transition: opacity 0.2s, transform 0.2s;
 }
 
 .btn:disabled {
-opacity: .5;
-cursor: not-allowed;
+    cursor: not-allowed;
+    opacity: 0.55;
 }
 
 .primary {
-background: #3457db;
-color: white;
+    color: #fff;
+    background: var(--blue);
+    box-shadow: 0 4px 10px rgba(52, 87, 219, 0.16);
+}
+
+.primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.send-button {
+    margin-top: 16px;
 }
 
 .secondary {
-background: #edf0f7;
-color: #293550;
+    color: #5e6c84;
+    background: #edf1f7;
 }
 
-.actions {
-display: flex;
-gap: 10px;
-margin-top: 18px;
+.stop-button {
+    margin-top: 9px;
 }
 
-.actions .btn {
-flex: 1;
+.stop-note {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+    margin: 9px 0 0;
 }
 
-/* STATUS */
-
-.status,
-.notice {
-font-size: 13px;
-line-height: 1.5;
-color: #4b5872;
-background: #f5f7fc;
-border-radius: 10px;
-padding: 12px;
+.recipient-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 9px;
 }
 
-.notice,
-.error {
-color: #a63d35;
-background: #fff1ef;
-padding: 12px;
-border-radius: 10px;
-font-size: 13px;
+.text-button {
+    border: 0;
+    padding: 4px;
+    color: var(--blue);
+    background: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
 }
-
-/* STATS */
 
 .stats {
-display: grid;
-grid-template-columns: repeat(2, minmax(0, 1fr));
-gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
 }
 
 .stat {
-background: #f6f8fc;
-border: 1px solid #e9edf5;
-padding: 17px;
-border-radius: 13px;
+    min-width: 0;
+    padding: 12px 9px;
+    background: #f7f9fd;
+    border: 1px solid #edf0f6;
+    border-radius: 8px;
 }
 
 .stat span {
-display: block;
-text-transform: uppercase;
-letter-spacing: .08em;
-font-size: 10px;
-color: #79839a;
-font-weight: 800;
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 8px;
 }
 
 .stat strong {
-display: block;
-font-size: 29px;
-margin-top: 6px;
-}
-
-/* PROGRESS */
-
-.progress-track {
-height: 8px;
-background: #edf0f6;
-border-radius: 99px;
-overflow: hidden;
-margin: 18px 0 25px;
-}
-
-.progress-bar {
-height: 100%;
-width: 0;
-background: #3457db;
-transition: width .15s;
-}
-
-/* ACTIVITY LOG */
-
-h3 {
-font-size: 15px;
-}
-
-.log {
-height: 310px;
-overflow: auto;
-border: 1px solid #e7ebf3;
-border-radius: 12px;
-padding: 10px;
-background: #fbfcfe;
-}
-
-.log p {
-font-size: 12px;
-line-height: 1.5;
-overflow-wrap: anywhere;
-border-bottom: 1px solid #edf0f5;
-padding: 7px 3px;
-margin: 0;
+    font-size: 21px;
+    font-weight: 800;
 }
 
 .success {
-color: #16805d;
+    color: var(--green);
 }
 
 .failure {
-color: #b53b43;
+    color: var(--red);
+}
+
+.progress-track {
+    height: 8px;
+    width: 100%;
+    background: #edf0f6;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 19px;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background: var(--blue);
+    border-radius: inherit;
+    transition: width 0.25s ease;
+}
+
+.progress-caption {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 9px;
+}
+
+.log {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.log-empty {
+    color: var(--muted);
+    background: #f8faff;
+    border: 1px dashed #dce4ef;
+    border-radius: 8px;
+    padding: 19px;
+    text-align: center;
+    font-size: 11px;
+}
+
+.log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 7px;
+    background: #f8faff;
+    border: 1px solid #edf0f6;
+    font-size: 10px;
+}
+
+.log-email {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.log-message {
+    flex-shrink: 0;
+    max-width: 48%;
+    text-align: right;
+    overflow-wrap: anywhere;
+    color: var(--muted);
+}
+
+.log-item.success .log-message {
+    color: var(--green);
+}
+
+.log-item.failure .log-message {
+    color: var(--red);
 }
 
 .footnote {
-font-size: 11px;
-line-height: 1.5;
-color: #778198;
+    padding: 5px 20px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 10px;
 }
 
-/* LOGIN */
+/* Login page */
 
 .login-page {
-display: grid;
-place-items: center;
-padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background:
+        radial-gradient(circle at top right, #e4ebff 0, transparent 35%),
+        var(--bg);
 }
 
 .login-card {
-width: min(420px, 100%);
+    width: 100%;
+    max-width: 390px;
+    padding: 32px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 15px 45px rgba(22, 42, 82, 0.08);
 }
 
-.login-card h1 {
-font-size: 25px;
+.app-title {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
-.login-card .app-title {
-font-size: 23px;
-font-weight: 800;
-color: #172033;
-margin-bottom: 12px;
+.login-card > p {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 9px 0 24px;
 }
 
-.login-card p {
-color: #778198;
-font-size: 13px;
-line-height: 1.5;
+.login-card label {
+    margin-top: 0;
 }
 
-.login-card .full {
-width: 100%;
-margin-top: 10px;
+.primary-btn {
+    width: 100%;
+    min-height: 43px;
+    margin-top: 16px;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    background: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
 }
 
-/* RESPONSIVE */
+.primary-btn:hover {
+    opacity: 0.92;
+}
+
+.error {
+    padding: 11px;
+    margin-bottom: 17px;
+    color: #b42332;
+    background: #fff0f1;
+    border: 1px solid #ffd9dd;
+    border-radius: 7px;
+    font-size: 11px;
+    line-height: 1.5;
+}
 
 @media (max-width: 800px) {
-
-.layout {
-grid-template-columns: 1fr;
-margin: 14px auto;
-}
-
-.topbar {
-padding: 18px 20px;
-}
-
-.panel {
-padding: 18px;
-}
-
-.topbar h1 {
-font-size: 20px;
-}
-}
-
-@media (max-width: 520px) {
-
-.field-grid {
-grid-template-columns: 1fr;
-}
-
-.actions {
-flex-direction: column;
-}
-}
-</CodeBlock>
-4. templates/login.html
-<CodeBlock language="html" editable>
-<!DOCTYPE html>
-<html lang="en">
-
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-<title>Sign in · Bulk Email Sender</title>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-</head>
-
-
-<body class="login-page">
-
-
-<main class="login-card">
-
-<div class="app-title">
-➤ Bulk Email Sender
-</div>
-
-<p>Sign in to continue to your workspace.</p>
-
-{% if error %}
-<div class="error">{{ error }}</div>
-{% endif %}
-
-<form method="post" action="{{ url_for('login') }}">
-
-<label for="password">
-Workspace Password
-
-<input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="Enter password"
-                    autocomplete="current-password"
-                    required
-                >
-</label>
-
-<button class="btn primary full" type="submit">
-Sign in ›
-</button>
-
-</form>
-
-</main>
-
-</body>
-</html>
-</CodeBlock>
-
-5. requirements.txt
-<CodeBlock language="text" editable>
-Flask>=3.0,<4.0
-</CodeBlock>
-
-6. vercel.json
-<CodeBlock language="json" editable>
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "includeFiles": "templates/**,static/**"
-      }
+    .layout {
+        grid-template-columns: 1fr;
+        width: min(100% - 26px, 600px);
+        margin: 15px auto;
+        gap: 14px;
     }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "api/index.py"
+
+    .right-column {
+        gap: 14px;
     }
-  ]
+
+    .panel {
+        padding: 17px;
+    }
+
+    .topbar {
+        padding: 0 15px;
+        min-height: 58px;
+    }
+
+    .brand {
+        font-size: 16px;
+    }
 }
-</CodeBlock>
+
+@media (max-width: 420px) {
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .info-strip {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .log-item {
+        flex-direction: column;
+    }
+
+    .log-message {
+        max-width: 100%;
+        text-align: left;
+    }
+
+    .login-card {
+        padding: 24px;
+    }
+}
