@@ -1,9 +1,8 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "app.py": {
-      "maxDuration": 60,
-      "includeFiles": "{templates,static}/**"
-    }
-  }
+  "version": 2,
+  "builds": [{"src": "api/index.py", "use": "@vercel/python"}],
+  "routes": [
+    {"src": "/static/(.*)", "dest": "/static/$1"},
+    {"src": "/(.*)", "dest": "api/index.py"}
+  ]
 }
