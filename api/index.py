@@ -250,6 +250,7 @@ def send_one(gmail, app_password, sender_name, subject, body, is_html, recipient
         context=ssl.create_default_context(),
         timeout=SMTP_TIMEOUT
     ) as smtp:
+
         smtp.ehlo()
         smtp.login(gmail, password)
 
@@ -277,6 +278,7 @@ def login():
 
     if not LOGIN_PASSWORD:
         logger.error("LOGIN_PASSWORD is missing.")
+
         return render_template(
             "login.html",
             error="Server login configuration is incomplete."
@@ -354,6 +356,7 @@ def service_worker():
 
 @app.route("/send-batch", methods=["POST"])
 def send_batch():
+
     if not logged_in():
         return jsonify({
             "success": False,
@@ -419,6 +422,7 @@ def send_batch():
         return error(f"Maximum {MAX_RECIPIENTS} unique recipients per batch.")
 
     def generate():
+
         total = len(recipients)
         sent = 0
         failed = 0
@@ -451,6 +455,7 @@ def send_batch():
             }
 
             for future in as_completed(jobs):
+
                 recipient = jobs[future]
 
                 try:
