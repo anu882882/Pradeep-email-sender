@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -27,7 +28,7 @@ body {
     background: var(--page);
     color: var(--text);
     font-family: Inter, Arial, sans-serif;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 button,
@@ -36,17 +37,17 @@ textarea {
     font: inherit;
 }
 
-/* TOP HEADER */
+/* HEADER */
 
 .topbar {
     width: 100%;
-    height: 59px;
+    height: 76px;
     background: var(--navy);
-    color: #fff;
+    color: white;
 }
 
 .topbar-inner {
-    width: min(920px, calc(100% - 40px));
+    width: min(1500px, calc(100% - 64px));
     height: 100%;
     margin: 0 auto;
     display: flex;
@@ -57,17 +58,16 @@ textarea {
 .brand {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 
 .brand-kicker,
 .eyebrow {
     display: block;
     color: #8194c0;
-    font-size: 6px;
-    line-height: 1.3;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 1.1px;
+    letter-spacing: 1.4px;
 }
 
 .brand-kicker {
@@ -75,48 +75,40 @@ textarea {
 }
 
 .brand-title {
-    color: #fff;
-    font-size: 14px;
-    line-height: 1.2;
+    color: white;
+    font-size: 21px;
     font-weight: 800;
-    letter-spacing: -0.25px;
 }
 
 .logout-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 51px;
-    height: 24px;
-    padding: 0 12px;
-    border-radius: 7px;
+    height: 36px;
+    padding: 0 17px;
+    border-radius: 8px;
     background: #f1f4fb;
     color: #172444;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.2s;
 }
 
-.logout-btn:hover {
-    background: #dfe7f8;
-}
-
-/* DASHBOARD LAYOUT */
+/* MAIN DASHBOARD */
 
 .dashboard {
-    width: min(724px, calc(100% - 32px));
-    margin: 17px 0 40px max(16px, calc((100vw - 892px) / 2));
+    width: min(1450px, calc(100% - 48px));
+    margin: 20px auto 40px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 14px;
+    gap: 27px;
     align-items: start;
 }
 
 .right-column {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 27px;
     min-width: 0;
 }
 
@@ -124,59 +116,52 @@ textarea {
 
 .card {
     min-width: 0;
-    padding: 17px 15px;
-    background: var(--white);
+    padding: 30px;
+    background: white;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 7px 22px rgba(29, 51, 92, 0.035);
+    border-radius: 21px;
+    box-shadow: 0 10px 35px rgba(29, 51, 92, 0.045);
 }
 
 .compose-card {
-    min-height: 482px;
+    min-height: 650px;
 }
 
 .recipients-card {
-    min-height: 220px;
+    min-height: 435px;
 }
 
 .progress-card {
-    min-height: 475px;
+    min-height: 600px;
 }
 
 .card-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 9px;
-    margin-bottom: 14px;
+    gap: 14px;
+    margin-bottom: 30px;
 }
 
 .card-heading h1,
 .card-heading h2 {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     color: var(--text);
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 23px;
     font-weight: 800;
-    letter-spacing: -0.2px;
-}
-
-.card-heading h1 {
-    font-size: 12px;
+    letter-spacing: -0.5px;
 }
 
 .badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    min-height: 19px;
-    padding: 0 8px;
+    min-height: 35px;
+    padding: 0 13px;
     color: #2949c7;
     background: var(--blue-soft);
-    border-radius: 20px;
-    font-size: 7px;
-    line-height: 1;
+    border-radius: 25px;
+    font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -196,13 +181,13 @@ textarea {
     background: #fff0f1;
 }
 
-/* FORM FIELDS */
+/* FORM */
 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 10px;
-    row-gap: 2px;
+    column-gap: 20px;
+    row-gap: 24px;
 }
 
 .field {
@@ -212,10 +197,9 @@ textarea {
 .field label,
 .login-card label {
     display: block;
-    margin: 10px 0 5px;
+    margin: 12px 0 9px;
     color: #152544;
-    font-size: 7px;
-    line-height: 1.3;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -227,22 +211,21 @@ textarea {
 .login-card input {
     display: block;
     width: 100%;
-    height: 28px;
-    padding: 0 9px;
+    height: 56px;
+    padding: 0 15px;
     border: 1px solid #d1dced;
-    border-radius: 6px;
+    border-radius: 12px;
     outline: none;
     color: var(--text);
-    background: #fff;
-    font-size: 8px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background: white;
+    font-size: 15px;
 }
 
 .field input:focus,
 .field textarea:focus,
 .login-card input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 2px rgba(52, 88, 223, 0.08);
+    box-shadow: 0 0 0 3px rgba(52, 88, 223, 0.08);
 }
 
 input::placeholder,
@@ -254,56 +237,55 @@ textarea::placeholder {
 /* MESSAGE BODY */
 
 .message-field {
-    margin-top: 11px;
+    margin-top: 27px;
 }
 
 .message-field label {
     margin-top: 0;
-    margin-bottom: 7px;
+    margin-bottom: 11px;
 }
 
 .field textarea {
     display: block;
     width: 100%;
-    min-height: 139px;
-    padding: 9px;
+    min-height: 275px;
+    padding: 15px;
     border: 1px solid #d1dced;
-    border-radius: 6px;
+    border-radius: 12px;
     outline: none;
     resize: vertical;
     color: var(--text);
-    background: #fff;
-    font-size: 8px;
-    line-height: 1.55;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background: white;
+    font-size: 15px;
+    line-height: 1.6;
 }
 
 .check-row {
     display: flex;
     align-items: flex-start;
-    gap: 7px;
-    margin-top: 10px;
+    gap: 11px;
+    margin-top: 18px;
     color: #20304d;
-    font-size: 7px;
+    font-size: 13px;
     line-height: 1.5;
     font-weight: 600;
     cursor: pointer;
 }
 
 .check-row input {
-    width: 8px;
-    height: 8px;
-    flex: 0 0 8px;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
     margin: 1px 0 0;
     accent-color: var(--blue);
     cursor: pointer;
 }
 
 .helper-text {
-    margin: 10px 0;
+    margin: 20px 0;
     color: #8493b1;
-    font-size: 7px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 /* BUTTONS */
@@ -311,18 +293,17 @@ textarea::placeholder {
 .button-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 12px;
 }
 
 .btn {
-    height: 25px;
-    padding: 0 9px;
+    height: 47px;
+    padding: 0 16px;
     border: 0;
-    border-radius: 7px;
-    font-size: 7px;
+    border-radius: 12px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.2s, background 0.2s;
 }
 
 .btn:disabled {
@@ -331,7 +312,7 @@ textarea::placeholder {
 }
 
 .btn-primary {
-    color: #fff;
+    color: white;
     background: var(--blue);
 }
 
@@ -349,13 +330,13 @@ textarea::placeholder {
 }
 
 .status-message {
-    min-height: 27px;
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 7px;
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 13px 15px;
+    border-radius: 10px;
     color: #6e7e9d;
     background: #f3f6fc;
-    font-size: 7px;
+    font-size: 12px;
     line-height: 1.5;
     overflow-wrap: anywhere;
 }
@@ -365,7 +346,7 @@ textarea::placeholder {
 .heading-with-icon {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 12px;
 }
 
 .heading-with-icon h2 {
@@ -374,81 +355,79 @@ textarea::placeholder {
 
 .heading-icon {
     color: #1c2c4d;
-    font-size: 12px;
-    line-height: 1;
+    font-size: 20px;
 }
 
 .section-description {
-    margin: -5px 0 20px;
+    margin: -12px 0 28px;
     color: #8795b0;
-    font-size: 7px;
+    font-size: 13px;
     line-height: 1.5;
 }
 
 .recipients-input {
     display: block;
     width: 100%;
-    height: 98px;
-    min-height: 80px;
-    padding: 9px;
+    height: 195px;
+    min-height: 130px;
+    padding: 16px;
     border: 1px solid #d1dced;
-    border-radius: 6px;
+    border-radius: 12px;
     outline: none;
     resize: vertical;
     color: var(--text);
-    background: #fff;
-    font-size: 8px;
-    line-height: 1.5;
+    background: white;
+    font-size: 15px;
+    line-height: 1.65;
 }
 
 .recipients-input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 2px rgba(52, 88, 223, 0.08);
+    box-shadow: 0 0 0 3px rgba(52, 88, 223, 0.08);
 }
 
 .recipient-check {
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
-/* PROGRESS MONITOR */
+/* PROGRESS */
 
 .progress-card .card-heading {
-    margin-bottom: 12px;
+    margin-bottom: 25px;
 }
 
 .progress-title {
-    margin-top: 4px !important;
-    font-size: 13px !important;
+    margin-top: 7px !important;
+    font-size: 24px !important;
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 15px;
 }
 
 .stat-box {
-    min-height: 61px;
-    padding: 11px;
+    min-height: 116px;
+    padding: 22px;
     border: 1px solid #e0e8f4;
-    border-radius: 9px;
+    border-radius: 15px;
     background: #f5f7fc;
 }
 
 .stat-label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     color: #7183a8;
-    font-size: 6px;
-    line-height: 1;
+    font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
 }
 
 .stat-box strong {
     display: block;
     color: #101d38;
-    font-size: 17px;
+    font-size: 34px;
     line-height: 1;
     font-weight: 800;
 }
@@ -463,8 +442,8 @@ textarea::placeholder {
 
 .progress-track {
     width: 100%;
-    height: 5px;
-    margin-top: 11px;
+    height: 9px;
+    margin-top: 21px;
     overflow: hidden;
     border-radius: 20px;
     background: #e9edf5;
@@ -481,9 +460,9 @@ textarea::placeholder {
 .progress-caption {
     display: flex;
     justify-content: space-between;
-    margin-top: 6px;
+    margin-top: 10px;
     color: #8795b0;
-    font-size: 7px;
+    font-size: 12px;
 }
 
 /* ACTIVITY LOG */
@@ -492,52 +471,52 @@ textarea::placeholder {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 18px;
-    margin-bottom: 8px;
+    margin-top: 27px;
+    margin-bottom: 12px;
 }
 
 .activity-heading h3 {
     margin: 0;
     color: #172746;
-    font-size: 9px;
+    font-size: 15px;
     font-weight: 800;
 }
 
 .clear-btn {
     border: 0;
-    padding: 3px 5px;
+    padding: 5px;
     color: #536baf;
     background: transparent;
-    font-size: 7px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
 }
 
 .activity-log {
-    height: 194px;
-    padding: 7px;
+    height: 260px;
+    padding: 12px;
     overflow-y: auto;
     border: 1px solid #dce5f2;
-    border-radius: 7px;
+    border-radius: 12px;
     background: #fbfcfe;
 }
 
 .log-placeholder {
-    padding: 5px 2px 8px;
+    padding: 8px 3px 12px;
     border-bottom: 1px solid #e9eef6;
     color: #8795b0;
-    font-size: 7px;
+    font-size: 12px;
 }
 
 .log-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
-    padding: 7px 3px;
+    gap: 12px;
+    padding: 11px 4px;
     border-bottom: 1px solid #edf1f7;
-    font-size: 7px;
-    line-height: 1.45;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 .log-email {
@@ -563,13 +542,13 @@ textarea::placeholder {
 }
 
 .delivery-note {
-    margin: 8px 0 0;
+    margin: 12px 0 0;
     color: #8996b0;
-    font-size: 6px;
+    font-size: 10px;
     line-height: 1.5;
 }
 
-/* LOGIN PAGE */
+/* LOGIN */
 
 .login-page {
     display: flex;
@@ -582,11 +561,11 @@ textarea::placeholder {
 
 .login-card {
     width: 100%;
-    max-width: 350px;
-    padding: 25px;
+    max-width: 430px;
+    padding: 32px;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #fff;
+    border-radius: 17px;
+    background: white;
     box-shadow: 0 8px 25px rgba(29, 51, 92, 0.05);
 }
 
@@ -595,36 +574,36 @@ textarea::placeholder {
 }
 
 .login-card h1 {
-    margin: 7px 0;
-    font-size: 19px;
+    margin: 10px 0;
+    font-size: 25px;
     font-weight: 800;
 }
 
 .login-description {
-    margin: 0 0 22px;
+    margin: 0 0 25px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 14px;
 }
 
 .login-card label {
-    margin: 0 0 7px;
-    font-size: 9px;
+    margin: 0 0 9px;
+    font-size: 13px;
 }
 
 .login-card input {
-    height: 38px;
-    font-size: 11px;
+    height: 48px;
+    font-size: 14px;
 }
 
 .login-submit {
     width: 100%;
-    height: 38px;
-    margin-top: 15px;
+    height: 48px;
+    margin-top: 18px;
     border: 0;
-    border-radius: 7px;
-    color: #fff;
+    border-radius: 10px;
+    color: white;
     background: var(--blue);
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
 }
@@ -634,32 +613,27 @@ textarea::placeholder {
 }
 
 .error-message {
-    margin-bottom: 15px;
-    padding: 10px;
+    margin-bottom: 18px;
+    padding: 12px;
     border: 1px solid #f4cbd0;
-    border-radius: 7px;
+    border-radius: 8px;
     color: #b83243;
     background: #fff2f3;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.5;
 }
 
-/* RESPONSIVE */
+/* TABLET AND MOBILE */
 
-@media (max-width: 760px) {
-    .topbar-inner {
-        width: calc(100% - 30px);
-    }
-
+@media (max-width: 900px) {
     .dashboard {
-        width: min(520px, calc(100% - 28px));
-        margin: 15px auto 30px;
+        width: min(720px, calc(100% - 32px));
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 18px;
     }
 
     .right-column {
-        gap: 12px;
+        gap: 18px;
     }
 
     .compose-card,
@@ -667,30 +641,67 @@ textarea::placeholder {
     .progress-card {
         min-height: auto;
     }
-
-    .field textarea {
-        min-height: 150px;
-    }
-
-    .activity-log {
-        height: 180px;
-    }
 }
 
-@media (max-width: 420px) {
-    .card {
-        padding: 14px 12px;
+@media (max-width: 520px) {
+    .topbar {
+        height: 66px;
     }
 
-    .form-grid {
-        column-gap: 8px;
+    .topbar-inner {
+        width: calc(100% - 28px);
     }
 
     .brand-title {
-        font-size: 13px;
+        font-size: 17px;
+    }
+
+    .dashboard {
+        width: calc(100% - 24px);
+        margin-top: 13px;
+    }
+
+    .card {
+        padding: 19px 15px;
+        border-radius: 14px;
+    }
+
+    .card-heading h1,
+    .card-heading h2 {
+        font-size: 19px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        row-gap: 8px;
+    }
+
+    .field input {
+        height: 47px;
+    }
+
+    .field textarea {
+        min-height: 190px;
+    }
+
+    .recipients-input {
+        height: 150px;
+    }
+
+    .stat-box {
+        min-height: 95px;
+        padding: 16px;
+    }
+
+    .stat-box strong {
+        font-size: 28px;
     }
 
     .button-row {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .activity-log {
+        height: 210px;
     }
 }
