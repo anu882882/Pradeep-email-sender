@@ -8,198 +8,209 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header class="topbar">
-        <div class="topbar-inner">
-            <div class="brand">
-                <div class="brand-icon">M</div>
-                <div>
-                    <div class="brand-kicker">MAIL OPERATIONS</div>
-                    <div class="brand-title">Secure Mail Console</div>
-                </div>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <div class="brand">
+            <div class="brand-icon">M</div>
+            <div>
+                <div class="brand-kicker">MAIL OPERATIONS</div>
+                <div class="brand-title">Secure Mail Console</div>
             </div>
-            <a class="logout-link" href="{{ url_for('logout') }}">Log out <span>↗</span></a>
         </div>
-    </header>
+        <a class="logout-link" href="{{ url_for('logout') }}">Log out <span>↗</span></a>
+    </div>
+</header>
 
 <main class="dashboard">
-        <section class="card compose-card">
-            <div class="card-heading">
-                <div>
-                    <div class="eyebrow">MESSAGE CONFIGURATION</div>
-                    <h1>Compose Email</h1>
-                    <p class="section-description">Prepare your message and sender details.</p>
-                </div>
-                <div class="heading-icon">✉</div>
+
+<section class="card compose-card">
+        <div class="card-heading">
+            <div>
+                <div class="eyebrow">MESSAGE CONFIGURATION</div>
+                <h1>Compose Email</h1>
+                <p class="section-description">Prepare your message and sender details.</p>
             </div>
+            <div class="heading-icon">✉</div>
+        </div>
 
 <form id="emailForm">
-                <div class="field">
-                    <label class="sender-label" for="senderName">Sender Name</label>
-                    <input id="senderName" type="text" placeholder="Your name" required>
-                </div>
+            <div class="field">
+                <label class="sender-label" for="senderName">Sender Name</label>
+                <input id="senderName" type="text" placeholder="Your name" required>
+            </div>
 
 <div class="field">
-                    <label for="senderEmail">Gmail Address</label>
-                    <input id="senderEmail" type="email" placeholder="you@gmail.com" required>
-                </div>
+                <label for="senderEmail">Gmail Address</label>
+                <input id="senderEmail" type="email" placeholder="you@gmail.com" required>
+            </div>
 
 <div class="field">
-                    <label for="appPassword">Gmail App Password</label>
-                    <input id="appPassword" type="password" placeholder="Enter your app password" required>
-                    <p class="helper-text">Use a Google App Password, not your regular Gmail password.</p>
-                </div>
+                <label for="appPassword">Gmail App Password</label>
+                <input id="appPassword" type="password" placeholder="Enter your app password" required>
+                <p class="helper-text">Use a Google App Password, not your regular Gmail password.</p>
+            </div>
 
 <div class="field">
-                    <label for="subject">Email Subject</label>
-                    <input id="subject" type="text" placeholder="Enter email subject" required>
-                </div>
+                <label for="subject">Email Subject</label>
+                <input id="subject" type="text" placeholder="Enter email subject" required>
+            </div>
 
 <div class="field">
-                    <div class="label-row">
-                        <label for="messageBody">Message Body</label>
-                        <span class="optional-label">HTML supported</span>
-                    </div>
-                    <textarea id="messageBody" placeholder="Write your message here..." required></textarea>
-                    <p class="helper-text">Personalize with {{name}} and {{email}}.</p>
+                <div class="label-row">
+                    <label for="messageBody">Message Body</label>
+                    <span class="optional-label">HTML supported</span>
                 </div>
+                <textarea id="messageBody" placeholder="Write your message here..." required></textarea>
+                <p class="helper-text">Personalize with {{name}} and {{email}}.</p>
+            </div>
 
 <label class="check-row">
-                    <input type="checkbox" id="htmlMode">
-                    <span>Send message as HTML</span>
-                </label>
+                <input type="checkbox" id="htmlMode">
+                <span>Send message as HTML</span>
+            </label>
 
 <label class="check-row consent-row">
-                    <input type="checkbox" id="consent">
-                    <span>I confirm that these recipients have agreed to receive these emails.</span>
-                </label>
+                <input type="checkbox" id="consent">
+                <span>I confirm that these recipients have agreed to receive these emails.</span>
+            </label>
 
 <button type="submit" class="btn btn-primary" id="sendButton">
-                    <span>➤</span> Start Sending
-                </button>
-                <div class="status-message" id="statusMessage">Ready to send your emails.</div>
-            </form>
-        </section>
+                <span>➤</span> Start Sending
+            </button>
 
-<div class="right-column">
-            <section class="card recipients-card">
-                <div class="card-heading compact-heading">
-                    <div>
-                        <div class="eyebrow">DELIVERY TARGETS</div>
-                        <h2>Recipients</h2>
-                        <p class="section-description">Add up to 25 email addresses.</p>
-                    </div>
-                    <div class="heading-icon">♧</div>
+<div class="status-message" id="statusMessage">
+                Ready to send your emails.
+            </div>
+        </form>
+    </section>
+
+    <div class="right-column">
+
+<section class="card recipients-card">
+            <div class="card-heading compact-heading">
+                <div>
+                    <div class="eyebrow">DELIVERY TARGETS</div>
+                    <h2>Recipients</h2>
+                    <p class="section-description">Add up to 25 email addresses.</p>
                 </div>
+                <div class="heading-icon">♧</div>
+            </div>
 
 <div class="field">
-                    <label for="recipients">Recipient List</label>
-                    <textarea id="recipients" class="recipients-input" placeholder="alex@example.com
+                <label for="recipients">Recipient List</label>
+                <textarea id="recipients" class="recipients-input" placeholder="alex@example.com
 Jordan <jordan@example.com>"></textarea>
-                    <p class="helper-text">Separate addresses with commas, semicolons, or new lines.</p>
-                </div>
-                <div class="recipient-footer">
-                    <span>Maximum recipients</span>
-                    <strong id="recipientCount">0 / 25</strong>
-                </div>
-            </section>
+                <p class="helper-text">Separate addresses with commas, semicolons, or new lines.</p>
+            </div>
+
+<div class="recipient-footer">
+                <span>Maximum recipients</span>
+                <strong id="recipientCount">0 / 25</strong>
+            </div>
+        </section>
 
 <section class="card progress-card">
-                <div class="card-heading compact-heading">
-                    <div>
-                        <div class="eyebrow">LIVE DELIVERY STATUS</div>
-                        <h2>Progress Monitor</h2>
-                    </div>
-                    <span class="live-indicator"><i></i> LIVE</span>
+            <div class="card-heading compact-heading">
+                <div>
+                    <div class="eyebrow">LIVE DELIVERY STATUS</div>
+                    <h2>Progress Monitor</h2>
                 </div>
+                <span class="live-indicator"><i></i> LIVE</span>
+            </div>
 
 <div class="progress-stats">
-                    <div class="stat-box">
-                        <span class="stat-label">TOTAL</span>
-                        <strong id="totalCount">0</strong>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">SENT</span>
-                        <strong class="success-number" id="sentCount">0</strong>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">FAILED</span>
-                        <strong class="error-number" id="failedCount">0</strong>
-                    </div>
+                <div class="stat-box">
+                    <span class="stat-label">TOTAL</span>
+                    <strong id="totalCount">0</strong>
                 </div>
+                <div class="stat-box">
+                    <span class="stat-label">SENT</span>
+                    <strong class="success-number" id="sentCount">0</strong>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">FAILED</span>
+                    <strong class="error-number" id="failedCount">0</strong>
+                </div>
+            </div>
 
 <div class="progress-track">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-caption">
-                    <span id="progressText">Waiting to start</span>
-                    <strong id="progressPercent">0%</strong>
-                </div>
-            </section>
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+<div class="progress-caption">
+                <span id="progressText">Waiting to start</span>
+                <strong id="progressPercent">0%</strong>
+            </div>
+        </section>
 
 <section class="card activity-card">
-                <div class="card-heading compact-heading">
-                    <div>
-                        <div class="eyebrow">SYSTEM EVENTS</div>
-                        <h2>Activity Log</h2>
-                    </div>
-                    <button type="button" class="clear-button" id="clearLog">Clear log</button>
+            <div class="card-heading compact-heading">
+                <div>
+                    <div class="eyebrow">SYSTEM EVENTS</div>
+                    <h2>Activity Log</h2>
                 </div>
-                <div class="activity-log" id="activityLog">
-                    <div class="empty-log">Activity will appear here when sending begins.</div>
-                </div>
-            </section>
-        </div>
-    </main>
+                <button type="button" class="clear-button" id="clearLog">Clear log</button>
+            </div>
+
+<div class="activity-log" id="activityLog">
+                <div class="empty-log">Activity will appear here when sending begins.</div>
+            </div>
+        </section>
+
+</div>
+</main>
 
 <script>
-        const form = document.getElementById("emailForm");
-        const sendButton = document.getElementById("sendButton");
-        const recipientsInput = document.getElementById("recipients");
-        const activityLog = document.getElementById("activityLog");
+const form = document.getElementById("emailForm");
+const sendButton = document.getElementById("sendButton");
+const recipientsInput = document.getElementById("recipients");
+const activityLog = document.getElementById("activityLog");
 
-        let isSending = false;
+let isSending = false;
 
 function getRecipientCount() {
-            const entries = recipientsInput.value
-                .split(/[\n,;]+/)
-                .map(item => item.trim())
-                .filter(Boolean);
+    const entries = recipientsInput.value
+        .split(/[\n,;]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
 
 const unique = new Set(entries.map(item => {
-                const match = item.match(/<([^<>]+)>/);
-                return (match ? match[1] : item).trim().toLowerCase();
-            }));
+        const match = item.match(/<([^<>]+)>/);
+        return (match ? match[1] : item).trim().toLowerCase();
+    }));
 
 return unique.size;
-        }
-
-function updateRecipientCount() {
-const count = getRecipientCount();
-document.getElementById("recipientCount").textContent = $DIL0 / 25;
-document.getElementById("recipientCount").classList.toggle("limit-warning", count > 25);
 }
 
-        recipientsInput.addEventListener("input", updateRecipientCount);
+function updateRecipientCount() {
+    const count = getRecipientCount();
+    const counter = document.getElementById("recipientCount");
+
+counter.textContent = $DIL0 / 25;
+counter.classList.toggle("limit-warning", count > 25);
+}
+
+recipientsInput.addEventListener("input", updateRecipientCount);
 
 function addLog(message, type = "info") {
-            const empty = activityLog.querySelector(".empty-log");
-            if (empty) empty.remove();
+    const empty = activityLog.querySelector(".empty-log");
+    if (empty) empty.remove();
 
 const row = document.createElement("div");
 row.className = log-row $DIL0;
 
-const time = new Date().toLocaleTimeString();
-            const timeElement = document.createElement("span");
-            timeElement.className = "log-time";
-            timeElement.textContent = time;
+const timeElement = document.createElement("span");
+    timeElement.className = "log-time";
+    timeElement.textContent = new Date().toLocaleTimeString();
 
 const messageElement = document.createElement("span");
-            messageElement.className = "log-message";
-            messageElement.textContent = message;
+    messageElement.className = "log-message";
+    messageElement.textContent = message;
 
 row.append(timeElement, messageElement);
-            activityLog.prepend(row);
-        }
+    activityLog.prepend(row);
+}
 
 function setStatus(message, type = "") {
 const status = document.getElementById("statusMessage");
@@ -208,129 +219,182 @@ status.className = status-message $DIL0;
 }
 
 function updateProgress(sent, failed, total) {
-            const completed = sent + failed;
-            const percent = total ? Math.round((completed / total) * 100) : 0;
+    const completed = sent + failed;
+    const percent = total
+        ? Math.round((completed / total) * 100)
+        : 0;
 
 document.getElementById("sentCount").textContent = sent;
-document.getElementById("failedCount").textContent = failed;
-document.getElementById("totalCount").textContent = total;
+    document.getElementById("failedCount").textContent = failed;
+    document.getElementById("totalCount").textContent = total;
+
 document.getElementById("progressFill").style.width = $DIL0%;
 document.getElementById("progressPercent").textContent = $DIL1%;
-document.getElementById("progressText").textContent = $DIL2 of $DIL3 processed;
+document.getElementById("progressText").textContent =
+$DIL2 of $DIL3 processed;
 }
 
 document.getElementById("clearLog").addEventListener("click", () => {
-            activityLog.innerHTML = '<div class="empty-log">Activity will appear here when sending begins.</div>';
-        });
+    activityLog.innerHTML =
+        '<div class="empty-log">Activity will appear here when sending begins.</div>';
+});
 
 form.addEventListener("submit", async (event) => {
-            event.preventDefault();
+    event.preventDefault();
 
-            if (isSending) return;
+    if (isSending) return;
 
-            const totalRecipients = getRecipientCount();
+    if (!form.reportValidity()) return;
+
+    const totalRecipients = getRecipientCount();
 
 if (totalRecipients < 1) {
-                setStatus("Please add at least one valid recipient.", "error");
-                return;
-            }
+        setStatus("Please add at least one recipient.", "error");
+        return;
+    }
 
 if (totalRecipients > 25) {
-                setStatus("You can send to a maximum of 25 recipients at a time.", "error");
-                return;
-            }
+        setStatus("Maximum 25 recipients are allowed.", "error");
+        return;
+    }
 
 if (!document.getElementById("consent").checked) {
-                setStatus("Please confirm recipient consent before sending.", "error");
-                return;
-            }
+        setStatus("Please confirm recipient consent.", "error");
+        return;
+    }
 
 const payload = {
-                sender_name: document.getElementById("senderName").value,
-                sender_email: document.getElementById("senderEmail").value,
-                app_password: document.getElementById("appPassword").value,
-                subject: document.getElementById("subject").value,
-                body: document.getElementById("messageBody").value,
-                recipients: recipientsInput.value,
-                is_html: document.getElementById("htmlMode").checked,
-                consent: document.getElementById("consent").checked
-            };
+        sender_name: document.getElementById("senderName").value,
+        sender_email: document.getElementById("senderEmail").value,
+        app_password: document.getElementById("appPassword").value,
+        subject: document.getElementById("subject").value,
+        body: document.getElementById("messageBody").value,
+        recipients: recipientsInput.value,
+        is_html: document.getElementById("htmlMode").checked,
+        consent: document.getElementById("consent").checked
+    };
 
 isSending = true;
-            sendButton.disabled = true;
-            sendButton.innerHTML = "Sending...";
-            updateProgress(0, 0, totalRecipients);
-            setStatus("Connecting to Gmail SMTP...", "working");
-            addLog("Sending process started.", "info");
+    sendButton.disabled = true;
+    sendButton.textContent = "Sending...";
+
+updateProgress(0, 0, totalRecipients);
+    setStatus("Connecting to Gmail SMTP...", "working");
+    addLog("Sending process started.", "info");
 
 try {
-                const response = await fetch("/send", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(payload)
-                });
+        const response = await fetch("/send", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/x-ndjson"
+            },
+            body: JSON.stringify(payload)
+        });
 
 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Unable to start sending.");
-                }
+            let errorMessage = "Unable to start sending.";
+
+try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (_) {}
+
+throw new Error(errorMessage);
+        }
+
+if (!response.body) {
+            throw new Error("Streaming is not supported by this browser.");
+        }
 
 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = "";
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-while (true) {
-                    const {value, done} = await reader.read();
-                    if (done) break;
+function handleEvent(line) {
+            if (!line.trim()) return;
 
-buffer += decoder.decode(value, {stream: true});
-                    const lines = buffer.split("\n");
-                    buffer = lines.pop();
-
-for (const line of lines) {
-                        if (!line.trim()) continue;
-
-                        const eventData = JSON.parse(line);
+            const eventData = JSON.parse(line);
 
 if (eventData.type === "start") {
-                            setStatus(eventData.message, "working");
-                            addLog(eventData.message, "info");
-                            updateProgress(0, 0, eventData.total);
-                        }
+                updateProgress(0, 0, eventData.total);
+                setStatus(eventData.message, "working");
+                addLog(eventData.message, "info");
+            }
+
+if (eventData.type === "batch") {
+                addLog(eventData.message, "info");
+            }
 
 if (eventData.type === "success") {
-                            updateProgress(eventData.sent, eventData.failed, eventData.total);
-                            addLog(eventData.message, "success");
-                        }
+                updateProgress(
+                    eventData.sent,
+                    eventData.failed,
+                    eventData.total
+                );
+                addLog(eventData.message, "success");
+            }
 
 if (eventData.type === "error") {
-                            updateProgress(eventData.sent, eventData.failed, eventData.total);
-                            addLog(eventData.message, "error");
-                        }
+                updateProgress(
+                    eventData.sent,
+                    eventData.failed,
+                    eventData.total
+                );
+                addLog(eventData.message, "error");
+            }
 
 if (eventData.type === "complete") {
-updateProgress(eventData.sent, eventData.failed, eventData.total);
+                updateProgress(
+                    eventData.sent,
+                    eventData.failed,
+                    eventData.total
+                );
+
 setStatus(
 Completed: $DIL0 sent, $DIL1 failed.,
 eventData.failed ? "error" : "success"
 );
+
 addLog(eventData.message, "info");
 }
 }
+
+while (true) {
+const { value, done } = await reader.read();
+
+if (done) break;
+
+buffer += decoder.decode(value, { stream: true });
+
+const lines = buffer.split("\n");
+buffer = lines.pop() || "";
+
+for (const line of lines) {
+handleEvent(line);
+}
+}
+
+buffer += decoder.decode();
+
+if (buffer.trim()) {
+handleEvent(buffer);
 }
 
 } catch (error) {
-                setStatus(error.message, "error");
-                addLog(error.message, "error");
-            } finally {
-                isSending = false;
-                sendButton.disabled = false;
-                sendButton.innerHTML = "<span>➤</span> Start Sending";
-            }
-        });
+setStatus(error.message || "Unexpected error occurred.", "error");
+addLog(error.message || "Unexpected sending error.", "error");
+
+} finally {
+isSending = false;
+sendButton.disabled = false;
+sendButton.innerHTML = "<span>➤</span> Start Sending";
+}
+});
 
 updateRecipientCount();
-    </script>
+</script>
+
 </body>
 </html>
 </CodeBlock>
