@@ -1,1 +1,3 @@
+<CodeBlock language="text" editable>
 Flask>=3.0,<4.0
+</CodeBlock>
