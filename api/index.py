@@ -50,7 +50,7 @@ def parse_recipients(raw_value):
         if not line:
             continue
 
-        match = re.match(r"^(.*?)\s*<([^<>]+)>$", line)
+        match = re.match(r'^(.*?)\s*<([^<>]+)>$', line)
 
         if match:
             name = match.group(1).strip().strip('"')
@@ -103,12 +103,10 @@ def send_one_email(
 
     message["Subject"] = personalized_subject
     message["From"] = formataddr((sender_name, sender_email))
-
-    if recipient["name"]:
-        message["To"] = formataddr((recipient["name"], email))
-    else:
-        message["To"] = email
-
+    message["To"] = (
+        formataddr((recipient["name"], email))
+        if recipient["name"] else email
+    )
     message["Date"] = formatdate(localtime=True)
     message["Message-ID"] = make_msgid()
 
@@ -230,13 +228,11 @@ def send():
 
         for batch_start in range(0, total, BATCH_SIZE):
             batch = recipients[batch_start:batch_start + BATCH_SIZE]
+            batch_number = (batch_start // BATCH_SIZE) + 1
 
             yield stream_event({
                 "type": "batch",
-                "message": (
-                    f"Processing batch "
-                    f"{(batch_start // BATCH_SIZE) + 1}."
-                )
+                "message": f"Processing batch {batch_number}."
             })
 
             with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
