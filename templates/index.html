@@ -17,7 +17,7 @@
                 <div class="brand-title">Secure Mail Console</div>
             </div>
         </div>
-        <a class="logout-link" href="{{ url_for('logout') }}">Log out ↗</a>
+        <a class="logout-link" href="{{ url_for('logout') }}">Log out</a>
     </div>
 </header>
 
@@ -26,61 +26,61 @@
     <section class="card compose-card">
         <div class="card-heading">
             <div>
-                <div class="eyebrow">MESSAGE CONFIGURATION</div>
-                <h1>Compose Email</h1>
-                <p class="section-description">Prepare your message and sender details.</p>
+                <div class="eyebrow">MESSAGE BUILDER</div>
+                <h1>Compose email</h1>
             </div>
-            <div class="heading-icon">✉</div>
+            <span class="live-indicator">Gmail SMTP</span>
         </div>
 
         <form id="emailForm" novalidate>
 
             <div class="field">
                 <label class="sender-label" for="senderName">Sender Name</label>
-                <input id="senderName" type="text" placeholder="Your name" required>
+                <input id="senderName" type="text" placeholder="Your name or business" required>
             </div>
 
             <div class="field">
-                <label for="senderEmail">Gmail Address</label>
+                <label for="senderEmail">Your Gmail</label>
                 <input id="senderEmail" type="email" placeholder="you@gmail.com" required>
             </div>
 
             <div class="field">
-                <label for="appPassword">Gmail App Password</label>
-                <input id="appPassword" type="password" placeholder="Enter your app password" required>
-                <p class="helper-text">Use a Google App Password, not your regular Gmail password.</p>
+                <label for="appPassword">App Password</label>
+                <input id="appPassword" type="password" placeholder="Enter Gmail app password" required>
             </div>
 
             <div class="field">
                 <label for="subject">Email Subject</label>
-                <input id="subject" type="text" placeholder="Enter email subject" required>
+                <input id="subject" type="text" placeholder="Email subject" required>
             </div>
 
             <div class="field">
                 <div class="label-row">
-                    <label for="messageBody">Message Body</label>
+                    <label for="messageBody">Message body</label>
                     <span class="optional-label">HTML supported</span>
                 </div>
-                <textarea id="messageBody" placeholder="Write your message here..." required></textarea>
-                <p class="helper-text">Personalize with {{name}} and {{email}}.</p>
+                <textarea id="messageBody" placeholder="Write your message. You can use {{name}} and {{email}}." required></textarea>
+                <p class="helper-text">Personalize your message with recipient details.</p>
             </div>
 
             <label class="check-row">
                 <input type="checkbox" id="htmlMode">
-                <span>Send message as HTML</span>
+                <span>Message body is HTML</span>
             </label>
+
+            <p class="helper-text">Send only to recipients who agreed to receive your email.</p>
 
             <label class="check-row consent-row">
                 <input type="checkbox" id="consent">
-                <span>I confirm that these recipients have agreed to receive these emails.</span>
+                <span>I confirm these recipients agreed to receive this email.</span>
             </label>
 
             <button type="submit" class="btn btn-primary" id="sendButton">
-                ➤ Start Sending
+                Send All
             </button>
 
             <div class="status-message" id="statusMessage" role="status">
-                Ready to send your emails.
+                Ready to send.
             </div>
 
         </form>
@@ -91,32 +91,29 @@
         <section class="card recipients-card">
             <div class="card-heading compact-heading">
                 <div>
-                    <div class="eyebrow">DELIVERY TARGETS</div>
-                    <h2>Recipients</h2>
-                    <p class="section-description">Add up to 25 email addresses.</p>
+                    <h2>♟ Recipients</h2>
+                    <p class="section-description">Paste email addresses separated by commas or new lines</p>
                 </div>
-                <div class="heading-icon">♧</div>
+                <span class="live-indicator" id="recipientCount">0 found</span>
             </div>
 
             <div class="field">
-                <label for="recipients">Recipient List</label>
-                <textarea id="recipients" class="recipients-input" placeholder="alex@example.com&#10;Jordan &lt;jordan@example.com&gt;"></textarea>
-                <p class="helper-text">Separate addresses with commas, semicolons, or new lines.</p>
+                <textarea id="recipients" class="recipients-input" placeholder="person@example.com&#10;another@example.com"></textarea>
             </div>
 
-            <div class="recipient-footer">
-                <span>Maximum recipients</span>
-                <strong id="recipientCount">0 / 25</strong>
-            </div>
+            <label class="check-row consent-row">
+                <input type="checkbox" id="recipientConsentMirror" disabled>
+                <span>I confirm these recipients agreed to receive this email.</span>
+            </label>
         </section>
 
         <section class="card progress-card">
             <div class="card-heading compact-heading">
                 <div>
-                    <div class="eyebrow">DELIVERY STATUS</div>
-                    <h2>Progress Monitor</h2>
+                    <div class="eyebrow">LIVE STATUS</div>
+                    <h2>Progress monitor</h2>
                 </div>
-                <span class="live-indicator"><i></i> STATUS</span>
+                <span class="live-indicator" id="liveStatus">Ready</span>
             </div>
 
             <div class="progress-stats">
@@ -132,6 +129,10 @@
                     <span class="stat-label">FAILED</span>
                     <strong class="error-number" id="failedCount">0</strong>
                 </div>
+                <div class="stat-box">
+                    <span class="stat-label">REMAINING</span>
+                    <strong id="remainingCount">0</strong>
+                </div>
             </div>
 
             <div class="progress-track">
@@ -142,20 +143,23 @@
                 <span id="progressText">Waiting to start</span>
                 <strong id="progressPercent">0%</strong>
             </div>
-        </section>
 
-        <section class="card activity-card">
-            <div class="card-heading compact-heading">
-                <div>
-                    <div class="eyebrow">SYSTEM EVENTS</div>
-                    <h2>Activity Log</h2>
+            <section class="activity-card">
+                <div class="card-heading compact-heading">
+                    <div>
+                        <h2>Activity log</h2>
+                    </div>
+                    <button type="button" class="clear-button" id="clearLog">Clear log</button>
                 </div>
-                <button type="button" class="clear-button" id="clearLog">Clear log</button>
-            </div>
 
-            <div class="activity-log" id="activityLog">
-                <div class="empty-log">Activity will appear here when sending begins.</div>
-            </div>
+                <div class="activity-log" id="activityLog">
+                    <div class="empty-log">Sending results will appear here.</div>
+                </div>
+
+                <p class="helper-text">
+                    Sent means Gmail accepted the message for sending; it does not confirm inbox delivery.
+                </p>
+            </section>
         </section>
 
     </div>
@@ -188,10 +192,8 @@
 
     function updateRecipientCount() {
         const count = getRecipientCount();
-        const counter = document.getElementById("recipientCount");
-
-        counter.textContent = `${count} / 25`;
-        counter.classList.toggle("limit-warning", count > 25);
+        document.getElementById("recipientCount").textContent =
+            `${count} found`;
     }
 
     function addLog(message, type = "info") {
@@ -221,6 +223,7 @@
 
     function updateProgress(sent, failed, total) {
         const completed = sent + failed;
+        const remaining = Math.max(0, total - completed);
         const percent = total
             ? Math.round((completed / total) * 100)
             : 0;
@@ -228,6 +231,7 @@
         document.getElementById("totalCount").textContent = total;
         document.getElementById("sentCount").textContent = sent;
         document.getElementById("failedCount").textContent = failed;
+        document.getElementById("remainingCount").textContent = remaining;
 
         document.getElementById("progressFill").style.width =
             `${percent}%`;
@@ -254,12 +258,17 @@
 
     recipientsInput.addEventListener("input", updateRecipientCount);
 
-    document.getElementById("clearLog").addEventListener("click", () => {
-        activityLog.innerHTML =
-            '<div class="empty-log">Activity will appear here when sending begins.</div>';
+    document.getElementById("consent").addEventListener("change", event => {
+        document.getElementById("recipientConsentMirror").checked =
+            event.target.checked;
     });
 
-    form.addEventListener("submit", async (event) => {
+    document.getElementById("clearLog").addEventListener("click", () => {
+        activityLog.innerHTML =
+            '<div class="empty-log">Sending results will appear here.</div>';
+    });
+
+    form.addEventListener("submit", async event => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -298,6 +307,8 @@
         isSending = true;
         sendButton.disabled = true;
         sendButton.textContent = "Sending...";
+
+        document.getElementById("liveStatus").textContent = "Sending";
 
         updateProgress(0, 0, total);
         setStatus("Connecting to Gmail. Please wait...", "working");
@@ -347,15 +358,18 @@
                 data.failed > 0 ? "error" : "success"
             );
 
+            document.getElementById("liveStatus").textContent =
+                data.failed > 0 ? "Completed with errors" : "Completed";
+
         } catch (error) {
             setStatus(error.message || "Sending failed.", "error");
             addLog(error.message || "Unknown sending error.", "error");
+            document.getElementById("liveStatus").textContent = "Error";
 
         } finally {
-            // Form values are deliberately not reset.
             isSending = false;
             sendButton.disabled = false;
-            sendButton.textContent = "➤ Start Sending";
+            sendButton.textContent = "Send All";
         }
     });
 
