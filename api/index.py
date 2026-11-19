@@ -1,17 +1,15 @@
 
 import os
 import re
-import json
 import ssl
 import smtplib
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate, make_msgid
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, Response, jsonify
+    url_for, session, jsonify
 )
 
 app = Flask(
@@ -26,7 +24,6 @@ LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD", "")
 
 MAX_RECIPIENTS = 25
 BATCH_SIZE = 5
-BATCH_DELAY_SECONDS = 1
 
 EMAIL_PATTERN = re.compile(
     r"^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
@@ -67,10 +64,6 @@ def parse_recipients(raw_value):
             })
 
     return recipients
-
-
-def stream_event(data):
-    return json.dumps(data, ensure_ascii=False) + "\n"
 
 
 def send_one_email(
@@ -116,7 +109,7 @@ def send_one_email(
         "smtp.gmail.com",
         465,
         context=context,
-        timeout=25
+        timeout=20
     ) as server:
         server.login(sender_email, app_password)
         server.sendmail(
@@ -166,7 +159,8 @@ def logout():
 def send():
     if not session.get("logged_in"):
         return jsonify({
-            "error": "Your session has expired. Please log in again."
+            "success": False,
+            "error": "Session expired. Please log in again."
         }), 401
 
     data = request.get_json(silent=True) or {}
@@ -188,122 +182,96 @@ def send():
         body.strip()
     ]):
         return jsonify({
+            "success": False,
             "error": "Please complete all required fields."
         }), 400
 
     if not is_valid_email(sender_email):
         return jsonify({
-            "error": "Please enter a valid Gmail address."
+            "success": False,
+            "error": "Please enter a valid sender email address."
         }), 400
 
     if not consent:
         return jsonify({
-            "error": "Please confirm recipient consent before sending."
+            "success": False,
+            "error": "Please confirm recipient consent."
         }), 400
 
     recipients = parse_recipients(recipients_raw)
 
     if not recipients:
         return jsonify({
-            "error": "No valid recipient email addresses were found."
+            "success": False,
+            "error": "No valid recipient email addresses found."
         }), 400
 
     if len(recipients) > MAX_RECIPIENTS:
         return jsonify({
+            "success": False,
             "error": f"Maximum {MAX_RECIPIENTS} recipients are allowed."
         }), 400
 
-    def generate():
-        total = len(recipients)
-        sent = 0
-        failed = 0
+    results = []
 
-        yield stream_event({
-            "type": "start",
-            "total": total,
-            "sent": sent,
-            "failed": failed,
-            "message": f"Starting delivery to {total} recipients."
-        })
+    # Wait for every SMTP task before returning the HTTP response.
+    for start in range(0, len(recipients), BATCH_SIZE):
+        batch = recipients[start:start + BATCH_SIZE]
 
-        for batch_start in range(0, total, BATCH_SIZE):
-            batch = recipients[batch_start:batch_start + BATCH_SIZE]
-            batch_number = (batch_start // BATCH_SIZE) + 1
+        with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+            futures = {
+                executor.submit(
+                    send_one_email,
+                    recipient,
+                    sender_name,
+                    sender_email,
+                    app_password,
+                    subject,
+                    body,
+                    is_html
+                ): recipient
+                for recipient in batch
+            }
 
-            yield stream_event({
-                "type": "batch",
-                "message": f"Processing batch {batch_number}."
-            })
+            for future in as_completed(futures):
+                recipient = futures[future]
 
-            with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
-                futures = {
-                    executor.submit(
-                        send_one_email,
-                        recipient,
-                        sender_name,
-                        sender_email,
-                        app_password,
-                        subject,
-                        body,
-                        is_html
-                    ): recipient
-                    for recipient in batch
-                }
+                try:
+                    email = future.result()
 
-                for future in as_completed(futures):
-                    recipient = futures[future]
+                    results.append({
+                        "success": True,
+                        "email": email,
+                        "message": f"SMTP accepted email for {email}."
+                    })
 
-                    try:
-                        email = future.result()
-                        sent += 1
+                except Exception as exc:
+                    error_message = str(exc).replace(
+                        app_password, "[hidden]"
+                    )
 
-                        yield stream_event({
-                            "type": "success",
-                            "email": email,
-                            "sent": sent,
-                            "failed": failed,
-                            "total": total,
-                            "message": f"SMTP accepted email for {email}."
-                        })
-
-                    except Exception as exc:
-                        failed += 1
-
-                        error_message = str(exc).replace(
-                            app_password, "[hidden]"
+                    results.append({
+                        "success": False,
+                        "email": recipient["email"],
+                        "message": (
+                            f"Failed for {recipient['email']}: "
+                            f"{error_message[:250]}"
                         )
+                    })
 
-                        yield stream_event({
-                            "type": "error",
-                            "email": recipient["email"],
-                            "sent": sent,
-                            "failed": failed,
-                            "total": total,
-                            "message": (
-                                f"Failed for {recipient['email']}: "
-                                f"{error_message[:250]}"
-                            )
-                        })
+    sent = sum(1 for item in results if item["success"])
+    failed = len(results) - sent
 
-            if batch_start + BATCH_SIZE < total:
-                time.sleep(BATCH_DELAY_SECONDS)
-
-        yield stream_event({
-            "type": "complete",
-            "sent": sent,
-            "failed": failed,
-            "total": total,
-            "message": "Sending process completed."
-        })
-
-    return Response(
-        generate(),
-        mimetype="application/x-ndjson",
-        headers={
-            "Cache-Control": "no-cache, no-store",
-            "X-Accel-Buffering": "no"
-        }
-    )
+    return jsonify({
+        "success": failed == 0,
+        "total": len(recipients),
+        "sent": sent,
+        "failed": failed,
+        "results": results,
+        "message": (
+            f"Sending completed: {sent} sent, {failed} failed."
+        )
+    })
 
 
 if __name__ == "__main__":
