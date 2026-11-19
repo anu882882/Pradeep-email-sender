@@ -1,3 +1,4 @@
+<CodeBlock language="json" editable>
 {
   "version": 2,
   "builds": [
@@ -8,8 +9,13 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
   ]
 }
+</CodeBlock>
