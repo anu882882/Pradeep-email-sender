@@ -7,20 +7,25 @@
     <title>Login - Mail Operations</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="login-page">
-    <div class="login-card">
+<body>
+
+
+<main class="login-page">
+    <section class="login-card">
         <div class="login-logo">M</div>
-        <div class="eyebrow">MAIL OPERATIONS</div>
-        <h1>Welcome Back</h1>
-        <p class="section-description">Sign in to access your secure mail console.</p>
+
+
+<div class="eyebrow">MAIL OPERATIONS</div>
+<h1>Secure Mail Console</h1>
+<p class="section-description">Enter your password to continue.</p>
 
 {% if error %}
-            <div class="login-error">{{ error }}</div>
-        {% endif %}
+<div class="login-error">{{ error }}</div>
+{% endif %}
 
-<form method="POST">
-            <label for="password">Access Password</label>
-            <input
+<form method="POST" action="{{ url_for('login') }}">
+<label for="password">Login Password</label>
+<input
                 id="password"
                 name="password"
                 type="password"
@@ -28,10 +33,18 @@
                 required
                 autofocus
             >
-            <button class="btn btn-primary" type="submit">Sign In</button>
-        </form>
-        <p class="login-footer">Secure Mail Console</p>
-    </div>
+
+<button type="submit" class="btn btn-primary">
+Login
+</button>
+</form>
+
+<p class="login-footer">Secure access only</p>
+</section>
+
+</main>
+
+
 </body>
 </html>
 </CodeBlock>
