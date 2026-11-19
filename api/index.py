@@ -1,4 +1,3 @@
-
 import os
 import re
 import ssl
@@ -8,8 +7,8 @@ from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate, make_msgid
 
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, jsonify
+    Flask, render_template, request,
+    redirect, url_for, session, jsonify
 )
 
 app = Flask(
@@ -214,7 +213,6 @@ def send():
 
     results = []
 
-    # Wait for every SMTP task before returning the HTTP response.
     for start in range(0, len(recipients), BATCH_SIZE):
         batch = recipients[start:start + BATCH_SIZE]
 
@@ -238,7 +236,6 @@ def send():
 
                 try:
                     email = future.result()
-
                     results.append({
                         "success": True,
                         "email": email,
@@ -268,9 +265,7 @@ def send():
         "sent": sent,
         "failed": failed,
         "results": results,
-        "message": (
-            f"Sending completed: {sent} sent, {failed} failed."
-        )
+        "message": f"Completed: {sent} sent, {failed} failed."
     })
 
 
