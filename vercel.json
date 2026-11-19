@@ -1,4 +1,3 @@
-<CodeBlock language="json" editable>
 {
   "version": 2,
   "builds": [
@@ -18,4 +17,3 @@
     }
   ]
 }
-</CodeBlock>
