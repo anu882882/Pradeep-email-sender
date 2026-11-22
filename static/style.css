@@ -693,3 +693,13 @@ body {
         height: 175px;
     }
 }
+
+/* ADJUSTABLE MESSAGE BODY */
+
+#messageBody {
+    height: 225px;
+    min-height: 80px;
+    max-height: none;
+    resize: vertical;
+    overflow-y: auto;
+}
