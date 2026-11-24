@@ -3,38 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in - Secure Mail Console</title>
+    <title>Login - Bulk Email Sender</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body class="login-page">
 
     <main class="login-card">
-        <div class="brand-icon login-icon">M</div>
 
-        <h1>Secure Mail Console</h1>
-        <p>Sign in to continue to your workspace.</p>
+        <div class="header-logo login-logo">M</div>
+
+        <div class="eyebrow">MAIL OPERATIONS</div>
+        <h1>Welcome back</h1>
+        <p>Login to continue to your workspace.</p>
 
         {% if error %}
-            <div class="error">{{ error }}</div>
+            <div class="login-error">{{ error }}</div>
         {% endif %}
 
         <form method="POST" action="{{ url_for('login') }}">
+
             <label for="password">Workspace Password</label>
 
             <input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Enter password"
+                placeholder="Enter your password"
                 autocomplete="current-password"
                 required
             >
 
-            <button type="submit" class="send-button">
-                Sign in
+            <button type="submit" class="login-submit-button">
+                Login
             </button>
+
         </form>
+
     </main>
 
 </body>
