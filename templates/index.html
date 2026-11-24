@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,7 +60,13 @@
                     <label for="messageBody">Message body</label>
                     <span class="optional-label">HTML supported</span>
                 </div>
-                <textarea id="messageBody" placeholder="Write your message. You can use {{name}} and {{email}}." required></textarea>
+
+                <textarea
+                    id="messageBody"
+                    placeholder="Write your message. You can use {{name}} and {{email}}."
+                    required
+                ></textarea>
+
                 <p class="helper-text">Personalize your message with recipient details.</p>
             </div>
 
@@ -68,7 +75,9 @@
                 <span>Message body is HTML</span>
             </label>
 
-            <p class="helper-text">Send only to recipients who agreed to receive your email.</p>
+            <p class="helper-text">
+                Send only to recipients who agreed to receive your email.
+            </p>
 
             <label class="check-row consent-row">
                 <input type="checkbox" id="consent">
@@ -92,13 +101,19 @@
             <div class="card-heading compact-heading">
                 <div>
                     <h2>♟ Recipients</h2>
-                    <p class="section-description">Paste email addresses separated by commas or new lines</p>
+                    <p class="section-description">
+                        Paste email addresses separated by commas or new lines
+                    </p>
                 </div>
                 <span class="live-indicator" id="recipientCount">0 found</span>
             </div>
 
             <div class="field">
-                <textarea id="recipients" class="recipients-input" placeholder="person@example.com&#10;another@example.com"></textarea>
+                <textarea
+                    id="recipients"
+                    class="recipients-input"
+                    placeholder="person@example.com&#10;another@example.com"
+                ></textarea>
             </div>
 
             <label class="check-row consent-row">
@@ -121,14 +136,17 @@
                     <span class="stat-label">TOTAL</span>
                     <strong id="totalCount">0</strong>
                 </div>
+
                 <div class="stat-box">
                     <span class="stat-label">SENT</span>
                     <strong class="success-number" id="sentCount">0</strong>
                 </div>
+
                 <div class="stat-box">
                     <span class="stat-label">FAILED</span>
                     <strong class="error-number" id="failedCount">0</strong>
                 </div>
+
                 <div class="stat-box">
                     <span class="stat-label">REMAINING</span>
                     <strong id="remainingCount">0</strong>
@@ -149,11 +167,15 @@
                     <div>
                         <h2>Activity log</h2>
                     </div>
-                    <button type="button" class="clear-button" id="clearLog">Clear log</button>
+                    <button type="button" class="clear-button" id="clearLog">
+                        Clear log
+                    </button>
                 </div>
 
                 <div class="activity-log" id="activityLog">
-                    <div class="empty-log">Sending results will appear here.</div>
+                    <div class="empty-log">
+                        Sending results will appear here.
+                    </div>
                 </div>
 
                 <p class="helper-text">
@@ -192,13 +214,17 @@
 
     function updateRecipientCount() {
         const count = getRecipientCount();
+
         document.getElementById("recipientCount").textContent =
             `${count} found`;
     }
 
     function addLog(message, type = "info") {
         const empty = activityLog.querySelector(".empty-log");
-        if (empty) empty.remove();
+
+        if (empty) {
+            empty.remove();
+        }
 
         const row = document.createElement("div");
         row.className = `log-row ${type}`;
@@ -217,6 +243,7 @@
 
     function setStatus(message, type = "") {
         const status = document.getElementById("statusMessage");
+
         status.textContent = message;
         status.className = `status-message ${type}`;
     }
@@ -224,6 +251,7 @@
     function updateProgress(sent, failed, total) {
         const completed = sent + failed;
         const remaining = Math.max(0, total - completed);
+
         const percent = total
             ? Math.round((completed / total) * 100)
             : 0;
@@ -272,14 +300,20 @@
         event.preventDefault();
         event.stopPropagation();
 
-        if (isSending) return;
+        if (isSending) {
+            return;
+        }
 
         const payload = getPayload();
         const total = getRecipientCount();
 
-        if (!payload.sender_name || !payload.sender_email ||
-            !payload.app_password || !payload.subject ||
-            !payload.body.trim()) {
+        if (
+            !payload.sender_name ||
+            !payload.sender_email ||
+            !payload.app_password ||
+            !payload.subject ||
+            !payload.body.trim()
+        ) {
             setStatus("Please complete all required fields.", "error");
             return;
         }
@@ -317,10 +351,15 @@
         try {
             const response = await fetch("/send", {
                 method: "POST",
+
+                // Important: send the login session cookie with this request.
+                credentials: "same-origin",
+
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
+
                 body: JSON.stringify(payload)
             });
 
@@ -341,29 +380,42 @@
             }
 
             if (!Array.isArray(data.results)) {
-                throw new Error(data.error || "Unexpected server response.");
+                throw new Error(
+                    data.error || "Unexpected server response."
+                );
             }
 
-            updateProgress(data.sent, data.failed, data.total);
+            updateProgress(
+                Number(data.sent) || 0,
+                Number(data.failed) || 0,
+                Number(data.total) || total
+            );
 
             data.results.forEach(item => {
                 addLog(
-                    item.message,
+                    item.message || "No result message returned.",
                     item.success ? "success" : "error"
                 );
             });
 
             setStatus(
                 data.message || "Sending completed.",
-                data.failed > 0 ? "error" : "success"
+                Number(data.failed) > 0 ? "error" : "success"
             );
 
             document.getElementById("liveStatus").textContent =
-                data.failed > 0 ? "Completed with errors" : "Completed";
+                Number(data.failed) > 0
+                    ? "Completed with errors"
+                    : "Completed";
 
         } catch (error) {
             setStatus(error.message || "Sending failed.", "error");
-            addLog(error.message || "Unknown sending error.", "error");
+
+            addLog(
+                error.message || "Unknown sending error.",
+                "error"
+            );
+
             document.getElementById("liveStatus").textContent = "Error";
 
         } finally {
@@ -374,6 +426,7 @@
     });
 
     updateRecipientCount();
+
 })();
 </script>
 
