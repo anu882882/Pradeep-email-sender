@@ -1,50 +1,41 @@
-<CodeBlock language="html" editable>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Mail Operations</title>
+    <title>Sign in - Secure Mail Console</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
 
+<body class="login-page">
 
-<main class="login-page">
-    <section class="login-card">
-        <div class="login-logo">M</div>
+    <main class="login-card">
+        <div class="brand-icon login-icon">M</div>
 
+        <h1>Secure Mail Console</h1>
+        <p>Sign in to continue to your workspace.</p>
 
-<div class="eyebrow">MAIL OPERATIONS</div>
-<h1>Secure Mail Console</h1>
-<p class="section-description">Enter your password to continue.</p>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
 
-{% if error %}
-<div class="login-error">{{ error }}</div>
-{% endif %}
+        <form method="POST" action="{{ url_for('login') }}">
+            <label for="password">Workspace Password</label>
 
-<form method="POST" action="{{ url_for('login') }}">
-<label for="password">Login Password</label>
-<input
+            <input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter password"
+                autocomplete="current-password"
                 required
-                autofocus
             >
 
-<button type="submit" class="btn btn-primary">
-Login
-</button>
-</form>
-
-<p class="login-footer">Secure access only</p>
-</section>
-
-</main>
-
+            <button type="submit" class="send-button">
+                Sign in
+            </button>
+        </form>
+    </main>
 
 </body>
 </html>
-</CodeBlock>
