@@ -1,4 +1,4 @@
-
+<CodeBlock language="html" editable>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +24,7 @@
 
 <main class="dashboard">
 
-    <section class="card compose-card">
+<section class="card compose-card">
         <div class="card-heading">
             <div>
                 <div class="eyebrow">MESSAGE BUILDER</div>
@@ -35,69 +35,97 @@
 
         <form id="emailForm" novalidate>
 
-            <div class="field">
+<div class="field">
                 <label class="sender-label" for="senderName">Sender Name</label>
-                <input id="senderName" type="text" placeholder="Your name or business" required>
+                <input id="senderName" type="text"
+                       placeholder="Your name or business" required>
             </div>
 
-            <div class="field">
+<div class="field">
                 <label for="senderEmail">Your Gmail</label>
-                <input id="senderEmail" type="email" placeholder="you@gmail.com" required>
+                <input id="senderEmail" type="email"
+                       placeholder="you@gmail.com" required>
             </div>
 
-            <div class="field">
+<div class="field">
                 <label for="appPassword">App Password</label>
-                <input id="appPassword" type="password" placeholder="Enter Gmail app password" required>
+                <input id="appPassword" type="password"
+                       placeholder="Enter Gmail app password" required>
             </div>
 
-            <div class="field">
+<div class="field">
                 <label for="subject">Email Subject</label>
-                <input id="subject" type="text" placeholder="Email subject" required>
+                <input id="subject" type="text"
+                       placeholder="Email subject" required>
             </div>
 
-            <div class="field">
+<div class="field">
                 <div class="label-row">
-                    <label for="messageBody">Message body</label>
+                    <label for="messageBody">Message Body</label>
                     <span class="optional-label">HTML supported</span>
                 </div>
 
-                <textarea
+<div class="font-control">
+                    <label for="fontFamily">Message font</label>
+                    <select id="fontFamily">
+                        <option value="Arial">Arial</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Calibri">Calibri</option>
+                        <option value="Cambria">Cambria</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Garamond">Garamond</option>
+                        <option value="Palatino">Palatino</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Lucida Console">Lucida Console</option>
+                    </select>
+                </div>
+
+<textarea
                     id="messageBody"
                     placeholder="Write your message. You can use {{name}} and {{email}}."
                     required
                 ></textarea>
 
-                <p class="helper-text">Personalize your message with recipient details.</p>
+<p class="helper-text">
+                    Personalize your message with recipient details.
+                    You can resize this message box vertically.
+                </p>
             </div>
 
-            <label class="check-row">
+<label class="check-row">
                 <input type="checkbox" id="htmlMode">
                 <span>Message body is HTML</span>
             </label>
 
-            <p class="helper-text">
+<p class="helper-text">
                 Send only to recipients who agreed to receive your email.
             </p>
 
-            <label class="check-row consent-row">
+<label class="check-row consent-row">
                 <input type="checkbox" id="consent">
                 <span>I confirm these recipients agreed to receive this email.</span>
             </label>
 
-            <button type="submit" class="btn btn-primary" id="sendButton">
+<button type="submit" class="btn btn-primary" id="sendButton">
                 Send All
             </button>
 
-            <div class="status-message" id="statusMessage" role="status">
+<div class="status-message" id="statusMessage" role="status">
                 Ready to send.
             </div>
 
-        </form>
+</form>
     </section>
 
     <div class="right-column">
 
-        <section class="card recipients-card">
+<section class="card recipients-card">
             <div class="card-heading compact-heading">
                 <div>
                     <h2>♟ Recipients</h2>
@@ -108,21 +136,22 @@
                 <span class="live-indicator" id="recipientCount">0 found</span>
             </div>
 
-            <div class="field">
+<div class="field">
                 <textarea
                     id="recipients"
                     class="recipients-input"
-                    placeholder="person@example.com&#10;another@example.com"
+                    placeholder="person@example.com
+another@example.com"
                 ></textarea>
             </div>
 
-            <label class="check-row consent-row">
+<label class="check-row consent-row">
                 <input type="checkbox" id="recipientConsentMirror" disabled>
-                <span>I confirm these recipients agreed to receive this email.</span>
+                <span>Recipient consent confirmation</span>
             </label>
         </section>
 
-        <section class="card progress-card">
+<section class="card progress-card">
             <div class="card-heading compact-heading">
                 <div>
                     <div class="eyebrow">LIVE STATUS</div>
@@ -131,38 +160,38 @@
                 <span class="live-indicator" id="liveStatus">Ready</span>
             </div>
 
-            <div class="progress-stats">
+<div class="progress-stats">
                 <div class="stat-box">
                     <span class="stat-label">TOTAL</span>
                     <strong id="totalCount">0</strong>
                 </div>
 
-                <div class="stat-box">
+<div class="stat-box">
                     <span class="stat-label">SENT</span>
                     <strong class="success-number" id="sentCount">0</strong>
                 </div>
 
-                <div class="stat-box">
+<div class="stat-box">
                     <span class="stat-label">FAILED</span>
                     <strong class="error-number" id="failedCount">0</strong>
                 </div>
 
-                <div class="stat-box">
+<div class="stat-box">
                     <span class="stat-label">REMAINING</span>
                     <strong id="remainingCount">0</strong>
                 </div>
             </div>
 
-            <div class="progress-track">
+<div class="progress-track">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
 
-            <div class="progress-caption">
+<div class="progress-caption">
                 <span id="progressText">Waiting to start</span>
                 <strong id="progressPercent">0%</strong>
             </div>
 
-            <section class="activity-card">
+<section class="activity-card">
                 <div class="card-heading compact-heading">
                     <div>
                         <h2>Activity log</h2>
@@ -172,142 +201,185 @@
                     </button>
                 </div>
 
-                <div class="activity-log" id="activityLog">
+<div class="activity-log" id="activityLog">
                     <div class="empty-log">
                         Sending results will appear here.
                     </div>
                 </div>
 
-                <p class="helper-text">
-                    Sent means Gmail accepted the message for sending; it does not confirm inbox delivery.
+<p class="helper-text">
+                    Sent means Gmail accepted the message for sending;
+                    it does not confirm inbox delivery.
                 </p>
             </section>
         </section>
 
-    </div>
+</div>
 </main>
 
 <script>
 (() => {
     "use strict";
 
-    const form = document.getElementById("emailForm");
+const form = document.getElementById("emailForm");
     const sendButton = document.getElementById("sendButton");
     const recipientsInput = document.getElementById("recipients");
     const activityLog = document.getElementById("activityLog");
+    const messageBody = document.getElementById("messageBody");
+    const fontFamily = document.getElementById("fontFamily");
+    const consent = document.getElementById("consent");
 
     let isSending = false;
 
-    function getRecipientCount() {
+const FONT_MAP = {
+        "Arial": "Arial, Helvetica, sans-serif",
+        "Arial Black": "Arial Black, Arial, sans-serif",
+        "Calibri": "Calibri, Arial, sans-serif",
+        "Cambria": "Cambria, Georgia, serif",
+        "Courier New": "'Courier New', monospace",
+        "Georgia": "Georgia, serif",
+        "Helvetica": "Helvetica, Arial, sans-serif",
+        "Tahoma": "Tahoma, sans-serif",
+        "Times New Roman": "'Times New Roman', serif",
+        "Trebuchet MS": "'Trebuchet MS', sans-serif",
+        "Verdana": "Verdana, sans-serif",
+        "Garamond": "Garamond, serif",
+        "Palatino": "'Palatino Linotype', Palatino, serif",
+        "Impact": "Impact, sans-serif",
+        "Lucida Console": "'Lucida Console', monospace"
+    };
+
+function extractAddress(item) {
+        const match = item.match(/<([^<>]+)>/);
+        return (match ? match[1] : item).trim().toLowerCase();
+    }
+
+function getUniqueRecipients() {
         const entries = recipientsInput.value
             .split(/[\n,;]+/)
             .map(item => item.trim())
             .filter(Boolean);
 
-        const unique = new Set(entries.map(item => {
-            const match = item.match(/<([^<>]+)>/);
-            return (match ? match[1] : item).trim().toLowerCase();
-        }));
+const seen = new Set();
+        const unique = [];
 
-        return unique.size;
+entries.forEach(item => {
+            const address = extractAddress(item);
+            if (address && !seen.has(address)) {
+                seen.add(address);
+                unique.push(item);
+            }
+        });
+
+return unique;
     }
 
-    function updateRecipientCount() {
-        const count = getRecipientCount();
+function updateRecipientCount() {
+const count = getUniqueRecipients().length;
+document.getElementById("recipientCount").textContent =
+$DIL0 found;
+}
 
-        document.getElementById("recipientCount").textContent =
-            `${count} found`;
-    }
-
-    function addLog(message, type = "info") {
+function addLog(message, type = "info") {
         const empty = activityLog.querySelector(".empty-log");
+        if (empty) empty.remove();
 
-        if (empty) {
-            empty.remove();
-        }
+const row = document.createElement("div");
+row.className = log-row $DIL0;
 
-        const row = document.createElement("div");
-        row.className = `log-row ${type}`;
-
-        const time = document.createElement("span");
+const time = document.createElement("span");
         time.className = "log-time";
         time.textContent = new Date().toLocaleTimeString();
 
-        const text = document.createElement("span");
+const text = document.createElement("span");
         text.className = "log-message";
         text.textContent = message;
 
-        row.append(time, text);
+row.append(time, text);
         activityLog.prepend(row);
     }
 
-    function setStatus(message, type = "") {
-        const status = document.getElementById("statusMessage");
+function setStatus(message, type = "") {
+const status = document.getElementById("statusMessage");
+status.textContent = message;
+status.className = status-message $DIL0;
+}
 
-        status.textContent = message;
-        status.className = `status-message ${type}`;
-    }
-
-    function updateProgress(sent, failed, total) {
+function updateProgress(sent, failed, total) {
         const completed = sent + failed;
         const remaining = Math.max(0, total - completed);
-
         const percent = total
             ? Math.round((completed / total) * 100)
             : 0;
 
-        document.getElementById("totalCount").textContent = total;
+document.getElementById("totalCount").textContent = total;
         document.getElementById("sentCount").textContent = sent;
         document.getElementById("failedCount").textContent = failed;
         document.getElementById("remainingCount").textContent = remaining;
 
-        document.getElementById("progressFill").style.width =
-            `${percent}%`;
+document.getElementById("progressFill").style.width =
+$DIL0%;
 
-        document.getElementById("progressPercent").textContent =
-            `${percent}%`;
+document.getElementById("progressPercent").textContent =
+$DIL0%;
 
-        document.getElementById("progressText").textContent =
-            `${completed} of ${total} processed`;
-    }
+document.getElementById("progressText").textContent =
+$DIL0 of $DIL1 processed;
+}
 
-    function getPayload() {
+function getPayload() {
         return {
             sender_name: document.getElementById("senderName").value.trim(),
             sender_email: document.getElementById("senderEmail").value.trim(),
             app_password: document.getElementById("appPassword").value,
             subject: document.getElementById("subject").value.trim(),
-            body: document.getElementById("messageBody").value,
-            recipients: recipientsInput.value,
+            body: messageBody.value,
+            recipients: getUniqueRecipients(),
             is_html: document.getElementById("htmlMode").checked,
-            consent: document.getElementById("consent").checked
+            consent: consent.checked,
+            font_family: fontFamily.value
         };
+    }
+
+function setSendingState(sending) {
+        isSending = sending;
+        sendButton.disabled = sending;
+        sendButton.textContent = sending ? "Sending..." : "Send All";
+        document.getElementById("liveStatus").textContent =
+            sending ? "Sending" : "Ready";
     }
 
     recipientsInput.addEventListener("input", updateRecipientCount);
 
-    document.getElementById("consent").addEventListener("change", event => {
+consent.addEventListener("change", () => {
         document.getElementById("recipientConsentMirror").checked =
-            event.target.checked;
+            consent.checked;
     });
 
-    document.getElementById("clearLog").addEventListener("click", () => {
-        activityLog.innerHTML =
-            '<div class="empty-log">Sending results will appear here.</div>';
+fontFamily.addEventListener("change", () => {
+        messageBody.style.fontFamily =
+            FONT_MAP[fontFamily.value] || FONT_MAP.Arial;
     });
 
-    form.addEventListener("submit", async event => {
+document.getElementById("clearLog").addEventListener("click", () => {
+        activityLog.replaceChildren();
+
+const empty = document.createElement("div");
+        empty.className = "empty-log";
+        empty.textContent = "Sending results will appear here.";
+        activityLog.appendChild(empty);
+    });
+
+form.addEventListener("submit", async event => {
         event.preventDefault();
         event.stopPropagation();
 
-        if (isSending) {
-            return;
-        }
+        if (isSending) return;
 
-        const payload = getPayload();
-        const total = getRecipientCount();
+const payload = getPayload();
+        const total = payload.recipients.length;
 
-        if (
+if (
             !payload.sender_name ||
             !payload.sender_email ||
             !payload.app_password ||
@@ -318,117 +390,83 @@
             return;
         }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.sender_email)) {
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.sender_email)) {
             setStatus("Please enter a valid sender email address.", "error");
             return;
         }
 
-        if (total === 0) {
+if (total === 0) {
             setStatus("Please add at least one recipient.", "error");
             return;
         }
 
-        if (total > 25) {
-            setStatus("Maximum 25 recipients are allowed.", "error");
+if (total > 25) {
+            setStatus("Maximum 25 unique recipients are allowed.", "error");
             return;
         }
 
-        if (!payload.consent) {
+if (!payload.consent) {
             setStatus("Please confirm recipient consent.", "error");
             return;
         }
 
-        isSending = true;
-        sendButton.disabled = true;
-        sendButton.textContent = "Sending...";
+setSendingState(true);
+updateProgress(0, 0, total);
+setStatus("Connecting to Gmail. Please wait...", "working");
+addLog(Sending started for $DIL0 recipients., "info");
 
-        document.getElementById("liveStatus").textContent = "Sending";
-
-        updateProgress(0, 0, total);
-        setStatus("Connecting to Gmail. Please wait...", "working");
-        addLog(`Sending started for ${total} recipients.`, "info");
-
-        try {
+try {
             const response = await fetch("/send", {
                 method: "POST",
-
-                // Important: send the login session cookie with this request.
                 credentials: "same-origin",
-
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
-
                 body: JSON.stringify(payload)
             });
 
             let data;
 
-            try {
-                data = await response.json();
-            } catch (_) {
-                throw new Error(
-                    `Invalid server response (HTTP ${response.status}).`
+try {
+data = await response.json();
+} catch (_) {
+throw new Error(
+Invalid server response (HTTP $DIL0).
+);
+}
+
+if (response.status === 401) {
+                setStatus(
+                    "Your login session expired. Please log in again.",
+                    "error"
                 );
+                addLog("Login session expired.", "error");
+                document.getElementById("liveStatus").textContent = "Session expired";
+                return;
             }
 
-            if (!response.ok) {
-                throw new Error(
-                    data.error || `Request failed (HTTP ${response.status}).`
-                );
-            }
+if (!response.ok) {
+throw new Error(
+data.error || Request failed (HTTP $DIL0).
+);
+}
 
-            if (!Array.isArray(data.results)) {
-                throw new Error(
-                    data.error || "Unexpected server response."
-                );
-            }
+if (!Array.isArray(data.results)) {
+throw new Error("Unexpected server response.");
+}
 
-            updateProgress(
-                Number(data.sent) || 0,
-                Number(data.failed) || 0,
-                Number(data.total) || total
-            );
+updateProgress(
+Number(data.sent) || 0,
+Number(data.failed) || 0,
+Number(data.total) || total
+);
 
-            data.results.forEach(item => {
-                addLog(
-                    item.message || "No result message returned.",
-                    item.success ? "success" : "error"
-                );
-            });
+data.results.forEach(item => {
+addLog(
+item.message || "No result message returned.",
+item.success ? "success" : "error"
+);
+});
 
-            setStatus(
-                data.message || "Sending completed.",
-                Number(data.failed) > 0 ? "error" : "success"
-            );
-
-            document.getElementById("liveStatus").textContent =
-                Number(data.failed) > 0
-                    ? "Completed with errors"
-                    : "Completed";
-
-        } catch (error) {
-            setStatus(error.message || "Sending failed.", "error");
-
-            addLog(
-                error.message || "Unknown sending error.",
-                "error"
-            );
-
-            document.getElementById("liveStatus").textContent = "Error";
-
-        } finally {
-            isSending = false;
-            sendButton.disabled = false;
-            sendButton.textContent = "Send All";
-        }
-    });
-
-    updateRecipientCount();
-
-})();
-</script>
-
-</body>
-</html>
+const failed = Number(data.failed) || 0;
