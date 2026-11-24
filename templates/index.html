@@ -8,6 +8,20 @@
 </head>
 <body>
 
+<header class="top-header">
+    <div class="header-inner">
+        <div class="header-brand">
+            <div class="header-logo">M</div>
+            <span>Bulk Email Sender</span>
+        </div>
+
+        <div class="header-actions">
+            <a href="{{ url_for('login') }}" class="login-nav-button">Login</a>
+            <a href="{{ url_for('logout') }}" class="logout-nav-button">Logout</a>
+        </div>
+    </div>
+</header>
+
 <main class="dashboard">
 
     <section class="card compose-card">
@@ -199,8 +213,9 @@ function getRecipients() {
 
 function updateRecipientCount() {
     const count = getRecipients().length;
+
     document.getElementById("recipientCount").textContent =
-        count + (count === 1 ? " found" : " found");
+        count + " found";
 
     document.getElementById("totalCount").textContent = count;
     document.getElementById("remainingCount").textContent = count;
@@ -214,6 +229,7 @@ fontChoice.addEventListener("change", () => {
 
 stopButton.addEventListener("click", () => {
     stopUIUpdates = true;
+
     document.getElementById("liveStatus").textContent = "Updates paused";
     document.getElementById("activityLog").textContent =
         "Live UI updates paused. The server-side sending request is not cancelled.";
@@ -274,17 +290,10 @@ form.addEventListener("submit", async (event) => {
         }
 
         if (!stopUIUpdates) {
-            document.getElementById("totalCount").textContent =
-                result.total;
-
-            document.getElementById("sentCount").textContent =
-                result.sent;
-
-            document.getElementById("failedCount").textContent =
-                result.failed;
-
-            document.getElementById("remainingCount").textContent =
-                result.failed;
+            document.getElementById("totalCount").textContent = result.total;
+            document.getElementById("sentCount").textContent = result.sent;
+            document.getElementById("failedCount").textContent = result.failed;
+            document.getElementById("remainingCount").textContent = result.failed;
 
             const completed = result.sent + result.failed;
 
@@ -307,10 +316,8 @@ form.addEventListener("submit", async (event) => {
     } catch (error) {
         if (!stopUIUpdates) {
             document.getElementById("liveStatus").textContent = "Error";
-            document.getElementById("statusMessage").textContent =
-                error.message;
-            document.getElementById("activityLog").textContent =
-                error.message;
+            document.getElementById("statusMessage").textContent = error.message;
+            document.getElementById("activityLog").textContent = error.message;
         }
 
     } finally {
