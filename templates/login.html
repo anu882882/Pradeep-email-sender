@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,11 +7,9 @@
     <title>Login - Bulk Email Sender</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body class="login-page">
 
     <main class="login-card">
-
         <div class="header-logo login-logo">M</div>
 
         <div class="eyebrow">MAIL OPERATIONS</div>
@@ -22,7 +21,6 @@
         {% endif %}
 
         <form method="POST" action="{{ url_for('login') }}">
-
             <label for="password">Workspace Password</label>
 
             <input
@@ -37,9 +35,7 @@
             <button type="submit" class="login-submit-button">
                 Login
             </button>
-
         </form>
-
     </main>
 
 </body>
