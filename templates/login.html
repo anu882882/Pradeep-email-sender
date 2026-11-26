@@ -2,41 +2,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Bulk Email Sender</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Bulk Email Sender</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="login-page">
-
     <main class="login-card">
         <div class="header-logo login-logo">M</div>
-
         <div class="eyebrow">MAIL OPERATIONS</div>
         <h1>Welcome back</h1>
         <p>Login to continue to your workspace.</p>
 
         {% if error %}
-            <div class="login-error">{{ error }}</div>
+        <div class="login-error">{{ error }}</div>
         {% endif %}
 
         <form method="POST" action="{{ url_for('login') }}">
             <label for="password">Workspace Password</label>
-
-            <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                autocomplete="current-password"
-                required
-            >
-
-            <button type="submit" class="login-submit-button">
-                Login
-            </button>
+            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <button type="submit" class="login-submit-button">Login</button>
         </form>
     </main>
-
 </body>
 </html>
