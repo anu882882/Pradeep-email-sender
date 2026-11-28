@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bulk Email Sender</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Email Sender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
@@ -107,7 +107,10 @@
                 <div class="stat-box"><span>REMAINING</span><strong id="remainingCount">0</strong></div>
             </div>
 
-            <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+            <div class="progress-track">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+
             <h3 class="activity-title">Activity log</h3>
             <div class="activity-box" id="activityLog">Sending results will appear here.</div>
         </div>
@@ -118,24 +121,33 @@
 const form = document.getElementById("sendForm");
 const recipientsInput = document.getElementById("recipients");
 const sendButton = document.getElementById("sendButton");
-let sending = false, stopUIUpdates = false;
+
+let sending = false;
+let stopUIUpdates = false;
 
 function getRecipients() {
-    return [...new Set(recipientsInput.value.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean))];
+    return [...new Set(
+        recipientsInput.value
+            .split(/[\s,;]+/)
+            .map(item => item.trim().toLowerCase())
+            .filter(Boolean)
+    )];
 }
 
 function updateCount() {
-    const n = getRecipients().length;
-    document.getElementById("recipientCount").textContent = n + " found";
-    document.getElementById("totalCount").textContent = n;
-    document.getElementById("remainingCount").textContent = n;
+    const count = getRecipients().length;
+    document.getElementById("recipientCount").textContent = count + " found";
+    document.getElementById("totalCount").textContent = count;
+    document.getElementById("remainingCount").textContent = count;
 }
+
 recipientsInput.addEventListener("input", updateCount);
 
 document.getElementById("stopButton").addEventListener("click", () => {
     stopUIUpdates = true;
     document.getElementById("liveStatus").textContent = "Updates paused";
-    document.getElementById("activityLog").textContent = "UI updates paused. This does not cancel sending.";
+    document.getElementById("activityLog").textContent =
+        "UI updates paused. This does not cancel the sending request.";
 });
 
 form.addEventListener("submit", async event => {
@@ -143,6 +155,7 @@ form.addEventListener("submit", async event => {
     if (sending) return;
 
     const recipients = getRecipients();
+
     if (!recipients.length) return alert("Please enter recipient email addresses.");
     if (!document.getElementById("consent").checked) return alert("Please confirm recipient consent.");
 
@@ -150,6 +163,7 @@ form.addEventListener("submit", async event => {
     stopUIUpdates = false;
     sendButton.disabled = true;
     sendButton.textContent = "Sending...";
+
     document.getElementById("liveStatus").textContent = "Sending";
     document.getElementById("activityLog").textContent = "Sending request...";
 
@@ -171,26 +185,35 @@ form.addEventListener("submit", async event => {
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
+
         const result = await response.json();
 
         if (response.status === 401) {
             window.location.href = "/login";
             return;
         }
+
         if (!response.ok) throw new Error(result.message || "Sending failed.");
 
         if (!stopUIUpdates) {
             document.getElementById("totalCount").textContent = result.total;
             document.getElementById("sentCount").textContent = result.sent;
             document.getElementById("failedCount").textContent = result.failed;
-            document.getElementById("remainingCount").textContent = result.total - result.sent - result.failed;
+            document.getElementById("remainingCount").textContent =
+                result.total - result.sent - result.failed;
+
+            const completed = result.sent + result.failed;
             document.getElementById("progressBar").style.width =
-                (result.total ? (result.sent + result.failed) / result.total * 100 : 0) + "%";
-            document.getElementById("liveStatus").textContent = result.failed ? "Completed with errors" : "Completed";
+                (result.total ? completed / result.total * 100 : 0) + "%";
+
+            document.getElementById("liveStatus").textContent =
+                result.failed ? "Completed with errors" : "Completed";
+
             document.getElementById("statusMessage").textContent = result.message;
-            document.getElementById("activityLog").textContent = result.failed_recipients.length
-                ? "Failed recipients:\n" + result.failed_recipients.join("\n")
-                : "SMTP accepted all messages.";
+            document.getElementById("activityLog").textContent =
+                result.failed_recipients.length
+                    ? "Failed recipients:\n" + result.failed_recipients.join("\n")
+                    : "SMTP accepted all messages.";
         }
     } catch (error) {
         if (!stopUIUpdates) {
